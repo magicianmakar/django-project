@@ -4,7 +4,7 @@ import arrow
 
 from django.contrib.auth.models import User
 
-from hubspot_core.utils import api_requests, create_contact, update_contact
+from hubspot_core.utils import api_requests, clean_plan_name, create_contact, update_contact
 from hubspot_core.models import HubspotAccount
 from last_seen.models import LastSeen
 from leadgalaxy.models import GroupPlan
@@ -36,6 +36,7 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--create', action='store_true', help='Create Properties only')
         parser.add_argument('--missing', action='store_true', help='Add Missing users only')
         parser.add_argument('--skip', action='store', type=int, default=0, help='Skip this number of users')
+        parser.add_argument('--threads', action='store', type=int, default=2, help='Number of threads')
 
     def start_command(self, *args, **options):
         if options['create']:
@@ -44,7 +45,7 @@ class Command(DropifiedBaseCommand):
 
         q = Queue()
 
-        for i in range(2):
+        for i in range(options['threads']):
             t = Thread(target=create_contact_worker, args=(self, q))
             t.daemon = True
             t.start()
@@ -59,6 +60,8 @@ class Command(DropifiedBaseCommand):
 
             try:
                 last_seen = LastSeen.objects.when(user, 'website')
+            except KeyboardInterrupt:
+                raise
             except:
                 last_seen = None
 
@@ -154,13 +157,12 @@ class Command(DropifiedBaseCommand):
             self.write(f'Add Property error: {name}')
 
     def update_plan_property_options(self):
-        plans = GroupPlan.objects.all()
+        plans = set([clean_plan_name(i) for i in GroupPlan.objects.all().values_list('title', flat=True)])
         options = []
         for plan in plans:
             options.append({
-                "label": plan.title,
-                "value": plan.title,
-                "displayOrder": plan.id,
+                "label": plan,
+                "value": plan,
                 "hidden": False
             })
 

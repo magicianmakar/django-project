@@ -26,6 +26,34 @@ def api_requests(url, data, method='post'):
     return r.json()
 
 
+def clean_plan_name(plan):
+    plan = plan.replace('Plan', '').replace('Yearly', '').replace('Monthly', '').replace('Shopify', '')
+    plan = re.sub(r'Shopify$', '', plan).strip()
+    plan = re.sub(r'[0-9]+ Days Trial', '', plan).strip()
+    plan = re.sub(r'\(\$[0-9]+\)', '', plan).strip()
+    if plan.strip() != 'Free':
+        plan = re.sub(r'Free$', '', plan).strip()
+    plan = re.sub(r'RT$', '', plan).strip()
+    plan = re.sub(r'Stripe$', '', plan).strip()
+    plan = re.sub(r'(Webinar)', '', plan).strip()
+    plan = re.sub(r'60DC', '', plan).strip()
+    plan = re.sub(r'VIP', '', plan).strip()
+    plan = re.sub(r'Beta', '', plan).strip()
+    plan = re.sub(r'Special Offer', '', plan).strip()
+    plan = re.sub(r'One Time', '', plan).strip()
+    plan = re.sub(r'Free Access', '', plan).strip()
+    plan = re.sub(r'\(Pro', '', plan).strip()
+    plan = re.sub(r'[0-9]+ Pay(ments)?', '', plan).strip()
+    plan = re.sub(r'[0-9]+ Year', '', plan).strip()
+    plan = plan.strip(' -()')
+    plan = re.sub(r'Shopify$', '', plan).strip()
+    plan = re.sub(r'Trial$', '', plan).strip()
+    plan = re.sub(r'For Lifetime', '', plan).strip()
+    plan = re.sub(r'Free Gift', '', plan).strip()
+
+    return plan
+
+
 def generate_create_contact(user: User):
     profile = user.profile
 
@@ -48,11 +76,11 @@ def generate_create_contact(user: User):
             "country": profile.country,
 
             "dr_join_date": arrow.get(user.date_joined).timestamp * 1000,
-            "dr_plan": plan.title if plan else '',
+            "dr_plan": clean_plan_name(plan.title) if plan else '',
             "dr_bundles": ','.join(profile.bundles_list()),
             "dr_user_tags": profile.tags,
             "dr_is_subuser": user.is_subuser,
-            "dr_parent_plan": parent_plan.title if user.is_subuser else '',
+            "dr_parent_plan": clean_plan_name(parent_plan.title) if user.is_subuser else '',
             "dr_payment_gateway": parent_plan.payment_gateway if parent_plan else '',
             "dr_free_plan": parent_plan.free_plan if parent_plan else '',
 
@@ -64,7 +92,8 @@ def generate_create_contact(user: User):
             "dr_gkart_count": profile.get_gkart_stores().count(),
             "dr_bigcommerce_count": profile.get_bigcommerce_stores().count(),
 
-            "plan": plan.title if plan else '',
+            "plan": clean_plan_name(plan.title) if plan else '',
+            "billing_interval": plan.payment_interval if plan else '',
             "install_source": parent_plan.payment_gateway if parent_plan else '',
             "user_level": 'Sub User' if user.is_subuser else 'User',
         }
