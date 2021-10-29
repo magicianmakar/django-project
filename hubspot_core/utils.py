@@ -136,9 +136,11 @@ def create_contact(user: User):
         raise e
 
 
-def update_contact(user: User):
+def update_contact(user: User, account: HubspotAccount = None):
     try:
-        account = HubspotAccount.objects.get(hubspot_user=user)
+        if account is None:
+            account = HubspotAccount.objects.get(hubspot_user=user)
+
         data = generate_create_contact(user)
         return api_requests(f'https://api.hubapi.com/crm/v3/objects/contacts/{account.hubspot_vid}', data, 'PATCH')
     except HubspotAccount.DoesNotExist:

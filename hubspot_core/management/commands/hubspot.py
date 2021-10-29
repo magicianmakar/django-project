@@ -4,7 +4,7 @@ import arrow
 
 from django.contrib.auth.models import User
 
-from hubspot_core.utils import create_contact, api_requests
+from hubspot_core.utils import api_requests, create_contact, update_contact
 from hubspot_core.models import HubspotAccount
 from last_seen.models import LastSeen
 from leadgalaxy.models import GroupPlan
@@ -16,7 +16,13 @@ def create_contact_worker(cmd, q):
         user = q.get()
 
         try:
-            create_contact(user)
+            try:
+                account = HubspotAccount.objects.get(hubspot_user=user)
+                update_contact(user, account=account)
+                cmd.write(f'> UPDATE: {user.email}')
+            except HubspotAccount.DoesNotExist:
+                cmd.write(f'> CREATE: {user.email}')
+                create_contact(user)
         except:
             cmd.write(f'> Error for {user.email}')
 
@@ -43,15 +49,13 @@ class Command(DropifiedBaseCommand):
             t.daemon = True
             t.start()
 
-        users = User.objects.all()
+        users = User.objects.all().order_by('-id')
 
         skip = options['skip']
-        self.progress_total(users.count() - skip)
-        total_count = 0
+        self.progress_total(users.count())
+        active_users = []
         for user in users.all():
-            total_count += 1
-            if total_count < skip:
-                continue
+            self.progress_update()
 
             try:
                 last_seen = LastSeen.objects.when(user, 'website')
@@ -60,9 +64,18 @@ class Command(DropifiedBaseCommand):
 
             if last_seen and last_seen > arrow.utcnow().replace(years=-2).datetime:
                 if not options['missing'] or not HubspotAccount.objects.filter(hubspot_user=user).exists():
-                    q.put(user)
+                    active_users.append(user)
 
-            self.progress_update()
+        self.progress_close()
+
+        self.progress_total(len(active_users) - skip)
+        total_count = 0
+        for user in active_users:
+            total_count += 1
+            if total_count < skip:
+                continue
+
+            q.put(user)
 
         q.join()
 
