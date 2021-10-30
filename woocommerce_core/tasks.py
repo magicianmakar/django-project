@@ -1,6 +1,7 @@
 import simplejson as json
 import requests
 import re
+import arrow
 from tempfile import mktemp
 from zipfile import ZipFile
 
@@ -11,8 +12,9 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.conf import settings
 from django.template.defaultfilters import truncatewords
+from django.db import IntegrityError
 
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_exception, capture_message
 
 from app.celery_base import celery_app, CaptureFailure, retry_countdown
 from shopified_core import permissions
@@ -39,8 +41,12 @@ from .utils import (
     create_variants_api_data,
     get_latest_order_note,
     get_product_data,
+    replace_problematic_images,
     WooOrderUpdater,
-    replace_problematic_images
+    WooListQuery,
+    find_missing_orders,
+    update_woo_store_order,
+    get_woo_order,
 )
 
 from product_alerts.utils import (
@@ -599,3 +605,101 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
         store.pusher_trigger('products-supplier-sync', push_data)
 
     cache.delete(cache_key)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def sync_woo_orders(self, store_id):
+    try:
+        start_time = arrow.now()
+        store = WooStore.objects.get(id=store_id)
+        max_days_sync = 30
+        saved_count = store.count_saved_orders(days=max_days_sync)
+        woo_count = WooListQuery(store, 'orders').count()
+        need_import = woo_count - saved_count
+
+        if need_import > 0:
+            capture_message('Sync Store Orders', level='info', extra={
+                'store': store.title, 'es': False, 'missing': need_import
+            }, tags={'store': store.title, 'es': False})
+
+            imported = 0
+            page = 1
+
+            while page:
+                if imported >= need_import:
+                    break
+                after = arrow.utcnow().replace(days=-abs(max_days_sync)).isoformat()
+                params = {'page': page, 'per_page': 100, 'after': after}
+                r = store.wcapi.get('orders', params=params)
+                r.raise_for_status()
+                orders = r.json()
+
+                if not orders:
+                    break
+
+                missing_orders = find_missing_orders(store, orders)
+                for missing_order in missing_orders:
+                    update_woo_store_order(store, missing_order)
+                    imported += 1
+
+                has_next = 'rel="next"' in r.headers.get('link', '')
+                page = page + 1 if has_next else 0
+
+            took = (arrow.now() - start_time).seconds
+            print('Sync Need: {}, Total: {}, Imported: {}, Store: {}, Took: {}s'.format(
+                need_import, woo_count, imported, store.title, took))
+
+    except Exception:
+        capture_exception()
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def update_woo_order(self, store_id, order_id, woo_order=None, from_webhook=True):
+    store = None
+    try:
+        store = WooStore.objects.get(id=store_id)
+
+        if not store.is_active:
+            return
+
+        # if not store.is_active or store.user.get_config('_disable_update_woo_order'):
+        #     return
+
+        if woo_order is None:
+            woo_order = cache.get('woo_webhook_order_{}_{}'.format(store_id, order_id))
+
+        if woo_order is None:
+            woo_order = get_woo_order(store, order_id)
+
+        with cache.lock('woo_order_lock_{}_{}'.format(store_id, order_id), timeout=10):
+            try:
+                update_woo_store_order(store, woo_order)
+            except IntegrityError as e:
+                raise self.retry(exc=e, countdown=30, max_retries=3)
+
+        # active_order_key = 'woo_active_order_{}'.format(woo_order['id'])
+
+    except AssertionError:
+        capture_message('Store is being imported', extra={'store': store})
+
+    except WooStore.DoesNotExist:
+        capture_exception()
+
+    except Exception as e:
+        if http_excption_status_code(e) in [401, 402, 403, 404]:
+            return
+
+        if http_excption_status_code(e) != 429:
+            capture_exception(level='warning', extra={
+                'Store': store_id,
+                'Order': order_id,
+                'from_webhook': from_webhook,
+                'Retries': self.request.retries
+            }, tags={
+                'store': store.id if store else 'N/A',
+                'webhook': from_webhook,
+            })
+
+        # if not self.request.called_directly:
+        #     countdown = retry_countdown('retry_order_{}'.format(order_id), self.request.retries)
+        #     raise self.retry(exc=e, countdown=countdown, max_retries=3)

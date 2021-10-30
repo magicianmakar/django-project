@@ -22,6 +22,7 @@ from django.core.cache import cache
 from django.utils import timezone
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.conf import settings
 
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
@@ -36,7 +37,8 @@ from shopified_core.utils import (
     get_top_most_commons,
     get_first_valid_option,
     normalize_product_title,
-    order_data_cache
+    order_data_cache,
+    app_link
 )
 from shopified_core.shipping_helper import (
     get_uk_province,
@@ -50,7 +52,16 @@ from shopified_core.shipping_helper import (
 import leadgalaxy.utils as leadgalaxy_utils
 from supplements.utils import supplement_customer_address
 
-from .models import WooProduct, WooStore, WooBoard
+from .models import (
+    WooProduct,
+    WooStore,
+    WooBoard,
+    WooOrder,
+    WooOrderLine,
+    WooOrderShippingAddress,
+    WooOrderBillingAddress,
+    WooWebhook,
+)
 
 
 def woocommerce_products(request, post_per_page=25, sort=None, board=None, store='n'):
@@ -401,6 +412,162 @@ def disconnect_data(product):
     product.data = json.dumps(data)
 
     return product
+
+
+def orders_after_filters(store, params):
+    woo_orders = store.wooorder_set.all()
+    woo_orders_total = woo_orders.count()
+    connected_products = WooProduct.objects.filter(store=store)
+    connected_products = connected_products.filter(source_id__isnull=False)
+    connected_products = connected_products.filter(source_id__gt=0)
+
+    if params.get('supplier_name'):
+        supplier_name = params['supplier_name']
+        connected_products = connected_products.filter(default_supplier__supplier_name__icontains=supplier_name)
+        product_ids = connected_products.values_list('source_id', flat=True)
+        woo_orders = woo_orders.filter(wooorderline__product_id__in=product_ids).distinct()
+
+    if params.get('query_product'):
+        product_id = params['query_product']
+        product_filter = WooProduct.objects.filter(pk=safe_int(product_id)).first()
+        product_ids = product_filter.source_id if product_filter else 0
+        woo_orders = woo_orders.filter(wooorderline__product_id=product_ids)
+
+    if params.get('query_customer'):
+        query_customer = params['query_customer']
+        query = Q(shipping_address__first_name__icontains=query_customer)
+        query |= Q(shipping_address__last_name__icontains=query_customer)
+        query |= Q(billing_address__email__icontains=query_customer)
+        woo_orders = woo_orders.filter(query)
+
+    if params.get('query_country'):
+        countries = params.getlist('query_country')
+        woo_orders = woo_orders.filter(Q(shipping_address__country__in=countries))
+
+    if params.get('status') and not params['status'] == 'any':
+        status = params['status']
+        woo_orders = woo_orders.filter(status=status)
+
+    if params.get('created_at_daterange') and not params['created_at_daterange'] == 'all':
+        daterange = params['created_at_daterange']
+        after, before = get_daterange_filters(daterange)
+        from_date = arrow.get(after).datetime
+        to_date = arrow.get(before).datetime
+        woo_orders = woo_orders.filter(date_created__gte=from_date, date_created__lte=to_date)
+
+    if params.get('query_order'):
+        order_ids = params['query_order'].split(',')
+
+        try:
+            order_ids = [int(order_id) for order_id in order_ids]
+        except ValueError:
+            order_ids = []
+        woo_orders = woo_orders.filter(order_id__in=order_ids)
+
+    filtered = woo_orders.count() < woo_orders_total
+
+    return filtered, woo_orders
+
+
+def update_woo_store_order(store, data, sync_check=True):
+    sync = store.get_sync_status()
+
+    if not sync:
+        return
+
+    if sync_check:
+        if sync.sync_status == 1:
+            sync.add_pending_order(data['id'])
+            return
+        if sync.sync_status not in [2, 5, 6]:
+            return
+
+    with transaction.atomic():
+        order, created = WooOrder.objects.update_or_create(store=store,
+                                                           order_id=data['id'],
+                                                           defaults={'data': json.dumps(data)})
+        shipping_data = order.parsed.get('shipping', {})
+        WooOrderShippingAddress.objects.update_or_create(order=order,
+                                                         defaults={'data': json.dumps(shipping_data)})
+        billing_data = order.parsed.get('billing', {})
+        WooOrderBillingAddress.objects.update_or_create(order=order,
+                                                        defaults={'data': json.dumps(billing_data)})
+
+        for line_item in order.parsed.get('line_items', []):
+            WooOrderLine.objects.update_or_create(order=order,
+                                                  line_id=line_item['id'],
+                                                  defaults={'data': json.dumps(line_item)})
+
+
+def find_missing_orders(store, orders):
+    order_ids = [order['id'] for order in orders]
+    saved_order_ids = store.wooorder_set.filter(order_id__in=order_ids).values_list('order_id', flat=True)
+
+    return [order for order in orders if order['id'] not in saved_order_ids]
+
+
+def get_woo_webhook(store, topic):
+    try:
+        webhook = WooWebhook.objects.get(store=store, topic=topic[0])
+        response_data = store.wcapi.get(f"webhooks/{webhook.webhook_id}").json()
+        if response_data.get('code', '') == "woocommerce_rest_shop_webhook_invalid_id":
+            webhook.delete()
+            return False
+        elif response_data.get("status", "") != "active":
+            webhook.delete()
+            return False
+    except WooWebhook.DoesNotExist:
+        create_woo_webhook(store, topic)
+    except:
+        capture_exception()
+        return None
+
+    return True
+
+
+def get_woo_order(store, order_id):
+    rep = requests.get(store.wcapi.get(f"orders/{order_id}"))
+    rep.raise_for_status()
+
+    return rep.json()
+
+
+def attach_webhooks(store):
+    default_topics = [
+        ("order.created", "Dropified Order Create"), ("order.updated", "Dropified Order Update")
+    ]  # (Webhook Topic, Webhook Name)
+
+    webhooks = []
+
+    if settings.DEBUG:
+        return webhooks
+
+    for index, topic in enumerate(default_topics):
+        webhook = get_woo_webhook(store, default_topics[index])
+
+        if not webhook:
+            webhook = create_woo_webhook(store, topic)
+
+        if webhook:
+            webhooks.append(webhook)
+
+    return webhooks
+
+
+def create_woo_webhook(store, topic):
+    webhook_payload = {
+        "name": topic[1],
+        "topic": topic[0],
+        "delivery_url": app_link('webhook', 'woo', topic[0].replace('.', '-'), store=store.store_hash)
+    }
+    try:
+        response_data = store.wcapi.post("webhooks", webhook_payload).json()
+        webhook = WooWebhook(store=store, topic=topic[0], webhook_id=response_data.get('id'))
+        webhook.save()
+        return webhook
+    except Exception as e:
+        print(f"Exception in creating webhook {e.message}")
+        return None
 
 
 @transaction.atomic

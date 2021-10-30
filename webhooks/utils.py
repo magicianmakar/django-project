@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.views import View
 
 from leadgalaxy.models import ShopifyStore, ShopifyProduct
+from woocommerce_core.models import WooStore
 from leadgalaxy.utils import webhook_token
 from lib.exceptions import capture_message, capture_exception
 
@@ -49,3 +50,32 @@ class ShopifyWebhookMixing(View):
     def process_webhook(self, store, shopify_data):
         capture_message('process_webhook not implemented')
         raise NotImplementedError('process_webhook not implemented')
+
+
+class WooWebhookProcessing(View):
+    http_method_names = ['post']
+
+    def verify_woo_webhook(self, request):
+        try:
+            store = WooStore.objects.get(store_hash=request.GET['store'], is_active=True)
+            return store
+        except WooStore.DoesNotExist:
+            return None
+
+    def post(self, request):
+        self.store = self.verify_woo_webhook(request)
+
+        if self.store:
+            try:
+                self.shopify_data = json.loads(request.body)
+            except:
+                self.shopify_data = None
+
+            try:
+                self.process_webhook(self.store, self.shopify_data)
+            except:
+                capture_exception()
+        else:
+            return HttpResponse(status=404)
+
+        return HttpResponse('ok')

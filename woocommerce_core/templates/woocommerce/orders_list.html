@@ -29,12 +29,12 @@
                             {% if store_order_synced %}
                                 {% if store_sync_enabled %}
                                     <a class="btn btn-outline btn-default btn-rounded btn-sm swith-implemenation itooltip"
-                                        title="Switch to the Old Order page"
-                                        href="{% url_replace 'old' 1 %}">Switch Orders Page</a>
+                                        title="Switch to the Simple Order page"
+                                        href="{% url_replace 'old' 1 %}">Switch to Simple </a>
                                 {% else %}
                                     <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
-                                        title="Switch to the New Order page"
-                                        href="{% url_replace 'old' 0 %}">Switch Orders Page</a>
+                                        title="Switch to the Advanced Order page"
+                                        href="{% url_replace 'old' 0 %}">Switch to Advanced</a>
                                 {% endif %}
                             {% endif %}
                             {% if not store_sync_enabled %}
@@ -47,36 +47,12 @@
                           style="display:none"
                     {% endif %}
                     >
-                    {% if store_sync_enabled %}
-                        <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Sort</span>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="sort" class="form-control">
-                                <option {% if sort == 'created_at' %}selected="selected"{% endif %} value="created_at">Order Date</option>
-                                <option {% if sort == 'updated_at' %}selected="selected"{% endif %} value="updated_at">Order Last Update</option>
-                                <option {% if sort == 'total_price' %}selected="selected"{% endif %} value="total_price">Total Price</option>
-                                <option {% if sort == 'country_code' %}selected="selected"{% endif %} value="country_code">Shipping Country</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="sort-desc" class="control-label">
-                                <input type="checkbox" id="sort-desc" name="desc" value="true" class="icheck"
-                                       {% if sort_type == 'true' %}checked{% endif %}>
-                                Descending
-                            </label>
-                        </div>
-                    </div>
-                    {% endif %}
-                    {% if store_sync_enabled %}
                     <div class="row filter-row">
                         <div class="col-md-offset-1 col-md-1 filter-label">
                             <span>Order</span>
                         </div>
                         <div class="col-md-4">
-                            <input name="query_order" value="{{query_order|default:''}}" class="form-control"
-                                   placeholder="Order Number or ID">
+                            <input name="query_order" value="{{request.GET.query_order|default:''}}" class="form-control" placeholder="Comma separated Order#" />
                         </div>
                     </div>
 
@@ -95,9 +71,11 @@
                             <span>Product</span>
                         </div>
                         <div class="col-md-4">
-                            <input name="product" value="{{request.GET.product|default:''}}" type="hidden" />
-                            <input name="" id="product_title" value="{{product_filter.title|default:''}}" class="form-control"
-                                   placeholder="Product Title" data-store="{{store.id}}">
+                            <select name="query_product" id="product" class="form-control" data-store="{{store.id}}">
+                                {% for p in product_filter %}
+                               <option value="{{p.id}}" selected="">{{p.title|truncatewords:5}}</option>
+                               {% endfor %}
+                            </select>
                         </div>
                     </div>
 
@@ -110,28 +88,19 @@
                                    placeholder="Supplier Name" data-store="{{store.id}}">
                         </div>
                     </div>
-                    {% if request.user.profile.get_config.shipping_method_filter %}
-                    <div class="row filter-row" style="display:none">
-                        <div class="col-md-2 filter-label">
-                            <span>Shipping Method</span>
-                        </div>
-                        <div class="col-md-4">
-                            <input name="shipping_method_name" id="shipping_method_name" value="{{shipping_method_filter|default:''}}" class="form-control"
-                                   placeholder="Shipping Method Name" data-store="{{store.id}}">
-                        </div>
-                    </div>
-                    {% endif %}
+                    {% if store_sync_enabled %}
                     <div class="row filter-row">
                         <div class="col-md-offset-1 col-md-1 filter-label">
                             <span>Country</span>
                         </div>
+                        
                         <div class="col-md-4">
-                            <select name="query_address"  class="form-control" id="country-filter"
+                            <select name="query_country"  class="form-control" id="country-filter"
                                     data-placeholder="Shipping Country" style="height:30px" multiple>
                                <option value=""></option>
                                 {% for item in countries %}
                                 <option value="{{item.0}}"
-                                    {% query_active 'query_address' item.0 'selected="selected"' True %}
+                                    {% query_active 'query_country' item.0 'selected="selected"' True %}
                                     >{{item.1}}</option>
                                 {% endfor %}
                                 </select>
@@ -151,6 +120,8 @@
                             </select>
                         </div>
                     </div>
+                    {% endif %}
+
                     <div class="row filter-row m-b">
                        <div class="col-md-2 filter-label">
                            <span>Date Range</span>
@@ -167,38 +138,6 @@
                            <span class="help-block "></span>
                        </div>
                     </div>
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Order</span>
-                        </div>
-                        <div class="col-md-4">
-                            <input name="query" value="{{request.GET.query|default:''}}" class="form-control" placeholder="Order name or ID">
-                        </div>
-                    </div>
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Customer</span>
-                        </div>
-                        <div class="col-md-4">
-                            <input type="hidden" id="query_customer_id" name="query_customer_id"
-                                value="{{ request.GET.query_customer_id|default:'' }}" orig-value="{{request.GET.query_customer|default:''}}" />
-
-                            <input id="query_customer" name="query_customer" class="form-control"placeholder="Name or Email" data-store="{{store.id}}"
-                                value="{% base64_decode_params request.GET.query_customer %}"
-                            >
-                        </div>
-                    </div>
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Product</span>
-                        </div>
-                        <div class="col-md-4">
-                            <select name="product" id="product" class="form-control" data-store="{{store.id}}">
-                               <option value="{{product_filter.id}}" selected="">{{product_filter.title|truncatewords:5}}</option>
-                           </select>
-                        </div>
-                    </div>
-                    {% endif %}
                     <div class="row filter-row m-t-md">
                         <div class="col-md-2  filter-label filter-order-status">
                             <span>Order Status</span>
@@ -254,7 +193,6 @@
                         <button class="btn btn-primary"><i class="fa fa-filter"></i> Apply</button>
                         </div>
 
-                        {% if store_order_synced %}
                         <div class="col-md-5 col-md-offset-4 text-right">
                             <a href="{% url_replace save 1 %}" class="btn btn-success save-filter-btn">
                                 <i class="fa fa-save"></i> Save Filter
@@ -264,7 +202,6 @@
                                 <i class="fa fa-eraser"></i> Reset Filter
                             </a>
                         </div>
-                        {% endif %}
 
                     </div>
                     </form>

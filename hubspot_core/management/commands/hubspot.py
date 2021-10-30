@@ -4,9 +4,10 @@ import arrow
 
 from django.contrib.auth.models import User
 
-from hubspot_core.utils import create_contact, api_requests
+from hubspot_core.utils import api_requests, clean_plan_name, create_contact, update_contact
 from hubspot_core.models import HubspotAccount
 from last_seen.models import LastSeen
+from leadgalaxy.models import GroupPlan
 from shopified_core.commands import DropifiedBaseCommand
 
 
@@ -15,7 +16,13 @@ def create_contact_worker(cmd, q):
         user = q.get()
 
         try:
-            create_contact(user)
+            try:
+                account = HubspotAccount.objects.get(hubspot_user=user)
+                update_contact(user, account=account)
+                cmd.write(f'> UPDATE: {user.email}')
+            except HubspotAccount.DoesNotExist:
+                cmd.write(f'> CREATE: {user.email}')
+                create_contact(user)
         except:
             cmd.write(f'> Error for {user.email}')
 
@@ -28,6 +35,8 @@ class Command(DropifiedBaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--create', action='store_true', help='Create Properties only')
         parser.add_argument('--missing', action='store_true', help='Add Missing users only')
+        parser.add_argument('--skip', action='store', type=int, default=0, help='Skip this number of users')
+        parser.add_argument('--threads', action='store', type=int, default=2, help='Number of threads')
 
     def start_command(self, *args, **options):
         if options['create']:
@@ -36,31 +45,40 @@ class Command(DropifiedBaseCommand):
 
         q = Queue()
 
-        for i in range(2):
+        for i in range(options['threads']):
             t = Thread(target=create_contact_worker, args=(self, q))
             t.daemon = True
             t.start()
 
-        users = User.objects.all()
+        users = User.objects.all().order_by('-id')
 
-        SKIP = 0
-        self.progress_total(users.count() - SKIP)
-        total_count = 0
+        skip = options['skip']
+        self.progress_total(users.count())
+        active_users = []
         for user in users.all():
-            total_count += 1
-            if total_count < SKIP:
-                continue
+            self.progress_update()
 
             try:
                 last_seen = LastSeen.objects.when(user, 'website')
+            except KeyboardInterrupt:
+                raise
             except:
                 last_seen = None
 
             if last_seen and last_seen > arrow.utcnow().replace(years=-2).datetime:
                 if not options['missing'] or not HubspotAccount.objects.filter(hubspot_user=user).exists():
-                    q.put(user)
+                    active_users.append(user)
 
-            self.progress_update()
+        self.progress_close()
+
+        self.progress_total(len(active_users) - skip)
+        total_count = 0
+        for user in active_users:
+            total_count += 1
+            if total_count < skip:
+                continue
+
+            q.put(user)
 
         q.join()
 
@@ -76,19 +94,13 @@ class Command(DropifiedBaseCommand):
 
     def create_properties(self):
         self.create_property('dr_join_date', 'Join Date', 'datetime', 'date')
-        self.create_property('dr_plan', 'User Plan', 'string', 'text')
         self.create_property('dr_bundles', 'User Bundles', 'string', 'text')
 
         self.create_property('dr_user_tags', 'User Tags', 'string', 'text')
 
         self.create_property('dr_is_subuser', 'Sub User Account', 'enumeration', 'booleancheckbox', is_bool=True)
         self.create_property('dr_parent_plan', 'User Parent Plan', 'string', 'text')
-        self.create_property('dr_payment_gateway', 'Payment Gateway', 'string', 'text')
         self.create_property('dr_free_plan', 'Free Plan', 'enumeration', 'booleancheckbox', is_bool=True)
-
-        self.create_property('dr_country', 'Country', 'string', 'text')
-        self.create_property('dr_state', 'Country', 'string', 'text')
-        self.create_property('dr_company', 'Company', 'string', 'text')
 
         self.create_property('dr_stores_count', 'All Stores Count', 'number', 'number')
         self.create_property('dr_shopify_count', 'Shopify Store Count', 'number', 'number')
@@ -97,6 +109,8 @@ class Command(DropifiedBaseCommand):
         self.create_property('dr_gear_count', 'GearBubble Store Count', 'number', 'number')
         self.create_property('dr_gkart_count', 'Groovekart Store Count', 'number', 'number')
         self.create_property('dr_bigcommerce_count', 'Bigcommerce Store Count', 'number', 'number')
+
+        self.update_plan_property_options()
 
     def create_property(self, name, label, ptype, field, is_bool=False):
         self.write(f'> {name}')
@@ -135,3 +149,28 @@ class Command(DropifiedBaseCommand):
             return api_requests(url, data, 'POST')
         except:
             self.write(f'Add Property error: {name}')
+
+    def update_plan_property_options(self):
+        plans = set([clean_plan_name(i) for i in GroupPlan.objects.all().values_list('title', flat=True)])
+        options = []
+        for plan in plans:
+            options.append({
+                "label": plan,
+                "value": plan,
+                "hidden": False
+            })
+
+        data = {
+            "name": "plan",
+            "label": "Plan",
+            "type": "enumeration",
+            "fieldType": "select",
+            "description": "Dropified Plan",
+            "groupName": "subscription",
+            "formField": True,
+            "options": options
+        }
+
+        url = 'https://api.hubapi.com/crm/v3/properties/0-1/plan'
+
+        return api_requests(url, data, 'PATCH')

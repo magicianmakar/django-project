@@ -1,4 +1,5 @@
 import json
+import os
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -7,6 +8,18 @@ from django.utils.crypto import get_random_string
 
 from shopified_core.models import ProductBase, StoreBase
 from shopified_core.utils import safe_json
+
+sd_default_fields = None
+
+
+def load_sd_default_fields():
+    global sd_default_fields
+
+    if sd_default_fields is None:
+        with open(os.path.join(settings.BASE_DIR, 'app/data/sd_default_defined_fields.json')) as f:
+            sd_default_fields = json.loads(f.read())
+
+    return sd_default_fields
 
 
 class SureDoneAccount(StoreBase):
@@ -63,16 +76,67 @@ class SureDoneAccount(StoreBase):
         if commit:
             self.save()
 
-    def verify_custom_fields_created(self, options):
+    def verify_custom_fields_created(self, options: dict):
         all_user_custom_fields = options.get('user_field_names', '').split('*')
 
         failed_sets = []
         for i, fields_set in enumerate(settings.SUREDONE_CUSTOM_FIELDS_CONFIG):
-            failed_fields = [x for x in fields_set.get('name', []) if x not in all_user_custom_fields]
-            if len(failed_fields):
-                failed_sets.append({**fields_set, 'name': failed_fields})
+            missing_field_names = []
+            missing_field_labels = []
+            all_field_labels = fields_set.get('label', [])
+            for field_i, field_name in enumerate(fields_set.get('name', [])):
+                if field_name not in all_user_custom_fields:
+                    missing_field_names.append(field_name)
+                    try:
+                        missing_field_labels.append(all_field_labels[field_i])
+                    except IndexError:
+                        continue
+
+            if len(missing_field_names):
+                failed_sets.append({**fields_set, 'name': missing_field_names, 'label': missing_field_labels})
 
         return failed_sets
+
+    def verify_variation_fields(self, options: dict):
+        current_variant_fields = options.get('site_cart_variants', '').split('*')
+        return [x for x in settings.SUREDONE_DEFAULT_VARIANTS_FIELDS_CONFIG if x not in current_variant_fields]
+
+    def format_custom_field(self, field_name):
+        minified_key = ''.join(c for c in field_name if c.isalnum()).lower()
+        return f'ucf{minified_key}'
+
+    def has_field_defined(self, field_name: str, options=None):
+        default_fields = load_sd_default_fields()
+        if field_name.lower() in default_fields:
+            return True
+
+        if not options:
+            options = self.parsed_options_config
+        all_user_custom_fields = options.get('user_field_names', '').split('*')
+        return self.format_custom_field(field_name) in all_user_custom_fields
+
+    def has_fields_defined(self, field_names: list, options=None):
+        if not options:
+            options = self.parsed_options_config
+        default_fields = load_sd_default_fields()
+        custom_fields = options.get('user_field_names', '').split('*')
+
+        return all([(x.lower() in default_fields or x in custom_fields or self.format_custom_field(x) in custom_fields)
+                    for x in field_names])
+
+    def has_variation_field(self, variation_field: str, options=None):
+        if not options:
+            options = self.parsed_options_config
+        all_var_fields = options.get('site_cart_variants', '').split('*')
+        return variation_field.lower() in all_var_fields or self.format_custom_field(variation_field) in all_var_fields
+
+    def has_variation_fields(self, variation_fields: list, options=None):
+        if not options:
+            options = self.parsed_options_config
+        user_var_fields = options.get('site_cart_variants', '').split('*')
+
+        return all([(x.lower() in user_var_fields or self.format_custom_field(x) in user_var_fields)
+                   for x in variation_fields])
 
     @property
     def has_business_settings_configured(self):

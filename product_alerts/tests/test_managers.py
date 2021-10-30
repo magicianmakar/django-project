@@ -436,6 +436,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
             'name': 'price',
             'new_value': new_value,
             'old_value': old_value,
+            'sku': '200000182:193#Single Len DVR;200009160:100018900#DVR with 16G TF card',
         })
         request = self.factory.post(
             '/webhook/price-monitor/product?product={}&dropified_type=gkart'.format(product.id),

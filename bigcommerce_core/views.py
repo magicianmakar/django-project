@@ -135,8 +135,12 @@ def auth(request):
     client = BigcommerceApi(client_id=settings.BIGCOMMERCE_CLIENT_ID, store_hash=store_hash, access_token=access_token)
     bigcommerce_store = client.Store.all()
 
-    store = BigCommerceStore.objects.filter(user=user.models_user, api_key=store_hash, is_active=True).first()
-    if not store:
+    try:
+        store = BigCommerceStore.objects.filter(
+            user=user.models_user,
+            api_key=store_hash,
+        ).latest('-pk')
+    except BigCommerceStore.DoesNotExist:
         store = BigCommerceStore()
 
     store.user = user.models_user
@@ -144,6 +148,7 @@ def auth(request):
     store.api_url = bigcommerce_store.domain
     store.api_key = store_hash
     store.api_token = access_token
+    store.is_active = True
 
     permissions.user_can_add(user, store)
     store.save()

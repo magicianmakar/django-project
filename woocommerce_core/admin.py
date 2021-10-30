@@ -6,8 +6,14 @@ from .models import (
     WooProduct,
     WooSupplier,
     WooOrderTrack,
+    WooOrder,
     WooBoard,
     WooUserUpload,
+    WooSyncStatus,
+    WooOrderLine,
+    WooOrderShippingAddress,
+    WooOrderBillingAddress,
+    WooWebhook
 )
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
@@ -33,6 +39,13 @@ class WooProductAdmin(admin.ModelAdmin):
 
     def view_on_site(self, obj):
         return reverse('product_view', kwargs={'pid': obj.id})
+
+
+@admin.register(WooOrder)
+class WooOrderAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'store', 'order_id', 'status')
+    ordering = ('order_id',)
+    search_fields = ('order_id', 'status')
 
 
 @admin.register(WooOrderTrack)
@@ -65,3 +78,66 @@ class WooUserUploadAdmin(admin.ModelAdmin):
     list_filter = ('created_at', 'updated_at')
     raw_id_fields = ('user', 'product')
     date_hierarchy = 'created_at'
+
+
+@admin.register(WooSyncStatus)
+class WooSyncStatusAdmin(admin.ModelAdmin):
+    list_display = ('store', 'sync_type', 'sync_status', 'elastic', 'orders_count', 'created_at', 'updated_at')
+    list_filter = ('sync_type', 'sync_status', 'elastic')
+    raw_id_fields = ('store',)
+    search_fields = ['store__id', 'store__shop'] + ['store__' + i for i in USER_SEARCH_FIELDS]
+
+
+@admin.register(WooOrderLine)
+class WooOrderLineAdmin(admin.ModelAdmin):
+    list_display = ('id', 'data', 'order', 'line_id', 'product_id')
+    raw_id_fields = ('order',)
+
+
+@admin.register(WooOrderShippingAddress)
+class WooOrderShippingAddressAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'data',
+        'order',
+        'first_name',
+        'last_name',
+        'company',
+        'address_1',
+        'address_2',
+        'city',
+        'state',
+        'postcode',
+        'country',
+    )
+    raw_id_fields = ('order',)
+
+
+@admin.register(WooOrderBillingAddress)
+class WooOrderBillingAddressAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'data',
+        'order',
+        'first_name',
+        'last_name',
+        'company',
+        'address_1',
+        'address_2',
+        'city',
+        'state',
+        'postcode',
+        'country',
+        'email',
+        'phone',
+    )
+    raw_id_fields = ('order',)
+
+
+@admin.register(WooWebhook)
+class WooWebhook(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'topic',
+        'store'
+    )

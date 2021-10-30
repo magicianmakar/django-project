@@ -140,12 +140,21 @@ class WooStoreApi(ApiBase):
         if len(title) > WooStore._meta.get_field('title').max_length:
             return self.api_error('The title is too long.', status=400)
 
-        store = WooStore(
-            user=user.models_user,
-            title=data.get('title', '').strip(),
-            api_url=api_url)
+        try:
+            store = WooStore.objects.filter(
+                user=user.models_user,
+                api_url=api_url,
+            ).latest('-pk')
+        except WooStore.DoesNotExist:
+            store = WooStore(
+                user=user.models_user,
+                api_url=api_url,
+            )
 
         permissions.user_can_add(user, store)
+
+        store.title = data.get('title', '').strip()
+        store.is_active = True
         store.save()
 
         return_url = request.build_absolute_uri(reverse('index'))

@@ -23,6 +23,7 @@ from django.views import View
 from alibaba_core import utils as alibaba_utils
 from churnzero_core.utils import post_churnzero_cancellation_event
 from leadgalaxy import utils, tasks
+from commercehq_core.utils import get_chq_products
 from leadgalaxy.models import (
     FeatureBundle,
     GroupPlan,
@@ -36,10 +37,13 @@ from leadgalaxy.models import (
     UserProfile,
     AppPermission
 )
+
+from woocommerce_core.tasks import update_woo_order
+
 from lib.exceptions import capture_message, capture_exception
 from metrics.activecampaign import ActiveCampaignAPI
 from product_alerts.models import ProductChange
-from product_alerts.utils import delete_product_monitor, unmonitor_store
+from product_alerts.utils import delete_product_monitor, unmonitor_store, variant_index_from_supplier_sku
 from profit_dashboard.models import FacebookAccess
 from shopified_core.models_utils import get_product_model
 from shopified_core.tasks import export_user_activity
@@ -49,7 +53,7 @@ from shopify_orders.models import ShopifyOrder
 from stripe_subscription.utils import process_webhook_event
 from supplements.models import PLSOrder
 from webhooks.tasks import setup_free_account
-from webhooks.utils import ShopifyWebhookMixing
+from webhooks.utils import ShopifyWebhookMixing, WooWebhookProcessing
 
 
 def jvzoo_webhook(request, option):
@@ -721,6 +725,43 @@ def price_monitor_webhook(request):
     if product.user.can('price_changes.use') and product.is_connected and product.store.is_active:
         data = json.loads(request.body.decode())
 
+        vrnts = ''
+        if dropified_type == 'shopify':
+            try:
+                products = utils.get_shopify_products(store=product.store, product_ids=product.shopify_id, fields='id,title,variants')
+                for p in products:
+                    vrnts = p['variants']
+            except:
+                capture_exception()
+
+        if dropified_type == 'woo':
+            try:
+                vrnts = product.retrieve_variants()
+            except:
+                capture_exception()
+
+        if dropified_type == 'chq':
+            chq_id = product.get_chq_id()
+            try:
+                if chq_id:
+                    products = get_chq_products(store=product.store, product_ids=[chq_id], expand='variants')
+                    for p in products:
+                        if p.get('id') is not None:
+                            vrnts = p.get('variants', None)
+            except:
+                capture_exception()
+
+        for i, changes in enumerate(data):
+            if data[i]['name'] == 'price':
+                variant_id = 0
+                index = variant_index_from_supplier_sku(product, changes['sku'], vrnts)
+                if index is not None:
+                    variant_id = vrnts[index]['id']
+                if variant_id > 0:
+                    if vrnts[index].get('price') is not None:
+                        price = vrnts[index]['price']
+                        data[i]['store_price_before_change'] = price
+
         product_change = ProductChange.objects.create(
             store_type=dropified_type,
             shopify_product=product if dropified_type == 'shopify' else None,
@@ -1364,3 +1405,50 @@ def alibaba_webhook(request):
     alibaba_utils.save_alibaba_products(request, products_data)
 
     return HttpResponse('ok')
+
+
+class WooOrderCreateWebhook(WooWebhookProcessing):
+    def process_webhook(self, store, webhook_data):
+        cache.set(f'woo_saved_orders_clear_{store.id}', True, timeout=300)
+        queue = 'priority_high'
+        countdown = 1
+
+        cache.set(f'woo_webhook_order_{store.id}_{webhook_data["id"]}', webhook_data, timeout=600)
+        countdown_key = f'woo_eta_order__{store.id}_{webhook_data["id"]}_updated'
+        countdown_saved = cache.get(countdown_key)
+        if countdown_saved is None:
+            cache.set(countdown_key, countdown, timeout=countdown * 2)
+        else:
+            countdown = countdown_saved + random.randint(2, 5)
+            cache.set(countdown_key, countdown, timeout=countdown * 2)
+
+        update_woo_order.apply_async(
+            args=[store.id, webhook_data['id']],
+            queue=queue,
+            countdown=countdown)
+
+        return JsonResponse({'status': 'ok'})
+
+
+class WooOrderUpdateWebhook(WooWebhookProcessing):
+    def process_webhook(self, store, webhook_data):
+        cache.set(f'woo_saved_orders_clear_{store.id}', True, timeout=300)
+
+        queue = 'celery'
+        countdown = random.randint(2, 9)
+
+        cache.set(f'woo_webhook_order_{store.id}_{webhook_data["id"]}', webhook_data, timeout=600)
+        countdown_key = f'woo_eta_order__{store.id}_{webhook_data["id"]}_updated'
+        countdown_saved = cache.get(countdown_key)
+        if countdown_saved is None:
+            cache.set(countdown_key, countdown, timeout=countdown * 2)
+        else:
+            countdown = countdown_saved + random.randint(2, 5)
+            cache.set(countdown_key, countdown, timeout=countdown * 2)
+
+        update_woo_order.apply_async(
+            args=[store.id, webhook_data['id']],
+            queue=queue,
+            countdown=countdown)
+
+        return JsonResponse({'status': 'ok'})
