@@ -76,12 +76,10 @@ def generate_create_contact(user: User):
             "country": profile.country,
 
             "dr_join_date": arrow.get(user.date_joined).timestamp * 1000,
-            "dr_plan": clean_plan_name(plan.title) if plan else '',
             "dr_bundles": ','.join(profile.bundles_list()),
             "dr_user_tags": profile.tags,
             "dr_is_subuser": user.is_subuser,
             "dr_parent_plan": clean_plan_name(parent_plan.title) if user.is_subuser else '',
-            "dr_payment_gateway": parent_plan.payment_gateway if parent_plan else '',
             "dr_free_plan": parent_plan.free_plan if parent_plan else '',
 
             "dr_stores_count": 0,
@@ -114,10 +112,6 @@ def generate_create_contact(user: User):
             pass
 
     if address:
-        data['properties']['dr_company'] = address.name
-        data['properties']['dr_state'] = address.state
-        data['properties']['dr_country'] = address.country
-
         data['properties']['company'] = address.name
         data['properties']['city'] = address.state
         data['properties']['state'] = address.state

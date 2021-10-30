@@ -94,19 +94,13 @@ class Command(DropifiedBaseCommand):
 
     def create_properties(self):
         self.create_property('dr_join_date', 'Join Date', 'datetime', 'date')
-        self.create_property('dr_plan', 'User Plan', 'string', 'text')
         self.create_property('dr_bundles', 'User Bundles', 'string', 'text')
 
         self.create_property('dr_user_tags', 'User Tags', 'string', 'text')
 
         self.create_property('dr_is_subuser', 'Sub User Account', 'enumeration', 'booleancheckbox', is_bool=True)
         self.create_property('dr_parent_plan', 'User Parent Plan', 'string', 'text')
-        self.create_property('dr_payment_gateway', 'Payment Gateway', 'string', 'text')
         self.create_property('dr_free_plan', 'Free Plan', 'enumeration', 'booleancheckbox', is_bool=True)
-
-        self.create_property('dr_country', 'Country', 'string', 'text')
-        self.create_property('dr_state', 'Country', 'string', 'text')
-        self.create_property('dr_company', 'Company', 'string', 'text')
 
         self.create_property('dr_stores_count', 'All Stores Count', 'number', 'number')
         self.create_property('dr_shopify_count', 'Shopify Store Count', 'number', 'number')
