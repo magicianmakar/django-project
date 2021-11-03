@@ -409,6 +409,10 @@ $('.add-supplier-info-btn').click(function (e) {
         });
 });
 
+$('#modal-supplier-link').on('hidden.bs.modal', function (e) {
+    $(this).find('.product-export-form').find("input[type=text]").val("");
+});
+
 $(function() {
     setupContextMenus();
 
