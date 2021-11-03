@@ -7,9 +7,13 @@
 $('#apply-btn').click(function(e) {
     var action = $('#selected-actions').val();
 
-
     if (action.length === 0) {
         swal('Please select an action first', '', "warning");
+        return;
+    }
+
+    if (!$('input.item-select[type=checkbox]').is(':checked')) {
+        swal('Please select a product first', '', "warning");
         return;
     }
 
