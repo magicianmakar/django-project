@@ -1,9 +1,11 @@
 import arrow
 import json
 from celery import chain
+from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.db.models import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -555,7 +557,6 @@ class EbayStoreApi(ApiBase):
         store_id = data.get('store')
         order_id = safe_int(data.get('order_id'))
         item_sku = data.get('line_id')
-        product_id = safe_int(data.get('product_id'))
         source_id = data.get('aliexpress_order_id')
 
         if not (order_id and item_sku) or not store_id:
@@ -585,8 +586,7 @@ class EbayStoreApi(ApiBase):
 
         tracks = EbayOrderTrack.objects.filter(store=store,
                                                order_id=order_id,
-                                               line_id=item_sku,
-                                               product_id=product_id)
+                                               line_id=item_sku)
         tracks_count = tracks.count()
 
         if tracks_count > 1:
@@ -608,7 +608,6 @@ class EbayStoreApi(ApiBase):
             store=store,
             order_id=order_id,
             line_id=item_sku,
-            product_id=product_id,
             defaults={
                 'user': user.models_user,
                 'source_id': source_id,
@@ -624,7 +623,6 @@ class EbayStoreApi(ApiBase):
             'track': track.id,
             'order_id': order_id,
             'line_id': item_sku,
-            'product_id': product_id,
             'source_id': source_id,
             'source_url': track.get_source_url(),
         })
@@ -709,3 +707,30 @@ class EbayStoreApi(ApiBase):
         AlibabaOrderItem.objects.filter(order_track_id__in=deleted_ids).delete()
 
         return self.api_success()
+
+    def post_order_note(self, request, user, data):
+        try:
+            store = EbayStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except ObjectDoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        order_id = data['order_id']
+        note = data['note']
+
+        if note is None:
+            return self.api_error('Note required')
+
+        latest_note = EbayUtils(user).get_latest_order_note(order_id)
+        if latest_note == note:
+            return self.api_success()
+        else:
+            try:
+                resp = EbayOrderUpdater(user, store, order_id).add_ebay_order_note(order_id, note)
+                if resp.get('results', {}).get('successful'):
+                    return self.api_success()
+                else:
+                    return self.api_error(f'{self.store_label} API Error', status=422)
+            except HTTPError:
+                return self.api_error(f'{self.store_label} API Error', status=422)

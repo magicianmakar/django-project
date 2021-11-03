@@ -638,7 +638,6 @@ class EbayOrderTrack(OrderTrackBase):
     CUSTOM_TRACKING_KEY = 'ebay_custom_tracking'
 
     store = models.ForeignKey(EbayStore, null=True, on_delete=models.CASCADE)
-    product_id = models.BigIntegerField()
     line_id = models.CharField(max_length=512, blank=True, default='', db_index=True,
                                verbose_name="Variant-specific GUID")
     ebay_status = models.CharField(max_length=128, blank=True, null=True, default='',

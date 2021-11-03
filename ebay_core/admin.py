@@ -146,7 +146,6 @@ class EbayOrderTrackAdmin(admin.ModelAdmin):
         'updated_at',
         'status_updated_at',
         'store',
-        'product_id',
         'line_id',
         'ebay_status',
     )

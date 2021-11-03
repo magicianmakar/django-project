@@ -7,7 +7,7 @@ from django.db import models
 from django.utils.crypto import get_random_string
 
 from shopified_core.models import ProductBase, StoreBase
-from shopified_core.utils import safe_json
+from shopified_core.utils import safe_int, safe_json
 
 sd_default_fields = None
 
@@ -20,6 +20,11 @@ def load_sd_default_fields():
             sd_default_fields = json.loads(f.read())
 
     return sd_default_fields
+
+
+class InvalidSureDoneStoreInstanceId(Exception):
+    def __init__(self, instance_id):
+        super(InvalidSureDoneStoreInstanceId, self).__init__(f'Instance ID: {instance_id}')
 
 
 class SureDoneAccount(StoreBase):
@@ -181,6 +186,18 @@ class SureDoneStoreBase(StoreBase):
 
     def get_short_hash(self):
         return self.store_hash[:8] if self.store_hash else ''
+
+    @property
+    def filter_instance_id(self):
+        # SD assigns store instance IDs in the following order: 0, 2, 3, 4, etc.
+        # so if the instance ID is 1, set it to 0
+        instance_id = self.store_instance_id
+        if not isinstance(instance_id, int):
+            instance_id = safe_int(instance_id, None)
+            if instance_id is None:
+                raise InvalidSureDoneStoreInstanceId(instance_id)
+
+        return 0 if instance_id == 1 else instance_id
 
 
 class SureDoneProductBase(ProductBase):

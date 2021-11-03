@@ -750,11 +750,10 @@ class SureDoneUtils:
 
         if isinstance(orders_data, list) and len(orders_data) > 0:
             try:
-                all_notes = orders_data[0].get('internalnotes', {}).items()
-                next_value = next(iter(all_notes), None)
-                if next_value:
-                    parsed_date = arrow.get(next_value[0])
-                    return f'{parsed_date.humanize()}: {next_value[1]}'
+                all_notes = list(orders_data[0].get('internalnotes', {}).items())
+                latest_note = all_notes[-1]
+                if latest_note:
+                    return latest_note[1]
             except:
                 pass
 
