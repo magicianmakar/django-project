@@ -572,31 +572,51 @@ def process_webhook_event(request, event_id):
                     if item['type'] == 'subscription' and item['plan']['metadata'].get('plan_autoswitch'):
                         plan_autoswitch_json = json.loads(item['plan']['metadata']['plan_autoswitch'])
                         stripe_sub = StripeSubscription.objects.get(subscription_id=item['id'])
-                        days_passed = (arrow.now().timestamp - int(stripe_sub.created_at.timestamp())) // 86400
 
-                        if days_passed > int(plan_autoswitch_json['after_days']):
-                            # switching to plan
-                            plan = GroupPlan.objects.get(stripe_plan__stripe_id=plan_autoswitch_json['switch_to_plan'])
-                            if plan.is_stripe():
-                                # adding trial (from metadata)
-                                trial_end = arrow.now().timestamp + 86400 * int(plan_autoswitch_json['trial_days_add'])
-                                stripe.Subscription.modify(
-                                    stripe_sub.subscription_id,
-                                    trial_end=trial_end,
-                                    proration_behavior='none'
-                                )
-                                # updating subscription item (switching plan)
-                                stripe.SubscriptionItem.modify(
-                                    item['subscription_item'],
-                                    plan=plan.stripe_plan.stripe_id,
-                                    metadata={'plan_id': plan.id, 'user_id': customer.user.id},
-                                    proration_behavior='none'
-                                )
+                        if plan_autoswitch_json['after_days']:
+                            # determine 1st invoice date for this plan
+                            first_lifetime_payment_date = False
 
-                                customer.user.profile.change_plan(plan)
-                                sub = stripe_sub.refresh()
+                            # getting all paid invoices in last 12 monthes ( include posible delays for yearly).
+                            paid_invoices = stripe.Invoice.list(customer=invoice.customer, limit=100,
+                                                                created={"gt": arrow.now().shift(days=-380).timestamp},
+                                                                status='paid')
+                            for paid_invoice in paid_invoices['data']:
+                                for line in paid_invoice['lines']['data']:
+                                    if line['plan'] and line['plan']['id'] == item['plan']['id']:
+                                        # Recent invoices first in Stripe response, so need to get the latest
+                                        first_lifetime_payment_date = paid_invoice['created']
+                            print(f'First invoice: {first_lifetime_payment_date}  Plan: {item["plan"]["id"]} ')
 
-                                update_subscription(customer.user, plan, sub)
+                            days_passed = (arrow.now().timestamp - int(first_lifetime_payment_date)) // 86400
+                            print(f'Days passed: {days_passed}')
+
+                            if days_passed > int(plan_autoswitch_json['after_days']):
+                                print(f'Switching to plan {plan_autoswitch_json["switch_to_plan"]} ')
+                                plan = GroupPlan.objects.get(
+                                    stripe_plan__stripe_id=plan_autoswitch_json['switch_to_plan'])
+                                if plan.is_stripe():
+                                    # adding trial (from metadata)
+                                    trial_end = arrow.now().timestamp + 86400 * int(
+                                        plan_autoswitch_json['trial_days_add'])
+                                    stripe.Subscription.modify(
+                                        stripe_sub.subscription_id,
+                                        trial_end=trial_end,
+                                        proration_behavior='none'
+                                    )
+                                    # updating subscription item (switching plan)
+                                    stripe.SubscriptionItem.modify(
+                                        item['subscription_item'],
+                                        plan=plan.stripe_plan.stripe_id,
+                                        metadata={'plan_id': plan.id, 'user_id': customer.user.id},
+                                        proration_behavior='none'
+                                    )
+
+                                    customer.user.profile.change_plan(plan)
+                                    sub = stripe_sub.refresh()
+
+                                    update_subscription(customer.user, plan, sub)
+
                 except:
                     capture_exception(level='warning')
 
