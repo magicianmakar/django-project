@@ -7,9 +7,13 @@
 $('#apply-btn').click(function(e) {
     var action = $('#selected-actions').val();
 
-
     if (action.length === 0) {
         swal('Please select an action first', '', "warning");
+        return;
+    }
+
+    if (!$('input.item-select[type=checkbox]').is(':checked')) {
+        swal('Please select a product first', '', "warning");
         return;
     }
 
@@ -419,6 +423,10 @@ $('.add-supplier-info-btn').click(function (e) {
             displayAjaxError('Product Import', data);
         }).always(function() {
         });
+});
+
+$('#modal-supplier-link').on('hidden.bs.modal', function (e) {
+    $(this).find('.product-export-form').find("input[type=text]").val("");
 });
 
 $(function() {

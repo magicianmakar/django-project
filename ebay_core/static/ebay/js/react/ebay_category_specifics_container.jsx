@@ -11,8 +11,7 @@ function EbayCategorySpecifics(props) {
     const [productSpecifics, setProductSpecifics] = React.useState(product);
 
     const handleCustomFieldChange = (productFieldKey, value, fieldDetails) => {
-        product[productFieldKey] = value;
-        product[getEbaySpecificsKey(productFieldKey)] = value;
+        product[productFieldKey] = product[getEbaySpecificsKey(productFieldKey)] = value;
         setProductSpecifics({
             ...product,
         });
@@ -21,6 +20,10 @@ function EbayCategorySpecifics(props) {
     const getEbaySpecificsKey = (fieldName) => {
         return `ebayitemspecifics${fieldName}`;
     };
+
+    const formatEbayPrefix = (instanceId) => (
+        instanceId === '1' || instanceId === 1 ? 'ebay' : `ebay${instanceId}`
+    );
 
     const getProductKey = (fieldName, fieldDetails) => {
         let productKey = fieldName;
@@ -65,13 +68,24 @@ function EbayCategorySpecifics(props) {
             const allKeys = getAllEbaySpecificsKeys();
             const parsedData = JSON.parse(product.data);
 
+            // Try extracting values from ebay item specifics for the category specific fields
+            try {
+                const ebayKey = `${formatEbayPrefix(parsedData.dropifiedconnectedstoreid)}options`;
+                const ebayOptions = JSON.parse(parsedData[ebayKey]);
+                const itemSpecifics = ebayOptions.itemspecifics;
+                Object.keys(itemSpecifics).forEach(key => {
+                    product[key] = product[getEbaySpecificsKey(key)] = itemSpecifics[key];
+                });
+            } catch (e) {
+            }
+
             // For use when saving a product
             product['extendedFieldsList'] = allKeys;
 
             allKeys.forEach(key => {
                 // Check if the key is not defined in the top level product details
                 if (!(key in product) && key in parsedData) {
-                    product[key] = parsedData[key] ?? '';
+                    product[key] = product[getEbaySpecificsKey(key)] = parsedData[key] ?? '';
                     setProductSpecifics({ ...product });
                 }
             });

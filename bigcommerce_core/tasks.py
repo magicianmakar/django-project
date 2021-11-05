@@ -560,9 +560,15 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
                         updated = True
 
                 # check unmapped variants
+                temp = []
                 for variant in product_data['variants']:
+                    for vrnt in variant['option_values']:
+                        temp.append(vrnt['label'])
+                    vrnt_title = ' / '.join(temp)
+                    temp = []
+
                     if not mapped_variants.get(str(variant['id']), False):
-                        unmapped_variants.append(variant['title'])
+                        unmapped_variants.append(vrnt_title)
 
             if updated or sync_inventory:
                 r = product.store.request.put(
