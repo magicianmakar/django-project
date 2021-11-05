@@ -234,6 +234,10 @@ $(document).ready(function() {
                 }
             });
 
+            if (!products.length) {
+                toastr.warning("No Products selected.");
+                return;
+            }
             var param = {products: products, board_id: board_id};
 
             $.ajax({

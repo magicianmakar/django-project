@@ -121,6 +121,10 @@ $('.apply-btn').click(function(e) {
             }
         });
 
+        if (!products.length) {
+            toastr.warning("No Products selected.");
+            return;
+        }
         deletFromBoard(board_id, products, products_el);
     }
 
