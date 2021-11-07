@@ -354,7 +354,7 @@ class ApiBase(ApiResponseMixin, View):
 
             phone = order['order']['phone']
             if type(phone) is dict:
-                phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
+                phone_country, phone_number = order_phone_number(user.models_user, phone['number'], phone['country'])
                 order['order']['phone'] = phone_number
                 order['order']['phoneCountry'] = phone_country
 
@@ -379,7 +379,7 @@ class ApiBase(ApiResponseMixin, View):
 
                 order['ordered'] = {
                     'time': arrow.get(track.created_at).humanize(),
-                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id']))
+                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id'])) if request else ''
                 }
 
             except ObjectDoesNotExist:
@@ -387,7 +387,11 @@ class ApiBase(ApiResponseMixin, View):
             except:
                 capture_exception()
 
-            return JsonResponse(order, safe=False)
+            if data.get('no_format') == 1:
+                return order
+            else:
+                return JsonResponse(order, safe=False)
+
         else:
             return self.api_error('Not found: {}'.format(data.get('order')), status=404)
 

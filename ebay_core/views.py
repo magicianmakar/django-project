@@ -286,7 +286,7 @@ class OrdersList(ListView):
 
     def render_to_response(self, context, **response_kwargs):
         if self.bulk_queue:
-            return format_queueable_orders(self.request, context['orders'], context['page_obj'], store_type='ebay')
+            return format_queueable_orders(context['orders'], context['page_obj'], store_type='ebay', request=self.request)
 
         return super().render_to_response(context, **response_kwargs)
 

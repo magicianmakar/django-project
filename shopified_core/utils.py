@@ -557,7 +557,7 @@ def orders_update_limit(orders_count, check_freq=30, total_time=360, min_count=2
     return max(limit, min_count)
 
 
-def order_phone_number(request, user, phone_number, customer_country):
+def order_phone_number(user, phone_number, customer_country):
     if not phone_number or user.get_config('order_default_phone') != 'customer':
         phone_number = user.get_config('order_phone_number')
         country = user.profile.country
@@ -974,12 +974,13 @@ def get_next_page_from_request(request, page):
     ))
 
 
-def format_queueable_orders(request, orders, current_page, store_type='shopify'):
+def format_queueable_orders(orders, current_page, store_type='shopify', request=None, orders_only=False):
     orders_result = []
     enable_supplier_grouping = False
-    is_dropified_print = request.GET.get('is_dropified_print') == '1'
-    only_private_label_orders = request.GET.get('is_supplement_bulk_order') == '1'
-    single_supplier = request.GET.get('single_supplier')
+
+    is_dropified_print = request.GET.get('is_dropified_print') == '1' if request else None
+    only_private_label_orders = request.GET.get('is_supplement_bulk_order') == '1' if request else None
+    single_supplier = request.GET.get('single_supplier') if request else None
 
     if store_type in ['shopify', '']:
         orders_place_url = reverse('orders_place')
@@ -1122,15 +1123,18 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                 orders_result.append(queue_order)
 
     next_page_url = None
-    if current_page.has_next():
+    if current_page.has_next() and request:
         next_page_number = current_page.next_page_number()
         next_page_url = get_next_page_from_request(request, next_page_number)
 
-    return JsonResponse({
-        'orders': orders_result,
-        'next': next_page_url,
-        'pages': current_page.paginator.num_pages,
-    })
+    if orders_only:
+        return orders_result
+    else:
+        return JsonResponse({
+            'orders': orders_result,
+            'next': next_page_url,
+            'pages': current_page.paginator.num_pages,
+        })
 
 
 def normalize_product_title(title):
@@ -1194,7 +1198,7 @@ def get_cached_order(user, store_type, order_data_id):
     order = order_data_cache(key)
 
     phone = order['order']['phone']
-    phone_country_code, phone_number = order_phone_number(None, user.models_user, phone['number'], phone['country'])
+    phone_country_code, phone_number = order_phone_number(user.models_user, phone['number'], phone['country'])
     order['order']['phone'] = {
         'country': phone['country'],
         'number': phone_number,

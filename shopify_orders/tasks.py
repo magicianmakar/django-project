@@ -1,5 +1,3 @@
-
-
 import requests
 
 from aliexpress_core.models import AliexpressAccount
@@ -74,27 +72,20 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
 
 
 def fulfill_aliexpress_order(store, order_id, line_id=None):
+    from leadgalaxy.views import OrdersView
+    from leadgalaxy.api import ShopifyStoreApi
+
     if not API_SECRET:
         return 'Service API is not set'
 
     if not store.user.aliexpress_account.count():
         return 'Aliexpress Account is not connected'
 
-    req = requests.get(
-        url=app_link('orders'),
-        params=dict(store=store.id, query_order=order_id, line_id=line_id, bulk_queue=1, live=1),
-        headers=dict(Authorization=store.user.get_access_token())
-    )
+    orders = OrdersView().find_orders(store=store, order_id=order_id, line_id=line_id)
 
-    orders = req.json()
     results = []
-    for order in orders['orders']:
-        order_data = req = requests.get(
-            url=app_link('api/order-data'),
-            params=dict(order=order['order_data']),
-            headers=dict(Authorization=store.user.get_access_token())
-        ).json()
-
+    for order in orders:
+        order_data = ShopifyStoreApi().get_order_data(None, store.user, {'order': order['order_data'], 'no_format': 1})
         results.append(do_fulfill_aliexpress_order(order, order_data, store, order_id, line_id))
 
     return all(results)
