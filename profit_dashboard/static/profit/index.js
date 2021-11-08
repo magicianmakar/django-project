@@ -1505,4 +1505,12 @@ $(function () {
     });
 });
 
+document.querySelectorAll(".profit-other-costs").forEach(function(it) {
+    it.addEventListener("keydown", function(e) {
+        if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+            e.preventDefault();
+        }
+    });
+});
+
 FacebookProfitDashboard.init();
