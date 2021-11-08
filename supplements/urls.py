@@ -113,7 +113,7 @@ urlpatterns = [
         supplements.views.BasketCheckout.as_view(),
         name='checkout'),
 
-    url(r'^plod-product-announcements$',
+    url(r'^product-announcements$',
         supplements.views.ProductAnnouncements.as_view(),
         name='plod-product-announcements'),
 
