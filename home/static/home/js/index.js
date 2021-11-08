@@ -1629,6 +1629,216 @@
         });
     });
 
+    $('.ebay-verify-api-url').click(function (e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: api_url('store-verify', 'ebay'),
+            type: 'GET',
+            data: {
+                store: $(this).data('store-id')
+            },
+            context: {
+                btn: $(this)
+            },
+            success: function (data) {
+                swal('API URL', 'The API URL is working properly for eBay store:\n' + data.store, 'success');
+            },
+            error: function (data) {
+                displayAjaxError('API URL', data);
+            },
+            complete: function () {
+            }
+        });
+    });
+
+    $('.reauthorize-ebay-store').click(function(e) {
+        e.preventDefault();
+        if (typeof(Pusher) === 'undefined') {
+            toastr.error('This could be due to using Adblocker extensions<br>' +
+                'Please whitelist Dropified website and reload the page<br>' +
+                'Contact us for further assistance',
+                'Pusher service is not loaded', {timeOut: 0});
+            return;
+        }
+
+        var buttonEl = $(this);
+        buttonEl.bootstrapBtn('loading');
+
+        var pusher = new Pusher(sub_conf.key);
+        var channel = pusher.subscribe(sub_conf.channel);
+
+        channel.bind('ebay-reauthorize-store', function(data) {
+            buttonEl.bootstrapBtn('reset');
+            pusher.unsubscribe(channel);
+
+            if (data.success) {
+                window.location.href = data.auth_url;
+            } else {
+                displayAjaxError('Reauthorize eBay store', data);
+            }
+        });
+
+        channel.bind('pusher:subscription_succeeded', function() {
+            $.ajax({
+                url: api_url('reauthorize-store', 'ebay') + '?' + $.param({store: buttonEl.attr('data-store-id')}),
+                type: 'GET',
+                success: function(data) {},
+                error: function(data, status) {
+                    buttonEl.bootstrapBtn('reset');
+                    pusher.unsubscribe(channel);
+                    displayAjaxError('Reauthorize eBay store', data);
+                },
+            });
+        });
+    });
+
+    $('.ebay-store-settings-btn').click(function(e) {
+        e.preventDefault();
+
+        if (typeof(Pusher) === 'undefined') {
+            toastr.error('This could be due to using Adblocker extensions<br>' +
+                'Please whitelist Dropified website and reload the page<br>' +
+                'Contact us for further assistance',
+                'Pusher service is not loaded', {timeOut: 0});
+            return;
+        }
+        var pusher = new Pusher(sub_conf.key);
+        var channel = pusher.subscribe(sub_conf.channel);
+
+        var buttonEl = $(this);
+        var formContainerEl = $('#ebay-store-settings-main-container');
+        var loadingContainerEl = $('#ebay-loading-container');
+        var updateSettingsButtonEl = $('#ebay-update-settings-modal-btn');
+        var storeId = buttonEl.attr('data-store-id');
+
+        buttonEl.bootstrapBtn('loading');
+        updateSettingsButtonEl.prop('disabled', true);
+        loadingContainerEl.show();
+        formContainerEl.hide();
+
+
+        $('#ebay_payment_profile_default').html('<option>No policies found.</option>');
+        $('#ebay_return_profile_default').html('<option>No policies found.</option>');
+        $('#ebay_shipment_profile_default').html('<option>No policies found.</option>');
+        $('#ebay_settings_store_id').val(storeId);
+
+        channel.bind('ebay-advanced-settings-load', function(data) {
+            if (data.store_id == storeId) {
+                buttonEl.bootstrapBtn('reset');
+                updateSettingsButtonEl.prop('disabled', false);
+                pusher.unsubscribe(channel);
+
+                if (data.success) {
+                    var generateOptionHtml = function(option, currentSelection) {
+                        var selectedOption = currentSelection === option.profileId ? ' selected="selected"' : '';
+                        return '<option value="' + option.profileId + '"' + selectedOption + '>' + option.profileName + '</option>';
+                    };
+
+                    // Payment Profile Option selection
+                    var allPaymentOptions = data.options.payment_profile_options.map(function(option) {
+                        return generateOptionHtml(option, data.settings.payment_profile_id);
+                    });
+                    allPaymentOptions.unshift(generateOptionHtml({
+                        profileId: '',
+                        profileName: 'Select Payment Policy...'
+                    }, data.settings.payment_profile_id));
+                    $('#ebay_payment_profile_default').html(allPaymentOptions);
+
+                    // Return Profile Option selection
+                    var allReturnOptions = data.options.return_profile_options.map(function(option) {
+                        return generateOptionHtml(option, data.settings.return_profile_id);
+                    });
+                    allReturnOptions.unshift(generateOptionHtml({
+                        profileId: '',
+                        profileName: 'Select Return Policy...'
+                    }, data.settings.return_profile_id));
+                    $('#ebay_return_profile_default').html(allReturnOptions);
+
+                    // Shipping Profile Option selection
+                    var allShippingOptions = data.options.shippping_profile_options.map(function(option) {
+                        return generateOptionHtml(option, data.settings.shipping_profile_id);
+                    });
+                    allShippingOptions.unshift(generateOptionHtml({
+                        profileId: '',
+                        profileName: 'Select Shipping Policy...'
+                    }, data.settings.shipping_profile_id));
+                    $('#ebay_shipment_profile_default').html(allShippingOptions);
+                } else {
+                    displayAjaxError('Advanced eBay Settings', data);
+                }
+
+                loadingContainerEl.hide();
+                formContainerEl.show();
+            }
+        });
+
+        channel.bind('pusher:subscription_succeeded', function() {
+            $.ajax({
+                url: api_url('advanced-settings', 'ebay') + '?' + $.param({store: storeId}),
+                type: 'GET',
+                success: function(data) {},
+                error: function(data, status) {
+                    buttonEl.bootstrapBtn('reset');
+                    updateSettingsButtonEl.prop('disabled', false);
+                    loadingContainerEl.hide();
+                    formContainerEl.show();
+                    pusher.unsubscribe(channel);
+                    displayAjaxError('Advanced eBay Settings', data);
+                },
+            });
+        });
+
+        $("#ebay-store-update-modal").modal('show');
+    });
+
+    $('form#ebay-store-update-settings-form').submit(function (e) {
+        e.preventDefault();
+
+        if (typeof(Pusher) === 'undefined') {
+            toastr.error('This could be due to using Adblocker extensions<br>' +
+                'Please whitelist Dropified website and reload the page<br>' +
+                'Contact us for further assistance',
+                'Pusher service is not loaded', {timeOut: 0});
+            return;
+        }
+        var pusher = new Pusher(sub_conf.key);
+        var channel = pusher.subscribe(sub_conf.channel);
+
+        var buttonEl = $('#ebay-update-settings-modal-btn');
+        buttonEl.bootstrapBtn('loading');
+        var storeId = $('#ebay_settings_store_id').val();
+        var config = $(this).serialize();
+
+        channel.bind('ebay-advanced-settings-update', function(data) {
+            if (data.store_id == storeId) {
+                buttonEl.bootstrapBtn('reset');
+                pusher.unsubscribe(channel);
+
+                if (data.success) {
+                    $('#ebay-store-update-modal').modal('hide');
+                    toastr.success('Store information updated', 'Advanced eBay Settings');
+                } else {
+                    displayAjaxError('Advanced eBay Settings', data);
+                }
+            }
+        });
+
+        channel.bind('pusher:subscription_succeeded', function() {
+            $.ajax({
+                url: api_url('advanced-settings', 'ebay'),
+                type: 'POST',
+                data: config,
+                success: function (data) {},
+                error: function (data) {
+                    buttonEl.bootstrapBtn('reset');
+                    pusher.unsubscribe(channel);
+                    displayAjaxError('Advanced eBay Settings', data);
+                },
+            });
+        });
+    });
+
     $('.filter-store-btn').click(function (e) {
         e.preventDefault();
 

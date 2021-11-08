@@ -148,3 +148,59 @@
         </div>
     </div>
 </div>
+
+<div id="ebay-store-update-modal" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">eBay Store Advanced Settings</h3>
+                        <form id="ebay-store-update-settings-form" method="post" role="form">
+                            <div id="ebay-loading-container" class="col-sm-12 text-center m-t-lg m-b-lg">
+                                <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
+                            </div>
+                            <div id="ebay-store-settings-main-container">
+                                <input type="hidden" id="ebay_settings_store_id" name="store" />
+
+                                <div class="form-group">
+                                    <label for="ebay_payment_profile_default">
+                                        Payment Profile Default
+                                    </label>
+                                    <select id="ebay_payment_profile_default" name="payment_profile_id" class="form-control">
+                                        <option>Select Payment Profile...</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="ebay_shipment_profile_default">
+                                        Shipping Profile Default
+                                    </label>
+                                    <select id="ebay_shipment_profile_default" name="shipping_profile_id" class="form-control">
+                                        <option>Select Shipping Profile...</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="ebay_return_profile_default">
+                                        Return Profile Default
+                                    </label>
+                                    <select id="ebay_return_profile_default" name="return_profile_id" class="form-control">
+                                        <option>Select Return Profile...</option>
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <div>
+                                <button type="submit" id="ebay-update-settings-modal-btn" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Update store</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

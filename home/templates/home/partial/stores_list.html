@@ -311,7 +311,7 @@
                             <ul class="dropdown-menu pull-right">
 
                                 <li>
-                                    <a class="visit-store " href="#" target="_blank">
+                                    <a class="visit-store " href="{{item.get_store_url}}" target="_blank">
                                         <i class="fa fa-external-link"></i> Visit Store
                                     </a>
                                 </li>
@@ -321,6 +321,13 @@
                                     <a data-store-id="{{item.pk}}" class="ebay-verify-api-url btn-success btn-outline"
                                         data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                                         <i class="fa fa-check-circle-o"></i> Verify
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a data-store-id="{{item.id}}" class="reauthorize-ebay-store btn-info btn-outline"
+                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
+                                        <i class="fa fa-refresh"></i> Re-Authorize
                                     </a>
                                 </li>
 
@@ -337,10 +344,8 @@
                                 </li>
 
                                 <li>
-                                    <a
-                                        class="ebay-edit-store-btn"
-                                        data-store-id="{{ item.pk }}">
-                                        <i class="fa fa-edit"></i> Edit
+                                    <a data-store-id="{{item.id}}" class="ebay-store-settings-btn">
+                                        <i class="fa fa-cogs"></i> Advanced Settings
                                     </a>
                                 </li>
 

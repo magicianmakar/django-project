@@ -21,6 +21,7 @@ class EbayStoreAdmin(admin.ModelAdmin):
         'auto_fulfill',
         'created_at',
         'updated_at',
+        'store_username',
     )
     list_filter = (
         'is_active',

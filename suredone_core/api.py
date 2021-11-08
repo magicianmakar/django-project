@@ -44,6 +44,12 @@ class SureDoneApiHandler:
 
         return error_messages
 
+    def refresh_ebay_profiles(self, instance_id: int):
+        url = f'{self.API_ENDPOINT}/v3/internal/ebay/refresh-profiles'
+        params = {'instance': instance_id}
+
+        return requests.get(url, params=params, headers=self.HEADERS)
+
     def authorize_channel_v1(self, request_data: dict):
         url = f'{self.API_ENDPOINT}/v1/authorize'
         data = param(request_data)
