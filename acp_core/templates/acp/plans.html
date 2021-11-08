@@ -46,6 +46,9 @@
                             {% if user.is_superuser %}
                             <th></th>
                             {% endif %}
+                            <th>
+                                Plan Update Link
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -80,6 +83,9 @@
                                 {% endif %}
                             </td>
                             {% endif %}
+                            <td>
+                                <button class="btn btn-outline btn-success btn-xs plan-update-link" data-plan="{% url 'user_plan_change' plan_id=item.id %}" onclick="javascript: copyLink(this);">Copy Link</button>
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>

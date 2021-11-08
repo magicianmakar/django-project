@@ -303,6 +303,11 @@ class ACPUserInfoView(BaseTemplateView):
         bundles = FeatureBundle.objects.all().order_by('-id')
         installed_bundles = target_user.profile.bundles.all()
 
+        if target_user.profile.private_label or target_user.profile.dropified_private_label:
+            user_plans = GroupPlan.objects.exclude(id=target_user.profile.plan.id).filter(private_label=True, show_in_plod_app=True).order_by('-id')
+        else:
+            user_plans = GroupPlan.objects.exclude(id=target_user.profile.plan.id).exclude(private_label=True).order_by('-id')
+
         ctx.update({
             'target_user': target_user,
             'addon_logs': addon_logs,
@@ -320,6 +325,7 @@ class ACPUserInfoView(BaseTemplateView):
             'shopify_application_charges': shopify_application_charges,
             'user_last_seen': user_last_seen,
             'show_products': self.request.GET.get('products'),
+            'user_plans': user_plans,
         })
 
         return ctx
