@@ -147,6 +147,10 @@ def subscription_plan(request):
             else:
                 still_in_trial = False
 
+            # reset trial when switching to any lifetime plan
+            if "lifetime" in plan.slug:
+                sub.trial_end = arrow.utcnow().replace(days=plan.trial_days).timestamp
+
             if user.get_config('try_plan'):
                 sub.trial_end = arrow.utcnow().replace(days=14).timestamp
                 user.set_config('try_plan', False)
