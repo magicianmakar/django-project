@@ -74,6 +74,10 @@ def subscription_plan(request):
         if user.get_config('_can_trial', True):
             charge_params["trial_days"] = plan.trial_days
 
+        # save lifetime base plan in user config if upgrading (only for those who passed paid period)
+        if "lifetime" in user.profile.plan.slug and user.profile.plan.monthly_price <= 0:
+            user.set_config('lifetime_base_plan', user.profile.plan.id)
+
         # reset trial when switching to any lifetime plan
         if "lifetime" in plan.slug:
             charge_params["trial_days"] = plan.trial_days
