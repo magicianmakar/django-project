@@ -969,8 +969,12 @@ class BigCommerceProductChangeManager(ProductChangeManager):
 
         if self.config['price_change'] == 'update':
             if variant_id > 0:
-                current_price = safe_float(api_product_data['variants'][idx]['sale_price'])
-                current_compare_at_price = safe_float(api_product_data['variants'][idx].get('price'))
+                if safe_float(api_product_data['variants'][idx]['sale_price']):
+                    current_price = safe_float(api_product_data['variants'][idx]['sale_price'])
+                    current_compare_at_price = safe_float(api_product_data['variants'][idx].get('price'))
+                else:
+                    current_compare_at_price = safe_float(api_product_data['variants'][idx]['sale_price'])
+                    current_price = safe_float(api_product_data['variants'][idx]['price'])
 
                 new_price, new_compare_at_price = calculate_price(
                     self.user,
@@ -981,6 +985,12 @@ class BigCommerceProductChangeManager(ProductChangeManager):
                     self.config['price_update_method'],
                     self.markup_rules
                 )
+
+                if not api_product_data['variants'][idx]['sale_price']:  # swap the prices so correct price is sent to price field
+                    tmp_price = new_price
+                    new_price = new_compare_at_price
+                    new_compare_at_price = tmp_price
+
                 if self.config['price_update_for_increase']:
                     if new_price > current_price:
                         self.product_data_changed = True
