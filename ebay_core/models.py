@@ -9,7 +9,7 @@ from django.db import models
 from django.urls import reverse
 
 from shopified_core.models import BoardBase, OrderTrackBase, SupplierBase, UserUploadBase
-from shopified_core.utils import get_domain
+from shopified_core.utils import get_domain, safe_json
 from suredone_core.models import SureDoneProductBase, SureDoneStoreBase
 
 
@@ -17,8 +17,12 @@ class EbayStore(SureDoneStoreBase):
     class Meta(SureDoneStoreBase.Meta):
         verbose_name = 'eBay Store'
 
+    store_username = models.CharField(default='', null=True, blank=True, max_length=100,
+                                      verbose_name='eBay store username')
+
     def sync(self, instance_title: str, options_data: dict):
         store_index_str = '' if self.store_instance_id == 1 else f'{self.store_instance_id}'
+        self.store_username = safe_json(options_data.get(f'ebay{store_index_str}_user_data')).get('UserID')
         channel_is_enabled = options_data.get(f'site_ebay{store_index_str}connect') == 'on'
         legacy_auth_token = options_data.get(f'ebay{store_index_str}_token')
         oauth_token = options_data.get(f'ebay{store_index_str}_token_oauth')
@@ -50,10 +54,13 @@ class EbayStore(SureDoneStoreBase):
         self.save()
 
     def get_store_url(self):
-        return 'https://www.ebay.com'
+        if self.store_username:
+            return f'https://www.ebay.com/usr/{self.store_username}'
+        else:
+            return 'https://www.ebay.com'
 
     def get_admin_url(self, *args):
-        return f'{self.get_store_url()}/mys/overview'
+        return 'https://www.ebay.com/mys/overview'
 
     def get_admin_order_details(self, order_id):
         pass
@@ -638,7 +645,6 @@ class EbayOrderTrack(OrderTrackBase):
     CUSTOM_TRACKING_KEY = 'ebay_custom_tracking'
 
     store = models.ForeignKey(EbayStore, null=True, on_delete=models.CASCADE)
-    product_id = models.BigIntegerField()
     line_id = models.CharField(max_length=512, blank=True, default='', db_index=True,
                                verbose_name="Variant-specific GUID")
     ebay_status = models.CharField(max_length=128, blank=True, null=True, default='',

@@ -246,7 +246,6 @@
 
                 setTimeout(function() {
                     window.location.href = '/user/profile#plan';
-                    window.location.reload();
                 }, 1500);
             },
             error: function(data) {
@@ -474,6 +473,17 @@
         $(this).button('loading');
 
         selectPlan(126);
+    });
+
+    $("#update_plan").on("click", function(e) {
+        $(this).button("loading");
+        var plan_id = parseInt($("#plan_id").val());
+        if (Number.isInteger(plan_id)) {
+            selectPlan(plan_id);
+        } else {
+            toastr.warning("Invalid Plan Id");
+        }
+        $(this).button("reset");
     });
 
     $('.cancel-sub-btn-callflex').click(function(e) {

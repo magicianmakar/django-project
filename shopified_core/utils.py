@@ -811,6 +811,8 @@ def serializers_orders_track(tracks, store_type, humanize=False):
             continue
         elif not humanize and fields['source_type'] == 'dropified-print':
             continue
+        elif fields['source_type'] == 'ebay' and fields['updated_at'] > arrow.get().shift(hours=-12).datetime:
+            continue
 
         if fields['source_id'] and ',' in fields['source_id']:
             for j in fields['source_id'].split(','):

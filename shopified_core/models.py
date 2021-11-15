@@ -335,7 +335,10 @@ class OrderTrackBase(models.Model):
     def get_source_url(self):
         if self.source_id:
             if self.source_type == 'ebay':
-                return f'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId={self.source_id}&orderId={self.source_id}'
+                if re.match(r'\d{2}-\d{5}-\d{5}', self.source_id):
+                    return f'https://order.ebay.com/ord/show?orderId={self.source_id}&purchaseOrderId={self.source_id}#/'
+                else:
+                    return f'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId={self.source_id}&orderId={self.source_id}'
             elif self.source_type == 'other':
                 return ''
             elif self.source_type == 'supplements':

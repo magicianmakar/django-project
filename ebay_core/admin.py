@@ -21,6 +21,7 @@ class EbayStoreAdmin(admin.ModelAdmin):
         'auto_fulfill',
         'created_at',
         'updated_at',
+        'store_username',
     )
     list_filter = (
         'is_active',
@@ -146,7 +147,6 @@ class EbayOrderTrackAdmin(admin.ModelAdmin):
         'updated_at',
         'status_updated_at',
         'store',
-        'product_id',
         'line_id',
         'ebay_status',
     )

@@ -1,9 +1,11 @@
 import arrow
 import json
 from celery import chain
+from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.db.models import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -110,6 +112,98 @@ class EbayStoreApi(ApiBase):
         pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
         return self.api_success({'pusher': pusher})
 
+    def get_reauthorize_store(self, request, user, data):
+        """
+        Reauthorize an existing ebay store. This is used when a token gets expired or a user revokes access.
+        :param request:
+        :type request:
+        :param user:
+        :type user: User
+        :param data:
+        :type data: dict
+        :return:
+        :rtype:
+        """
+        if user.is_subuser:
+            return self.api_error('Sub-Users can not re-authorize stores.', status=401)
+
+        store_id = request.GET.get('store')
+
+        if not store_id:
+            return self.api_error('Missing a required store parameter.')
+
+        store = get_object_or_404(EbayStore, id=store_id)
+        permissions.user_can_edit(user, store)
+
+        pusher_channel = f'user_{user.id}'
+
+        try:
+            sd_account = SureDoneAccount.objects.get(user=user.models_user, is_active=True)
+        except SureDoneAccount.DoesNotExist:
+            return self.api_error('Invalid ebay configuration. Please contact Dropified support.')
+
+        tasks.add_new_ebay_store.apply_async(kwargs={
+            'user_id': user.id,
+            'sd_account_id': sd_account.id,
+            'pusher_channel': pusher_channel,
+            'instance_id': store.store_instance_id,
+            'event_name': 'ebay-reauthorize-store',
+            'error_message': 'Failed to reauthorize the store. Please try again or contact support@dropified.com'
+        })
+
+        pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
+        return self.api_success({'pusher': pusher})
+
+    def get_advanced_settings(self, request, user, data):
+        """
+        Get ebay advanced settings contents. The settings include store's default shipping, return policies, etc.
+        """
+        store_id = request.GET.get('store')
+
+        if not store_id:
+            return self.api_error('Missing a required store parameter.')
+
+        store = get_object_or_404(EbayStore, id=store_id)
+        permissions.user_can_view(user, store)
+
+        pusher_channel = f'user_{user.id}'
+
+        tasks.get_advanced_options.apply_async(kwargs={
+            'user_id': user.id,
+            'store_id': store_id,
+            'pusher_channel': pusher_channel,
+        })
+
+        pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
+        return self.api_success({'pusher': pusher})
+
+    def post_advanced_settings(self, request, user, data):
+        """
+        Update store's advanced settings. The settings include store's default shipping, return policies, etc.
+        """
+        data = data.dict()
+        store_id = data.pop('store')
+
+        if not store_id:
+            return self.api_error('Missing a required store parameter.')
+
+        store = get_object_or_404(EbayStore, id=store_id)
+        permissions.user_can_edit(user, store)
+
+        pusher_channel = f'user_{user.id}'
+        ebay_prefix = EbayUtils(user).get_ebay_prefix(store.store_instance_id)
+        request_data = {f"{ebay_prefix}_{k.replace('_', '')}": v for k, v in data.items()}
+
+        tasks.update_profile_settings.apply_async(kwargs={
+            'user_id': user.id,
+            'store_id': store_id,
+            'data': request_data,
+            'pusher_channel': pusher_channel,
+        })
+
+        pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
+        return self.api_success({'pusher': pusher})
+
     def delete_store(self, request, user, data):
         """
         Revoke ebay authorization and delete the ebay store and all connected models.
@@ -166,23 +260,29 @@ class EbayStoreApi(ApiBase):
         return self.api_success()
 
     def get_store_verify(self, request, user, data):
-        """
-        TODO: find how an ebay store connection can be verified.
-        :param request:
-        :type request:
-        :param user:
-        :type user:
-        :param data:
-        :type data:
-        :return:
-        :rtype:
-        """
         try:
             store = EbayStore.objects.get(id=data.get('store'))
             permissions.user_can_view(user, store)
 
         except EbayStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
+
+        resp = None
+        try:
+            resp = EbayUtils(user).api.refresh_ebay_profiles(instance_id=store.filter_instance_id)
+            resp.raise_for_status()
+
+            return self.api_success({'store': store.get_store_url()})
+        except HTTPError:
+            try:
+                resp_body = resp.json()
+                error_message = resp_body.get('message')
+                if 'Token does not match' in error_message:
+                    error_message = 'Please reauthorize the store'
+            except json.JSONDecodeError:
+                error_message = None
+            error = error_message if error_message else 'Unknown Issue'
+            return self.api_error(f'API credentials are not correct\nError: {error}.')
 
     def get_search_categories(self, request, user, data):
         """
@@ -555,7 +655,6 @@ class EbayStoreApi(ApiBase):
         store_id = data.get('store')
         order_id = safe_int(data.get('order_id'))
         item_sku = data.get('line_id')
-        product_id = safe_int(data.get('product_id'))
         source_id = data.get('aliexpress_order_id')
 
         if not (order_id and item_sku) or not store_id:
@@ -585,8 +684,7 @@ class EbayStoreApi(ApiBase):
 
         tracks = EbayOrderTrack.objects.filter(store=store,
                                                order_id=order_id,
-                                               line_id=item_sku,
-                                               product_id=product_id)
+                                               line_id=item_sku)
         tracks_count = tracks.count()
 
         if tracks_count > 1:
@@ -608,7 +706,6 @@ class EbayStoreApi(ApiBase):
             store=store,
             order_id=order_id,
             line_id=item_sku,
-            product_id=product_id,
             defaults={
                 'user': user.models_user,
                 'source_id': source_id,
@@ -624,7 +721,6 @@ class EbayStoreApi(ApiBase):
             'track': track.id,
             'order_id': order_id,
             'line_id': item_sku,
-            'product_id': product_id,
             'source_id': source_id,
             'source_url': track.get_source_url(),
         })
@@ -709,3 +805,30 @@ class EbayStoreApi(ApiBase):
         AlibabaOrderItem.objects.filter(order_track_id__in=deleted_ids).delete()
 
         return self.api_success()
+
+    def post_order_note(self, request, user, data):
+        try:
+            store = EbayStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except ObjectDoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        order_id = data['order_id']
+        note = data['note']
+
+        if note is None:
+            return self.api_error('Note required')
+
+        latest_note = EbayUtils(user).get_latest_order_note(order_id)
+        if latest_note == note:
+            return self.api_success()
+        else:
+            try:
+                resp = EbayOrderUpdater(user, store, order_id).add_ebay_order_note(order_id, note)
+                if resp.get('results', {}).get('successful'):
+                    return self.api_success()
+                else:
+                    return self.api_error(f'{self.store_label} API Error', status=422)
+            except HTTPError:
+                return self.api_error(f'{self.store_label} API Error', status=422)

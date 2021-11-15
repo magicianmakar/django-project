@@ -9,6 +9,8 @@ from django.conf import settings
 from shopified_core.utils import safe_str
 from .models import HubspotAccount
 
+INTERVALS = ['7', '14', '30', '90', '120', '365', '-1']
+
 
 def api_requests(url, data, method='post'):
     r = getattr(requests, method.lower())(
@@ -127,6 +129,14 @@ def generate_create_contact(user: User):
     ])
 
     data['properties']['number_of_stores'] = data['properties']['dr_stores_count']
+
+    shopify_orders_stat = user.get_config('_shopify_orders_stat')
+    if shopify_orders_stat:
+        for inter in INTERVALS:
+            name = f'{inter}_day' if inter != '-1' else 'all'
+            for stat_info_name in ['count', 'sum']:
+                if shopify_orders_stat.get(stat_info_name):
+                    data['properties'][f'dr_orders_{name}_{stat_info_name}'] = int(shopify_orders_stat[stat_info_name][inter])
 
     return data
 

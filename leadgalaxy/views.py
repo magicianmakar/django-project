@@ -1531,6 +1531,27 @@ def user_profile(request):
     })
 
 
+@login_required
+def user_plan_change(request, plan_id):
+    plan_id = safe_int(plan_id)
+
+    try:
+        plan_obj = GroupPlan.objects.get(id=plan_id)
+    except GroupPlan.DoesNotExist:
+        raise Http404('Invalid Plan')
+
+    stripe_customer = request.user.profile.plan.is_stripe() or request.user.profile.plan.is_free
+    if request.user.is_subuser or not stripe_customer or request.user.profile.plan.id == plan_id or \
+            request.user.is_staff:
+        raise PermissionDenied()
+
+    return render(request, 'user/profile_plan_change.html', {
+        'plan_id': plan_id,
+        'title': plan_obj.title,
+        'breadcrumbs': ['Plan Change']
+    })
+
+
 def user_unlock(request, token):
     data = cache.get('unlock_account_{}'.format(token))
     if data:

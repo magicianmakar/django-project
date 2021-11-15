@@ -236,6 +236,10 @@ $(document).ready(function() {
             });
 
             var param = {products: products, board_id: board_id};
+            if (!products.length) {
+                toastr.warning("No Products selected.");
+                return;
+            }
 
             $.ajax({
                 url: api_url('board-products', 'bigcommerce') + '?' + $.param(param),

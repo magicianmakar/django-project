@@ -1,3 +1,6 @@
+from json import JSONDecodeError
+from requests.exceptions import HTTPError
+
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.template.defaultfilters import truncatewords
@@ -15,11 +18,14 @@ from .utils import EbayOrderUpdater, EbayUtils
 
 
 @celery_app.task(base=CaptureFailure)
-def add_new_ebay_store(sd_account_id, pusher_channel, user_id):
+def add_new_ebay_store(sd_account_id, pusher_channel, user_id, instance_id=None, event_name=None, error_message=None):
     user = User.objects.get(id=user_id)
     sd_pusher = SureDonePusher(pusher_channel)
-    default_error_message = 'Failed to add a new eBay channel. Please try again or contact support@dropified.com'
-    default_event = 'ebay-store-add'
+    default_event = 'ebay-store-add' if event_name is None else event_name
+    if error_message is not None:
+        default_error_message = error_message
+    else:
+        default_error_message = 'Failed to add a new eBay channel. Please try again or contact support@dropified.com'
 
     try:
         try:
@@ -34,30 +40,33 @@ def add_new_ebay_store(sd_account_id, pusher_channel, user_id):
         # Step 1: Get all user options config
         ebay_utils = EbayUtils(user, account_id=sd_account.id)
         sd_config = ebay_utils.get_all_user_options()
-
-        # Step 2: Find an instance to authorize
-        # Check if the default ebay instance has already been authorized
-        channel_inst_to_use = 1
-        default_ebay_token = sd_config.get('ebay_token') or sd_config.get('ebay_token_oauth')
         ebay_plugin_settings = safe_json(sd_config.get('plugin_settings', '{}')).get('channel', {}).get('ebay', {})
 
-        # If the user's default ebay is already authorized, try finding an unauthorized channel from plugins list
-        if default_ebay_token:
-            channel_inst_to_use = None
+        # Step 2: Find an instance to authorize
+        if instance_id is not None:
+            channel_inst_to_use = instance_id
+        else:
+            # Check if the default ebay instance has already been authorized
+            channel_inst_to_use = 1
+            default_ebay_token = sd_config.get('ebay_token') or sd_config.get('ebay_token_oauth')
 
-            # Parse plugin settings
-            for inst_config in ebay_plugin_settings.values():
-                inst_id = safe_int(inst_config.get('instanceId'), inst_config.get('instanceId'))
-                inst_prefix = ebay_utils.get_ebay_prefix(inst_id)
-                inst_token = sd_config.get(f'{inst_prefix}_token') or sd_config.get(f'{inst_prefix}_token_oauth')
+            # If the user's default ebay is already authorized, try finding an unauthorized channel from plugins list
+            if default_ebay_token:
+                channel_inst_to_use = None
 
-                # Found an unauthorized instance
-                if isinstance(inst_token, str) and len(inst_token) == 0:
-                    channel_inst_to_use = inst_id
-                    break
+                # Parse plugin settings
+                for inst_config in ebay_plugin_settings.values():
+                    inst_id = safe_int(inst_config.get('instanceId'), inst_config.get('instanceId'))
+                    inst_prefix = ebay_utils.get_ebay_prefix(inst_id)
+                    inst_token = sd_config.get(f'{inst_prefix}_token') or sd_config.get(f'{inst_prefix}_token_oauth')
+
+                    # Found an unauthorized instance
+                    if isinstance(inst_token, str) and len(inst_token) == 0:
+                        channel_inst_to_use = inst_id
+                        break
 
         # If the default and all additional ebay plugins are already authorized, create a new ebay instance
-        if not channel_inst_to_use:
+        if channel_inst_to_use is None:
             sd_add_inst_resp = ebay_utils.api.add_new_ebay_instance()
 
             # If failed to add a new ebay instance
@@ -110,7 +119,7 @@ def add_new_ebay_store(sd_account_id, pusher_channel, user_id):
                 resp_data = sd_enable_channel_resp.json()
 
                 if resp_data.get('result') != 'success':
-                    capture_message('Request to add a enable an eBay store instance failed.', extra={
+                    capture_message('Request to enable an eBay store instance failed.', extra={
                         'suredone_account_id': sd_account_id,
                         'store_instance_id': channel_inst_to_use,
                         'response_code': sd_enable_channel_resp.status_code,
@@ -183,6 +192,131 @@ def add_new_ebay_store(sd_account_id, pusher_channel, user_id):
         sd_pusher.trigger(default_event, {
             'success': False,
             'error': 'Something went wrong. Please contact Dropifed support.'
+        })
+
+
+@celery_app.task(base=CaptureFailure)
+def get_advanced_options(user_id, store_id, pusher_channel, event_name=None):
+    pusher_event = event_name if event_name else 'ebay-advanced-settings-load'
+    sd_pusher = SureDonePusher(pusher_channel)
+    try:
+        store = EbayStore.objects.get(id=store_id)
+        user = User.objects.get(id=user_id)
+
+        permissions.user_can_view(user, store)
+        ebay_utils = EbayUtils(user)
+
+        # refresh ebay profiles before getting all options
+        resp = None
+        try:
+            resp = ebay_utils.api.refresh_ebay_profiles(instance_id=store.filter_instance_id)
+            resp.raise_for_status()
+        except HTTPError:
+            try:
+                resp_body = resp.json()
+                error_message = resp_body.get('message')
+                if 'Token does not match' in error_message:
+                    error_message = 'Please reauthorize the store'
+            except JSONDecodeError:
+                error_message = None
+            error_message = error_message if error_message else 'Unknown Issue'
+            sd_pusher.trigger(pusher_event, {
+                'success': False,
+                'store_id': store_id,
+                'error': f'API credentials are not correct\nError: {error_message}.'
+            })
+            return
+
+        all_options = ebay_utils.get_all_user_options()
+        if not isinstance(all_options, dict):
+            sd_pusher.trigger(pusher_event, {
+                'success': False,
+                'store_id': store_id,
+                'error': 'Failed to get eBay options. Please try again.'
+            })
+            return
+
+        ebay_prefix = ebay_utils.get_ebay_prefix(store.store_instance_id)
+        ebay_config = safe_json(all_options.get(f'{ebay_prefix}_attribute_mapping'))
+        if not ebay_config:
+            sd_pusher.trigger(pusher_event, {
+                'success': False,
+                'store_id': store_id,
+                'error': 'No eBay options found. Please try again.'
+            })
+            return
+
+        profile_options = ebay_config.get('profile', {})
+
+        sd_pusher.trigger(pusher_event, {
+            'success': True,
+            'store_id': store_id,
+            'options': {
+                'payment_profile_options': list(profile_options.get('payment', {}).values()),
+                'return_profile_options': list(profile_options.get('return', {}).values()),
+                'shippping_profile_options': list(profile_options.get('shipping', {}).values()),
+            },
+            'settings': {
+                'payment_profile_id': ebay_config.get('paymentprofileid', ''),
+                'return_profile_id': ebay_config.get('returnprofileid', ''),
+                'shipping_profile_id': ebay_config.get('shippingprofileid', '')
+            }
+        })
+
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+
+        sd_pusher.trigger(pusher_event, {
+            'success': False,
+            'error': http_exception_response(e, json=True).get('message', 'Server Error'),
+            'store_id': store_id,
+        })
+
+
+@celery_app.task(base=CaptureFailure)
+def update_profile_settings(user_id, store_id, data, pusher_channel, event_name=None):
+    pusher_event = event_name if event_name else 'ebay-advanced-settings-update'
+    sd_pusher = SureDonePusher(pusher_channel)
+    try:
+        user = User.objects.get(id=user_id)
+        store = EbayStore.objects.get(id=store_id)
+
+        permissions.user_can_edit(user, store)
+        ebay_utils = EbayUtils(user)
+
+        # Update ebay settings
+        resp = None
+        try:
+            resp = ebay_utils.api.update_user_settings(data)
+            resp.raise_for_status()
+        except HTTPError:
+            try:
+                resp_body = resp.json()
+                error_message = resp_body.get('message')
+            except JSONDecodeError:
+                error_message = None
+            error_message = error_message if error_message else 'Unknown Issue'
+            sd_pusher.trigger(pusher_event, {
+                'success': False,
+                'store_id': store_id,
+                'error': f'Failed to update store settings.\nError: {error_message}.'
+            })
+            return
+
+        sd_pusher.trigger(pusher_event, {
+            'success': True,
+            'store_id': store_id,
+        })
+
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+
+        sd_pusher.trigger(pusher_event, {
+            'success': False,
+            'error': http_exception_response(e, json=True).get('message', 'Server Error'),
+            'store_id': store_id,
         })
 
 

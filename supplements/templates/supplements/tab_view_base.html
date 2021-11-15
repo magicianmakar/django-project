@@ -56,10 +56,12 @@
     <li><a href="{% url 'pls:my_orders' %}">My Payments</a></li>
     {% endif %}
 
-    {% if request.path == plod_product_announcements %}
-    <li class="active"><a data-toggle="tab" href="#tab-1">Product News</a></li>
-    {% else %}
-    <li><a href="{{ plod_product_announcements }}">Product News</a></li>
+    {% if request.user|can:'pls_product_news.use' %}
+        {% if request.path == plod_product_announcements %}
+        <li class="active"><a data-toggle="tab" href="#tab-1">Product News</a></li>
+        {% else %}
+        <li><a href="{{ plod_product_announcements }}">Product News</a></li>
+        {% endif %}
     {% endif %}
 
   {% endif %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% load compress %}
+{% load static %}
+
+{% block main-container %}
+<div class="middle-box text-center">
+    <div class="panel-group">
+        <div class="panel panel-default">
+          <div class="panel-body panel-plan-update">
+            <h2>Are you sure you want to update the plan to <b>{{ title }}</b>?</h2>
+            <div>
+                <input type="hidden" id="plan_id" name="plan_id" value="{{plan_id}}"/>
+                <button class="btn-primary btn btn-update-plan" id="update_plan">Update Plan</button>
+                <button class="btn-success btn btn-update-plan" id="cancel_update_plan" onclick="javascript:window.location.href='/user/profile#plan'">Keep current plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        var config = {            
+            'subscription_plan': '{% url "stripe_subscription.views.subscription_plan" %}'
+        };
+    </script>
+
+    {% compress js %}
+    <script src="{% static 'shopified/js/payment.js' %}" type="text/javascript"></script>
+    {% endcompress %}
+    
+{% endblock %}

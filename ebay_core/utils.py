@@ -8,10 +8,12 @@ from django.shortcuts import get_object_or_404
 
 from ebay_core.models import EbayOrderTrack, EbayProduct, EbayProductVariant, EbayStore, EbaySupplier
 from leadgalaxy.models import UserProfile
+from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import safe_float, safe_int, safe_json, safe_str
+from suredone_core.models import InvalidSureDoneStoreInstanceId
 from suredone_core.utils import SureDoneUtils, get_or_create_suredone_account, parse_suredone_date, sd_customer_address
 
 
@@ -640,13 +642,20 @@ class EbayUtils(SureDoneUtils):
         if not per_page:
             per_page = 25
 
+        # SD assigns instance IDs in the following order: 0, 2, 3, 4, etc., so if the instance ID is 1, set it to 0
+        try:
+            instance_id_filter = store.filter_instance_id
+        except InvalidSureDoneStoreInstanceId:
+            capture_exception()
+            instance_id_filter = store.store_instance_id
+
         search_filters = {
             'channel': {
                 'value': 'ebay',
                 'relation': ':='
             },
             'instance': {
-                'value': store.store_instance_id,
+                'value': instance_id_filter,
                 'relation': ':='
             },
             'archived': {
@@ -1088,7 +1097,7 @@ class EbayOrderItem:
                         self.supplier_types.add(supplier_type)
 
             # Get Order track
-            key = f'{self.id}_{item_id}_{ebay_product_id}'
+            key = format_order_tracking_key(self.id, item_id)
             order_track = order_tracks_by_order_id.get(key)
             if order_track:
                 self.tracked_lines += 1
@@ -1267,7 +1276,7 @@ class EbayOrderItem:
         store = self.store
 
         for track in EbayOrderTrack.objects.filter(store=store, order_id__in=order_ids):
-            key = f'{track.order_id}_{track.line_id}_{track.product_id}'
+            key = format_order_tracking_key(track.order_id, track.line_id)
             track_by_item[key] = track
 
         return track_by_item
@@ -1337,3 +1346,7 @@ def get_fulfillment_meta(shipping_carrier_name, tracking_number, item_sku, date_
             'items': [{'sku': item_sku}]
         }
     }
+
+
+def format_order_tracking_key(order_id: str, line_id: str):
+    return f'{order_id}_{line_id}'

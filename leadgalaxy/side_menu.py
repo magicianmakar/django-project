@@ -145,7 +145,7 @@ def get_menu_item_data(request):
             'url_name': 'product_alerts',
             'permissions': ['price_changes.use', 'price_change_options.use'],
             'match': r'(/\w+)?/products/update',
-            'platforms': ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce', 'ebay']
+            'platforms': ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce']
         },
         'business': {
             'title': 'Business',
