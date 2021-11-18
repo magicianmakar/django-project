@@ -190,7 +190,9 @@ class ShopifyStoreApi(ApiBase):
         return JsonResponse(json.loads(product.data), safe=False)
 
     def post_shopify(self, request, user, data):
-        if data.get('store'):
+        store = data.get('store') if safe_int(data.get('store')) > 0 else None
+
+        if store:
             store = ShopifyStore.objects.get(pk=data['store'])
 
             if self.target == 'save-for-later' and not user.can('save_for_later.sub', store):

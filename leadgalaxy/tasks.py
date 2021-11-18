@@ -92,7 +92,7 @@ from shopify_orders.models import ShopifyOrder, ShopifyOrderRisk
 def export_product(req_data, target, user_id):
     start = time.time()
 
-    store = req_data.get('store')
+    store = req_data.get('store') if safe_int(req_data.get('store')) > 0 else None
     data = req_data['data']
     parsed_data = json.loads(req_data['data'])
     original_data = req_data.get('original', '')
