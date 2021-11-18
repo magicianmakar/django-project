@@ -84,7 +84,7 @@
                             </td>
                             {% endif %}
                             <td>
-                                <button class="btn btn-outline btn-success btn-xs plan-update-link" data-plan="{% url 'user_plan_change' plan_id=item.id %}" onclick="javascript: copyLink(this);">Copy Link</button>
+                                <button class="btn btn-outline btn-success btn-xs plan-update-link" data-plan="{% url 'user_plan_change' hashed_str=item.register_hash %}" onclick="javascript: copyLink(this);">Copy Link</button>
                             </td>
                         </tr>
                     {% empty %}
