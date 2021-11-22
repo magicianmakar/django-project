@@ -764,8 +764,9 @@ class OrdersList(ListView):
             if params.get('sort') == '!order_date':
                 filters['order'] = 'desc'
 
-        if params.get('query'):
-            filters['include'] = params.get('query')
+        query = params.get('query') or params.get('query_order')
+        if query:
+            filters['include'] = query.replace('#', '').strip()
 
         return filters
 
