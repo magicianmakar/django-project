@@ -2548,6 +2548,12 @@ def user_get_access_token(self):
     return access_token.token
 
 
+@add_to_class(User, 'get_jwt_access_token')
+def user_get_jwt_access_token(self):
+    from shopified_core.utils import jwt_encode
+    return jwt_encode({'id': self.id})
+
+
 @add_to_class(User, 'can')
 def user_can(self, perms, store_id=None):
     return self.profile.can(perms, store_id)

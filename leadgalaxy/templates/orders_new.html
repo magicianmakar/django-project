@@ -12,7 +12,11 @@
         {% include 'home/partial/tabs/orders.html' %}
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
-                <div class="panel-body gray-panel" style="padding:20px 0 0 0;border:none">
+                <div class="panel-body gray-panel" style="padding:20px 0 0 0;border:none"
+                <div class="row">
+                <div class="col-md-9">
+                >
+
                     <div class="row" style="padding:0px 5px">
                         <div class="col-md-4">
                             <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter &amp; Sort</button>
@@ -400,7 +404,10 @@
 
                                         {% if use_aliexpress_api %}
                                         <a class="place-order btn btn-info btn-xs m-r-xs" href="#"
-                                           store="{{store.id}}" order-id="{{order.id}}"><i class="fa fa-bolt"></i> Quick Order</a>
+                                           store="{{store.id}}"
+                                           order-id="{{order.id}}"
+                                           order-name="{{order.name}}"
+                                           ><i class="fa fa-bolt"></i> Quick Order</a>
                                         {% endif %}
 
                                         {% if 'dropified-print' in order.supplier_types %}
@@ -916,6 +923,17 @@
                     {% include "common/partial/upsell.html" with top="200px" message="Add Automated Ordering and Fulfillment to your Plan" only %}
                     {% endif %}
                     {% include "partial/paginator.html" %}
+
+
+
+                </div>
+                <div class="col-md-3" style="padding:0;margin:0">
+                    <iframe
+                        id="orders-aliexpress-frm"
+                        src="https://orders.dropified.com/?token={{ user.get_jwt_access_token }}"
+                        style=" width: 100%; min-height: 800px; padding: 0; margin: 0; border: 1px solid #655858cc;">
+                    </iframe>
+                </div>
                 </div>
             </div>
         </div>

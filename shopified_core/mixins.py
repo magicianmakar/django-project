@@ -6,6 +6,7 @@ from django.http import QueryDict
 import simplejson as json
 
 from lib.exceptions import capture_exception, capture_message
+from shopified_core.utils import jwt_decode
 from .exceptions import ApiLoginException
 
 
@@ -98,13 +99,21 @@ class AuthenticationMixin(RequestDataMixin):
         if not token:
             return None
 
+        user = None
+
         try:
             user = User.objects.get(accesstoken__token=token)
         except User.DoesNotExist:
-            return None
+            user = None
         except:
+            user = None
             capture_exception()
-            return None
+
+        try:
+            info = jwt_decode(token)
+            user = User.objects.get(id=info['id'])
+        except:
+            user = None
 
         return user
 

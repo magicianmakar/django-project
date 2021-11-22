@@ -472,7 +472,23 @@ function addOrderSourceRequest(data_api, callback) {
 }
 
 $('.mark-as-ordered').click(addOrderSourceID);
-$('.place-order').click(placeOrder);
+$('.place-order').on('click', function(e) {
+    e.preventDefault();
+
+    var btn = $(e.target);
+    var msg = {
+        subject: 'add-order',
+        order: {
+            'name': btn.attr('order-name'),
+            'store': btn.attr('store'),
+            'order_id': btn.attr('order-id'),
+            'line_id': btn.attr('line-id'),
+        },
+    }
+
+    document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
+
+});
 
 $('.add-order-note').click(function (e) {
     e.preventDefault();
