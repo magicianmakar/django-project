@@ -160,6 +160,9 @@ def subscription_plan(request):
                 else:
                     sub.trial_end = arrow.get(sub.trial_end).timestamp
 
+            # Use proration by default
+            do_not_prorate = False
+
             # save lifetime base plan in user config if upgrading (only for those who passed paid period)
             if "lifetime" in user.profile.plan.slug and user.profile.plan.monthly_price <= 0:
                 user.set_config('lifetime_base_plan', user.profile.plan.id)
@@ -167,6 +170,7 @@ def subscription_plan(request):
             if not user.get_config('research_upgraded') and "research" in user.profile.plan.slug:
                 sub.trial_end = arrow.utcnow().replace(days=plan.trial_days).timestamp
                 set_research_upgraded = True
+                do_not_prorate = True
             else:
                 set_research_upgraded = False
 
@@ -179,10 +183,17 @@ def subscription_plan(request):
                     subscription.move_custom_subscriptions(sub)
                     move_addons_subscription(sub)
 
-                stripe.SubscriptionItem.modify(
-                    main_plan_item['id'],
-                    plan=plan.stripe_plan.stripe_id
-                )
+                if do_not_prorate:
+                    print("DO NOT PRORATE")
+                    stripe.SubscriptionItem.modify(
+                        main_plan_item['id'],
+                        plan=plan.stripe_plan.stripe_id, proration_behavior="none"
+                    )
+                else:
+                    stripe.SubscriptionItem.modify(
+                        main_plan_item['id'],
+                        plan=plan.stripe_plan.stripe_id
+                    )
                 subscription.refresh()
 
                 if set_research_upgraded:
