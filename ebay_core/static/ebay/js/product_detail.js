@@ -222,12 +222,66 @@ $('#product-export-btn').click(function (e) {
         return;
     }
 
+    if (!validatePriceValue()) {
+        return;
+    }
+
     var btn = $(this);
 
     productSave($('#product-save-btn'), function () {
         productExport(btn);
     });
 });
+
+function validatePriceValue() {
+    var priceError = 0;
+    var comparePriceError = 0;
+
+    if ($('#product-price').val() < 0.99) {
+        $('#product-price').parent().addClass('has-error');
+        priceError++;
+    } else {
+        $('#product-price').parent().removeClass('has-error');
+    }
+
+    if ($('#product-price').val() > $('#product-compare-at').val()) {
+        $('#product-compare-at').parent().addClass('has-error');
+        priceError++;
+    } else {
+        $('#product-compare-at').parent().removeClass('has-error');
+    }
+
+    $('#ebay-variants').find('.ebay-variant').each(function() {
+        var price = $(this).find('input[name="price"]');
+        var compareatPrice = $(this).find('input[name="compareatprice"]');
+
+        if (price.val() < 0.99) {
+            price.parent().addClass('has-error');
+            priceError++;
+        } else {
+            price.parent().removeClass('has-error');
+        }
+
+        if (price.val() > compareatPrice.val()) {
+            comparePriceError++;
+            compareatPrice.parent().addClass('has-error');
+        } else {
+            compareatPrice.parent().removeClass('has-error');
+        }
+    });
+
+    if (priceError) {
+        swal('Invalid Price Value', 'Prices must be greater than or equal to 0.99.', 'error');
+        return false;
+    }
+
+    if (comparePriceError) {
+        swal('Invalid Compare Price Value', 'Compare price value must be greater than the current price.', 'error');
+        return false;
+    }
+
+    return true;
+}
 
 function productExport(btn) {
     var store_id = $('#store-select').val();
