@@ -26,9 +26,15 @@
       <a class="nav-link" href="{{ pls_user_supplement }}">Edit</a>
     </li>
     {% endif %}
-    <li class="nav-item">
-      <a class="nav-link" data-toggle="tab" href="#info">Info</a>
-    </li>
+    {% if request.path == pls_user_supplement or request.path == pls_supplement %}
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="tab" href="#info">Info</a>
+      </li>
+    {% else %}
+      <li class="nav-item">
+        <a class="nav-link" href="{{ pls_user_supplement }}#info">Info</a>
+      </li>
+    {% endif %}
     {% block history_tab %}{% endblock %}
   </ul>
 
