@@ -472,6 +472,12 @@ function addOrderSourceRequest(data_api, callback) {
 }
 
 $('.mark-as-ordered').click(addOrderSourceID);
+
+function showOrderIframe() {
+    $('.order-content-list').removeClass('col-md-12').addClass('col-md-9');
+    $('.order-content-list-iframe').removeClass('hidden');
+}
+
 $('.place-order').on('click', function(e) {
     e.preventDefault();
 
@@ -483,12 +489,29 @@ $('.place-order').on('click', function(e) {
             'store': btn.attr('store'),
             'order_id': btn.attr('order-id'),
             'line_id': btn.attr('line-id'),
+            'order_data': JSON.parse(atob(btn.attr('order-data')))
+
         },
     }
 
-    document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
+    showOrderIframe();
 
+    document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
 });
+
+window.onmessage = function (e) {
+    let message;
+
+    try {
+        message = JSON.parse(e.data);
+    } catch (e) {
+        return;
+    }
+
+    if (message && message.subject && message.subject == "show-me") {
+        showOrderIframe();
+    }
+};
 
 $('.add-order-note').click(function (e) {
     e.preventDefault();
