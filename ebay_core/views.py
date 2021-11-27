@@ -547,7 +547,7 @@ class OrdersTrackList(ListView):
 class BoardsList(ListView):
     model = EbayBoard
     context_object_name = 'boards'
-    # template_name = 'ebay/boards_list.html'
+    template_name = 'ebay/boards_list.html'
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
@@ -556,11 +556,21 @@ class BoardsList(ListView):
 
         return super(BoardsList, self).dispatch(request, *args, **kwargs)
 
+    def get_queryset(self):
+        qs = super(BoardsList, self).get_queryset()
+        return qs.filter(user=self.request.user.models_user)
+
+    def get_context_data(self, **kwargs):
+        context = super(BoardsList, self).get_context_data(**kwargs)
+        context['breadcrumbs'] = ['Boards']
+
+        return context
+
 
 class BoardDetailView(DetailView):
     model = EbayBoard
     context_object_name = 'board'
-    # template_name = 'ebay/board.html'
+    template_name = 'ebay/board.html'
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
@@ -568,6 +578,29 @@ class BoardDetailView(DetailView):
             raise permissions.PermissionDenied()
 
         return super(BoardDetailView, self).dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(BoardDetailView, self).get_queryset()
+        return qs.filter(user=self.request.user.models_user)
+
+    def get_context_data(self, **kwargs):
+        context = super(BoardDetailView, self).get_context_data(**kwargs)
+        permissions.user_can_view(self.request.user, self.object)
+
+        products = EbayUtils(self.request.user).get_ebay_products(store_id=self.request.GET.get('store'),
+                                                                  in_store=self.request.GET.get('in'),
+                                                                  board=self.object.id)
+        paginator = SimplePaginator(products, 25)
+        page = safe_int(self.request.GET.get('page'), 1)
+        page = paginator.page(page)
+
+        context['searchable'] = True
+        context['paginator'] = paginator
+        context['products'] = page
+        context['current_page'] = page
+        context['breadcrumbs'] = [{'title': 'Boards', 'url': reverse('ebay:boards_list')}, self.object.title]
+
+        return context
 
 
 class OrderPlaceRedirectView(RedirectView):

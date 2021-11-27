@@ -26,7 +26,7 @@
                                 {% if request.GET.store == 'n' and user|can:'myshopify_integration.use' %}
                                 {% comment %}<option value="edit">Edit...</option>{% endcomment %}
                                 {% endif %}
-                                {% comment %}<option value="board">Add to Board...</option>{% endcomment %}
+                                <option value="board">Add to Board...</option>
                                 {% if not request.GET.store or request.GET.store == 'n' %}
                                     <option value="ebay-send">Send To My Store...</option>
                                 {% endif %}
@@ -153,7 +153,7 @@
                             <label for="selected-board">Select board</label>
                             <select class="form-control" name="selected-board" id="selected-board" style="display: inline-block; width: 191px; ">
                                 {% for item in request.user.get_ebay_boards %}
-                                <option value="{{item.guid}}">{{item.title}}</option>
+                                <option value="{{item.id}}">{{item.title}}</option>
                                 {% endfor %}
                             </select>
                             </div>
@@ -214,7 +214,7 @@
 <script type="text/javascript">
     var boardsMenu = {
     {% for item in request.user.get_ebay_boards %}
-        "{{item.guid|safe}}": {name: "{{item.title|safe}}"},
+        "{{item.id|safe}}": {name: "{{item.title|safe}}"},
     {% endfor %}
         "sep1": "---------",
         "add": {name: "Add new board", icon: 'add'},

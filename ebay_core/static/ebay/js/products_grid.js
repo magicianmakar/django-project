@@ -288,12 +288,10 @@ $('#ebay-send-btn').click(function(e) {
         var productId = String(data.product);
 
         if ($.inArray(productId, productIds) >= 0) {
-            $('#product_' + productId).iCheck('disable').prop('checked', false);
-
             if (data.success) {
                 toastr.success('Product sent to eBay store.');
                 totalSuccess += 1;
-            } else {
+            } else if (data.error) {
                 toastr.error(data.error);
                 totalError += 1;
             }

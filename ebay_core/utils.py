@@ -1,12 +1,14 @@
 import arrow
 import json
+import re
 
 from django.contrib.auth.models import User
 from django.core.cache import cache, caches
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
-from ebay_core.models import EbayOrderTrack, EbayProduct, EbayProductVariant, EbayStore, EbaySupplier
+from ebay_core.models import EbayBoard, EbayOrderTrack, EbayProduct, EbayProductVariant, EbayStore, EbaySupplier
 from leadgalaxy.models import UserProfile
 from lib.exceptions import capture_exception
 from shopified_core import permissions
@@ -198,7 +200,7 @@ class EbayUtils(SureDoneUtils):
                                                store_type='ebay')
 
         # If the product was not successfully posted
-        if sd_api_result.get('api_response', {}).get('result') != 'success':
+        if not isinstance(sd_api_result, dict) or sd_api_result.get('api_response', {}).get('result') != 'success':
             return
 
         parent_guid = sd_api_result.get('parent_guid')
@@ -226,21 +228,14 @@ class EbayUtils(SureDoneUtils):
 
         return sd_api_result
 
-    def get_ebay_products(self, store_id: str, in_store: str, post_per_page=25, sort=None, board=None):
+    def sync_ebay_products(self, store_id: str, in_store: str):
         """
-        Get all eBay products.
-        TODO: add functionality for sorting, filtering and board selection
+        Sync all eBay products.
 
         :param store_id: eBay store id
         :type store_id: int
         :param in_store:
         :type in_store:
-        :param post_per_page: Number of products to display per page
-        :type post_per_page: int
-        :param sort: Whether or not return the products sorted
-        :type sort:
-        :param board: Board name to filter the products by
-        :type board:
         :return:
         :rtype:
         """
@@ -297,6 +292,68 @@ class EbayUtils(SureDoneUtils):
         all_products = self.convert_to_ebay_product_models(raw_products)
 
         return all_products
+
+    def get_ebay_products(self, store_id: str, in_store: str, post_per_page=25, sort=None, board=None, product_board=None):
+        """
+        Get all eBay products.
+        TODO: add functionality for sorting, filtering and board selection
+
+        :param product_board:
+        :type product_board:
+        :param store_id: eBay store id
+        :type store_id: int
+        :param in_store:
+        :type in_store:
+        :param post_per_page: Number of products to display per page
+        :type post_per_page: int
+        :param sort: Whether or not return the products sorted
+        :type sort:
+        :param board: Board name to filter the products by
+        :type board:
+        :return:
+        :rtype:
+        """
+        user_stores = self.user.profile.get_ebay_stores(flat=True)
+        res = EbayProduct.objects.select_related('store') \
+            .filter(user=self.user.models_user) \
+            .filter(Q(store__in=user_stores) | Q(store=None))
+
+        if store_id:
+            if store_id == 'c':  # connected
+                res = res.exclude(source_id=0)
+            elif store_id == 'n':  # non-connected
+                res = res.filter(source_id=0)
+
+                in_store = safe_int(in_store)
+                if in_store:
+                    in_store = get_object_or_404(EbayStore, id=in_store)
+                    res = res.filter(store=in_store)
+
+                    permissions.user_can_view(self.user, in_store)
+            else:
+                store = get_object_or_404(EbayStore, id=store_id)
+                res = res.filter(source_id__gt=0, store=store)
+
+                permissions.user_can_view(self.user, store)
+
+        if product_board in ['added', 'not_added']:
+            board_list = self.user.models_user.ebayboard_set.all()
+            if product_board == "added":
+                res = res.filter(ebayboard__in=board_list)
+            elif product_board == "not_added":
+                res = res.exclude(ebayboard__in=board_list)
+
+        if board:
+            res = res.filter(ebayboard=board)
+            permissions.user_can_view(self.user, get_object_or_404(EbayBoard, id=board))
+
+        # res = products_filter(res, request.GET)
+
+        if sort:
+            if re.match(r'^-?(title|price)$', sort):
+                res = res.order_by(sort)
+
+        return res
 
     def filter_by_connected(self, product):
         is_connected = product.is_connected
@@ -477,7 +534,7 @@ class EbayUtils(SureDoneUtils):
         else:
             return EbayProduct(**model_params)
 
-    def get_ebay_product_details(self, parent_guid: str, add_model_fields: dict = None) -> EbayProduct:
+    def get_ebay_product_details(self, parent_guid: str, add_model_fields: dict = None, smart_board_sync=False) -> EbayProduct:
         """
         Get all product variants matching the passed GUID value as a SKU
 
@@ -485,6 +542,8 @@ class EbayUtils(SureDoneUtils):
         :type parent_guid: str
         :param add_model_fields: additional fields to set in the Model update or create step
         :type add_model_fields:
+        :param smart_board_sync: Whether or not to perform a smart board sync when saving the product to the DB
+        :type smart_board_sync: bool
         :return: a tuple with a list of EbayProduct models and a list of variants
         :rtype: tuple(list[EbayProduct], list)
         """
@@ -506,7 +565,7 @@ class EbayUtils(SureDoneUtils):
                 parent_product = self.convert_to_ebay_product_model(sd_product_data, parent_product, add_model_fields)
             except EbayProduct.DoesNotExist:
                 parent_product = self.convert_to_ebay_product_model(sd_product_data, add_model_fields=add_model_fields)
-            parent_product.save()
+            parent_product.save(smart_board_sync=smart_board_sync)
 
             ebay_prefix = self.get_ebay_prefix(parent_product.ebay_store_index)
             seen_variant_guids = [parent_guid]
@@ -1350,3 +1409,41 @@ def get_fulfillment_meta(shipping_carrier_name, tracking_number, item_sku, date_
 
 def format_order_tracking_key(order_id: str, line_id: str):
     return f'{order_id}_{line_id}'
+
+
+def smart_board_by_product(user, product):
+    product_info = {
+        'title': product.title,
+        'tags': product.tags,
+        'type': product.product_type,
+    }
+
+    for k, v in list(product_info.items()):
+        if v:
+            product_info[k] = [i.lower().strip() for i in v.split(',')]
+        else:
+            product_info[k] = []
+
+    for board in user.ebayboard_set.all():
+        try:
+            config = json.loads(board.config)
+        except:
+            continue
+
+        product_added = False
+        for config_key in ['title', 'tags', 'type']:
+            if product_added:
+                break
+
+            if not len(config.get(config_key, '')) or not product_info[config_key]:
+                continue
+
+            for config_value in config.get(config_key, '').split(','):
+                curr_value = config_value.lower().strip()
+                if any([curr_value in k for k in product_info[config_key]]):
+                    board.products.add(product)
+                    product_added = True
+                    break
+
+        if product_added:
+            board.save()

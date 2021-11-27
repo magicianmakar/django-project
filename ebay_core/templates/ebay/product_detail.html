@@ -193,7 +193,7 @@
                                                                 <td>
                                                                     {% if variant_item.image %}
                                                                         <img class="unveil"
-                                                                             src="{% static 'img/blank.gif' %}"
+                                                                             src="{% shopify_image_thumb variant_item.image %}"
                                                                              data-src="{% shopify_image_thumb variant_item.image %}"
                                                                              product="{{ variant_item.guid }}"
                                                                              variant="{{ variant_item.id }}"
