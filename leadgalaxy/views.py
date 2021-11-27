@@ -1764,7 +1764,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
 
         # set defualt required fields
         self.filters.update(
-            query_order=safe_str(order_id),
+            query_order=str(order_id),
             query_line_id=safe_str(line_id),
             order_view_live='1',
 
@@ -1977,7 +1977,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
 
         self.sync.store_order_synced = shopify_orders_utils.is_store_synced(self.store)
         self.sync.store_sync_enabled = self.sync.store_order_synced \
-            and (shopify_orders_utils.is_store_sync_enabled(self.store) or self.filters.order_view_new) \
+            and (shopify_orders_utils.is_store_sync_enabled(self.store) or self.filters.get('order_view_new')) \
             and not self.filters.get('order_view_live')
 
         self.sync.support_product_filter = shopify_orders_utils.support_product_filter(self.store) and self.models_user.can('exclude_products.use')

@@ -277,8 +277,7 @@ function placeOrder(e) {
         },
     }).done(function(data) {
         swal.close();
-        toastr.success('Item added to Orders Queue', 'Order Placed');
-        // btn.hide();
+        toastr.success('Order successfully placed', 'Order Placed');
 
     }).fail(function(data) {
         displayAjaxError('Place Order', data);
