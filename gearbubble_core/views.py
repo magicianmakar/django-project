@@ -21,6 +21,7 @@ from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.decorators import HasSubuserPermission
 from shopified_core.utils import (
+    fix_order_data,
     jwt_encode,
     safe_int,
     safe_float,
@@ -410,6 +411,7 @@ class OrdersList(ListView):
                     order_data = self.get_order_data(order, item, product, supplier)
                     order_data['variant'] = self.get_order_data_variant(item)
                     order_data_id = order_data['id']
+                    order_data = fix_order_data(self.request.user, order_data)
                     orders_cache['gear_order_{}'.format(order_data_id)] = order_data
                     item['order_data_id'] = order_data_id
                     item['order_data'] = order_data

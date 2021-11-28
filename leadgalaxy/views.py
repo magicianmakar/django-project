@@ -63,6 +63,7 @@ from shopified_core.utils import (
     clean_query_id,
     decode_params,
     encode_params,
+    fix_order_data,
     format_queueable_orders,
     hash_list,
     hash_text,
@@ -2766,6 +2767,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
                                 order_data['variant'] = variant_title.split('/') if variant_title else ''
 
                         if product and product.have_supplier():
+                            order_data = fix_order_data(self.user, order_data)
                             orders_cache['order_{}'.format(order_data['id'])] = order_data
                             line_item['order_data_id'] = order_data['id']
 

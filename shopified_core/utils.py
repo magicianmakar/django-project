@@ -29,6 +29,8 @@ from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils.module_loading import import_string
 
+from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
+
 ALIEXPRESS_REJECTED_STATUS = {
     "buyer_pay_timeout": "Order Payment Timeout",
     "risk_reject_closed": "Rejected By Risk Control",
@@ -940,6 +942,39 @@ def jwt_decode(payload, key=settings.API_SECRECT_KEY):
         jwt=payload,
         key=key,
         algorithms=['HS256'])
+
+
+def fix_order_data(user, order):
+    if not order['shipping_address'].get('address2'):
+        order['shipping_address']['address2'] = ''
+
+    if order.get('supplier_type') == 'ebay':
+        order['shipping_address']['country_code'] = ebay_country_code_map(order['shipping_address']['country_code'])
+    else:
+        order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
+
+    order['ordered'] = False
+    order['fast_checkout'] = user.get_config('_fast_order_checkout', True)  # Use Cart for all orders
+    order['solve'] = user.models_user.get_config('aliexpress_solve_captcha', True)
+
+    phone = order['order']['phone']
+    if type(phone) is dict:
+        phone_country, phone_number = order_phone_number(user.models_user, phone['number'], phone['country'])
+        order['order']['phone'] = phone_number
+        order['order']['phoneCountry'] = phone_country
+
+    if not order['order']['phone']:
+        order['order']['phone'] = '0000000000'
+
+    if not order['order']['phoneCountry']:
+        try:
+            order['order']['phoneCountry'] = f"+{phonenumbers.country_code_for_region(order['shipping_address']['country_code'])}"
+        except:
+            pass
+
+    if order.get('supplier_type') != 'ebay' and safe_str(order['shipping_address']['country_code']).lower() == 'fr':
+        if order['order']['phone'] and not order['order']['phone'].startswith('0'):
+            order['order']['phone'] = order['order']['phone'].rjust(10, '0')
 
 
 def bulk_order_format(queue_order, first_line_id):

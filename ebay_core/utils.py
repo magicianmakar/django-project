@@ -12,7 +12,7 @@ from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
-from shopified_core.utils import safe_float, safe_int, safe_json, safe_str
+from shopified_core.utils import fix_order_data, safe_float, safe_int, safe_json, safe_str
 from suredone_core.models import InvalidSureDoneStoreInstanceId
 from suredone_core.utils import SureDoneUtils, get_or_create_suredone_account, parse_suredone_date, sd_customer_address
 
@@ -750,6 +750,7 @@ class EbayUtils(SureDoneUtils):
                     order_data_id = item.get('order_data_id')
                     order_data = item.get('order_data')
                     if order_data_id and order_data:
+                        order_data = fix_order_data(self.user, order_data)
                         orders_cache[f'ebay_order_{order_data_id}'] = order_data
 
                 normalized_orders.append(norm_item)

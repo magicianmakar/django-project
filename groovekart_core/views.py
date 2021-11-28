@@ -37,6 +37,7 @@ from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     app_link,
     aws_s3_context,
+    fix_order_data,
     jwt_encode,
     safe_int,
     safe_float,
@@ -755,6 +756,7 @@ class OrdersList(ListView):
                             product, item, variant_id, country_code)
                         order['connected_lines'] += 1
                         order_data['shipping_method'] = item['shipping_method']
+                        order_data = fix_order_data(self.request.user, order_data)
                         orders_cache['gkart_order_{}'.format(order_data_id)] = order_data
                         item['order_data'] = order_data
 

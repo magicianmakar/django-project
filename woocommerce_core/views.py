@@ -41,6 +41,7 @@ from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     app_link,
     aws_s3_context,
+    fix_order_data,
     jwt_encode,
     safe_int,
     url_join,
@@ -1161,6 +1162,7 @@ class OrdersList(ListView):
                                         'image_url': item['image'],
                                     })
 
+                        order_data = fix_order_data(self.request.user, order_data)
                         orders_cache['woo_order_{}'.format(order_data_id)] = order_data
                         item['order_data'] = order_data
 
