@@ -976,6 +976,8 @@ def fix_order_data(user, order):
         if order['order']['phone'] and not order['order']['phone'].startswith('0'):
             order['order']['phone'] = order['order']['phone'].rjust(10, '0')
 
+    return order
+
 
 def bulk_order_format(queue_order, first_line_id):
     items_count = len(queue_order['items'])
