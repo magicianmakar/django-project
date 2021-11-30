@@ -6,8 +6,10 @@ from requests.exceptions import HTTPError
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db.models import ObjectDoesNotExist
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 
 import suredone_core.tasks as sd_tasks
 from alibaba_core.models import AlibabaOrderItem
@@ -15,7 +17,8 @@ from fulfilment_fee.utils import process_sale_transaction_fee
 from lib.exceptions import capture_exception, capture_message
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
-from shopified_core.utils import CancelledOrderAlert, clean_tracking_number, get_domain, remove_link_query, safe_int
+from shopified_core.decorators import HasSubuserPermission
+from shopified_core.utils import CancelledOrderAlert, clean_tracking_number, dict_val, get_domain, remove_link_query, safe_int
 from suredone_core.models import SureDoneAccount
 
 from . import tasks
@@ -428,6 +431,19 @@ class EbayStoreApi(ApiBase):
         pusher = {'key': settings.PUSHER_KEY, 'channel': store.pusher_channel()}
         return self.api_success({'pusher': pusher})
 
+    def get_products_info(self, request, user, data):
+        products = {}
+        for guid in data.getlist('products[]'):
+            try:
+                product = EbayProduct.objects.get(guid=guid)
+                permissions.user_can_view(user, product)
+
+                products[guid] = json.loads(product.data)
+            except EbayProduct.DoesNotExist:
+                return self.api_error('Product not found.')
+
+        return JsonResponse(products, safe=False)
+
     def delete_product(self, request, user, data):
         """
         Delete a single SureDone product by its GUID
@@ -440,7 +456,10 @@ class EbayStoreApi(ApiBase):
         :rtype: JsonResponse
         """
         parent_guid = data.get('product')
-        product = get_object_or_404(EbayProduct, guid=parent_guid)
+        try:
+            product = EbayProduct.objects.get(guid=parent_guid)
+        except EbayProduct.DoesNotExist:
+            return self.api_error('Product not found.', status=404)
         permissions.user_can_delete(user, product)
 
         if not user.can('delete_products.sub', product.store):
@@ -570,6 +589,79 @@ class EbayStoreApi(ApiBase):
                 product.save()
 
         return self.api_success()
+
+    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
+    def post_board_add_products(self, request, user, data):
+        try:
+            board = EbayBoard.objects.get(id=data.get('board'))
+            permissions.user_can_edit(user, board)
+
+        except EbayBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+
+        product_ids = data.getlist('products[]')
+        products = EbayProduct.objects.filter(guid__in=product_ids)
+
+        for product in products:
+            permissions.user_can_edit(user, product)
+
+        board.products.add(*products)
+
+        return self.api_success()
+
+    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
+    def post_product_board(self, request, user, data):
+        try:
+            product = EbayProduct.objects.get(guid=data.get('product'))
+            permissions.user_can_edit(user, product)
+        except EbayProduct.DoesNotExist:
+            return self.api_error('Product not found.', status=404)
+
+        if data.get('board') == '0':
+            product.boards.clear()
+            product.save()
+            return self.api_success()
+        else:
+            try:
+                board = EbayBoard.objects.get(id=data.get('board'))
+                permissions.user_can_edit(user, board)
+                board.products.add(product)
+                board.save()
+                return self.api_success({'board': {'id': board.id, 'title': board.title}})
+            except EbayBoard.DoesNotExist:
+                return self.api_error('Board not found.', status=404)
+
+    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
+    def delete_board_products(self, request, user, data):
+        try:
+            pk = safe_int(dict_val(data, ['board', 'board_id']))
+            board = EbayBoard.objects.get(pk=pk)
+            permissions.user_can_edit(user, board)
+
+        except EbayBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+
+        product_ids = data.getlist('products[]')
+        products = EbayProduct.objects.filter(guid__in=product_ids)
+        for product in products:
+            permissions.user_can_edit(user, product)
+            board.products.remove(product)
+
+        return self.api_success()
+
+    def delete_board(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
+
+        try:
+            pk = safe_int(data.get('board_id'))
+            board = EbayBoard.objects.get(pk=pk)
+        except EbayBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+        else:
+            permissions.user_can_delete(user, board)
+            board.delete()
+            return self.api_success()
 
     def get_order_notes(self, request, user, data):
         store = EbayStore.objects.get(id=data['store'])

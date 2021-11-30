@@ -7,4 +7,9 @@ $(document).ready(function(){
         date: true,
         datePattern: ['m', 'Y']
     });
+
+    $('#address_country').chosen({
+        search_contains: true,
+        width: '99%'
+    });
 });

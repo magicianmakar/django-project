@@ -30,6 +30,8 @@
         "MANIFEST": "Shipping Info Received",
         "NO_PICKUP_INSTRUCTIONS_AVAILABLE": "No pickup instruction available",
         "NOT_PAID": "Not Paid",
+        "NOT_SHIPPED": "Item is not shipped",
+        "SHIPPED": "Shipped",
         "OUT_OF_STOCK": "Out of stock",
         "PENDING_MERCHANT_CONFIRMATION": "Order is being prepared",
         "PICKED_UP": "Picked up",

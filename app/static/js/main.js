@@ -1253,6 +1253,18 @@ $(".copy-text-btn").on("click", function() {
     });
 });
 
+function copyLink(e) {
+    var plan_url = e.dataset.plan;
+    var target_url = window.location.origin + plan_url;
+    navigator.clipboard.writeText(target_url)
+        .then(function(text){
+            toastr.info("Plan Link copied");
+        })
+        .catch(function(err){
+            toastr.warning("Unable to copy the Plan link");
+    });
+}
+
 $(function() {
     setTimeout(function() {
         var version = $('.extension-version').data('extension-version');

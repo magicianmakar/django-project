@@ -46,4 +46,12 @@
             <li><a href="{% url 'bigcommerce:boards_list' %}">BigCommerce</a></li>
         {% endif %}
     {% endif %}
+
+     {% if user_stores.ebay %}
+        {% if 'ebay' in request.path %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">eBay</a></li>
+        {% else %}
+            <li><a href="{% url 'ebay:boards_list' %}">eBay</a></li>
+        {% endif %}
+    {% endif %}
 </ul>

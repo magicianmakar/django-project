@@ -36,7 +36,7 @@
               <label class="sr-only" for="other_costs">Amount</label>
               <div class="input-group">
                 <div class="input-group-addon">{% money_format None store %}</div>
-                <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{ profit.other_costs|default:'0'|floatformat:2 }}" size="10" autocomplete="off">
+                <input type="number" class="form-control profit-other-costs" name="other_costs" id="other_costs" placeholder="Amount" value="{{ profit.other_costs|default:'0'|floatformat:2 }}" size="10" autocomplete="off">
               </div>
             </div>
             <div class="form-group loading hidden">
@@ -86,7 +86,7 @@
           <label class="sr-only" for="other_costs">Amount</label>
           <div class="input-group">
             <div class="input-group-addon">{{this.currency_sign}}</div>
-            <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{this.other_costs}}" size="10" autocomplete="off">
+            <input type="number" class="form-control profit-other-costs" name="other_costs" id="other_costs" placeholder="Amount" value="{{this.other_costs}}" size="10" autocomplete="off">
           </div>
         </div>
         <div class="form-group loading hidden">

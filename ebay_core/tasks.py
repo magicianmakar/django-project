@@ -14,7 +14,7 @@ from suredone_core.models import SureDoneAccount
 from suredone_core.utils import SureDonePusher
 
 from .models import EbayProduct, EbayStore
-from .utils import EbayOrderUpdater, EbayUtils
+from .utils import EbayOrderUpdater, EbayUtils, smart_board_by_product
 
 
 @celery_app.task(base=CaptureFailure)
@@ -455,9 +455,10 @@ def product_export(user_id, parent_guid, store_id):
         # Verify that the product got listed by fetching the product from SureDone
         store.pusher_trigger(pusher_event, {
             'product': product.guid,
-            'progress': 'Verifying...'
+            'progress': 'Verifying...',
+            'error': False
         })
-        updated_product = ebay_utils.get_ebay_product_details(parent_guid)
+        updated_product = ebay_utils.get_ebay_product_details(parent_guid, add_model_fields={'store': store})
         # If the SureDone returns no data, then the product did not get exported
         if not updated_product or not isinstance(updated_product, EbayProduct):
             store.pusher_trigger(pusher_event, {
@@ -467,8 +468,6 @@ def product_export(user_id, parent_guid, store_id):
             })
             return
 
-        updated_product.store = store
-        updated_product.save()
         error_message = ''
 
         # Verify the product and all variants actually got connected to the store
@@ -570,7 +569,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
             return
 
         # Fetch SureDone updates and update the DB
-        updated_product = ebay_utils.get_ebay_product_details(parent_guid)
+        updated_product = ebay_utils.get_ebay_product_details(parent_guid, smart_board_sync=True)
 
         # If the SureDone returns no data, then the product did not get imported
         if not updated_product or not isinstance(updated_product, EbayProduct):
@@ -658,6 +657,22 @@ def product_delete(user_id, parent_guid, store_id):
             'error': http_exception_response(e, json=True).get('message', 'Server Error'),
             'product': product.guid,
             'product_url': reverse('ebay:product_detail', kwargs={'pk': parent_guid, 'store_index': store.pk})
+        })
+
+
+@celery_app.task(base=CaptureFailure)
+def do_smart_board_sync_for_product(user_id, product_id):
+    user = User.objects.get(id=user_id)
+    product = EbayProduct.objects.get(id=product_id)
+    try:
+        permissions.user_can_edit(user, product)
+        smart_board_by_product(user, product)
+
+    except Exception as e:
+        capture_exception(extra={
+            'message': 'Failed to perform the smart board sync task',
+            'product_id': product_id,
+            'error': e
         })
 
 

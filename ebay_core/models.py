@@ -5,12 +5,22 @@ from pusher import Pusher
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
 
+from shopified_core.decorators import add_to_class
 from shopified_core.models import BoardBase, OrderTrackBase, SupplierBase, UserUploadBase
 from shopified_core.utils import get_domain, safe_json
 from suredone_core.models import SureDoneProductBase, SureDoneStoreBase
+
+
+@add_to_class(User, 'get_ebay_boards')
+def user_get_ebay_boards(self):
+    if self.is_subuser:
+        return self.profile.subuser_parent.get_ebay_boards()
+    else:
+        return self.ebayboard_set.all().order_by('title')
 
 
 class EbayStore(SureDoneStoreBase):
@@ -149,6 +159,10 @@ class EbayProduct(SureDoneProductBase):
                 return f'https://www.ebay.com/itm/{connected_variant.source_id}'
 
         return None
+
+    @property
+    def boards(self):
+        return self.ebayboard_set
 
     @property
     def variant_edit(self):
@@ -392,6 +406,17 @@ class EbayProduct(SureDoneProductBase):
                     return method
 
         return None
+
+    def save(self, *args, smart_board_sync=True, **kwargs):
+        # Perform smart board sync
+        if smart_board_sync:
+            from .tasks import do_smart_board_sync_for_product
+            do_smart_board_sync_for_product.apply_async(kwargs={
+                'user_id': self.user.id,
+                'product_id': self.id
+            }, countdown=5)
+
+        super().save(*args, **kwargs)
 
 
 class EbayProductVariant(models.Model):

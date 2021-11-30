@@ -1,3 +1,4 @@
+{% load perms_helper %}
 
 <div id="modal-add-order-id" class="modal" aria-hidden="true">
     <div class="modal-dialog">
@@ -21,7 +22,9 @@
                             <option value="aliexpress">Aliexpress</option>
                             <option value="alibaba">Alibaba</option>
                             <option value="ebay">eBay</option>
+                            {% if request.user|can:'print_on_demand.use' %}
                             <option value="dropified-print">Dropified Print</option>
+                            {% endif %}
                             <option value="supplements">Supplements</option>
                             <option value="other">Other</option>
                         </select>

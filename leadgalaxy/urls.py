@@ -38,6 +38,7 @@ urlpatterns = [
     url(r'^user/invoices/(?P<invoice_id>[\w-]+)$', leadgalaxy.views.user_invoices, name='user_invoices'),
     url(r'^user/invoices/(?P<invoice_id>[\w-]+)/download$', leadgalaxy.views.user_invoices_download, name='user_invoices_download'),
     url(r'^user/profile/invoices$', leadgalaxy.views.user_profile_invoices, name='user_profile_invoices'),
+    url(r'^user/profile/plan/change/(?P<hashed_str>[a-z0-9-]+)$', leadgalaxy.views.user_plan_change, name='user_plan_change'),
 
     url(r'^accounts/register/?(?P<registration>[a-z0-9-]+)?$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/sudo/$', leadgalaxy.views.sudo_login, name='sudo_login'),

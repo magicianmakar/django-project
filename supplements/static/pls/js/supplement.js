@@ -61,4 +61,12 @@ $(document).ready(function(){
           $('.mockup-select').prop('checked', false);
       }
     });
+
+    // make info tab active
+    var hash = window.location.hash;
+
+    if (hash === '#info') {
+        $("a[data-toggle=tab][href=#info]").tab("show");
+        history.replaceState("", document.title, window.location.pathname);
+    }
 });

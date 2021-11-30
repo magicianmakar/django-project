@@ -147,6 +147,10 @@ def subscription_plan(request):
             else:
                 still_in_trial = False
 
+            # reset trial when switching to any lifetime plan
+            if "lifetime" in plan.slug:
+                sub.trial_end = arrow.utcnow().replace(days=plan.trial_days).timestamp
+
             if user.get_config('try_plan'):
                 sub.trial_end = arrow.utcnow().replace(days=14).timestamp
                 user.set_config('try_plan', False)
@@ -156,9 +160,17 @@ def subscription_plan(request):
                 else:
                     sub.trial_end = arrow.get(sub.trial_end).timestamp
 
+            # Use proration by default
+            do_not_prorate = False
+
+            # save lifetime base plan in user config if upgrading (only for those who passed paid period)
+            if "lifetime" in user.profile.plan.slug and user.profile.plan.monthly_price <= 0:
+                user.set_config('lifetime_base_plan', user.profile.plan.id)
+
             if not user.get_config('research_upgraded') and "research" in user.profile.plan.slug:
                 sub.trial_end = arrow.utcnow().replace(days=plan.trial_days).timestamp
                 set_research_upgraded = True
+                do_not_prorate = True
             else:
                 set_research_upgraded = False
 
@@ -171,10 +183,17 @@ def subscription_plan(request):
                     subscription.move_custom_subscriptions(sub)
                     move_addons_subscription(sub)
 
-                stripe.SubscriptionItem.modify(
-                    main_plan_item['id'],
-                    plan=plan.stripe_plan.stripe_id
-                )
+                if do_not_prorate:
+                    print("DO NOT PRORATE")
+                    stripe.SubscriptionItem.modify(
+                        main_plan_item['id'],
+                        plan=plan.stripe_plan.stripe_id, proration_behavior="none"
+                    )
+                else:
+                    stripe.SubscriptionItem.modify(
+                        main_plan_item['id'],
+                        plan=plan.stripe_plan.stripe_id
+                    )
                 subscription.refresh()
 
                 if set_research_upgraded:
@@ -441,6 +460,17 @@ def captchacredit_subscription(request):
 @csrf_protect
 def subscription_cancel(request):
     user = request.user
+
+    # switch to lifetime free is it was previously set
+    if user.get_config('lifetime_base_plan'):
+        request.POST._mutable = True
+        request.POST['plan'] = user.get_config('lifetime_base_plan')
+        request.POST._mutable = False
+        switch_response = subscription_plan(request)
+        if switch_response.status_code == 200:
+            user.set_config('lifetime_base_plan', False)
+        return switch_response
+
     when = request.POST['when']
 
     subscription = user.stripesubscription_set.get(id=request.POST['subscription'])

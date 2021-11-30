@@ -603,3 +603,22 @@ fieldset[disabled] .btn-primary.active {
 .calendar .calendar-table .table-condensed .fa-chevron-right:before {
     content: "\f054";
 }
+
+button.btn-update-plan {
+    margin: 5px 10px 0 0;
+}
+
+div.panel-plan-update {
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+input.profit-other-costs::-webkit-outer-spin-button,
+input.profit-other-costs::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input.profit-other-costs {
+    width: 70% !important;
+}
+

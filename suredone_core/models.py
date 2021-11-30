@@ -236,6 +236,13 @@ class SureDoneProductBase(ProductBase):
         except:
             return []
 
+    @property
+    def tags_list(self):
+        try:
+            return self.tags.split(',')
+        except:
+            return []
+
     def get_config(self):
         try:
             return json.loads(self.config)
