@@ -212,6 +212,7 @@ DROPIFIED_API = {
     'mybasket': 'supplements.api.BasketApi',
     'acp': 'acp_core.api.ACPApi',
     'alibaba': 'alibaba_core.api.AlibabaApi',
+    'aliexpress': 'aliexpress_core.api.AliexpressApi',
 }
 
 # Database
