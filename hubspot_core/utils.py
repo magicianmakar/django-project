@@ -29,6 +29,10 @@ def api_requests(url, data, method='post'):
 
 
 def clean_plan_name(plan):
+    if plan.hubspot_title:
+        return plan.hubspot_title
+
+    plan = plan.title
     plan = plan.replace('Plan', '').replace('Yearly', '').replace('Monthly', '').replace('Shopify', '')
     plan = re.sub(r'Shopify$', '', plan).strip()
     plan = re.sub(r'[0-9]+ Days Trial', '', plan).strip()
@@ -81,7 +85,7 @@ def generate_create_contact(user: User):
             "dr_bundles": ','.join(profile.bundles_list()),
             "dr_user_tags": profile.tags,
             "dr_is_subuser": user.is_subuser,
-            "dr_parent_plan": clean_plan_name(parent_plan.title) if user.is_subuser else '',
+            "dr_parent_plan": clean_plan_name(parent_plan) if user.is_subuser else '',
             "dr_free_plan": parent_plan.free_plan if parent_plan else '',
 
             "dr_stores_count": 0,
@@ -92,7 +96,7 @@ def generate_create_contact(user: User):
             "dr_gkart_count": profile.get_gkart_stores().count(),
             "dr_bigcommerce_count": profile.get_bigcommerce_stores().count(),
 
-            "plan": clean_plan_name(plan.title) if plan else '',
+            "plan": clean_plan_name(plan) if plan else '',
             "billing_interval": plan.payment_interval if plan else '',
             "install_source": parent_plan.payment_gateway if parent_plan else '',
             "user_level": 'Sub User' if user.is_subuser else 'User',

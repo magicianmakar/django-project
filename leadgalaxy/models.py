@@ -900,8 +900,9 @@ class ShopifyStore(StoreBase):
     class Meta:
         ordering = ['list_index', '-created_at']
 
-    title = models.CharField(max_length=512, blank=True, default='')
     api_url = models.CharField(max_length=512)
+    title = models.CharField(max_length=512, blank=True, default='')
+    hubspot_title = models.CharField(max_length=512, blank=True, default='')
 
     # For OAuth App
     shop = models.CharField(max_length=512, blank=True, null=True)

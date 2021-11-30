@@ -175,7 +175,7 @@ class Command(DropifiedBaseCommand):
             self.write(f'Add Property error: {name}')
 
     def update_plan_property_options(self):
-        plans = set([clean_plan_name(i) for i in GroupPlan.objects.all().values_list('title', flat=True)])
+        plans = set([clean_plan_name(i) for i in GroupPlan.objects.all()])
         options = []
         for plan in plans:
             options.append({
