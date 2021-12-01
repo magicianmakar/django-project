@@ -24,7 +24,6 @@ from shopified_core.utils import (
 )
 from shopified_core import permissions
 
-from churnzero_core.utils import post_churnzero_product_import, post_churnzero_product_export
 from .models import BigCommerceStore, BigCommerceProduct, BigCommerceSupplier
 from .utils import (
     BigCommerceOrderUpdater,
@@ -148,8 +147,6 @@ def product_save(req_data, user_id):
 
             product.set_default_supplier(supplier, commit=True)
 
-            post_churnzero_product_import(user, product.title, getattr(store_info, 'name', ''))
-
         except PermissionDenied as e:
             capture_exception()
             return {
@@ -260,8 +257,6 @@ def product_export(store_id, product_id, user_id, publish=None):
         # Initial Products Inventory Sync
         if user.models_user.get_config('initial_inventory_sync', True):
             sync_bigcommerce_product_quantities.apply_async(args=[product.id], countdown=0)
-
-        post_churnzero_product_export(user, product.title)
 
         store.pusher_trigger('product-export', {
             'success': True,

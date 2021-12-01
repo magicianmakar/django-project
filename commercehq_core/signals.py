@@ -5,11 +5,10 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User
 
-from commercehq_core.models import CommerceHQProduct, CommerceHQOrderTrack, CommerceHQStore
+from commercehq_core.models import CommerceHQProduct, CommerceHQOrderTrack
 from shopified_core.tasks import keen_send_event
 from shopified_core.utils import get_domain
 from profits.utils import get_costs_from_track
-from analytic_events.models import StoreCreatedEvent
 
 
 @receiver(post_save, sender=CommerceHQOrderTrack, dispatch_uid='chq_sync_aliexpress_fulfillment_cost')
@@ -47,9 +46,3 @@ def chq_send_keen_event_for_product(sender, instance, created, **kwargs):
         }
 
         keen_send_event.delay('product_save', keen_data)
-
-
-@receiver(post_save, sender=CommerceHQStore)
-def store_saved(sender, instance, created, **kwargs):
-    if created:
-        StoreCreatedEvent.objects.create(user=instance.user, platform='CommerceHQ')

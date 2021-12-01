@@ -1,6 +1,5 @@
 import arrow
 import hashlib
-import hmac
 import re
 import requests
 import simplejson as json
@@ -485,20 +484,6 @@ class UserProfile(models.Model):
                         perms.append(i)
 
         return perms
-
-    @cached_property
-    def churnzero_account_id_hash(self):
-        churnzero_secret_token = settings.CHURNZERO_SECRET_TOKEN.encode()
-        account_owner = self.user.models_user.username.encode()
-
-        return hmac.new(churnzero_secret_token, account_owner, hashlib.sha256).hexdigest()
-
-    @cached_property
-    def churnzero_contact_id_hash(self):
-        churnzero_secret_token = settings.CHURNZERO_SECRET_TOKEN.encode()
-        account = self.user.username.encode()
-
-        return hmac.new(churnzero_secret_token, account, hashlib.sha256).hexdigest()
 
     def import_stores(self):
         ''' Return Stores the User can import products from '''

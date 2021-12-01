@@ -21,7 +21,6 @@ from django.utils import timezone
 from django.views import View
 
 from alibaba_core import utils as alibaba_utils
-from churnzero_core.utils import post_churnzero_cancellation_event
 from leadgalaxy import utils, tasks
 from commercehq_core.utils import get_chq_products
 from leadgalaxy.models import (
@@ -560,9 +559,6 @@ class ShopifyAppUninstallWebhook(ShopifyWebhookMixing):
             store.user.profile.change_plan(GroupPlan.objects.get(
                 payment_gateway='shopify',
                 slug='shopify-free-plan'))
-
-        if store.user.models_user.profile.has_churnzero_account:
-            post_churnzero_cancellation_event(store.user)
 
 
 class ShopifyGDPRDeleteCustomerWebhook(View):

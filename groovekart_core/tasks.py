@@ -22,7 +22,6 @@ from shopified_core import permissions
 from shopified_core import utils
 from shopified_core.utils import safe_str
 
-from churnzero_core.utils import post_churnzero_product_import, post_churnzero_product_export
 from .models import GrooveKartStore, GrooveKartProduct, GrooveKartSupplier
 from .utils import (
     OrderListQuery,
@@ -124,8 +123,6 @@ def product_save(req_data, user_id):
             )
 
             product.set_default_supplier(supplier, commit=True)
-
-            post_churnzero_product_import(user, product.title, getattr(store_info, 'name', ''))
 
         except PermissionDenied as e:
             capture_exception()
@@ -294,8 +291,6 @@ def product_export(store_id, product_id, user_id, publish=None):
 
         pusher_data['commercehq_url'] = groovekart_product.get('product_url')
         pusher_data['success'] = True
-
-        post_churnzero_product_export(user, product.title)
 
         return store.pusher_trigger('product-export', pusher_data)
 

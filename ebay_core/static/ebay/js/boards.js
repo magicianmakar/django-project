@@ -1,4 +1,4 @@
-/* global $, api_url, ChurnZero, displayAjaxError, swal, toastr, sendProductToEbay, Pusher */
+/* global $, api_url, displayAjaxError, swal, toastr, sendProductToEbay, Pusher */
 
 $(document).ready(function() {
     'use strict';
@@ -41,7 +41,6 @@ $(document).ready(function() {
             data: {title: boardName},
             success: function(data) {
                 if ('status' in data && data.status === 'ok') {
-                    ChurnZero.push(['trackEvent', 'Create a Board', boardName]);
                     $('#ebay-modal-board-add').modal('hide');
                     title.val('');
 

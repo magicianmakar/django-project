@@ -47,8 +47,6 @@ $(document).ready(function() {
                     } else {
                         window.location.href = window.location.href;
                     }
-
-                    ChurnZero.push(['trackEvent', 'Create a Board', boardName]);
                 } else {
                     displayAjaxError('Create Board', data);
                 }

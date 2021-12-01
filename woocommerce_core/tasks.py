@@ -25,7 +25,6 @@ from shopified_core.utils import (
     get_fileext_from_url,
     safe_str
 )
-from churnzero_core.utils import post_churnzero_product_import, post_churnzero_product_export
 from .models import WooStore, WooProduct, WooSupplier
 from .utils import (
     format_woo_errors,
@@ -161,8 +160,6 @@ def product_save(req_data, user_id):
 
             product.set_default_supplier(supplier, commit=True)
 
-            post_churnzero_product_import(user, product.title, getattr(store_info, 'name', ''))
-
         except PermissionDenied as e:
             capture_exception()
             return {
@@ -266,8 +263,6 @@ def product_export(store_id, product_id, user_id, publish=None):
         # Initial Products Inventory Sync
         if user.models_user.get_config('initial_inventory_sync', True):
             sync_woo_product_quantities.apply_async(args=[product.id], countdown=0)
-
-        post_churnzero_product_export(user, product.title)
 
         store.pusher_trigger('product-export', {
             'success': True,

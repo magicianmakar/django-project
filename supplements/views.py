@@ -48,7 +48,6 @@ from shopified_core.utils import (
     aws_s3_context as images_aws_s3_context,
 )
 from shopified_core.models_utils import get_store_model
-from churnzero_core.utils import post_churnzero_product_import
 from analytic_events.models import SupplementLabelForApprovalEvent
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
 from supplements.lib.image import get_order_number_label, get_payment_pdf
@@ -1869,9 +1868,6 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
                         immutable=country['immutable'],
                     )
                     pl_supplement.shipping_countries.add(group)
-
-                if request.user.models_user.profile.has_churnzero_account:
-                    post_churnzero_product_import(request.user, entry['title'], 'Supplement Import')
 
             return redirect(reverse('pls:index'))
         return self.get(request)
