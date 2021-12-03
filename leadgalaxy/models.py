@@ -902,7 +902,6 @@ class ShopifyStore(StoreBase):
 
     api_url = models.CharField(max_length=512)
     title = models.CharField(max_length=512, blank=True, default='')
-    hubspot_title = models.CharField(max_length=512, blank=True, default='')
 
     # For OAuth App
     shop = models.CharField(max_length=512, blank=True, null=True)
@@ -2094,6 +2093,8 @@ class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")
     register_hash = models.CharField(unique=True, max_length=50, editable=False)
+
+    hubspot_title = models.CharField(max_length=512, blank=True, default='')
 
     stores = models.IntegerField(default=0, verbose_name="Stores Limit")
     products = models.IntegerField(default=0, verbose_name="Products Limit")
