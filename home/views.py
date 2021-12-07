@@ -16,6 +16,7 @@ from shopified_core import permissions
 from shopified_core.mocks import get_mocked_config_alerts
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import last_executed
+from aliexpress_core.models import AliexpressAccount
 
 from .context_processors import all_stores
 
@@ -118,7 +119,8 @@ class HomePageMixing(TemplateView):
             'user_goals': user_goals,
             'platform_videos': platform_videos,
             'upsell_alerts': upsell_alerts,
-            'alibaba_login_url': get_alibaba_access_token_url(user.models_user)
+            'alibaba_login_url': get_alibaba_access_token_url(user.models_user),
+            'aliexpress_accounts': AliexpressAccount.objects.filter(user=user.models_user),
         })
 
         return ctx

@@ -102,7 +102,7 @@ def base64_decode_params(context, data):
 @register.simple_tag(takes_context=True)
 def json_dumps(context, data, obfuscate=None):
     data = json.dumps(data)
-    if obfuscate:
+    if obfuscate and obfuscate != 'base64':
         rand = random.randint(1, 10)
         ch = random.choice(['\'', 'JSON.parse('])
         sep = '/**/' * rand
@@ -116,6 +116,8 @@ def json_dumps(context, data, obfuscate=None):
             ")",
             f' /* var {obfuscate} = {ch} */ ' * rand
         ])
+    elif obfuscate == 'base64':
+        data = base64_encode(data)
     else:
         data = f"JSON.parse('{escapejs(data)}')"
 

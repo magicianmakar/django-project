@@ -39,6 +39,7 @@ from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     app_link,
+    fix_order_data,
     jwt_encode,
     safe_int,
     safe_float,
@@ -685,7 +686,7 @@ class OrdersList(ListView):
     def render_to_response(self, context, **response_kwargs):
         bulk_queue = bool(self.request.GET.get('bulk_queue'))
         if bulk_queue:
-            return format_queueable_orders(self.request, context['orders'], context['page_obj'], store_type='chq')
+            return format_queueable_orders(context['orders'], context['page_obj'], store_type='chq', request=self.request)
 
         return super().render_to_response(context, **response_kwargs)
 
@@ -1119,6 +1120,7 @@ class OrdersList(ListView):
                         order_data['variant'] = line.get('variant', {}).get('variant', '')
 
                 if product and product.have_supplier():
+                    order_data = fix_order_data(self.request.user, order_data)
                     orders_cache['order_{}'.format(order_data['id'])] = order_data
                     line['order_data_id'] = order_data['id']
 

@@ -41,6 +41,7 @@ from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     app_link,
     aws_s3_context,
+    fix_order_data,
     jwt_encode,
     safe_int,
     url_join,
@@ -716,7 +717,7 @@ class OrdersList(ListView):
 
     def render_to_response(self, context, **response_kwargs):
         if self.bulk_queue:
-            return format_queueable_orders(self.request, context['orders'], context['page_obj'], store_type='woo')
+            return format_queueable_orders(context['orders'], context['page_obj'], store_type='woo', request=self.request)
 
         return super().render_to_response(context, **response_kwargs)
 
@@ -1162,6 +1163,7 @@ class OrdersList(ListView):
                                         'image_url': item['image'],
                                     })
 
+                        order_data = fix_order_data(self.request.user, order_data)
                         orders_cache['woo_order_{}'.format(order_data_id)] = order_data
                         item['order_data'] = order_data
 

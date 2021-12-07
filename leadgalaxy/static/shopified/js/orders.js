@@ -277,8 +277,7 @@ function placeOrder(e) {
         },
     }).done(function(data) {
         swal.close();
-        toastr.success('Item added to Orders Queue', 'Order Placed');
-        // btn.hide();
+        toastr.success('Order successfully placed', 'Order Placed');
 
     }).fail(function(data) {
         displayAjaxError('Place Order', data);
@@ -472,7 +471,46 @@ function addOrderSourceRequest(data_api, callback) {
 }
 
 $('.mark-as-ordered').click(addOrderSourceID);
-$('.place-order').click(placeOrder);
+
+function showOrderIframe() {
+    $('.order-content-list').removeClass('col-md-12').addClass('col-md-9');
+    $('.order-content-list-iframe').removeClass('hidden');
+}
+
+$('.place-order').on('click', function(e) {
+    e.preventDefault();
+
+    var btn = $(e.target);
+    var msg = {
+        subject: 'add-order',
+        order: {
+            'name': btn.attr('order-name'),
+            'store': btn.attr('store'),
+            'order_id': btn.attr('order-id'),
+            'line_id': btn.attr('line-id'),
+            'order_data': JSON.parse(atob(btn.attr('order-data')))
+
+        },
+    };
+
+    showOrderIframe();
+
+    document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
+});
+
+window.onmessage = function (e) {
+    var message;
+
+    try {
+        message = JSON.parse(e.data);
+    } catch (e) {
+        return;
+    }
+
+    if (message && message.subject && message.subject == "show-me") {
+        showOrderIframe();
+    }
+};
 
 $('.add-order-note').click(function (e) {
     e.preventDefault();

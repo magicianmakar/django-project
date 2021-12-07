@@ -1,5 +1,6 @@
 import os
 import re
+import hashlib
 import simplejson as json
 import requests
 
@@ -13,7 +14,6 @@ from django.utils.functional import cached_property
 
 from lib.exceptions import capture_message
 
-from shopified_core.utils import hash_list
 
 uk_provinces = None
 aliexpress_countries = None
@@ -176,6 +176,10 @@ def get_uk_province(city, default=''):
         province = correction.get('province', province)
 
     return province
+
+
+def hash_list(data, sep=''):
+    return hashlib.md5(sep.join([str(i) for i in data]).encode()).hexdigest()
 
 
 def get_fr_city_info(city, zip_code=None, orig_city=None):

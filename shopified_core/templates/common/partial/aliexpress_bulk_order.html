@@ -1,0 +1,59 @@
+<div id="modal-quick-aliexpress-order" class="modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Details</h4>
+        </div>
+        <div class="loading-background"></div>
+        <div class="modal-body">
+          <table class="table">
+            <thead>
+              <th class="text-left">Order ID</th>
+              <th>Item</th>
+              <th>Status</th>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <a href="#" class="btn btn-danger" data-dismiss="modal" aria-label="Close">Close</a>
+          <button class="btn btn-primary place-aliexpress-orders"
+            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Place Orders</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+  {% verbatim %}
+  <script id="aliexpress-bulk-order" type="text/x-handlebars-template">
+    {{#each orders}}
+    <tr class="aliexpress-item-payment" data-order-id="{{order_id }}">
+        <td>
+            <p>{{ order_id}}</p>
+            <p>{{ order_name }}</p>
+        </td>
+    <td>
+    {{# each items}}
+        <li>{{ this.line_title}}</li>
+    {{/each}}
+    </td>
+    <td><p id="status-{{order_id}}" class="text-danger">Pending</p></td>
+    {{/each}}
+    </tr>
+  </script>
+  {% endverbatim %}
+  
+  
+  <style type="text/css">
+      #modal-quick-aliexpress-order.modal, #modal-quick-aliexpress-order.modal-content {
+        overflow: hidden;
+      }
+      #modal-quick-aliexpress-order .modal-body {
+          overflow-y: scroll;
+          height: calc(450px);
+      }
+    
+  </style>
+  

@@ -111,6 +111,7 @@ INSTALLED_APPS = (
     'my_basket',
     'fulfilment_fee',
     'alibaba_core',
+    'aliexpress_core',
     'insider_reports',
     'suredone_core',
 )
@@ -210,6 +211,7 @@ DROPIFIED_API = {
     'mybasket': 'supplements.api.BasketApi',
     'acp': 'acp_core.api.ACPApi',
     'alibaba': 'alibaba_core.api.AlibabaApi',
+    'aliexpress': 'aliexpress_core.api.AliexpressApi',
 }
 
 # Database
@@ -593,6 +595,7 @@ ALIEXPRESS_API_KEY = os.environ.get('ALIEXPRESS_API_KEY')
 ALIEXPRESS_API_SECRET = os.environ.get('ALIEXPRESS_API_SECRET')
 ALIEXPRESS_TOKEN = os.environ.get('ALIEXPRESS_TOKEN')
 
+DROPIFIED_ORDERS_URL = os.environ.get('DROPIFIED_ORDERS_URL', 'https://orders.dropified.com')
 TRELLO_TOKEN = os.environ.get('TRELLO_TOKEN')
 
 # ActiveCampaign

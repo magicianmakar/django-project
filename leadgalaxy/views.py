@@ -48,7 +48,8 @@ from phone_automation.utils import get_month_limit, get_month_totals, get_phonen
 from product_alerts.models import ProductChange
 from product_alerts.utils import variant_index_from_supplier_sku
 from shopified_core import permissions
-from shopified_core.exceptions import ApiProcessException
+from shopified_core.exceptions import ApiLoginException, ApiProcessException
+from shopified_core.mixins import AuthenticationMixin
 from shopified_core.mocks import get_mocked_alert_changes, get_mocked_bundle_variants, get_mocked_supplier_variants
 from shopified_core.paginators import FakePaginator, SimplePaginator
 from shopified_core.shipping_helper import aliexpress_country_code_map, country_from_code, get_counrties_list
@@ -62,6 +63,7 @@ from shopified_core.utils import (
     clean_query_id,
     decode_params,
     encode_params,
+    fix_order_data,
     format_queueable_orders,
     hash_list,
     hash_text,
@@ -72,6 +74,7 @@ from shopified_core.utils import (
     products_filter,
     safe_float,
     safe_int,
+    safe_str,
     update_product_data_images,
     url_join,
     using_replica,
@@ -1709,7 +1712,7 @@ class OrdersViewUpsell(TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class OrdersView(TemplateView):
+class OrdersView(AuthenticationMixin, TemplateView):
     template_name = 'orders_new.html'
     post_per_page = 20
 
@@ -1731,6 +1734,7 @@ class OrdersView(TemplateView):
         self.filters = Munch()
         self.sync = Munch()
 
+        self.page = 0
         self.page_num = 0
         self.page_start = 0
 
@@ -1753,8 +1757,48 @@ class OrdersView(TemplateView):
         self.open_orders = None  # Found orders count
         self.current_page = None  # current Page instance returned by paginator
 
-    @method_decorator(login_required)
+    def find_orders(self, store, order_id, line_id=None):
+        self.store = store
+        self.user = store.user
+        self.models_user = store.user.models_user
+
+        self.bulk_queue = True
+
+        # set defualt required fields
+        self.filters.update(
+            query_order=str(order_id),
+            query_line_id=safe_str(line_id),
+            order_view_live='1',
+
+            created_at_start=None,
+            created_at_end=None,
+            query_customer_id=None,
+            query_address=None,
+            query='',
+            sort='',
+
+            status=None,
+            fulfillment='',
+            financial='any',
+            connected_only=None,
+            awaiting_order=None,
+            product_filter=None,
+            supplier_filter=None,
+            shipping_method_filter=None,
+            sort_field='created_at',
+            sort_type='true',
+        )
+
+        result = self.proccess_orders()
+        return format_queueable_orders(result['orders'], result['current_page'], orders_only=True)
+
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            try:
+                self.request.user = self.get_user(request)
+            except ApiLoginException:
+                return HttpResponseRedirect(app_link(reverse('login'), next=request.get_full_path()))
+
         if not request.user.can('orders.use'):
             return HttpResponseRedirect(f"{reverse('orders_upsell')}")
 
@@ -1766,8 +1810,9 @@ class OrdersView(TemplateView):
         if self.bulk_queue and not request.user.can('bulk_order.use'):
             return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."}, status=402)
 
-        # Get or guess the current store from the request
-        self.store = utils.get_store_from_request(request)
+        if not self.store:
+            # Get or guess the current store from the request
+            self.store = utils.get_store_from_request(request)
 
         if not self.store:
             # TODO: possible redirection loop
@@ -1839,7 +1884,8 @@ class OrdersView(TemplateView):
             show_actual_supplier=self.models_user.get_config('_show_actual_supplier', False) or self.models_user.id in [883, 21064, 24767],
             order_risk_all_getaways=self.models_user.get_config('_order_risk_all_getaways', False),
             aliexpress_mobile_order=self.models_user.can('aliexpress_mobile_order.use'),
-            ebay_manual_affiliate_link=self.models_user.can('ebay_manual_affiliate_link.use')
+            ebay_manual_affiliate_link=self.models_user.can('ebay_manual_affiliate_link.use'),
+            use_aliexpress_api=self.models_user.can('aliexpress_api_integration.use'),
         )
 
         self.config['admitad_site_id'], self.config['user_admitad_credentials'] = utils.get_admitad_credentials(self.models_user)
@@ -1847,8 +1893,12 @@ class OrdersView(TemplateView):
         return self.config
 
     def get_filters(self):
+        if not hasattr(self, 'request'):
+            return
+
         now = arrow.get(timezone.now())
 
+        self.page = self.request.GET.get('page')
         self.page_num = safe_int(self.request.GET.get('page'), 1)
         self.page_start = safe_int(self.request.GET.get('page_start'), 1)
         self.page_num += self.page_start - 1
@@ -1865,18 +1915,23 @@ class OrdersView(TemplateView):
 
             query=decode_params(self.request.GET.get('query') or self.request.GET.get('id')),
             query_order=decode_params(self.request.GET.get('query_order') or self.request.GET.get('id')),
+            query_line_id=self.request.GET.get('line_id'),
             query_customer=decode_params(self.request.GET.get('query_customer')),
             query_customer_id=self.request.GET.get('query_customer_id'),
             query_address=self.request.GET.getlist('query_address'),
 
             product_filter=[i for i in self.request.GET.getlist('product') if safe_int(i)],
+
             supplier_filter=self.request.GET.get('supplier_name'),
             shipping_method_filter=self.request.GET.get('shipping_method_name'),
+            exclude_products=self.request.GET.get('exclude_products'),
 
             order_risk_levels_enabled=self.models_user.get_config('order_risk_levels_enabled'),
             user_filter=utils.get_orders_filter(self.request),
 
             created_at_daterange=self.request.GET.get('created_at_daterange', now.replace(days=-30).format('MM/DD/YYYY-')),
+
+            order_debug=self.request.session.get('is_hijacked_user') or self.request.user.get_config('_orders_debug') or settings.DEBUG
         )
 
         if self.filters.product_filter:
@@ -1907,25 +1962,32 @@ class OrdersView(TemplateView):
             except:
                 pass
 
+        self.filters.update(
+            order_view_old=self.request.GET.get('old'),
+            order_view_new=self.request.GET.get('new'),
+            order_view_live=self.request.GET.get('live'),
+            order_view_elastic=self.request.GET.get('elastic'),
+        )
+
         return self.filters
 
     def get_sync_status(self):
-        if self.request.GET.get('old') == '1':
+        if self.filters.get('order_view_old') == '1':
             shopify_orders_utils.disable_store_sync(self.store)
-        elif self.request.GET.get('old') == '0':
+        elif self.filters.get('order_view_old') == '0':
             shopify_orders_utils.enable_store_sync(self.store)
 
         self.sync.store_order_synced = shopify_orders_utils.is_store_synced(self.store)
         self.sync.store_sync_enabled = self.sync.store_order_synced \
-            and (shopify_orders_utils.is_store_sync_enabled(self.store) or self.request.GET.get('new')) \
-            and not self.request.GET.get('live')
+            and (shopify_orders_utils.is_store_sync_enabled(self.store) or self.filters.get('order_view_new')) \
+            and not self.filters.get('order_view_live')
 
         self.sync.support_product_filter = shopify_orders_utils.support_product_filter(self.store) and self.models_user.can('exclude_products.use')
-        self.sync.shipping_method_filter_enabled = self.filters.shipping_method_filter and self.sync.store_order_synced
+        self.sync.shipping_method_filter_enabled = self.filters.get('shipping_method_filter') and self.sync.store_order_synced
 
         self.es = shopify_orders_utils.get_elastic()
         self.sync.es_search_enabled = self.es and shopify_orders_utils.is_store_indexed(store=self.store) \
-            and not self.request.GET.get('elastic') == '0'
+            and not self.filters.get('order_view_elastic') == '0'
 
         # Start background syncing task
         orders_sync_check_key = f'store_orders_sync_check_{self.store.id}'
@@ -2002,7 +2064,7 @@ class OrdersView(TemplateView):
 
         paginator = ShopifyOrderPaginator([], self.post_per_page)
         paginator.set_store(self.store)
-        paginator.set_page_info(self.request.GET.get('page'))
+        paginator.set_page_info(self.page)
         paginator.set_order_limit(self.post_per_page)
         paginator.set_filter(
             self.filters.status,
@@ -2290,7 +2352,7 @@ class OrdersView(TemplateView):
                 orders = orders.annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count'))
 
         if self.filters.product_filter:
-            if self.request.GET.get('exclude_products'):
+            if self.filters.get('exclude_products'):
                 orders = orders.exclude(shopifyorderline__product_id__in=self.filters.product_filter,
                                         items_count__lte=len(self.filters.product_filter)).distinct()
             else:
@@ -2465,11 +2527,11 @@ class OrdersView(TemplateView):
                     for refund_line in refund['refund_line_items']:
                         order['refunded_lines'].append(refund_line['line_item_id'])
 
-            for i, line_item in enumerate(order['line_items']):
-                if self.request.GET.get('line_id'):
-                    if safe_int(self.request.GET['line_id']) != line_item['id']:
-                        continue
+            query_line_id = safe_int(self.filters.get('query_line_id'))
+            if query_line_id:
+                order['line_items'] = [i for i in order['line_items'] if i['id'] == query_line_id]
 
+            for i, line_item in enumerate(order['line_items']):
                 line_item['refunded'] = line_item['id'] in order['refunded_lines']
 
                 line_item['image'] = {
@@ -2706,6 +2768,7 @@ class OrdersView(TemplateView):
                                 order_data['variant'] = variant_title.split('/') if variant_title else ''
 
                         if product and product.have_supplier():
+                            order_data = fix_order_data(self.user, order_data)
                             orders_cache['order_{}'.format(order_data['id'])] = order_data
                             line_item['order_data_id'] = order_data['id']
 
@@ -2739,11 +2802,6 @@ class OrdersView(TemplateView):
         else:
             countries = []
 
-        order_debug = self.request.session.get('is_hijacked_user') or \
-            (self.request.user.is_superuser and self.request.GET.get('debug')) or \
-            self.request.user.get_config('_orders_debug') or \
-            settings.DEBUG
-
         self.ctx.update(
             orders=self.orders,
             store=self.store,
@@ -2751,16 +2809,17 @@ class OrdersView(TemplateView):
             current_page=self.current_page,
             open_orders=self.open_orders,
             countries=countries,
-            order_debug=order_debug,
             open_print_on_demand=open_print_on_demand,
             **self.config,
             **self.filters,
             **self.sync,
         )
 
+        return self.ctx
+
     def render_to_response(self, context, **response_kwargs):
         if self.bulk_queue:
-            return format_queueable_orders(self.request, self.orders, self.current_page)
+            return format_queueable_orders(self.orders, self.current_page, request=self.request)
         else:
             return super().render_to_response(context, **response_kwargs)
 
