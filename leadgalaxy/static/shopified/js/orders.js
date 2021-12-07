@@ -491,7 +491,7 @@ $('.place-order').on('click', function(e) {
             'order_data': JSON.parse(atob(btn.attr('order-data')))
 
         },
-    }
+    };
 
     showOrderIframe();
 
