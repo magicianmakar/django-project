@@ -869,6 +869,16 @@
                                                 {% endfor %}
                                                 {% if item.supplier_type != 'pls' %}
                                                     {% if not order.pending_payment and not item.refunded %}
+                                                        {% if use_aliexpress_api %}
+                                                            <button class="btn btn-success btn-xs quick-bundle-order {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
+                                                                        store-type="shopify"
+                                                                        supplier-type="{{item.supplier_type}}"
+                                                                        order-data="{{item.order_data_id}}"
+                                                                        order-number="{{order.name}}"
+                                                                        style="position:absolute;right:125px;top:50px;">
+                                                                    Quick Bundle Order
+                                                                </button>
+                                                            {% endif %}
                                                         <button class="btn btn-success btn-xs order-bundle {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
                                                                 store-type="shopify"
                                                                 supplier-type="{{item.supplier_type}}"
