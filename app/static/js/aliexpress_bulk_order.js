@@ -18,7 +18,7 @@ function sendAliExpressOrders(e) {
                             order_ids.push(order_data);
                         }
                     });
-                }    
+                }
            });
         }
     }
@@ -36,7 +36,7 @@ function placeBulkApiOrder(btn, final_ids) {
     final_ids = final_ids;
     var order_data = final_ids.pop().split('_');  // split order data which contains store, order, line id
     var elem = '#status-' + order_data[1];
-    
+
     $.ajax({
         url: '/api/order-place',
         type: 'POST',
@@ -54,6 +54,7 @@ function placeBulkApiOrder(btn, final_ids) {
             swal.close();
             toastr.success('All items ordered', 'Order Placed');
             $("#modal-quick-aliexpress-order").modal('hide');
+            window.location.reload();
         }
         else {
             placeBulkApiOrder(btn, final_ids);
@@ -67,3 +68,26 @@ function placeBulkApiOrder(btn, final_ids) {
         // btn.button('reset');
     });
 }
+
+$('.quick-bundle-order').on("click", function(e) {
+    e.preventDefault();
+    btn = $(this);
+    btn.button('loading');
+
+    var order_data = $(e.target).attr('order-data');
+    order_data = order_data.split('_');
+    $.ajax({
+        url: '/api/order-place',
+        type: 'POST',
+        data: {
+            'store': order_data[0], // store id
+            'order_id': order_data[1], // order id
+            'line_id': order_data[2]
+        },
+    }).done(function(data) {
+        btn.button('reset');
+        toastr.success('All items ordered', 'Order Placed');
+    }).fail(function(data) {
+        btn.button('reset');
+    });
+});

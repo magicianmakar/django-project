@@ -94,12 +94,19 @@ def fulfill_aliexpress_order(store, order_id, line_id=None):
 
 def do_fulfill_aliexpress_order(orders, store, order_id, line_id=None):
     from leadgalaxy.api import ShopifyStoreApi
+    is_bundle = False
+    if orders.get('bundle', False):
+        is_bundle = True
 
     order_item = []
     for order in orders['items']:
         order_data = ShopifyStoreApi().get_order_data(None, store.user, {'order': order['order_data'], 'no_format': 1})
         order_item.append(order_data)
 
+    if is_bundle:
+        if len(order_item) > 0:
+            order_data = order_item[0]
+            order_item = order_data['products']
     aliexpress_order = PlaceOrder()
     aliexpress_order.set_app_info(API_KEY, API_SECRET)
 
@@ -122,12 +129,16 @@ def do_fulfill_aliexpress_order(orders, store, order_id, line_id=None):
     product_list = {}
     temp = []
     for order in order_item:
-        if str(order['supplier_id']) in product_list:
-            temp = product_list[str(order['supplier_id'])]
+        if is_bundle:
+            supplier_id = order['source_id']
+        else:
+            supplier_id = order['supplier_id']
+        if str(supplier_id) in product_list:
+            temp = product_list[str(supplier_id)]
         else:
             temp = []
         temp.append(order)
-        product_list[str(order['supplier_id'])] = temp
+        product_list[str(supplier_id)] = temp
 
     for key in product_list:
         req.product_items = []
@@ -135,9 +146,10 @@ def do_fulfill_aliexpress_order(orders, store, order_id, line_id=None):
             item = ProductBaseItem()
             item.product_count = i['quantity']
             item.product_id = i['source_id']
-            item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in i['variant']])
+            temp_variants = i.get('variants') or i.get('variant')
+            item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in temp_variants])
             # item.logistics_service_name = "DHL"  # TODO: handle shipping method
-            item.order_memo = i['order']['note']
+            # item.order_memo = i['order']['note'] or order_data['order']['note']
             req.add_item(item)
         aliexpress_order.set_info(req)
         aliexpress_account = AliexpressAccount.objects.filter(user=store.user).first()
@@ -148,15 +160,16 @@ def do_fulfill_aliexpress_order(orders, store, order_id, line_id=None):
             aliexpress_order_id = ','.join(set([str(i) for i in result['result']['order_list']['number']]))
         for line_id in orders['line_id']:
             try:
-                req = requests.post(
+                request = requests.post(
                     url=app_link('api/order-fulfill'),
                     data=dict(store=store.id, order_id=order_id, line_id=line_id, aliexpress_order_id=aliexpress_order_id, source_type=''),
                     headers=dict(Authorization=store.user.get_access_token())
                 )
+                print(request)
             except Exception:
                 pass
 
-        return HttpResponse(status=200)
+    return HttpResponse(status=200)
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
