@@ -96,26 +96,19 @@ class AuthenticationMixin(RequestDataMixin):
         return user
 
     def user_from_token(self, token):
-        if not token:
-            return None
+        if token:
+            try:
+                return User.objects.get(accesstoken__token=token)
+            except User.DoesNotExist:
+                pass
+            except:
+                capture_exception()
 
-        user = None
-
-        try:
-            user = User.objects.get(accesstoken__token=token)
-        except User.DoesNotExist:
-            user = None
-        except:
-            user = None
-            capture_exception()
-
-        try:
-            info = jwt_decode(token)
-            user = User.objects.get(id=info['id'])
-        except:
-            user = None
-
-        return user
+            try:
+                info = jwt_decode(token)
+                return User.objects.get(id=info['id'])
+            except:
+                pass
 
 
 class ApiResponseMixin(AuthenticationMixin, View):
