@@ -499,7 +499,7 @@ $('.place-order').on('click', function(e) {
 });
 
 window.onmessage = function (e) {
-    let message;
+    var message;
 
     try {
         message = JSON.parse(e.data);
