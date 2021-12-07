@@ -928,7 +928,7 @@
                 <div class="col-md-3 order-content-list-iframe hidden" style="padding:0;margin:0">
                     <iframe
                         id="orders-aliexpress-frm"
-                        src="https://orders.dropified.com/?token={{ user.get_jwt_access_token }}"
+                        src="{% app_setting 'DROPIFIED_ORDERS_URL' %}/?token={{ user.get_jwt_access_token }}"
                         style=" width: 100%; min-height: 800px; padding: 0; margin: 0; border: 1px solid #655858cc;">
                     </iframe>
                 </div>

@@ -596,6 +596,7 @@ ALIEXPRESS_API_KEY = os.environ.get('ALIEXPRESS_API_KEY')
 ALIEXPRESS_API_SECRET = os.environ.get('ALIEXPRESS_API_SECRET')
 ALIEXPRESS_TOKEN = os.environ.get('ALIEXPRESS_TOKEN')
 
+DROPIFIED_ORDERS_URL = os.environ.get('DROPIFIED_ORDERS_URL', 'https://orders.dropified.com')
 TRELLO_TOKEN = os.environ.get('TRELLO_TOKEN')
 
 # ActiveCampaign
