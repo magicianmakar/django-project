@@ -9,10 +9,11 @@ from leadgalaxy.templatetags.template_helper import app_link
 from lib.exceptions import capture_exception
 
 from aliexpress_core.settings import API_KEY, API_SECRET
-from aliexpress_core.utils import MaillingAddress, PlaceOrder, PlaceOrderRequest, ProductBaseItem
+from aliexpress_core.utils import MaillingAddress, PlaceOrder, OrderInfo, PlaceOrderRequest, ProductBaseItem
 from leadgalaxy.models import ShopifyStore, ShopifyProduct, ShopifyOrderTrack
 from shopify_orders.utils import OrderErrorsCheck, update_elasticsearch_shopify_order
 from shopify_orders.models import ShopifyOrder
+import json
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -186,4 +187,99 @@ def index_shopify_order(self, order_pk):
         pass
 
     except:
+        capture_exception()
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def get_order_info_via_api(self, order, source_id, store_id):
+
+    STATUS_MAP = {
+        "PLACE_ORDER_SUCCESS": "Awaiting Payment",
+        "IN_CANCEL": "Awaiting Cancellation",
+        "WAIT_SELLER_SEND_GOODS": "Awaiting Shipment",
+        "SELLER_PART_SEND_GOODS": "Partial Shipment",
+        "WAIT_BUYER_ACCEPT_GOODS": "Awaiting delivery",
+        "WAIT_GROUP_SUCCESS": "Pending operation success",
+        "FINISH": "Order Completed",
+        "IN_ISSUE": "Dispute Orders",
+        "IN_FROZEN": "Frozen Orders",
+        "WAIT_SELLER_EXAMINE_MONEY": "Payment not yet confirmed",
+        "RISK_CONTROL": "Payment being verified",
+        "IN_PRESELL_PROMOTION": "Promotion is on",
+        "FUND_PROCESSING": "Fund Processing",
+
+        "BUYER_NO_SHOW": "Pickup cancelled buyer no show",
+        "BUYER_REJECTED": "Pickup cancelled buyer rejected",
+        "DELIVERED": "Delivered",
+        "DIRECT_DEBIT": "Direct Debit",
+        "EXTERNAL_WALLET": "Processed by PayPal",
+        "IN_TRANSIT": "In transit",
+        "MANIFEST": "Shipping Info Received",
+        "NO_PICKUP_INSTRUCTIONS_AVAILABLE": "No pickup instruction available",
+        "NOT_PAID": "Not Paid",
+        "NOT_SHIPPED": "Item is not shipped",
+        "SHIPPED": "Shipped",
+        "OUT_OF_STOCK": "Out of stock",
+        "PENDING_MERCHANT_CONFIRMATION": "Order is being prepared",
+        "PICKED_UP": "Picked up",
+        "PICKUP_CANCELLED_BUYER_NO_SHOW": "Pickup cancelled buyer no show",
+        "PICKUP_CANCELLED_BUYER_REJECTED": "Pickup cancelled buyer rejected",
+        "PICKUP_CANCELLED_OUT_OF_STOCK": "Out of stock",
+        "READY_FOR_PICKUP": "Ready for pickup",
+        "SHIPPING_INFO_RECEIVED": "Shipping info received",
+
+        "D_PENDING_PAYMENT": "Pending Payment",
+        "D_PAID": "Confirmed Payment",
+        "D_PENDING_SHIPMENT": "Pending Shipment",
+        "D_SHIPPED": "Shipped"
+    }
+    store = ShopifyStore.objects.get(id=store_id)
+    if not API_SECRET:
+        return 'Service API is not set'
+    if not store.user.aliexpress_account.count():
+        return 'Aliexpress Account is not connected'
+
+    aliexpress_order_details = OrderInfo()
+    aliexpress_order_details.set_app_info(API_KEY, API_SECRET)
+
+    aliexpress_order_details.single_order_query = json.dumps({"order_id": source_id})
+
+    aliexpress_account = AliexpressAccount.objects.filter(user=store.user).first()
+
+    try:
+        result = aliexpress_order_details.getResponse(authrize=aliexpress_account.access_token)
+
+        fulfillment_data = {}
+        order_details = {}
+        order_data = result.get('aliexpress_trade_ds_order_get_response')
+        if order_data is None:
+            return None
+        order_data = order_data.get('result')
+        tracking_number_obj = order_data.get('logistics_info_list').get('aeop_order_logistics_info')
+        if tracking_number_obj is not None:
+            fulfillment_data['tracking_number'] = tracking_number_obj[0]['logistics_no']
+        fulfillment_data['end_reason'] = ''
+        fulfillment_data['status'] = order_data['order_status']
+        fulfillment_data['orderStatus'] = STATUS_MAP[order_data['order_status']]
+
+        # product data starts here
+        product_data = order_data.get("child_order_list", None)
+        total_product_price = 0
+        if product_data is not None:
+            product_data = product_data.get("aeop_child_order_info")
+            for product in product_data:
+                product_qty = product['product_count']
+                product_price = product['product_price']['amount']
+                total_product_price = total_product_price + (float(product_price) * product_qty)
+
+        cost = {}
+        cost['total'] = order_data['order_amount']['amount']
+        cost['currency'] = order_data['order_amount']['currency_code']
+        cost['shipping'] = ''
+        cost['products'] = str(total_product_price) if total_product_price > 0 else ''
+        order_details['cost'] = cost
+        fulfillment_data['order_details'] = order_details
+        return fulfillment_data
+    except Exception as e:
+        print(e)
         capture_exception()
