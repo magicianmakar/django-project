@@ -51,8 +51,6 @@
         if ($(this).data('src')) {
             $(this).prop('src', $(this).data('src'));
         }
-        console.log($(this));
-
     });
 
 
@@ -110,7 +108,3 @@
 
 
 }());
-
-
-
-

@@ -1,6 +1,8 @@
-import requests
 
-from django.http import HttpResponse
+import requests
+from collections import defaultdict
+
+from django.http import HttpResponse, JsonResponse
 
 from aliexpress_core.models import AliexpressAccount
 from aliexpress_core.settings import API_KEY, API_SECRET
@@ -20,6 +22,30 @@ class AliexpressFulfillHelper():
         self.order_id = order_id
         self.items = items
         self.shipping_address = shipping_address
+
+        self.reset_errors()
+
+    def reset_errors(self):
+        self.order_errors = []
+        self.order_item_errors = defaultdict(list)
+
+    def order_error(self, err):
+        self.order_errors.append(err)
+        raise AliexpressFulfillException(err)
+
+    def order_item_error(self, line_id, err):
+        self.order_item_errors[str(line_id)].append(err)
+
+    def has_errors(self):
+        return self.order_errors or self.order_item_errors
+
+    def errors(self):
+        return {
+            'errors': {
+                'order': self.order_errors,
+                'items': self.order_item_errors,
+            }
+        }
 
     def fulfill_shopify_order(self):
         self.order = get_shopify_order(self.store, self.order_id)
@@ -60,7 +86,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['id'])] = item
 
         if not need_fulfill_items:
-            raise AliexpressFulfillException('Order have no items that need fulfillements')
+            return self.order_error('Order have no items that need fulfillements')
 
         self.items = need_fulfill_items
 
@@ -113,7 +139,7 @@ class AliexpressFulfillHelper():
                     )
                 except Exception:
                     capture_exception()
-                    raise AliexpressFulfillException('Could not mark as ordered')
+                    return self.order_error('Could not mark as ordered')
             else:
                 error_message = 'Could not place order'
                 if result:
@@ -122,7 +148,7 @@ class AliexpressFulfillHelper():
                     if error_code == 'B_DROPSHIPPER_DELIVERY_ADDRESS_VALIDATE_FAIL':
                         error_message = 'Customer Shipping Address or Phone Number is not valid'
 
-                raise AliexpressFulfillException(error_message)
+                return self.order_error(error_message)
 
         return HttpResponse(status=200)
 
@@ -136,7 +162,11 @@ class AliexpressApi(ApiResponseMixin):
         try:
             helper = AliexpressFulfillHelper(store, data['order_id'], data['items'], data['shipping_address'])
             helper.fulfill_shopify_order()
-        except AliexpressFulfillException as e:
-            return self.api_error(str(e), status=422)
 
-        return self.api_success()
+        except AliexpressFulfillException:
+            pass
+
+        if helper.has_errors():
+            return JsonResponse(helper.errors(), status=422)
+        else:
+            return self.api_success()
