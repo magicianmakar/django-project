@@ -111,18 +111,26 @@ class AliexpressFulfillHelper():
         req = PlaceOrderRequest()
         req.setAddress(address)
 
+        aliexpress_account = AliexpressAccount.objects.filter(user=self.store.user).first()
+        if not aliexpress_account:
+            return self.order_error("No Aliexpress Account is found")
+
         for line_id, line_item in self.items.items():
             req.product_items = []
             item = ProductBaseItem()
             item.product_count = line_item['quantity']
             item.product_id = line_item['source_id']
-            item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
+
+            try:
+                item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
+            except:
+                self.order_item_error(line_id, 'Variant mapping is not set for this item')
+
             # item.logistics_service_name = "DHL"  # TODO: handle shipping method
             item.order_memo = 'No Invoice'  # TODO: Memo
             req.add_item(item)
 
             aliexpress_order.set_info(req)
-            aliexpress_account = AliexpressAccount.objects.filter(user=self.store.user).first()
 
             result = aliexpress_order.getResponse(authrize=aliexpress_account.access_token)
             result = result.get('aliexpress_trade_buy_placeorder_response')
@@ -139,7 +147,7 @@ class AliexpressFulfillHelper():
                     )
                 except Exception:
                     capture_exception()
-                    return self.order_error('Could not mark as ordered')
+                    self.order_item_error(line_id, f'Could not mark as ordered, Aliexpress Order ID: {aliexpress_order_id}')
             else:
                 error_message = 'Could not place order'
                 if result:
