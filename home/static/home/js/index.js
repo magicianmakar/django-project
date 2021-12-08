@@ -1844,6 +1844,19 @@
         });
     });
 
+    $('.del-aliexpress-account').on('click', function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: api_url('account', 'aliexpress') + '?' + $.param({account: $(e.currentTarget).data('account')}),
+            method: 'DELETE',
+        }).done(function(data) {
+            window.location.reload();
+        }).error(function(data) {
+            displayAjaxError('Delete Aliexpress Account', data);
+        });
+    });
+
     $(function () {
         showDescriptionHelp();
         $('#auto_shopify_fulfill').trigger('change');

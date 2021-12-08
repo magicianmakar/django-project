@@ -11,7 +11,11 @@
         <div class="row well m">
             <div class="col-sm-4">{{ account.aliexpress_username }} ({{ account.aliexpress_user_id }})</div>
             <div class="col-sm-4">Added {% date_humanize account.created_at %}</div>
-            <div class="col-sm-4 text-right"><a href="#" class="text-danger"><i class="fa fa-times"></i> Remove</a></div>
+            <div class="col-sm-4 text-right">
+                <a href="#" class="del-aliexpress-account text-danger" data-account="{{ account.id }}">
+                    <i class="fa fa-times"></i> Remove
+                </a>
+            </div>
         </div>
         {% endfor %}
 

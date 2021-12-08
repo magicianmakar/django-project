@@ -170,3 +170,11 @@ class AliexpressApi(ApiResponseMixin):
             return JsonResponse(helper.errors(), status=422)
         else:
             return self.api_success()
+
+    def delete_account(self, request, user, data):
+        account = AliexpressAccount.objects.get(id=data['account'])
+        permissions.user_can_delete(user, account)
+
+        account.delete()
+
+        return self.api_success()
