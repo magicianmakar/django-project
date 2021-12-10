@@ -9,6 +9,10 @@ function basketCalculateShipping(country_code,province) {
             dataType: 'json',
             contentType: 'application/json',
             success: function (api_data) {
+                if (api_data.shippings[0].error) {
+                    swal(api_data.shippings[0].error, '', "warning");
+                    return;
+                }
                 var shippingsCount = api_data.shippings.length;
                 for (var i = 0; i < shippingsCount; i++) {
                     api_data.shippings[i].currency_shipping_cost = '$'+api_data.shippings[i].shipping_cost.toFixed(2);
