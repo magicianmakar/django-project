@@ -79,33 +79,32 @@
                         </div>
                     </div>
 
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Supplier</span>
-                        </div>
-                        <div class="col-md-4">
-                            <input name="supplier_name" id="supplier_name" value="{{supplier_filter|default:''}}" class="form-control"
-                                   placeholder="Supplier Name" data-store="{{store.id}}">
-                        </div>
-                    </div>
                     {% if store_sync_enabled %}
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Country</span>
+                        <div class="row filter-row">
+                            <div class="col-md-offset-1 col-md-1 filter-label">
+                                <span>Supplier</span>
+                            </div>
+                            <div class="col-md-4">
+                                <input name="supplier_name" id="supplier_name" value="{{supplier_filter|default:''}}" class="form-control"
+                                    placeholder="Supplier Name" data-store="{{store.id}}">
+                            </div>
                         </div>
-                        
-                        <div class="col-md-4">
-                            <select name="query_country"  class="form-control" id="country-filter"
-                                    data-placeholder="Shipping Country" style="height:30px" multiple>
-                               <option value=""></option>
-                                {% for item in countries %}
-                                <option value="{{item.0}}"
-                                    {% query_active 'query_country' item.0 'selected="selected"' True %}
-                                    >{{item.1}}</option>
-                                {% endfor %}
-                                </select>
+                        <div class="row filter-row">
+                            <div class="col-md-offset-1 col-md-1 filter-label">
+                                <span>Country</span>
+                            </div>
+                            <div class="col-md-4">
+                                <select name="query_country"  class="form-control" id="country-filter"
+                                        data-placeholder="Shipping Country" style="height:30px" multiple>
+                                <option value=""></option>
+                                    {% for item in countries %}
+                                    <option value="{{item.0}}"
+                                        {% query_active 'query_country' item.0 'selected="selected"' True %}
+                                        >{{item.1}}</option>
+                                    {% endfor %}
+                                    </select>
+                            </div>
                         </div>
-                    </div>
                     {% endif %}
 
                     {% if not store_sync_enabled %}
@@ -198,7 +197,7 @@
                                 <i class="fa fa-save"></i> Save Filter
                             </a>
 
-                            <a href="/orders?store={{store.id}}&reset=1" class="btn btn-default reset-filter-btn">
+                            <a href="{% url 'woo:orders_list'%}?store={{store.id}}&reset=1" class="btn btn-default reset-filter-btn">
                                 <i class="fa fa-eraser"></i> Reset Filter
                             </a>
                         </div>

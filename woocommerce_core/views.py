@@ -738,10 +738,10 @@ class OrdersList(ListView):
         if daterange and not daterange == 'all':
             filters['after'], filters['before'] = get_daterange_filters(daterange)
 
-        product_id = params.get('product')
+        product_id = params.get('query_product')
         if product_id:
-            self.product_filter = WooProduct.objects.filter(pk=safe_int(product_id)).first()
-            filters['product'] = self.product_filter.source_id if self.product_filter else 0
+            self.product_filter = WooProduct.objects.filter(pk=safe_int(product_id))
+            filters['product'] = self.product_filter.first().source_id if self.product_filter else 0
 
         if params.get('query_customer'):
             filters['customer'] = get_customer_id(self.get_store(), params['query_customer'])
