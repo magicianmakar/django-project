@@ -256,8 +256,12 @@
 
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
+        <div class="row">
+            <div class="order-content-list col-md-12">
+
                 {% for order in orders %}
                 <div class="panel-body">
+
                     <div class="order" order-id="{{order.id}}"
                         connected="{{order.connected_lines}}"
                         data-auto-order="{{user|can:'auto_order.use'|lower}}">
@@ -820,19 +824,21 @@
                     </p>
                 {% endif %}
                 {% endfor %}
+            </div> <!-- /order-content-list -->
+
+            <div class="col-md-3 order-content-list-iframe hidden" style="padding:0;margin:0">
+                <iframe
+                    id="orders-aliexpress-frm"
+                    src="{% app_setting 'DROPIFIED_ORDERS_URL' %}/?token={{ user.get_jwt_access_token }}"
+                    style=" width: 100%; min-height: 800px; padding: 0; margin: 0; border: 0px solid #655858cc;">
+                </iframe>
+            </div> <!-- /order-content-list-iframe -->
+        </div> <!-- /row -->
 
                 {% if request.user.models_user.profile.plan.auto_fulfill_limit == 0 %}
                 {% include "common/partial/upsell.html" with top="200px" message="Add Automated Ordering and Fulfillment to your Plan" only %}
                 {% endif %}
                 {% include "partial/paginator.html" %}
-
-                <div class="col-md-3 order-content-list-iframe hidden" style="padding:0;margin:0">
-                    <iframe
-                        id="orders-aliexpress-frm"
-                        src="{% app_setting 'DROPIFIED_ORDERS_URL' %}/?token={{ user.get_jwt_access_token }}"
-                        style=" width: 100%; min-height: 800px; padding: 0; margin: 0; border: 0px solid #655858cc;">
-                    </iframe>
-                </div>
             </div>
         </div>
     </div>
