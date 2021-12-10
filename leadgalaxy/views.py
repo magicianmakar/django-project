@@ -110,7 +110,8 @@ from .models import (
     ShopifyProductImage,
     ShopifyStore,
     UserBlackSampleTracking,
-    UserUpload
+    UserUpload,
+    UserProfile
 )
 from .paginator import ShopifyOrderPaginator
 from .templatetags.template_helper import money_format
@@ -3460,7 +3461,18 @@ def register(request, registration=None, subscribe_plan=None):
         form.set_plan_registration(registration)
 
         if form.is_valid():
-            new_user = form.save()
+
+            if registration and registration.plan:
+                # do not autoprofile, to not fire Stripe webhooks
+                new_user = form.save(False)
+                new_user.no_auto_profile = True
+                new_user.save()
+                profile = UserProfile.objects.create(user=new_user, plan=registration.plan)
+                if profile.plan.is_stripe():
+                    profile.apply_subscription(profile.plan)
+            else:
+                new_user = form.save()
+
             new_user.set_config('_tos-accept', True)
 
             reg_coupon = request.GET.get('cp')
