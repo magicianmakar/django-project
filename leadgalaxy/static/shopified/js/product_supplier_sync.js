@@ -120,6 +120,12 @@
 
     $('#modal-product-supplier-sync .stop-update-btn').click(function(e) {
         e.preventDefault();
+        
+        $('#modal-product-supplier-sync input').prop('disabled', null);
+        $('#modal-product-supplier-sync .start-update-btn').show();
+        $('#modal-product-supplier-sync .stop-update-btn').hide();
+        $('#modal-product-supplier-sync .update-progress').hide();
+        
         $.ajax({
             url: '/api/products-supplier-sync-stop',
             type: 'POST',
@@ -127,9 +133,8 @@
                 store: $(e.target).attr('data-store')
             },
         }).done(function(data) {
-            $('#modal-product-supplier-sync input').prop('disabled', null);
-            $('#modal-product-supplier-sync .start-update-btn').show();
-            $('#modal-product-supplier-sync .stop-update-btn').hide();
+            swal('Product Sync', 'Product Sync is stopped', 'success');
+            return;
 
         }).fail(function(data) {
             displayAjaxError('Product Sync', data);
