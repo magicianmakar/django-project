@@ -1962,3 +1962,14 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
         width: calc(25% + 15px);
     }
 }
+
+.switchery-small {
+  height: 15px !important;
+  width: 40px !important;
+  bottom: 2px;
+}
+
+.switchery-small>small {
+  height: 14.3px !important;
+  width: 14px !important;
+}

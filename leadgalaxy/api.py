@@ -1331,6 +1331,11 @@ class ShopifyStoreApi(ApiBase):
                 if key != 'access_token':
                     config[key] = data[key]
 
+        if 'order_default_phone' in data.keys():
+            config['order_default_phone'] = data['order_default_phone']
+        else:
+            config['order_default_phone'] = 'seller'
+
         for key in bool_config:
             config[key] = (key in data)
 

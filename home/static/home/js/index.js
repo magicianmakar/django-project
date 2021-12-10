@@ -251,7 +251,7 @@
         });
     });
 
-    $('form#config-form').submit(function (e) {
+    $('form.config-form').submit(function (e) {
         e.preventDefault();
 
         if ($('#phone-invalid').is(':visible')) {
@@ -267,7 +267,7 @@
             return;
         }
 
-        var config = $(this).serialize();
+        var config = $('.config-form').serialize();
 
         $.ajax({
             url: '/api/user-config',
@@ -939,15 +939,6 @@
         else {
             $('#add-rule-form .price-markup-cont .input-group-addon').hide();
         }
-    });
-
-    $('#compare_at_enabled').on('change', function (e) {
-        if (e.currentTarget.checked) {
-            $('.compare-at-row').slideDown();
-        } else {
-            $('.compare-at-row').slideUp();
-        }
-
     });
 
     var deleteMarkupRuleClicked = function(e) {
