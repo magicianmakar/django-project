@@ -3,11 +3,12 @@
 {% load template_helper %}
 {% load cache %}
 
+<a class="navbar-minimalize minimalize-styl-2 btn btn-primary leftnavbar old-layout-hidden" href="#"></a>
 <nav id="side-menu" class="navbar-default sidebar navbar-static-side
   {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
   pls
   {% endif %}
-  " role="navigation">
+  " role="navigation" >
     <div class="sidebar-collapse">
         <div class="logo">
             <a href="{% url 'index' %}">
@@ -24,7 +25,7 @@
         </div>
 
     {% if user.is_authenticated %}
-    <div class="profile">
+    <div class="profile new-layout-hidden">
       <div class="name">
         <a href='{% url "user_profile" %}'>
           <strong class="font-bold">{{user.get_full_name|default:'Profile'}}</strong>
@@ -34,7 +35,7 @@
         <img src="{% static 'vector-profile.svg' %}"/>
       </div>
     </div>
-    <div class="account {{ sidemenu.named.account.classes }}">
+    <div class="account new-layout-hidden {{ sidemenu.named.account.classes }}">
       <a href='{{ sidemenu.named.account.url }}'>
         {{ sidemenu.named.account.title }}
       </a>
@@ -42,11 +43,16 @@
 
     {% endif %}
 
+
     <ul>
       {# header #}
 
       {% if request.user.is_superuser or request.user.is_staff %}
+        {% if request.session.old_layout %}
         <li style="display:flex;margin-left:10px;">
+        {% else %}
+        <li style="display:flex;margin-left:8px;">
+        {% endif %}
             <a href="{% url 'acp_index_view' %}" style="flex-grow:2">
               <span class="item-title">Admin</span>
             </a>
@@ -63,81 +69,103 @@
       {% for item in section.items %}
 
       <li class="section-no-icon {{ item.classes }}">
-        <a href="{{ item.url }}">{{ item.title | safe }}</a>
+        <a href="{{ item.url }}">
+          {% if item.icon %}
+            <img src="{% static item.icon %}" class="item-icon"/>
+          {% endif %}
+          {{ item.title | safe }}
+        </a>
       </li>
 
       {% endfor %}
       {% endfor %}
 
       {% if user.models_user.profile.plan.support_addons %}
-      <li class="section">
-          <a class="section-header" href="{% url 'addons.list_view' %}">
-            <div>
-              <img src="https://cdn.dropified.com/static/img/black/addons_21px_outlined.svg"/>
-            </div>
-            <span class="item-title item-link" style="cursor:pointer">Addon Store</span>
+      <li class="section-no-icon">
+          <a href="{% url 'addons.list_view' %}">
+            <img src="{% static 'img/addon-store.svg' %}" class="item-icon"/>
+            Addon Store
           </a>
       </li>
       {% endif %}
 
       {# Dropified Black #}
       {% if user|can:'pls.use' or user.profile.private_label or request.user|can:'pls_staff.use' %}
-      <li class="section">
+      <li class="section side-menu-dropdown">
         <span class="section-header">
-          <div>
+          <div class="new-layout-hidden">
             <img src="https://cdn.dropified.com/static/img/black/pallet-solid.svg"/>
           </div>
-          <span class="item-title">Private Label</span>
+          <div class="section-header-content">
+            <span class="item-title">Private Label</span>
+            <i class="fa fa-caret-up nav-menu-caret"></i>
+          </div>
         </span>
       </li>
-      <li class="item">
+      <div>
+        <li class="item">
           <a href="{% url 'pls:index' %}">
+            <img src="{% static 'img/private-label.svg' %}" class="item-icon"/>
             Products
           </a>
-      </li>  
-      <li class="item">
+        </li>
+        <li class="item">
           <a href="https://www.dropified.com/dropified-black-catalog/" target="_blank">
+            <img src="{% static 'img/private-label.svg' %}" class="item-icon"/>
             Updates
           </a>
-      </li>   
-      {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
-        <li class="item">
-            <a href="{% url 'pls:all_user_supplements' %}">
-              Admin
-            </a>
         </li>
-      {% endif %}  
-    {% endif %}
+        {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
+        <li class="item">
+          <a href="{% url 'pls:all_user_supplements' %}">
+            <img src="{% static 'img/private-label.svg' %}" class="item-icon"/>
+            Admin
+          </a>
+        </li>
+        {% endif %}
+      </div>
+      {% endif %}
 
       {# body #}
       {% for section in sidemenu.body %}
-      <li class="section">
+      <li class="section side-menu-dropdown">
         <span class="section-header">
-          <div>
+          <div class="new-layout-hidden">
             <img src="{% static section.icon %}"/>
           </div>
-          <span class="item-title">{{ section.title }}</span>
+          <div class="section-header-content">
+            <span class="item-title">{{ section.title }}</span>
+            <i class="fa fa-caret-up nav-menu-caret"></i>
+          </div>
         </span>
       </li>
 
+      <div>
         {% for item in section.items %}
         <li class="item {{ item.classes }}">
-          <a {% if item.new_tab %}target="_blank"{% endif %} href="{{ item.url }}">{{ item.title }}</a>
+          <a {% if item.new_tab %}target="_blank"{% endif %} href="{{ item.url }}">
+            {% if item.icon %}
+            <img src="{% static item.icon %}" class="item-icon"/>
+            {% endif %}
+            {{ item.title }}
+          </a>
         </li>
         {% endfor %}
+      </div>
       {% endfor %}
+
     </ul>
-  
+
     {# footer #}
     <ul class="navfooter {% if user.is_staff %}staff{% endif %}">
-      <li class="section-no-icon">
+      <li class="section-no-icon new-layout-hidden">
         <a href="{{ sidemenu.named.academy.url }}" target="_blank"
             class="itooltip" data-placement="right" title="Step by Step Course">
           {{ sidemenu.named.academy.title | safe }}
         </a>
       </li>
 
-      <li class="section-no-icon">
+      <li class="section-no-icon new-layout-hidden">
         <a href="{{ sidemenu.named.video_training.url }}" target="_blank">
           {{ sidemenu.named.video_training.title }}
         </a>
@@ -147,7 +175,163 @@
       {% for item in section.items %}
 
       <li class="section-no-icon {{ item.classes }}">
-        <a href="{{ item.url }}">{{ item.title | safe }}</a>
+        <a href="{{ item.url }}">
+          {% if item.fa_icon %}<i class="fa {{ item.fa_icon }}"></i>{% endif %}
+          {{ item.title | safe }}
+        </a>
+      </li>
+
+      {% endfor %}
+      {% endfor %}
+
+    </ul>
+  </div>
+</nav>
+
+
+<nav id="mini-side-menu" class="navbar-default sidebar navbar-static-side icon-navbar
+  {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
+  pls
+  {% endif %}
+  " role="navigation" style="display: none">
+    <div class="sidebar-collapse">
+        <div class="logo">
+            <a href="{% url 'index' %}">
+                <img src="{% static 'img/dropified-icon-only.svg' %}"/>
+            </a>
+        </div>
+
+    {% if user.is_authenticated %}
+    <div class="profile new-layout-hidden">
+      <div class="name">
+        <a href='{% url "user_profile" %}'>
+          <strong class="font-bold">{{user.get_full_name|default:'Profile'}}</strong>
+        </a>
+      </div>
+      <div class="icon">
+        <img src="{% static 'vector-profile.svg' %}"/>
+      </div>
+    </div>
+    <div class="account new-layout-hidden {{ sidemenu.named.account.classes }}">
+      <a href='{{ sidemenu.named.account.url }}'>
+        {{ sidemenu.named.account.title }}
+      </a>
+    </div>
+
+    {% endif %}
+
+
+    <ul>
+      {# header #}
+
+      {% if request.user.is_superuser or request.user.is_staff %}
+        {% if request.session.old_layout %}
+        <li style="display:flex;margin-left:10px;">
+        {% else %}
+        <li class="section-no-icon">
+        {% endif %}
+            <a href="{% url 'acp_index_view' %}" title="Admin">
+              <i class="fa fa-search item-icon"></i>
+            </a>
+        </li>
+      {% endif %}
+
+      {% for section in sidemenu.header %}
+      {% for item in section.items %}
+
+      <li class="section-no-icon {{ item.classes }}">
+        <a href="{{ item.url }}" title="{{item.title | safe}}">
+          {% if item.icon %}
+            <img src="{% static item.icon %}" class="item-icon"/>
+          {% endif %}
+        </a>
+      </li>
+
+      {% endfor %}
+      {% endfor %}
+
+      {% if user.models_user.profile.plan.support_addons %}
+      <li class="section-no-icon">
+          <a href="{% url 'addons.list_view' %}">
+            <img src="{% static 'img/addon-store.svg' %}" class="item-icon">
+          </a>
+      </li>
+      {% endif %}
+
+      {# Dropified Black #}
+      {% if user|can:'pls.use' or user.profile.private_label or request.user|can:'pls_staff.use' %}
+      <li class="section">
+        <span class="section-header">
+        </span>
+      </li>
+      <li class="item">
+          <a href="{% url 'pls:index' %}" title="Private Label Products">
+            <img src="{% static 'img/private-label.svg' %}" class="item-icon"/>
+          </a>
+      </li>
+      <li class="item">
+          <a href="https://www.dropified.com/dropified-black-catalog/" target="_blank" title="Private Label Updates">
+            <img src="{% static 'img/private-label.svg' %}" class="item-icon"/>
+          </a>
+      </li>
+      {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
+      <li class="item">
+          <a href="{% url 'pls:all_user_supplements' %}" title="Private Label Admin">
+            <img src="{% static 'img/private-label.svg' %}" class="item-icon"/>
+          </a>
+      </li>
+      {% endif %}
+      {% endif %}
+
+      {# body #}
+      {% for section in sidemenu.body %}
+      <li class="section">
+        <span class="section-header">
+          <div class="new-layout-hidden">
+            <img src="{% static section.icon %}"/>
+          </div>
+        </span>
+      </li>
+
+      <div>
+        {% for item in section.items %}
+        <li class="item {{ item.classes }}">
+          <a {% if item.new_tab %}target="_blank"{% endif %} href="{{ item.url }}"  title="{{item.title | safe}}">
+            {% if item.icon %}
+            <img src="{% static item.icon %}" class="item-icon"/>
+            {% else %}
+            <i class="fa fa-ban item-icon" aria-hidden="true"></i>
+            {% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </ul>
+
+    {# footer #}
+    <ul class="navfooter {% if user.is_staff %}staff{% endif %}">
+      <li class="section-no-icon new-layout-hidden">
+        <a href="{{ sidemenu.named.academy.url }}" target="_blank"
+            class="itooltip" data-placement="right" title="Step by Step Course">
+          {{ sidemenu.named.academy.title | safe }}
+        </a>
+      </li>
+
+      <li class="section-no-icon new-layout-hidden">
+        <a href="{{ sidemenu.named.video_training.url }}" target="_blank">
+          {{ sidemenu.named.video_training.title }}
+        </a>
+      </li>
+
+      {% for section in sidemenu.footer %}
+      {% for item in section.items %}
+
+      <li class="section-no-icon {{ item.classes }}">
+        <a href="{{ item.url }}">
+          {% if item.fa_icon %}<i class="fa {{ item.fa_icon }}"></i>{% endif %}
+          {{ item.title | safe }}
+        </a>
       </li>
 
       {% endfor %}

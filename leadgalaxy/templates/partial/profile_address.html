@@ -3,69 +3,96 @@
 
     <h4>{{title}}</h4>
 
-    <div class="form-group"><label class="col-sm-2 control-label">Name</label>
-        <div class="col-sm-4">
-            <input type="text" name="{{ slug }}_name" value="{{ company.name }}" class="form-control" placeholder="Name">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label class="control-label">Name</label>
+                <input type="text" name="{{ slug }}_name" value="{{ company.name }}" class="form-control" placeholder="Name">
+            </div>
         </div>
-        <div class="col-sm-4">
 
+        <div class="col-md-2">
+            <div class="form-group">
+                <label class="control-label">Country</label>
+                <select class="country_list" name="{{ slug }}_country" current="{{timezone}}" style="width:350px;">
+                    <option value=""></option>
+                    {% for item in countries %}
+                    <option value="{{item.0}}"
+                        {% if company.country == item.0 %}selected="selected"{% endif %}
+                        >{{item.1}}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
-    </div>
-    <div class="form-group"><label class="col-sm-2 control-label">Address</label>
-        <div class="col-sm-4">
-            <input type="text" name="{{ slug }}_address_line1" value="{{ company.address_line1 }}" class="form-control" placeholder="Address line 1">
-        </div>
-        <div class="col-sm-4">
-            <input type="text" name="{{ slug }}_address_line2" value="{{ company.address_line2 }}" class="form-control" placeholder="Address line 2">
-        </div>
-    </div>
-    <div class="form-group"><label class="col-sm-2 control-label"></label>
-        <div class="col-sm-4">
-            <input type="text" name="{{ slug }}_city" value="{{ company.city }}" class="form-control" placeholder="City">
-        </div>
-        <div class="col-sm-4">
-            <input type="text" name="{{ slug }}_state" value="{{ company.state }}" class="form-control" placeholder="State or Province">
-        </div>
-    </div>
-    <div class="form-group"><label class="col-sm-2 control-label"></label>
-        <div class="col-sm-4">
-            <input type="text" name="{{ slug }}_zip_code" value="{{ company.zip_code }}" class="form-control" placeholder="Zip or Postal">
-        </div>
-        <div class="col-sm-6">
-            <select class="country_list" name="{{ slug }}_country" current="{{timezone}}" style="width:350px;">
-                <option value=""></option>
-                {% for item in countries %}
-                <option value="{{item.0}}"
-                    {% if company.country == item.0 %}selected="selected"{% endif %}
-                    >{{item.1}}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
 
-    {% if company.vat_support %}
-    <div class="form-group"><label class="col-sm-2 control-label">VAT</label>
-        <div class="col-sm-4">
-            <input type="text" name="vat" value="{{ company.vat }}" class="form-control" maxlength="11" placeholder="VAT Number">
-        </div>
-        <div class="col-sm-4">
-
-        </div>
-    </div>
-    <div class="form-group">
-        <div class="col-md-offset-2 col-sm-6">
-            <div class="checkbox">
-                <label><input type="checkbox" name="invoice_to_company" {% if profile.get_config.invoice_to_company %}checked{% endif %}>Send invoice to company</label>
+        <div class="col-md-2">
+            <div class="form-group">
+                <label class="control-label">City</label>
+                <input type="text" name="{{ slug }}_city" value="{{ company.city }}" class="form-control" placeholder="City">
             </div>
         </div>
     </div>
-    {% else %}
-    <div class="form-group"><label class="col-sm-2 control-label">Phone Number</label>
-        <div class="col-sm-4">
-            <input type="text" name="{{ slug }}_phone" value="{{ company.phone }}" class="form-control" placeholder="">
-        </div>
-        <div class="col-sm-4">
 
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label class="control-label">Address Line 1</label>
+                <input type="text" name="{{ slug }}_address_line1" value="{{ company.address_line1 }}" class="form-control" placeholder="Address line 1">
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="form-group">
+                <label class="control-label">Address Line 2</label>
+                <input type="text" name="{{ slug }}_address_line2" value="{{ company.address_line2 }}" class="form-control" placeholder="Address line 2">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-2">
+            <div class="form-group">
+                <label class="control-label">ZIP or Postal</label>
+                <input type="text" name="{{ slug }}_zip_code" value="{{ company.zip_code }}" class="form-control" placeholder="Zip or Postal">
+            </div>
+        </div>
+
+        {% if company.vat_support %}
+        <div class="col-md-2">
+            <div class="form-group">
+                <label class="control-label">VAT</label>
+                <input type="text" name="vat" value="{{ company.vat }}" class="form-control" maxlength="11" placeholder="VAT Number">
+            </div>
+        </div>
+
+        {% else %}
+        <div class="col-md-2">
+            <div class="form-group">
+                <label class="control-label">Phone Number</label>
+                <input type="text" name="{{ slug }}_phone" value="{{ company.phone }}" class="form-control" placeholder="">
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="col-md-2">
+            <div class="form-group">
+                <label class="control-label">State or Province</label>
+                <input type="text" name="{{ slug }}_state" value="{{ company.state }}" class="form-control" placeholder="State or Province">
+            </div>
+        </div>
+    </div>
+
+
+    {% if company.vat_support %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <div class="col-md-offset-2 col-sm-6">
+                    <div class="checkbox">
+                        <label><input type="checkbox" name="invoice_to_company" {% if profile.get_config.invoice_to_company %}checked{% endif %}>Send invoice to company</label>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     {% endif %}

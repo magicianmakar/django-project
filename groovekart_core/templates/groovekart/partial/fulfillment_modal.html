@@ -11,14 +11,14 @@
                                 <label for="fulfill-tracking-number">Tracking Number
                                 {% include 'partial/help_tooltip.html' with help="If you don't have a tracking number, leave this field blank." %}
                                 </label>
-                                <input type="text" id="fulfill-tracking-number" name="fulfill-tracking-number" class="form-control" style="width:200px">
+                                <input type="text" id="fulfill-tracking-number" name="fulfill-tracking-number" class="form-control">
                             </div>
                             <div class="form-group">
                                 <label for="fulfill-provider">
                                     Provider
                                     {% include 'partial/help_tooltip.html' with help="The name of the shipping carrier. (optional)" %}
                                 </label>
-                                <select class="form-control" name="fulfill-provider" id="fulfill-provider" style="width:120px">
+                                <select class="form-control" name="fulfill-provider" id="fulfill-provider">
                                     <option value=""></option>
                                     {% for carrier in shipping_carriers %}
                                     <option value="{{carrier.id}}">{{carrier.title}}</option>
@@ -30,14 +30,14 @@
                                     Tracking Link
                                     {% include 'partial/help_tooltip.html' with help="The URL pointing to the shipment tracking page. (optional)" %}
                                 </label>
-                                <input type="text" id="fulfill-tracking-link" name="fulfill-tracking-link" class="form-control" style="width:200px">
+                                <input type="text" id="fulfill-tracking-link" name="fulfill-tracking-link" class="form-control">
                             </div>
                             {% if notify %}
                             <div class="form-group">
                                 <label for="fulfill-notify-customer">
                                     Send shipping confirmation email to the customer
                                 </label>
-                                <select class="form-control" name="fulfill-notify-customer" id="fulfill-notify-customer" style="width:100px">
+                                <select class="form-control" name="fulfill-notify-customer" id="fulfill-notify-customer">
                                     <option value=""></option>
                                     <option value="no">No</option>
                                     <option value="yes">Yes</option>

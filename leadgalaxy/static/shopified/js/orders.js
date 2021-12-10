@@ -112,18 +112,14 @@ $('#fullfill-order-btn').click(function (e) {
 });
 
 $('.filter-btn').click(function (e) {
-    Cookies.set('orders_filter', !$('.filter-form').is(':visible'));
+    Cookies.set('orders_filter', !$('#filter-form').hasClass('active'));
 
     ga('clientTracker.send', 'event', 'Order Filter Toggle', 'Shopify', sub_conf.shop);
 
-    if (!$('.filter-form').is(':visible')) {
-        $('.filter-form').fadeIn('fast');
-    } else {
-        $('.filter-form').fadeOut('fast');
-    }
+    $('#filter-form').toggleClass('active');
 });
 
-$(".filter-form").submit(function() {
+$("#filter-form").submit(function() {
     var items = $(this).find(":input").filter(function(i, el) {
         if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred'))  {
             // Note: Update in $('.save-filter-btn').click() too
@@ -152,7 +148,7 @@ $(".filter-form").submit(function() {
 $('.save-filter-btn').click(function (e) {
     e.preventDefault();
 
-    $(".filter-form").find(":input").filter(function(i, el) {
+    $("#filter-form").find(":input").filter(function(i, el) {
         if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred')) {
             el.value = JSON.stringify(el.checked);
             el.checked = true;
@@ -165,11 +161,11 @@ $('.save-filter-btn').click(function (e) {
     $.ajax({
         url: api_url('save-orders-filter', 'shopify'),
         type: 'POST',
-        data: $('.filter-form').serialize(),
+        data: $('#filter-form').serialize(),
         success: function (data) {
             toastr.success('Orders Filter', 'Saved');
             setTimeout(function() {
-                $(".filter-form").trigger('submit');
+                $("#filter-form").trigger('submit');
             }, 1000);
         },
         error: function (data) {
@@ -837,6 +833,10 @@ $('.cached-img').error(function() {
     });
 });
 
+$('.line-checkbox').on('ifChanged', function (e) {
+    $(this).parents('.line').toggleClass('active', e.target.checked);
+});
+
 $('.product-preview img').click(function (e) {
     var checkbox = $(this).parent().find('.line-checkbox');
     if ($(checkbox).prop('disabled')) {
@@ -855,7 +855,7 @@ $('.help-select').each(function (i, el) {
     });
 
     $(el).change(function (e) {
-        var helpTag = $(this).parents('.row').find('.help-block');
+        var helpTag = $(this).siblings('.help-block');
         $('option', el).each(function (index, option) {
             if ($(option).prop('selected')) {
                 helpTag.text($(option).attr('title'));
@@ -1189,7 +1189,7 @@ $(".track-details").click(function(e) {
 
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {
-        $('.filter-form').show();
+        $('#filter-form').addClass('active');
     }
 
     pusherSub();

@@ -13,22 +13,105 @@
 
 {% block main-container %}
 
-    {% if not request.GET.store or request.GET.store == 'n' %}
-        {% include 'home/partial/candu.html' with mount_id='candu-saved-products-info-above' %}
-    {% endif %}
+{% if not request.GET.store or request.GET.store == 'n' %}
+  {% include 'home/partial/candu.html' with mount_id='candu-saved-products-info-above' %}
+{% endif %}
 
-    <div class="tabs-container">
-        {% include 'home/partial/tabs/products.html' %}
+<div class="tabs-container">
+  {% include 'home/partial/tabs/products.html' %}
 
-        <div class="tab-content">
-            <div id="tab-1" class="tab-pane active">
-                <div class="panel-body">
+  {% if not request.session.old_layout %}
+  <ul class="actions">
+    <form method="get">
+      <input type="hidden" name="f" value="1">
+      <input type="hidden" name="ppp" value="{{request.GET.ppp}}">
+      <input type="hidden" name="store" value="{{request.GET.store}}">
+      <li class="hidden-form">
+          <a href="javascript:;" class="text-default">
+            Filter by
+            <span class="dropified-icons di-arrow-down"></span>
+          </a>
 
-        {% if products %}
+          <div class="form" style="width: 300px;">
+            <h3>Filter</h3>
+            <div class="form-group">
+              <label>Product Title</label>
+              <input name="title" type="text" class="form-control" value="{{request.GET.title}}" placeholder="">
+            </div>
+            <div class="form-group">
+              <label style="width: 100%;">Price</label>
+              <input name="price_min" type="text" class="form-control" value="{{request.GET.price_min}}" placeholder="Min." style="width: 49%;">
+              <input name="price_max" type="text" class="form-control" value="{{request.GET.price_max}}" placeholder="Max." style="width: 49%; margin-left: 2%;">
+            </div>
+            <div class="form-group">
+              <label>{{filter_product_type|default:'Product Type'}}</label>
+              <input id="filter-type" name="type" type="text" class="form-control" value="{{request.GET.type}}" placeholder="">
+            </div>
+            {% if not filter_no_tag %}
+            <div class="form-group">
+              <label>Product Tag</label>
+              <input id="filter-tag" name="tag" type="text" class="form-control" value="{{request.GET.tag}}" placeholder="">
+            </div>
+            {% endif %}
+            <div class="form-group">
+              <label>Supplier</label>
+              <input id="filter-vendor" name="vendor" type="text" class="form-control" value="{{request.GET.vendor}}" placeholder="">
+            </div>
+            <div class="form-group">
+              <label>Products on Board</label>
+              <select name="product_board" class="form-control">
+                <option selected disabled value="">Select an option</option>
+                <option {% if request.GET.product_board == "all" %} selected {% endif %} value="all">All Products</option>
+                <option {% if request.GET.product_board == "added" %} selected {% endif %} value="added">Added on Board</option>
+                <option {% if request.GET.product_board == "not_added" %} selected {% endif %} value="not_added">Not Added on Board</option>
+              </select>
+            </div>
 
-        {% include 'home/partial/platform_selection_dropdown.html' with section='Shopify' %}
+            <button class="btn btn-primary">Apply</button>
+          </div>
+      </li>
+      <li class="hidden-form">
+        <a href="javascript:;" class="text-default">
+          Sort by
+          <span class="dropified-icons di-arrow-down"></span>
+        </a>
 
-        <div class="row m-b-lg">
+        <div class="form" style="width: 300px;">
+          <h3>Sort</h3>
+          <div class="form-group">
+            <select name="sort" class="form-control">
+              <option value="">Select an option</option>
+              <option {% if request.GET.sort == "title" %} selected {% endif %} value="title">Product Title (asc)</option>
+              <option {% if request.GET.sort == "-title" %} selected {% endif %} value="-title">Product Title (desc)</option>
+              <option {% if request.GET.sort == "price" %} selected {% endif %} value="price">Price (asc)</option>
+              <option {% if request.GET.sort == "-price" %} selected {% endif %} value="-price">Price (desc)</option>
+              <option {% if request.GET.sort == "date" %} selected {% endif %} value="date">Date (asc)</option>
+              <option {% if request.GET.sort == "-date" %} selected {% endif %} value="-date">Date (desc)</option>
+            </select>
+          </div>
+          <button class="btn btn-primary">Apply</button>
+        </div>
+      </li>
+    </form>
+    <li class="pull-right border-left group">
+      <input type="text" class="form-control m-l-sm" name="search-name" placeholder="Search by name">
+      <a href="javascript:;" class="btn btn-primary btn-icon">
+        <i class="fa fa-search"></i>
+      </a>
+    </li>
+    <li class="pull-right">
+      {% include 'home/partial/platform_selection_dropdown.html' with section='Shopify' %}
+    </li>
+  </ul>
+  {% endif %}
+  <div class="tab-content">
+    <div id="tab-1" class="tab-pane active">
+      <div class="panel-body no-background">
+        <div class="new-layout-hidden">
+          {% include 'home/partial/platform_selection_dropdown.html' with section='Shopify' %}
+
+          {% if products %}
+          <div class="row m-b-lg">
             <div class="col-md-8 filter-col">
                 <label for="selected-actions" class="filter-col-item">Selected Items:</label>
                 <select class="form-control filter-col-item" name="selected-actions" id="selected-actions">
@@ -56,214 +139,223 @@
                         {% endif %}
                     {% endif %}
                 {% endif %}
-
-                {% if store.id %}
-                 {% if request.user|can:'product_supplier.use' %}
-                <a href="#" class="shopify-product-import-btn filter-col-item" store="{{store.id}}">
-                    <i class="fa fa-plus"></i> Import From Shopify
-                </a>
+                <option value="board">Add to Board...</option>
+                {% if not request.GET.store or request.GET.store == 'n' %}
+                <option value="shopify-send">Send To My Store...</option>
                 {% endif %}
-
-                {% if user|can:'manual_suppliers_sync.use' %}
-                <a href="#" class="product-supplier-sync-btn filter-col-item m-l" store="{{store.id}}">
-                    <i class="fa fa-refresh"></i> Sync Products with Supplier
-                </a>
+                <option value="delete">Delete</option>
+              </select>
+              <button id="apply-btn" class="btn btn-primary filter-col-item">Apply</button>
+              <button class="btn btn-default btn-outline select-all-btn filter-col-item">Select All</button>
+              {% if request.user|can:'product_filters.view' %}
+                <button class="btn btn-success btn-outline filter-btn filter-col-item">Filter</button>
+                {% if filter_products %}
+                <a href="/product" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>
                 {% endif %}
+              {% endif %}
 
-                {% endif %}
+              {% if store.id %}
+               {% if request.user|can:'product_supplier.use' %}
+              <a href="#" class="shopify-product-import-btn filter-col-item" store="{{store.id}}">
+                <i class="fa fa-plus"></i> Import From Shopify
+              </a>
+              {% endif %}
+
+              {% if user|can:'manual_suppliers_sync.use' %}
+              <a href="#" class="product-supplier-sync-btn filter-col-item m-l" store="{{store.id}}">
+                <i class="fa fa-refresh"></i> Sync Products with Supplier
+              </a>
+              {% endif %}
+
+              {% endif %}
             </div>
 
             <div class="col-md-1 pull-right text-right" style="padding:6px  5px;">
-                <a href="{% url_path '/product/table' %}" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
-                <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
+              <a href="{% url_path '/product/table' %}" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
+              <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
             </div>
+          </div>
+          {% endif %}
         </div>
-        {% else %}
-            {% include 'home/partial/platform_selection_dropdown.html' with section='Shopify' %}
-        {% endif %}
 
-<div class="row">
-    {% for item in products %}
-    <div class="col-xs-12 col-md-3">
-        <div class="ibox">
-            <div class="ibox-content product-box" product-id="{{item.id}}" product-title="{{item.product.title}}">
+        <div class="row">
+          {% for item in products %}
+          <div class="col-xs-12 col-md-3">
+            <div class="ibox">
+              <div class="ibox-content product-box" product-id="{{item.id}}" product-title="{{item.product.title}}">
                 <div class="product-imitation" style="padding: 0;">
-                    <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" style="position:absolute; left:20px;top:5px"/>
-                    <a href="/product/{{item.id}}">
-                        <img class="no-img unveil" src="{% static 'img/blank.gif' %}" data-src="{{item.images|force_https}}" style="width: 100%">
-                    </a>
-                    <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; background-color:#cc6666;border: none;"><i class="fa fa-times"></i></button>
+                  <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" style="position:absolute; left:20px;top:5px"/>
+                  <a class="img-wrapper" href="/product/{{item.id}}">
+                    <img class="no-img unveil" src="{% static 'img/blank.gif' %}" data-src="{{item.images|force_https}}" style="width: 100%">
+                  </a>
+                  <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; background-color:#cc6666;border: none;"><i class="fa fa-times"></i></button>
                 </div>
                 <div class="product-desc">
-                    <span class="product-price">
-                        {% if item.price_range %}
-                            {{item.price_range}}
-                        {% else %}
-                            {{item.price}}
-                        {% endif %}
-                    </span>
-                    <small class="text-muted">{{item.product.type}}</small>
-                    {% if item.source %}
-                    <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
-                        <a href="{{item.product.original_url}}" target="_blank">{{item.source}}</a>
-                    </small>
+                  <span class="product-price">
+                    {% if item.price_range %}
+                      {{item.price_range}}
+                    {% else %}
+                      {{item.price}}
                     {% endif %}
-                    <a href="/product/{{item.id}}" class="hidden-xs product-name"> {{item.product.title|truncatewords:13}}</a>
-                    <a href="/product/{{item.id}}" class="visible-xs product-name" style="font-size: 12px"> {{item.product.title|truncatewords:5}}</a>
+                  </span>
+                  <small class="text-muted product-type">{{item.product.type}}</small>
+                  {% if item.source %}
+                  <small class="text-muted product-source" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
+                    <a href="{{item.product.original_url}}" target="_blank">{{item.source}}</a>
+                  </small>
+                  {% endif %}
 
-                    <div class="small m-t-xs">
-                        Submitted at {{item.created_at|date}}
+                  {% if request.session.old_layout %}
+                  <a href="/product/{{item.id}}" class="hidden-xs product-name"> {{item.product.title|truncatewords:13}}</a>
+                  <a href="/product/{{item.id}}" class="visible-xs product-name" style="font-size: 12px"> {{item.product.title|truncatewords:5}}</a>
+                  {% else %}
+                  <a href="/product/{{item.id}}" class="product-name"> {{item.product.title}}</a>
+                  {% endif %}
+
+                  <div class="small m-t-xs">
+                    Added at {{item.created_at|date}}
+                  </div>
+                  <div class="m-t row">
+                    <div class="col-md-4" style="padding-right:0">
+                    <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> View <i class="fa fa-long-arrow-right"></i> </a>
                     </div>
-                    <div class="m-t row">
-                        <div class="col-md-4" style="padding-right:0">
-                        <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> View <i class="fa fa-long-arrow-right"></i> </a>
-                        </div>
-                        <div class="col-md-8 text-right" style="padding-left:5px">
-                        {% if ebay_manual_affiliate_link and item.qelem.default_supplier and item.qelem.default_supplier.is_ebay %}
-                            <a href="{{ item.qelem.default_supplier.get_affiliate_link }}" class="btn btn-xs btn-outline btn-success" target="_blank">
-                                Order on eBay
-                            </a>
-                        {% else %}
-                            <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right">
-                                {% with board=item.board %}
-                                    {% if board %}
-                                    Board: {{board.title}}
-                                    {% else %}
-                                    Board
-                                    {% endif %}
-                                {% endwith %}
-                            </button>
-                        {% endif %}
-                        </div>
+                    <div class="col-md-8 text-right" style="padding-left:5px">
+                    {% if ebay_manual_affiliate_link and item.qelem.default_supplier and item.qelem.default_supplier.is_ebay %}
+                      <a href="{{ item.qelem.default_supplier.get_affiliate_link }}" class="btn btn-xs btn-outline btn-success" target="_blank">
+                        Order on eBay
+                      </a>
+                    {% else %}
+                      <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right">
+                        {% with board=item.board %}
+                          {% if board %}
+                          Board: {{board.title}}
+                          {% else %}
+                          Board
+                          {% endif %}
+                        {% endwith %}
+                      </button>
+                    {% endif %}
                     </div>
+                  </div>
                 </div>
+              </div>
             </div>
+          </div>
+
+        {% if request.session.old_layout %}
+        {% if forloop.counter|divisibleby:"4" %}
         </div>
-    </div>
+        <div class="row">
+        {% endif %}
+        {% endif %}
 
-{% if forloop.counter|divisibleby:"4" %}
-    </div>
-<div class="row">
-{% endif %}
-
-    {% empty %}
-    <h3 class="text-center">No product found.</h3>
-    {% if store.id %}
-        <p class="text-center">
+        {% empty %}
+          <h3 class="text-center">No product found.</h3>
+          {% if store.id %}
+          <p class="text-center">
             {% if request.user|can:'product_supplier.use' %}
             <a href="#" class="shopify-product-import-btn filter-col-item" store="{{store.id}}">
-                Import
+              Import
             </a>
             Or
             {% endif %}
             <a href="{% url 'shopify_migration' %}?store={{store.id}}&status=not_connected" class="filter-col-item">
-                Migrate
+              Migrate
             </a>
 
             From Shopify
-        </p>
-    {% endif %}
-    {% endfor %}
-</div>
-
-{% include "partial/paginator.html" %}
-            </div>
+          </p>
+          {% endif %}
+        {% endfor %}
         </div>
-    </div> <!-- /div.tab-content -->
+
+        {% include "partial/paginator.html" %}
+      <!-- </div> -->
+    </div>
+  </div> <!-- /div.tab-content -->
 </div> <!-- /div.tabs-container -->
 
-<!--
-</div>
-</div> -->
-
-{% include "partial/product_edit_modal.html" %}
-
 <div id="modal-board-product" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <h3 class="m-t-none m-b">Add to board</h3>
-                        <form role="form">
-                            <div class="form-group text-center">
-            <label for="selected-board">Select board</label>
-            <select class="form-control" name="selected-board" id="selected-board" style="display: inline-block; width: 191px; ">
-                <!-- <option value=""></option> -->
-                {% for item in request.user.get_boards %}
-                <option value="{{item.id}}">{{item.title}}</option>
-                {% endfor %}
-            </select>
-                            </div>
-
-                            <div>
-                                <button id="board-product-send" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
-                                    <strong>Apply</strong>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-            </div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-sm-12">
+            <h3 class="m-t-none m-b">Add to board</h3>
+            <form role="form">
+              <div class="form-group text-center">
+                <label for="selected-board">Select board</label>
+                <select class="form-control" name="selected-board" id="selected-board" style="display: inline-block; width: 191px;">
+                  <!-- <option value=""></option> -->
+                  {% for item in request.user.get_boards %}
+                  <option value="{{item.id}}">{{item.title}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div>
+                <button id="board-product-send" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                  <strong>Apply</strong>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-        </div>
+      </div>
     </div>
+  </div>
 </div>
-
+{% include "partial/product_edit_modal.html" %}
 {% include 'partial/shopify_send_modal.html' %}
-
 {% include 'partial/filter_modal.html' %}
-
 {% include "partial/shopify_product_selector.html" %}
-
 {% include 'partial/product_supplier_sync_modal.html' with store=store only %}
-
 {% endblock %}
 
 {% block extracss %}
 <style type="text/css">
 
 .filter-col {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .filter-col .filter-col-item {
-    margin-right: 5px;
+  margin-right: 5px;
 }
 
 .filter-col .shopify-product-import-btn {
-    margin-left: 15px;
+  margin-left: 15px;
 }
 
 #selected-actions {
-    padding-top: 2px;
-    display: inline-block;
-    width: 191px;
+  padding-top: 2px;
+  display: inline-block;
+  width: 191px;
 }
 
 #modal-product-supplier-sync .icheckbox_square-blue {
-    position: static;
+  position: static;
 }
 </style>
 {% endblock %}
 
 {% block extrajs %}
 <script type="text/javascript">
-    var sub_conf = {
-        key: "{% app_setting 'PUSHER_KEY' %}",
-        {% if store %}
-        channel: "{{store.pusher_channel}}",
-        store: {{store.id}},
-        {% endif %}
-    };
-    var boardsMenu = {
-    {% for item in request.user.get_boards %}
-        "{{item.id}}": {name: "{{item.title|safe}}"},
-    {% endfor %}
-        "sep1": "---------",
-        "add": {name: "Add new board", icon: 'add'},
-        "clear": {name: "Clear", icon: 'quit'}
-    };
+  var sub_conf = {
+    key: "{% app_setting 'PUSHER_KEY' %}",
+    {% if store %}
+    channel: "{{store.pusher_channel}}",
+    store: {{store.id}},
+    {% endif %}
+  };
+  var boardsMenu = {
+  {% for item in request.user.get_boards %}
+    "{{item.id}}": {name: "{{item.title|safe}}"},
+  {% endfor %}
+    "sep1": "---------",
+    "add": {name: "Add new board", icon: 'add'},
+    "clear": {name: "Clear", icon: 'quit'}
+  };
 </script>
 
 <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>

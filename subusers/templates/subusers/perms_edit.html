@@ -13,129 +13,115 @@
 {% endblock %}
 
 {% block main-container %}
-<div class="row">
+<div class="row panel-heading m-b-none p-none no-border-bottom rounded">
     <div class="col-md-12">
-        <div class="ibox collapsed border-bottom">
-            <div class="ibox-title">
-                <h5>General Permissions</h5>
-            </div>
-            <div class="ibox-content" style="display:block">
-                <div class="alert alert-warning alert-dismissible" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    The general permissions are not related to a specific store and will affect the account no matter what store this user is assigned to.
-                </div>
-                {% for error in form.permissions.errors %}
-                    <p class="text-danger">{{ error }}</p>
-                {% endfor %}
-                <form
-                    method="POST"
-                    role="form"
-                    action="{% url template_config.url.namespace|add:'subuser_perms_edit' subuser.id %}"
-                >
-                    <div class="form-group">
-                        {% render_field form.permissions %}
-                    </div>
-                    <p>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fa fa-save"></i> Save
-                        </button>
-                    </p>
-                </form>
-            </div>
-            <br />
-            <div class="alert alert-warning alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                Store permissions are assigned on a per store basis. To assign permissions, click Edit next to the store. Make sure to do this for each store. If you do not see the store listed, go back to the previous screen and make sure you have assigned the user to the store.
-            </div>
-            <div class="ibox-title">
-                <h5>Shopify Store Permissions</h5>
-            </div>
-            <div class="ibox-content" style="display:block">
+          <h3>General Permissions</h3>
+          <div style="display:block">
+              <div class="alert alert-warning alert-dismissible" role="alert">
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  The general permissions are not related to a specific store and will affect the account no matter what store this user is assigned to.
+              </div>
+              {% for error in form.permissions.errors %}
+                  <p class="text-danger">{{ error }}</p>
+              {% endfor %}
+              <form
+                  method="POST"
+                  role="form"
+                  action="{% url template_config.url.namespace|add:'subuser_perms_edit' subuser.id %}"
+              >
+                  <div class="form-group">
+                      {% render_field form.permissions %}
+                  </div>
+                  <p>
+                      <button type="submit" class="btn btn-primary">
+                          <i class="fa fa-save"></i> Save
+                      </button>
+                  </p>
+              </form>
+          </div>
+          <br />
+          <div class="alert alert-warning alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              Store permissions are assigned on a per store basis. To assign permissions, click Edit next to the store. Make sure to do this for each store. If you do not see the store listed, go back to the previous screen and make sure you have assigned the user to the store.
+          </div>
+          <h5>Shopify Store Permissions</h5>
+          <div style="display:block">
 
-                {% for store in subuser.profile.subuser_stores.all %}
-                    <p>
-                        {{ store.title }} &nbsp;
-                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_store_permissions' subuser.id store.id %}">Edit</a>
-                    </p>
-                {% empty %}
-                    <p class="text-center">
-                        No stores found
-                    </p>
-                {% endfor %}
-            </div>
-            {% if subuser.profile.subuser_chq_stores.all %}
-            <br />
-            <div class="ibox-title">
-                <h5>CommerceHQ Store Permissions</h5>
-            </div>
-            <div class="ibox-content" style="display:block">
-                {% for store in subuser.profile.subuser_chq_stores.all %}
-                    <p>
-                        {{ store.title }} &nbsp;
-                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_chq_store_permissions' subuser.id store.id %}">Edit</a>
-                    </p>
-                {% empty %}
-                    <p class="text-center">
-                        No stores found
-                    </p>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% if subuser.profile.subuser_woo_stores.all %}
-            <br />
-            <div class="ibox-title">
-                <h5>WooCommerce Store Permissions</h5>
-            </div>
-            <div class="ibox-content" style="display:block">
-                {% for store in subuser.profile.subuser_woo_stores.all %}
-                    <p>
-                        {{ store.title }} &nbsp;
-                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_woo_store_permissions' subuser.id store.id %}">Edit</a>
-                    </p>
-                {% empty %}
-                    <p class="text-center">
-                        No stores found
-                    </p>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% if subuser.profile.subuser_gkart_stores.all %}
-                <br />
-                <div class="ibox-title">
-                    <h5>GrooveKart Store Permissions</h5>
-                </div>
-                <div class="ibox-content" style="display:block">
-                    {% for store in subuser.profile.subuser_gkart_stores.all %}
-                        <p>
-                            {{ store.title }} &nbsp;
-                            <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_gkart_store_permissions' subuser.id store.id %}">Edit</a>
-                        </p>
-                    {% empty %}
-                        <p class="text-center">
-                            No stores found
-                        </p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            {% if subuser.profile.subuser_bigcommerce_stores.all %}
-            <br />
-            <div class="ibox-title">
-                <h5>BigCommerce Store Permissions</h5>
-            </div>
-            <div class="ibox-content" style="display:block">
-                {% for store in subuser.profile.subuser_bigcommerce_stores.all %}
-                    <p>
-                        {{ store.title }} &nbsp;
-                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_bigcommerce_store_permissions' subuser.id store.id %}">Edit</a>
-                    </p>
-                {% empty %}
-                    <p class="text-center">
-                        No stores found
-                    </p>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
+              {% for store in subuser.profile.subuser_stores.all %}
+                  <p>
+                      {{ store.title }} &nbsp;
+                      <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_store_permissions' subuser.id store.id %}">Edit</a>
+                  </p>
+              {% empty %}
+                  <p class="text-center">
+                      No stores found
+                  </p>
+              {% endfor %}
+          </div>
+          {% if subuser.profile.subuser_chq_stores.all %}
+          <br />
+          <h5>CommerceHQ Store Permissions</h5>
+          <div style="display:block">
+              {% for store in subuser.profile.subuser_chq_stores.all %}
+                  <p>
+                      {{ store.title }} &nbsp;
+                      <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_chq_store_permissions' subuser.id store.id %}">Edit</a>
+                  </p>
+              {% empty %}
+                  <p class="text-center">
+                      No stores found
+                  </p>
+              {% endfor %}
+          </div>
+          {% endif %}
+          {% if subuser.profile.subuser_woo_stores.all %}
+          <br />
+          <h5>WooCommerce Store Permissions</h5>
+          <div style="display:block">
+              {% for store in subuser.profile.subuser_woo_stores.all %}
+                  <p>
+                      {{ store.title }} &nbsp;
+                      <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_woo_store_permissions' subuser.id store.id %}">Edit</a>
+                  </p>
+              {% empty %}
+                  <p class="text-center">
+                      No stores found
+                  </p>
+              {% endfor %}
+          </div>
+          {% endif %}
+          {% if subuser.profile.subuser_gkart_stores.all %}
+              <br />
+              <h5>GrooveKart Store Permissions</h5>
+              <div style="display:block">
+                  {% for store in subuser.profile.subuser_gkart_stores.all %}
+                      <p>
+                          {{ store.title }} &nbsp;
+                          <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_gkart_store_permissions' subuser.id store.id %}">Edit</a>
+                      </p>
+                  {% empty %}
+                      <p class="text-center">
+                          No stores found
+                      </p>
+                  {% endfor %}
+              </div>
+          {% endif %}
+          {% if subuser.profile.subuser_bigcommerce_stores.all %}
+          <br />
+          <h5>BigCommerce Store Permissions</h5>
+          <div style="display:block">
+              {% for store in subuser.profile.subuser_bigcommerce_stores.all %}
+                  <p>
+                      {{ store.title }} &nbsp;
+                      <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_bigcommerce_store_permissions' subuser.id store.id %}">Edit</a>
+                  </p>
+              {% empty %}
+                  <p class="text-center">
+                      No stores found
+                  </p>
+              {% endfor %}
+          </div>
+          {% endif %}
     </div>
 </div>
 {% endblock main-container %}

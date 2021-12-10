@@ -29,7 +29,6 @@ def subusers(request):
         raise PermissionDenied()
 
     sub_users = []
-    invitation = []
 
     for sub in User.objects.filter(profile__subuser_parent=request.user):
         try:
@@ -37,14 +36,30 @@ def subusers(request):
         except:
             sub.last_seen = None
 
-        sub_users.append(sub)
+        sub_users.append({
+            'id': sub.id,
+            'username': sub.username,
+            'name': sub.get_full_name() if sub.get_full_name() else sub.username,
+            'email': sub.email,
+            'date_joined': sub.date_joined,
+            'last_seen': sub.last_seen,
+            'is_invite': False,
+        })
 
         clear_interval(sub)
 
     for i in PlanRegistration.objects.filter(sender=request.user).filter(Q(user__isnull=True) | Q(user__profile__subuser_parent=request.user)):
         i.have_access = (i.expired and (i.user.profile.subuser_stores.count() or i.user.profile.subuser_chq_stores.count()))
 
-        invitation.append(i)
+        if not i.have_access:
+            sub_users.append({
+                'user': i.user if i.user else '',
+                'name': i.user.get_full_name() if i.user else '',
+                'email': i.email,
+                'created_at': i.created_at,
+                'expired': i.expired,
+                'is_invite': True,
+            })
 
     extra_user_cost = request.user.profile.plan.extra_subuser_cost
 
@@ -58,7 +73,6 @@ def subusers(request):
         'sub_users': sub_users,
         'extra_user_cost': extra_user_cost,
         'extra_subusers': extra_subusers,
-        'invitation': invitation,
         'page': 'subusers',
         'breadcrumbs': ['Account', 'Sub Users'],
     })

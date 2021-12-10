@@ -2677,6 +2677,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
                                 'supplier': b_supplier,
                                 'shipping_method': b_shipping_method,
                                 'quantity': quantity,
+                                'variant': b_variants,
                                 'weight': weight,
                                 'data': b
                             })
@@ -2852,6 +2853,11 @@ def orders_track(request):
         order_map['-' + k] = '-' + v
 
     sorting = request.GET.get('sort', '-update')
+    if request.GET.get('sort'):
+        if request.GET.get('desc'):
+            sorting = sorting if sorting.startswith('-') else f"-{sorting}"
+        else:
+            sorting = sorting[1:] if sorting.startswith('-') else sorting
     sorting = order_map.get(sorting, 'status_updated_at')
 
     post_per_page = safe_int(request.GET.get('ppp'), 20)
@@ -3222,7 +3228,7 @@ def product_alerts(request):
             'product_changes': get_mocked_alert_changes(),
             'page': 'product_alerts',
             'store': store,
-            'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts'],
+            'breadcrumbs': ['Alerts'],
             'selected_menu': 'products:alerts',
         })
 
@@ -3352,7 +3358,7 @@ def product_alerts(request):
         'store': store,
         'category': category,
         'product_type': product_type,
-        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts'],
+        'breadcrumbs': ['Alerts'],
     })
 
 
@@ -3396,6 +3402,10 @@ def bundles_bonus(request, bundle_id):
 def products_collections(request, collection):
     if not request.user.can('us_products.use'):
         raise PermissionDenied()
+
+    # force use new layout
+    # TODO: remove later
+    request.session['old_layout'] = False
 
     aliexpress_categories = json.load(open(settings.ALIEXPRESS_CATEGORIES_PATH))
 
@@ -3691,3 +3701,12 @@ def user_invoices_download(request, invoice_id):
     buffer.close()
 
     return response
+
+
+def update_layout(request):
+    old_layout = request.session.get('old_layout')
+    request.session['old_layout'] = not old_layout
+    referer = request.META.get('HTTP_REFERER')
+    if not referer or 'update-layout' in referer:
+        referer = 'index'
+    return redirect(referer)

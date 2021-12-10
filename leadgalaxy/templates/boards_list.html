@@ -3,15 +3,81 @@
 {% load static %}
 {% load compress %}
 
+{% block breadcrumb-right %}
+    <button class="btn btn-primary add-board-btn pull-right">
+        <i class="fa fa-plus"></i> Add Board
+    </button>
+{% endblock %}
+
 {% block main-container %}
 
 {% include 'home/partial/candu.html' with mount_id='candu-boards-info-above' %}
 
 <div class="tabs-container">
     {% include 'home/partial/tabs/boards.html' %}
+    <ul class="actions old-layout-hidden">
+        <li class="pull-right group">
+            <form id="board-search-form" method="get" role="form" class="form-inline">
+                <input type="text" class="form-control m-l-sm" name="search" placeholder="Search by name" value="{{ request.GET.search|default:'' }}">
+                <a href="javascript:;" class="btn btn-primary btn-icon">
+                    <i class="fa fa-search"></i>
+                </a>
+            </form>
+        </li>
+    </ul>
+
     <div class="tab-content margin-before-banner">
         <div id="tab-1" class="tab-pane active">
-            <div class="panel-body">
+            <div class="panel-body row old-layout-hidden no-background">
+                {% for item in current_page.object_list %}
+                <div class="col-md-3">
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            <a class="color-info" board-id="{{item.id}}" href="/boards/{{item.id}}">
+                                {{item.title}}
+                            </a>
+                            <div class="more-actions">
+                                <a href="#">
+                                    <i class="glyphicon glyphicon-option-horizontal"></i>
+                                </a>
+                                <ul class="actions">
+                                    <li>
+                                        <a href="#" class="board-edit" board-id="{{item.id}}">
+                                            <i class="fa fa-edit"></i> Edit
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="board-empty" board-id="{{item.id}}">
+                                            <i class="fa fa-eraser"></i> Empty
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="board-delete" board-id="{{item.id}}">
+                                            <i class="fa fa-times"></i> Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <br>
+                            <span class="text-muted">{{item.updated_at|date}}</span>
+                        </div>
+                        <div class="ibox-content">
+                            <a href="/boards/{{item.id}}?store=n">
+                                <span class="badge">{{ item.saved|default:"0" }}</span>
+                                <span>Saved</span>
+                            </a>
+                            <br>
+                            <a href="/boards/{{item.id}}?store=c">
+                                <span class="badge">{{ item.connected|default:"0" }}</span>
+                                <span>Connected</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="panel-body new-layout-hidden">
                 <form id="board-search-form" method="get" role="form" class="form-inline">
                     <div class="form-group pull-right">
                         <label>Search:</label>
@@ -77,20 +143,24 @@
 <div id="smartboard-modal" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <h3 class="m-t-none m-b">Edit Board</h3>
-                        <form role="form">
+            <form role="form">
+                <div class="m-t-none modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Edit Board</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
                             <div class="form-group">
                                 <label for="">Board Title:</label>
                                 <input type="text" id="board-title" class="form-control">
                             </div>
 
-                            <h3 class="m-t-none m-b">Smart Board</h3>
-                            <p class="m-t-none m-b" style="padding: 0; margin: 0">Add products to this board if (separate values with comma):</p>
-                            <input type="hidden" id="smartboard-board">
+                            <hr>
+                            <h3 class="m-t-none m-b-xs">Smart Board</h3>
+                            <p class="m-t-none m-b">Add products to this board if (separate values with comma):</p>
 
+                            <input type="hidden" id="smartboard-board">
                             <div class="form-group">
                                 <label for="">Product Title contains:</label>
                                 <input type="text" id="smartboard-product-title" class="form-control">
@@ -103,15 +173,14 @@
                                 <label for="">Product Type contains:</label>
                                 <input type="text" id="smartboard-product-type" class="form-control">
                             </div>
-                            <div>
-                                <button id="smartboard-save-changes" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
-                                    <strong>Save</strong>
-                                </button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
-            </div>
-        </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="smartboard-save-changes" class="btn btn-primary" type="button">Save Details</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

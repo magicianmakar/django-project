@@ -60,4 +60,6 @@ urlpatterns = [
                                                                    extra_context={'site_header': 'Dropified'}), name='password_reset_confirm'),
     url(r'^accounts/reset/done/$', django.contrib.auth.views.PasswordResetCompleteView.as_view(
         template_name='registration/password_reset_complete2.html', extra_context={'site_header': 'Dropified'}), name='password_reset_complete'),
+
+    path('update-layout/', leadgalaxy.views.update_layout, name='update_layout'),
 ]

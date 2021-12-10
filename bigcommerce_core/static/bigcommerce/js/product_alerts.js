@@ -121,55 +121,30 @@
         }), 'SA_Order');
     });
 
-    $.contextMenu({
-        selector: '.open-product-in',
-        trigger: 'left',
-        callback: function(key, options) {
-            if (key == 'bigcommerce') {
-                var url = options.$trigger.attr('bigcommerce-link');
-                if (url && url.length) {
-                    window.open(url, '_blank');
-                } else {
-                    toastr.warning('Product is not connected');
-                }
-
-            } else if (key == 'original') {
-                window.open(options.$trigger.attr('original-link'), '_blank');
-            } else if (key == 'shopified') {
-                window.open('/bigcommerce/product/' + options.$trigger.attr('product-id'), '_blank');
-            }
-        },
-        items: {
-            "original": {
-                name: 'Original Product'
-            },
-            "bigcommerce": {
-                name: 'BigCommerce'
-            },
-            "shopified": {
-                name: 'Dropified'
-            },
-        },
-        events: {
-            show: function(opt) {
-                setTimeout(function() {
-                    opt.$menu.css({
-                        'z-index': '10000',
-                        'max-height': '300px',
-                        'overflow': 'auto',
-                    });
-                }, 100);
-
-                return true;
+    $('.open-product-in').on('click', function(e) {
+        e.preventDefault();
+        var key = $(this).data('key');
+        if (key == 'original') {
+            window.open($(this).data('original-link'), '_blank');
+        } else if (key == 'shopified') {
+            window.open('/bigcommerce/product/' + $(this).data('product-id'), '_blank');
+        } else if (key == 'store') {
+            var url = $(this).data('store-link');
+            if (url && url.length) {
+                window.open(url, '_blank');
+            } else {
+                toastr.warning('Product is not connected');
             }
         }
     });
+
     $(function() {
         $('.view-details').trigger('click').hide('fast');
     });
 
     $('select#product').select2({
         placeholder: 'Select a Product',
+        allowClear: true,
         ajax: {
             url: "/autocomplete/title",
             dataType: 'json',
@@ -215,4 +190,28 @@
             return data.text || data.element.innerText;
         }
     });
+
+    $('.dropdown-menu').on("click", function(e){
+        e.stopPropagation();
+        e.preventDefault();
+    });
+
+    $(".filter-type").next().slideUp();
+    $('.filter-link').each(function() {
+        $(this).click(function() {
+            if (!$(this).next().hasClass('expanded')) {
+                $('.expanded').prev().css({'background': '#FFFFFF'});
+                $($('.expanded').prev().children()[1]).css({"transform": "none"});
+                $('.expanded').slideUp('fast').removeClass('expanded');
+                $(this).next().addClass('expanded').slideDown('fast');
+                $(this).css({'background': '#EAF3E7'});
+                $(this.children[1]).css({"transform": "rotate(180deg)"});
+            }
+        });
+    });
+
+    $('#apply-btn').on('click', function(e) {
+        $('#filter-form').submit();
+    });
+
 })();

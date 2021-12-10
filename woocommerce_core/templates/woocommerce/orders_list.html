@@ -7,451 +7,480 @@
 {% load compress %}
 {% load cache %}
 
+{% block breadcrumb-right %}
+    {% if paginator.count and user|can:'bulk_order.use' %}
+    {% include 'partial/bulk_orders.html' with orders_count=paginator.count %}
+    {% endif %}
+{% endblock %}
+
 {% block main-container %}
 
     <div class="tabs-container">
         {% include 'home/partial/tabs/orders.html' %}
+
+        <ul class="actions">
+            <li>
+                <a href="javascript:;" class="text-default filter-btn">
+                    Filter by
+                    <span class="dropified-icons di-arrow-down"></span>
+                </a>
+            </li>
+            <li>
+                <a href="javascript:;" class="text-default">
+                    Sort by
+                    <span class="dropified-icons di-arrow-down"></span>
+                </a>
+            </li>
+            <li class="pull-right">
+                <span class="text-default">{{ paginator.count }} Order(s)</span>
+            </li>
+            <li class="pull-right border-right">
+            {% if store_order_synced %}
+                {% if store_sync_enabled %}
+                    <a class="btn btn-outline btn-default btn-rounded btn-sm swith-implemenation itooltip"
+                        title="Switch to the Simple Order page"
+                        href="{% url_replace 'old' 1 %}">Switch to Simple </a>
+                {% else %}
+                    <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
+                        title="Switch to the Advanced Order page"
+                        href="{% url_replace 'old' 0 %}">Switch to Advanced</a>
+                {% endif %}
+            {% endif %}
+            </li>
+            <li class="pull-right">
+                {% if request.user|can:'orders_export.use' %}
+                <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
+                    title="Export Orders"
+                    href="{% url 'order_exports_index' %}"><i class="fa fa-upload"></i> Export</a>
+                {% endif %}
+            </li>
+        </ul>
+        <div id="filter-form" class="hidden-form" data-hidden-link=".filter-btn">
+            <form method="get" action="/orders" class="form" style="position: relative;">
+                {% if request.GET.store %}
+                <input type="hidden" name="store" value="{{ request.GET.store }}">
+                {% endif %}
+                <div class="row">
+                    <div class="col-md-4">
+                        <label>Date Range</label>
+                        <div id="created_at_daterange" class="form-control">
+                            <i class="fa fa-calendar m-r-xs"></i>
+                            <span>All Time</span>
+                            <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+                        </div>
+                        <input type="hidden" type="text" name="created_at_daterange" value="{{ created_at_daterange|default:'' }}" />
+                        <span class="help-block"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Order</label>
+                        <input name="query_order" value="{{request.GET.query_order|default:''}}" class="form-control" placeholder="Comma separated Order#" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Customer</label>
+                        <input name="query_customer" value="{{request.GET.query_customer|default:''}}" class="form-control"
+                               placeholder="Name or Email">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <label>Product</label>
+                        <select name="query_product" id="product" class="form-control" data-store="{{store.id}}">
+                            {% for p in product_filter %}
+                           <option value="{{p.id}}" selected="">{{p.title|truncatewords:5}}</option>
+                           {% endfor %}
+                        </select>
+                    </div>
+                    {% if store_sync_enabled %}
+                    <div class="col-md-4">
+                        <label>Supplier</label>
+                        <input name="supplier_name" id="supplier_name" value="{{supplier_filter|default:''}}" class="form-control"
+                               placeholder="Supplier Name" data-store="{{store.id}}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Country</label>
+                        <select name="query_country"  class="form-control" id="country-filter"
+                                data-placeholder="Shipping Country" multiple>
+                           <option value=""></option>
+                            {% for item in countries %}
+                            <option value="{{item.0}}"
+                                {% query_active 'query_country' item.0 'selected="selected"' True %}
+                                >{{item.1}}</option>
+                            {% endfor %}
+                            </select>
+                    </div>
+                    {% else %}
+                    <div class="col-md-4">
+                        <label>Sort</label>
+                        <select name="sort" class="form-control">
+                            <option {% if request.GET.sort == '!order_date' %}selected="selected"{% endif %} value="!order_date">Newest orders first</option>
+                            <option {% if request.GET.sort == 'order_date' %}selected="selected"{% endif %} value="order_date">Oldest orders first</option>
+                        </select>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <label>Order Status</label>
+                        <select name="status" class="form-control help-select">
+                            <option {% if status == 'any' or not status %}selected="selected"{% endif %} value="any">Any order status</option>
+                            <option {% if status == 'pending' %}selected="selected"{% endif %} value="pending">Show pending orders</option>
+                            <option {% if status == 'processing' %}selected="selected"{% endif %} value="processing">Show only processing orders</option>
+                            <option {% if status == 'on-hold' %}selected="selected"{% endif %} value="on-hold">Show only on-hold orders</option>
+                            <option {% if status == 'completed' %}selected="selected"{% endif %} value="completed">Show only completed orders</option>
+                            <option {% if status == 'cancelled' %}selected="selected"{% endif %} value="cancelled">Show only cancelled orders</option>
+                            <option {% if status == 'refunded' %}selected="selected"{% endif %} value="refunded">Show only refunded orders</option>
+                        </select>
+                        <span class="help-block "></span>
+
+                        {% if store_sync_enabled %}
+                        <!-- <label for="connected-orders" class="control-label pull-left" style="width: 100%;">
+                            <input type="checkbox" id="connected-orders" name="connected" value="true" class="icheck"
+                                   {% if connected_only == 'true' %}checked{% endif %}>
+                            Only Orders with Connected Products
+                            {% include 'partial/help_tooltip.html' with help="Show only Orders with connected products" qtipstyle="color:#BBB" pos_at="right center" pos_my="left bottom" %}
+                        </label>
+                        <label for="awaiting_order" class="control-label">
+                            <input type="checkbox" id="awaiting_order" name="awaiting_order" value="true" class="icheck"
+                                   {% if awaiting_order == 'true' %}checked{% endif %}>
+                            Only Pending Orders
+                            {% include 'partial/help_tooltip.html' with help="Hides orders placed on AliExpress" qtipstyle="color:#BBB" pos_at="right center" pos_my="left bottom" %}
+                        </label> -->
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 filter-buttons">
+                        <hr>
+                        <button class="btn btn-primary pull-right">Apply Filters</button>
+
+                        <a href="{% url_replace save 1 %}" class="btn btn-primary btn-outline no-border pull-right save-filter-btn">Save Filters</a>
+
+                        <a href="{% url 'woo:orders_list'%}?store={{store.id}}&reset=1" class="btn btn-default reset-filter-btn">
+                            <i class="fa fa-eraser"></i> Reset Filter
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
-                <div class="panel-body gray-panel" style="padding:20px 0 0 0;border:none">
-                    <div class="row" style="padding:0px 5px">
-                        <div class="col-md-4">
-                            <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter &amp; Sort</button>
-                            <span class="btn btn-white btn-rounded btn-sm">Orders count: {{paginator.count}}</span>
-                        </div>
-                        <div class="col-md-8 text-right">
-                            {% if request.user|can:'orders_export.use' %}
-                            <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
-                                title="Export Orders"
-                                href="{% url 'order_exports_index' %}"><i class="fa fa-upload"></i> Export</a>
-                            {% endif %}
+                {% for order in orders %}
+                <div class="panel-body">
+                    <div
+                        class="order"
+                        id="order-{{order.id}}"
+                        order-id="{{order.id}}"
+                        connected="{{order.connected_lines}}"
+                        data-placed-orders="{{order.placed_orders}}"
+                        data-lines-count="{{order.lines_count}}"
+                        data-auto-order="{{user|can:'auto_order.use'|lower}}">
+                        <div class="header">
+                            <div class="row">
+                                <div class="col-md-3 col-xs-6 header-column">
+                                    <label class="pull-left">
+                                        <p>Order ID:</p>
+                                        <p>Order Date:</p>
+                                    </label>
 
-                            {% if store_order_synced %}
-                                {% if store_sync_enabled %}
-                                    <a class="btn btn-outline btn-default btn-rounded btn-sm swith-implemenation itooltip"
-                                        title="Switch to the Simple Order page"
-                                        href="{% url_replace 'old' 1 %}">Switch to Simple </a>
-                                {% else %}
-                                    <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
-                                        title="Switch to the Advanced Order page"
-                                        href="{% url_replace 'old' 0 %}">Switch to Advanced</a>
-                                {% endif %}
-                            {% endif %}
-                            {% if not store_sync_enabled %}
-                            <button class="btn btn-primary btn-rounded btn-sm hide-ordered-btn">Hide Ordered</button>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <form method="get" class="filter-form m-b-sm m-t-sm"
-                    {% if request.COOKIES.orders_filter != 'true' %}
-                          style="display:none"
-                    {% endif %}
-                    >
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Order</span>
-                        </div>
-                        <div class="col-md-4">
-                            <input name="query_order" value="{{request.GET.query_order|default:''}}" class="form-control" placeholder="Comma separated Order#" />
-                        </div>
-                    </div>
-
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Customer</span>
-                        </div>
-                        <div class="col-md-4">
-                            <input name="query_customer" value="{{request.GET.query_customer|default:''}}" class="form-control"
-                                   placeholder="Name or Email">
-                        </div>
-                    </div>
-
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Product</span>
-                        </div>
-                        <div class="col-md-4">
-                            <select name="query_product" id="product" class="form-control" data-store="{{store.id}}">
-                                {% for p in product_filter %}
-                               <option value="{{p.id}}" selected="">{{p.title|truncatewords:5}}</option>
-                               {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-
-                    {% if store_sync_enabled %}
-                        <div class="row filter-row">
-                            <div class="col-md-offset-1 col-md-1 filter-label">
-                                <span>Supplier</span>
-                            </div>
-                            <div class="col-md-4">
-                                <input name="supplier_name" id="supplier_name" value="{{supplier_filter|default:''}}" class="form-control"
-                                    placeholder="Supplier Name" data-store="{{store.id}}">
-                            </div>
-                        </div>
-                        <div class="row filter-row">
-                            <div class="col-md-offset-1 col-md-1 filter-label">
-                                <span>Country</span>
-                            </div>
-                            <div class="col-md-4">
-                                <select name="query_country"  class="form-control" id="country-filter"
-                                        data-placeholder="Shipping Country" style="height:30px" multiple>
-                                <option value=""></option>
-                                    {% for item in countries %}
-                                    <option value="{{item.0}}"
-                                        {% query_active 'query_country' item.0 'selected="selected"' True %}
-                                        >{{item.1}}</option>
-                                    {% endfor %}
-                                    </select>
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    {% if not store_sync_enabled %}
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Sort</span>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="sort" class="form-control">
-                                <option {% if request.GET.sort == '!order_date' %}selected="selected"{% endif %} value="!order_date">Newest orders first</option>
-                                <option {% if request.GET.sort == 'order_date' %}selected="selected"{% endif %} value="order_date">Oldest orders first</option>
-                            </select>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <div class="row filter-row m-b">
-                       <div class="col-md-2 filter-label">
-                           <span>Date Range</span>
-                       </div>
-                       <div class="col-md-4">
-                           <div id="created_at_daterange" class="form-control">
-                               <i class="fa fa-calendar m-r-xs"></i>
-                               <span>All Time</span>
-                               <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
-                           </div>
-                           <input type="hidden" type="text" name="created_at_daterange" value="{{ created_at_daterange|default:'' }}" />
-                       </div>
-                       <div class="col-md-6" style="">
-                           <span class="help-block "></span>
-                       </div>
-                    </div>
-                    <div class="row filter-row m-t-md">
-                        <div class="col-md-2  filter-label filter-order-status">
-                            <span>Order Status</span>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="status" class="form-control help-select">
-                                <option {% if status == 'any' or not status %}selected="selected"{% endif %} value="any">Any order status</option>
-                                <option {% if status == 'pending' %}selected="selected"{% endif %} value="pending">Show pending orders</option>
-                                <option {% if status == 'processing' %}selected="selected"{% endif %} value="processing">Show only processing orders</option>
-                                <option {% if status == 'on-hold' %}selected="selected"{% endif %} value="on-hold">Show only on-hold orders</option>
-                                <option {% if status == 'completed' %}selected="selected"{% endif %} value="completed">Show only completed orders</option>
-                                <option {% if status == 'cancelled' %}selected="selected"{% endif %} value="cancelled">Show only cancelled orders</option>
-                                <option {% if status == 'refunded' %}selected="selected"{% endif %} value="refunded">Show only refunded orders</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6" style="">
-                            <span class="help-block "></span>
-                        </div>
-                    </div>
-
-                    {% if store_sync_enabled %}
-                    <!--
-                    <div class="row m-t-xs">
-                        <div class="col-md-2 filter-label filter-order-status"></div>
-                        <div class="col-md-8" style="padding: 0px 10px">
-                            <label for="connected-orders" class="control-label">
-                                <input type="checkbox" id="connected-orders" name="connected" value="true" class="icheck"
-                                       {% if connected_only == 'true' %}checked{% endif %}>
-                                Only Orders with Connected Products
-                                {% include 'partial/help_tooltip.html' with help="Show only Orders with connected products" qtipstyle="color:#BBB" pos_at="right center" pos_my="left bottom" %}
-                            </label>
-                        </div>
-                    </div>
-                    <div class="row m-t-xs">
-                        <div class="col-md-2 filter-label filter-order-status"></div>
-                        <div class="col-md-8" style="padding: 0px 10px">
-                            <label for="awaiting_order" class="control-label">
-                                <input type="checkbox" id="awaiting_order" name="awaiting_order" value="true" class="icheck"
-                                       {% if awaiting_order == 'true' %}checked{% endif %}>
-                                Only Pending Orders
-                                {% include 'partial/help_tooltip.html' with help="Hides orders placed on AliExpress" qtipstyle="color:#BBB" pos_at="right center" pos_my="left bottom" %}
-                            </label>
-                        </div>
-                    </div>
-                    -->
-                    {% endif %}
-
-                    <div class="row">
-                        <div class="col-md-2 col-md-offset-2 filter-buttons m-t">
-                            {% if request.GET.store %}
-                            <input type="hidden" name="store" value="{{ request.GET.store }}">
-                            {% endif %}
-                        <button class="btn btn-primary"><i class="fa fa-filter"></i> Apply</button>
-                        </div>
-
-                        <div class="col-md-5 col-md-offset-4 text-right">
-                            <a href="{% url_replace save 1 %}" class="btn btn-success save-filter-btn">
-                                <i class="fa fa-save"></i> Save Filter
-                            </a>
-
-                            <a href="{% url 'woo:orders_list'%}?store={{store.id}}&reset=1" class="btn btn-default reset-filter-btn">
-                                <i class="fa fa-eraser"></i> Reset Filter
-                            </a>
-                        </div>
-
-                    </div>
-                    </form>
-
-                    {% if paginator.count and user|can:'bulk_order.use' %}
-                    {% include 'partial/bulk_orders.html' with orders_count=paginator.count %}
-                    {% endif %}
-
-                    <div class="orders">
-                        {% for order in orders %}
-                        <div
-                            class="order"
-                            id="order-{{order.id}}"
-                            order-id="{{order.id}}"
-                            connected="{{order.connected_lines}}"
-                            data-placed-orders="{{order.placed_orders}}"
-                            data-lines-count="{{order.lines_count}}"
-                            data-auto-order="{{user|can:'auto_order.use'|lower}}">
-                            <div class="header">
-                                <div class="row">
-                                    <div class="col-xs-2">
-                                        <b>Order <a href="{{order.order_url}}" target="_blank">#{{order.id}}</a></b>
+                                    <div>
+                                        <p>
+                                            <a href="{{order.order_url}}" target="_blank">#{{order.id}}</a>
+                                        </p>
+                                        <p>{% date_humanize order.date relative=False %}</p>
                                     </div>
-                                    <div class="col-xs-2">
-                                        <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #eee;border-radius: 3px;">
-                                        {% date_humanize order.date %}
-                                        </span>
+                                </div>
+                                <div class="col-md-3 col-xs-6 header-column">
+                                    <label class="pull-left">
+                                        <p>Payment Status:</p>
+                                        <p>Order Value:</p>
+                                    </label>
+
+                                    <div>
+                                        <p class="itooltip" title="{% date_humanize order.date_paid %}">
+                                            {% if order.date_paid %}
+                                                <span class="badge badge-primary"></span> Paid
+                                            {% else %}
+                                                <span class="badge badge-warning"></span> Unpaid
+                                            {% endif %}
+                                        </p>
+                                        <p>{% money_format order.total store %}</p>
                                     </div>
-                                    <div class="col-xs-1">
-                                        {% if order.date_paid %}
-                                            <span class="badge badge-primary">
-                                                Paid {% date_humanize order.date_paid %}
-                                            </span>
-                                        {% else %}
-                                            <span class="badge badge-warning">Unpaid</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-xs-2" id="fulfillment-status-order-{{order.id}}">
-                                        <span class="badge badge-{% if not order.fulfillment_status %}warning{% else %}primary{% endif %}">
+                                </div>
+                                <div class="col-md-2 col-xs-6 header-column">
+                                    <label class="pull-left">
+                                        <p>Shipping:</p>
+                                        <p>Country:</p>
+                                    </label>
+
+                                    <div>
+                                        <p>
+                                            <span class="badge badge-{% if not order.fulfillment_status %}danger{% else %}primary{% endif %}"></span>
                                             {{order.fulfillment_status|default:"Unfulfilled"|title}}
-                                        </span>
+                                        </p>
+                                        {% if order.shipping.country %}
+                                        <p>
+                                            <img class="itooltip m-r-xs shipping-country-code" shipping-country-code="{{order.shipping.country|lower}}"
+                                                 style="width: 28px; margin-bottom: 4px;" title="{{order.shipping.country}}" src="//cdn.dropified.com/static/flags/{{order.shipping.country|lower}}.svg">
+                                        </p>
+                                        {% endif %}
                                     </div>
-                                    <div class="col-xs-2 order-status">
-                                        {% if order.status == 'on-hold' %}
-                                            <span class="badge badge-danger primary">&nbsp;</span>
-                                        {% elif order.status == 'pending' %}
-                                            <span class="badge badge-warning primary">&nbsp;</span>
-                                        {% elif order.status == 'completed' %}
-                                            <span class="badge badge-primary completed-order">&nbsp;</span>
-                                        {% elif order.status == 'processing' and order.partially_ordered %}
-                                            <span class="badge badge-warning primary">&nbsp;</span>
-                                        {% elif order.status == 'processing' and order.lines_count == order.tracked_lines %}
-                                            <span class="badge badge-warning primary completed-order">&nbsp;</span>
-                                        {% else %}
-                                            <span class="badge">&nbsp;</span>
-                                        {% endif %}
-                                            {{order.status|title}}
-                                            {% if order.partially_ordered %}(Partially Ordered){% endif %}
-                                    </div>
-                                    <div class="col-xs-3 text-right">
-                                        {% if 'dropified-print' in order.supplier_types %}
-                                        <div class="btn-group" style="margin-right: 5px;">
-                                            <button class="btn btn-success btn-xs order-prints" order-id="{{order.id}}"
-                                                    type="button" style="border-right:1px solid #66a8cc;">
-                                                Print On Demand
-                                            </button>
-                                        </div>
-                                        {% endif %}
-
-                                        {% if 'pls' in order.supplier_types %}
-                                        <div class="btn-group pull">
-
-                                          <button class="btn btn-success btn-xs pay-all-lines" type="button" style="border-right:1px solid #66a8cc;">
-                                            Pay For Supplements
-                                          </button>
-
-                                          <button type="button" class="btn btn-success btn-xs dropdown-toggle"
-                                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <span class="caret"></span>
-                                          </button>
-
-                                          <ul class="dropdown-menu pull-right">
-                                            <li><a class="pay-selected-lines" href="#">Pay for Selected Items</a></li>
-                                          </ul>
-                                        </div>
-                                        {% endif %}
-                                        &nbsp;
-                                        {% if order.lines_count %}
-                                        <button class="btn btn-success btn-xs pull-right order-items" order-id="{{order.number}}"
-                                                type="button" style="border-right:1px solid #66a8cc">
+                                </div>
+                                <div class="col-md-4 col-xs-6 header-column">
+                                    {% if order.lines_count %}
+                                    <div class="btn-group pull-right">
+                                        <button class="btn btn-primary small order-items" order-id="{{order.number}}"
+                                                type="button" style="border-right:1px solid #66a8cc; {% if order.mixed_supplier_types %}display:none{% endif %}">
                                             Order Items
                                         </button>
+
+                                        <button type="button" class="btn btn-primary small dropdown-toggle order-by-supplier"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            {% if order.mixed_supplier_types %}
+                                            Order Items From
+                                            {% endif %}
+                                            <span class="caret"></span>
+                                        </button>
+
+                                        <ul class="dropdown-menu pull-right">
+                                            {% if order.mixed_supplier_types %}
+                                                {% for type in order.supplier_types %}
+                                                    <li><a class="order-seleted-suppliers" supplier-type="{{type}}" href="#">{{type|supplier_type}} Suppliers</a></li>
+                                                {% endfor %}
+                                            {% else %}
+                                                <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if use_fulfillbox %}
+                                    <a class="btn btn-info small pull-right place-order" href="#"
+                                       store="{{store.id}}" order-id="{{order.id}}"><i class="fa fa-bolt"></i> Quick Order</a>
+                                    {% endif %}
+
+                                    {% if 'pls' in order.supplier_types %}
+                                    <div class="btn-group pull-right">
+                                      <button class="btn btn-primary small pay-all-lines" type="button">
+                                        Pay For Supplements
+                                      </button>
+
+                                      <button type="button" class="btn btn-primary small dropdown-toggle"
+                                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <span class="caret"></span>
+                                      </button>
+
+                                      <ul class="dropdown-menu pull-right">
+                                        <li><a class="pay-selected-lines" href="#">Pay for Selected Items</a></li>
+                                      </ul>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if 'dropified-print' in order.supplier_types %}
+                                    <div class="btn-group pull-right">
+                                        <button class="btn btn-primary small order-prints" order-id="{{order.id}}"
+                                                type="button" style="border-right:1px solid #66a8cc;">
+                                            Print On Demand
+                                        </button>
+
+                                        <button type="button" class="btn btn-primary small dropdown-toggle"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <span class="caret"></span>
+                                        </button>
+
+                                        <ul class="dropdown-menu pull-right">
+                                            <li><a class="order-seleted-prints" href="#">Order Selected Items</a></li>
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="details">
+                            <div class="row shipping-info new-layout-hidden">
+                                <div class="col-xs-2 order-status">
+                                    {% if order.status == 'on-hold' %}
+                                        <span class="badge badge-danger primary">&nbsp;</span>
+                                    {% elif order.status == 'pending' %}
+                                        <span class="badge badge-warning primary">&nbsp;</span>
+                                    {% elif order.status == 'completed' %}
+                                        <span class="badge badge-primary completed-order">&nbsp;</span>
+                                    {% elif order.status == 'processing' and order.partially_ordered %}
+                                        <span class="badge badge-warning primary">&nbsp;</span>
+                                    {% elif order.status == 'processing' and order.lines_count == order.tracked_lines %}
+                                        <span class="badge badge-warning primary completed-order">&nbsp;</span>
+                                    {% else %}
+                                        <span class="badge">&nbsp;</span>
+                                    {% endif %}
+                                        {{order.status|title}}
+                                        {% if order.partially_ordered %}(Partially Ordered){% endif %}
+                                </div>
+                                <div class="col-md-3 col-xs-6" style="padding-left:5px">
+                                    {% if order.has_shipping_address %}
+                                        {{order.shipping.first_name|default:''}} {{order.shipping.last_name|default:''}}
+                                        {% if order.shipping.company %}
+                                            - {{order.shipping.company}}
                                         {% endif %}
+                                        {% if order.billing.cpf %}
+                                            - {{order.billing.cpf}}
+                                        {% endif %}
+                                        <br>
+                                        {{order.shipping.address_1}}{% if order.shipping.number %}, {{order.shipping.number}}{% endif %}<br>
+                                        {{order.shipping.address_2}}
+
+                                        {% if order.shipping.address_2 %}<br>{% endif %}
+
+                                        {{order.shipping.city}}
+                                        {% if order.shipping.state %}
+                                        ,
+                                            <span class="itooltip shipping-province-code" title="Province" data-placement="auto right" shipping-province-code="{{order.shipping.state}}">
+                                                    {{order.shipping.state|default:'N/A'}},
+                                            </span>
+                                        {% endif %}
+                                        {% if order.shipping.postcode %}
+                                        , {{order.shipping.postcode}}
+                                        {% endif %}
+                                    {% else %}
+                                        {{order.billing.first_name|default:''}} {{order.billing.last_name|default:''}}
+                                        <br>
+                                        {{order.billing.address_1}}{% if order.billing.number %}, {{order.billing.number}}{% endif %}<br>
+                                        {{order.billing.address_2}}
+
+                                        {% if order.billing.address_2 %}<br>{% endif %}
+
+                                        {{order.billing.city}}
+                                        {% if order.billing.state %}
+                                        , {{order.billing.state}}
+                                        {% endif %}
+                                        {% if order.billing.postcode %}
+                                        , {{order.billing.postcode}}
+                                        {% endif %}
+                                    {% endif %}
+                                    <br> {{order.billing.phone}}
+                                    {% if order.has_shipping_address %}
+                                        <br> <b>{{order.shipping.country}}</b>
+                                    {% else %}
+                                        <br> <b>{{order.billing.country}}</b>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-1 col-xs-1">
+                                    {% if order.has_shipping_address %}
+                                        <img class="itooltip shipping-country-code" shipping-country-code="{{order.shipping.country|lower}}"
+                                             style="width: 16px" title="{{order.shipping.country}}"
+                                             src="//cdn.dropified.com/static/flags/{{order.shipping.country|lower}}.svg">
+                                        <br />
+                                    {% else %}
+                                        <img class="itooltip" style="width: 16px"
+                                             title="{{order.billing.country}}"
+                                             src="//cdn.dropified.com/static/flags/{{order.billing.country|lower}}.svg">
+                                        <br />
+                                    {% endif %}
+                                    {% if order.billing.email %}
+                                        <a href="mailto:{{order.billing.email}}" class="itooltip" title="Send Email To The Customer">
+                                            <i class="fa fa-envelope-o fa-lg"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-2">
+                                    <b></b>
+                                </div>
+                                <div class="col-md-3 col-md-offset-3">
+                                    <div class="note-panel panel panel-default hidden-sm hidden-xs">
+                                        <div class="panel-heading">
+                                            Order Notes
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="note-preview">
+                                                <span class="note-text">Loading...</span>
+                                            </div>
+                                            <div class="edit-note">
+                                                <textarea class="note">{{order.notes|default:''}}</textarea>
+                                                <button class="btn btn-primary btn-xs note-edit-save"
+                                                        order-id="{{order.id}}" store-id="{{store.id}}">
+                                                    <i class="fa fa-save"></i> Save
+                                                </button>
+                                                <button class="btn btn-default btn-xs note-edit-cancel">
+                                                    <i class="fa fa-times"></i> Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <i class="fa fa-edit" style="position:absolute;bottom:0px;right:5px;z-index:1200"></i>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="details container-fluid">
-                                <div class="row shipping-info">
-                                    <div class="col-md-3 col-xs-6" style="padding-left:5px">
-                                        {% if order.has_shipping_address %}
-                                            {{order.shipping.first_name|default:''}} {{order.shipping.last_name|default:''}}
-                                            {% if order.shipping.company %}
-                                                - {{order.shipping.company}}
-                                            {% endif %}
-                                            {% if order.billing.cpf %}
-                                                - {{order.billing.cpf}}
-                                            {% endif %}
-                                            <br>
-                                            {{order.shipping.address_1}}{% if order.shipping.number %}, {{order.shipping.number}}{% endif %}<br>
-                                            {{order.shipping.address_2}}
+                            {% for item in order.items %}
+                            {% with original=item.product.get_original_info %}
+                            <div class="line rounded
+                                        {% if item.is_bundle %}bundled{% endif %}
+                                        {% if not forloop.first %}multi-lines{% endif %}
+                                        {% if excluded_product %}excluded{% endif %}"
+                                line-id="{{item.id}}"
+                                order-id="{{order.id}}"
+                                order-data-id="{{ item.order_data_id }}"
+                                order-number="{{order.id}}"
+                                line-title="{{item.title}}"
+                                supplier-type="{{item.supplier_type}}"
+                                {% if not excluded_product %}line-data="{{item.order_data_id|default:''}}"{% endif %}
+                                line-track="{{item.order_track.id|default:''}}"
+                                fulfillment-status="{{item.fulfillment_status}}"
+                                {% if item.is_pls %}is-pls="true"{% endif %}
+                                {% if excluded_product %}excluded-product="true"{% endif %}>
 
-                                            {% if order.shipping.address_2 %}<br>{% endif %}
-
-                                            {{order.shipping.city}}
-                                            {% if order.shipping.state %}
-                                            ,
-                                                <span class="itooltip shipping-province-code" title="Province" data-placement="auto right" shipping-province-code="{{order.shipping.state}}">
-                                                        {{order.shipping.state|default:'N/A'}},
-                                                </span>
-                                            {% endif %}
-                                            {% if order.shipping.postcode %}
-                                            , {{order.shipping.postcode}}
-                                            {% endif %}
-                                        {% else %}
-                                            {{order.billing.first_name|default:''}} {{order.billing.last_name|default:''}}
-                                            <br>
-                                            {{order.billing.address_1}}{% if order.billing.number %}, {{order.billing.number}}{% endif %}<br>
-                                            {{order.billing.address_2}}
-
-                                            {% if order.billing.address_2 %}<br>{% endif %}
-
-                                            {{order.billing.city}}
-                                            {% if order.billing.state %}
-                                            , {{order.billing.state}}
-                                            {% endif %}
-                                            {% if order.billing.postcode %}
-                                            , {{order.billing.postcode}}
+                                <div class="hidden-xs" style="padding-top: 5px;">
+                                    <input class="line-checkbox icheck" type="checkbox"
+                                        {% if item.is_pls %}
+                                            {% if item.is_paid or item.supplier.is_supplement_deleted %}
+                                                disabled
                                             {% endif %}
                                         {% endif %}
-                                        <br> {{order.billing.phone}}
-                                        {% if order.has_shipping_address %}
-                                            <br> <b>{{order.shipping.country}}</b>
-                                        {% else %}
-                                            <br> <b>{{order.billing.country}}</b>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-md-1 col-xs-1">
-                                        {% if order.has_shipping_address %}
-                                            <img class="itooltip shipping-country-code" shipping-country-code="{{order.shipping.country|lower}}"
-                                                 style="width: 16px" title="{{order.shipping.country}}"
-                                                 src="//cdn.dropified.com/static/flags/{{order.shipping.country|lower}}.svg">
-                                            <br />
-                                        {% else %}
-                                            <img class="itooltip" style="width: 16px"
-                                                 title="{{order.billing.country}}"
-                                                 src="//cdn.dropified.com/static/flags/{{order.billing.country|lower}}.svg">
-                                            <br />
-                                        {% endif %}
-                                        {% if order.billing.email %}
-                                            <a href="mailto:{{order.billing.email}}" class="itooltip" title="Send Email To The Customer">
-                                                <i class="fa fa-envelope-o fa-lg"></i>
-                                            </a>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-md-2">
-                                        <b>{% money_format order.total store %}</b>
-                                    </div>
-                                    <div class="col-md-3 col-md-offset-3">
-                                        <div class="note-panel panel panel-default hidden-sm hidden-xs">
-                                            <div class="panel-heading">
-                                                Order Notes
-                                            </div>
-                                            <div class="panel-body">
-                                                <div class="note-preview">
-                                                    <span class="note-text">Loading...</span>
-                                                </div>
-                                                <div class="edit-note">
-                                                    <textarea class="note">{{order.notes|default:''}}</textarea>
-                                                    <button class="btn btn-primary btn-xs note-edit-save"
-                                                            order-id="{{order.id}}" store-id="{{store.id}}">
-                                                        <i class="fa fa-save"></i> Save
-                                                    </button>
-                                                    <button class="btn btn-default btn-xs note-edit-cancel">
-                                                        <i class="fa fa-times"></i> Cancel
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <i class="fa fa-edit" style="position:absolute;bottom:0px;right:5px;z-index:1200"></i>
-                                        </div>
-                                    </div>
+                                    >
                                 </div>
+                                <div style="flex-grow: 4;">
+                                    <div class="col-md-3 product-preview">
+                                        <img class="product-img cached-img no-img no-img-sm unveil pull-left"
+                                            store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
+                                            src="{% static 'img/blank.gif' %}" no-img-width="32px"
+                                            {% if item.image %}
+                                            data-src="{{item.image}}"
+                                            {% endif %} />
 
-                                <div class="row">
-                                    {% for item in order.items %}
-                                    {% with original=item.product.get_original_info %}
-                                    <div class="line
-                                                container-fluid
-                                                {% if item.is_bundle %}bundled{% endif %}
-                                                {% if not forloop.first %}multi-lines{% endif %}
-                                                {% if excluded_product %}excluded{% endif %}"
-                                        line-id="{{item.id}}"
-                                        order-id="{{order.id}}"
-                                        order-data-id="{{ item.order_data_id }}"
-                                        order-number="{{order.id}}"
-                                        line-title="{{item.title}}"
-                                        supplier-type="{{item.supplier_type}}"
-                                        {% if not excluded_product %}line-data="{{item.order_data_id|default:''}}"{% endif %}
-                                        line-track="{{item.order_track.id|default:''}}"
-                                        fulfillment-status="{{item.fulfillment_status}}"
-                                        {% if item.is_pls %}is-pls="true"{% endif %}
-                                        {% if excluded_product %}excluded-product="true"{% endif %}>
-                                        <div class="row source-order">
+                                        {% if item.product %}
+                                        <a href="{% url 'woo:product_detail' item.product.id %}" target="_blank" title="{{item.name}}">
+                                            {{item.name|truncatewords:7}}
+                                        </a>
+                                        {% else %}
+                                        <span title="{{item.name}}">
+                                            {{item.name|truncatewords:7}}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-3 line-order-id header-column">
+                                        <label class="pull-left">
+                                            <p>Supplier ID:</p>
+                                            <p>Status:</p>
+                                        </label>
 
-                                            <div class="col-xs-3 no-wrap">
-                                                <span>{{item.supplier.supplier_type|supplier_type}}</span>
-                                                {% if item.supplier %}
-                                                    <a {% if item.supplier.supplier_url %}
-                                                        href="{{item.supplier.supplier_url|default:'#'}}" target="_blank"
-                                                    {% else %}
-                                                        href="#"
-                                                    {% endif %}
-
-                                                    {% if user.id == 883 and item.order_track %}
-                                                        class="order-supplier-store"
-                                                        source-order-id="{{item.order_track.source_id}}"
-                                                    {% endif %}
-
-                                                    >{{item.supplier.supplier_name|truncatechars:25}}</a>
-                                                {% else %}
-                                                    N/A
-                                                {% endif %}
-                                            </div>
-
-                                            <div class="col-xs-3 line-order-id">
-                                                Order ID:
+                                        <div>
+                                            <p>
                                                 {% if item.order_track %}
-                                                    <a class="placed-order-details" href="#" order-id="{{order.id}}"
-                                                        source-order-id="{{item.order_track.source_id}}"
-                                                        source-url="{{item.order_track.get_source_url}}"
-                                                        order-date="{{item.order_track.created_at|date:'N j, Y, P'}}"
-                                                        line-id="{{item.id}}"
-                                                        product-id="{{item.product_id}}"
-                                                        title="View Order Details">#{{item.order_track.source_id}}</a>
+                                                <a class="placed-order-details" href="#" order-id="{{order.id}}"
+                                                    source-order-id="{{item.order_track.source_id}}"
+                                                    source-url="{{item.order_track.get_source_url}}"
+                                                    order-date="{{item.order_track.created_at|date:'N j, Y, P'}}"
+                                                    line-id="{{item.id}}"
+                                                    title="View Order Details">{{item.order_track.get_source_ids}}</a>
                                                 {% else %}
-                                                    <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}" product-id="{{item.product_id}}">Add</a>
+                                                <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Add Supplier ID</a>
                                                 {% endif %}
-                                            </div>
-                                            <div class="col-md-3 line-ordered">
-                                                <span class="badge badge-{% if item.order_track or item.is_paid or item.fulfillment_status == 'fulfilled' or excluded_product %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
+                                            </p>
+                                            <p class="line-ordered">
+                                                <span class="badge badge-{% if item.order_track or item.is_paid or item.fulfillment_status == 'fulfilled' or excluded_product %}primary{% else %}danger{% endif %}"></span>
                                                 {% if item.order_track %}
                                                     <span class="ordered-status"
                                                     {% if item.order_track.source_id %}
@@ -465,8 +494,6 @@
                                                         </span>
                                                         {% endif %}
                                                     </span>
-                                                {% elif item.fulfillment_status == 'fulfilled' %}
-                                                    <span class="ordered-status">Fulfilled in Shopify</span>
                                                 {% elif excluded_product %}
                                                     <span class="ordered-status">Excluded Product</span>
                                                 {% elif item.is_pls and item.is_paid %}
@@ -476,181 +503,136 @@
                                                 {% else %}
                                                     <span class="ordered-status">Not ordered</span>
                                                 {% endif %}
-                                            </div>
-                                            <div class="col-md-3 line-tracking hidden-xs">
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 line-order-id header-column">
+                                        <label class="pull-left">
+                                            <p>Variant:</p>
+                                            <p>Tracking:</p>
+                                        </label>
+
+                                        <div>
+                                            <p>
+                                                {{item.quantity}}x {% if item.attributes %}{{item.attributes}}{% endif %}
+                                            </p>
+                                            <p class="line-tracking">
                                                 {% if item.order_track %}
-                                                    <span class="badge badge-{{ item.order_track.get_source_status_color }}" style="width:15px;height:15px">&nbsp;</span>
+                                                    <span class="badge badge-{{ item.order_track.get_source_status_color }}"></span>
                                                     {{item.order_track.get_source_status|default:'No Tracking Status'}}
-                                                {% elif item.fulfillment_status != 'fulfilled' and not excluded_product %}
-                                                    <span class="badge badge-default" style="width:15px;height:15px">&nbsp;</span>
+                                                {% elif not excluded_product %}
+                                                    <span class="badge badge-default"></span>
                                                     Not Tracked
                                                 {% endif %}
-                                            </div>
+                                            </p>
                                         </div>
-                                        <div class="row item">
-                                            <div class="col-md-12 no-padding">
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <td class="product-preview">
-                                                          <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; "
-                                                                  {% if item.is_pls %}
-                                                                    {% if item.is_paid or item.supplier.is_supplement_deleted %}
-                                                                        disabled
-                                                                    {% endif %}
-                                                                  {% endif %} >
+                                    </div>
+                                    <div class="col-md-3 pull-right text-right no-padding">
+                                        {% if not item.is_pls %}
+                                            {% include 'partial/place_order_btn.html' %}
+                                        {% endif %}
+                                    </div>
 
-                                                          <img class="product-img cached-img no-img no-img-sm unveil"
-                                                              store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
-                                                              src="{% static 'img/blank.gif' %}" no-img-width="32px"
-                                                              {% if item.image %}
-                                                              data-src="{{item.image}}"
-                                                              {% endif %}
-                                                              />
-                                                        </td>
-                                                        <td>
-                                                            {% if item.product %}
-                                                                <a href="{% url 'woo:product_detail' item.product.id %}" target="_blank" title="{{item.name}}">
-                                                                    {{item.name|truncatewords:7}}
-                                                                {% if item.attributes %}
-                                                                    - {{item.attributes}}
-                                                                {% endif %}
-                                                                </a>
-                                                            {% else %}
-                                                                <span title="{{item.name}}">
-                                                                    {{item.name|truncatewords:7}}
-                                                                </span>
-                                                                {% if item.attributes %}
-                                                                    - {{item.attributes}}
-                                                                {% endif %}
-                                                            {% endif %}
-                                                        </td>
-                                                        <td class="text-center no-wrap" style="width:10%"></td>
-                                                        <td class="text-center no-wrap" style="width:10%">
-                                                            <span style="font-weight:bolder;{% if item.quantity > 1 %}color:blue{% endif %}">
-                                                                {{item.quantity}}
-                                                            </span>
-                                                            &times;
-                                                            <b>{% money_format item.price store %}</b>
-                                                        </td>
-                                                        <td class="text-center no-wrap" style="width:10%">
-                                                            {% if item.is_bundle %}
-                                                                <span class="badge badge-primary">Bundle</span>
-                                                            {% elif item.is_pls %}
-                                                                {% if not item.is_paid %}
-                                                                    {% include 'partial/make_payment_btn.html' %}
-                                                                {% endif %}
-                                                            {% else %}
-                                                                {% include 'woocommerce/partial/place_order_btn.html' %}
-                                                            {% endif %}
-                                                        </td>
-                                                        <td class="text-center no-wrap" style="width:10%">
-                                                            <div id="fulfill-line-btn-{{ order.id }}-{{ item.id }}">
-                                                            {% if not item.is_bundle and not item.fulfillment_status %}
-
-                                                                <div class="btn-group dropup">
-                                                                    <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
-                                                                        Unfulfilled
-                                                                        <span class="caret"></span></button>
-
-                                                                        <ul class="dropdown-menu">
-                                                                            <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.order_track.source_tracking}}" product-id="{{item.product_id}}">Fulfill in WooCommerce</a></li>
-                                                                        </ul>
-                                                                    </div>
-                                                            {% else %}
-                                                                <span class="label label-success">{{item.fulfillment_status}}</span>
-                                                            {% endif %}
-                                                            </div>
-                                                        </td>
-                                                        <td class="text-center no-wrap" style="width:10%">
-                                                            {% if item.order_track and item.order_track.source_tracking %}
-                                                            <a href="{{item.order_track.get_tracking_link}}" target="_blank">
-                                                                {{item.order_track.source_tracking}}
-                                                            </a>
-                                                            {% endif %}
-                                                        </td>
-                                                    </tr>
-                                                </thead>
-                                            </table>
-                                            {% if item.is_bundle %}
-                                            <div class="well bundle-items" style="position: relative;">
-                                                {% for bundle in item.bundles %}
-                                                <div class="m-t-xs" style="display:flex">
-                                                    <div>
-                                                        <img class="product-img cached-img no-img no-img-sm unveil"
-                                                            store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}" no-img-width="32px"
-
-                                                            {% if bundle.data.variant_image %}
-                                                                src="{% shopify_image_thumb bundle.data.variant_image '32x32' 'center' %}"
-                                                            {% elif bundle.data.image %}
-                                                                src="{% shopify_image_thumb bundle.data.image '32x32' 'center' %}"
-                                                            {% endif %} style="max-width: 32px;"/>
-                                                    </div>
-
-                                                    <div>
-                                                        <a href="{% url 'woo:product_detail' bundle.product.id %}" target="_blank" title="{{bundle.product.title}}">
-                                                            {{bundle.product.title|truncatewords:9}}
-                                                        </a>
-                                                    </div>
-
-                                                    <div class="m-l">
-                                                        <span class="badge">{{bundle.quantity}} &times; {{bundle.data.variant_title}}</span>
-                                                    </div>
-
-                                                    <div class="m-l">
-                                                        <span class="badge badge-white">
-                                                            <a {% if bundle.supplier.supplier_url %}
-                                                                href="{{bundle.supplier.supplier_url|default:'#'}}" target="_blank"
-                                                            {% else %}
-                                                                href="#"
-                                                            {% endif %}
-
-                                                            >{{bundle.supplier.supplier_name|truncatechars:25}}</a>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                {% endfor %}
-                                                {% if item.supplier_type != 'pls' %}
-                                                    <button class="btn btn-success btn-xs order-bundle {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
-                                                            store-type="woo"
-                                                            supplier-type="{{item.supplier_type}}"
-                                                            order-data="{{item.order_data_id}}"
-                                                            order-number="{{order.name}}"
-                                                            style="position:absolute;right:25px;top:50px;">
-                                                        Order Bundle
-                                                    </button>
-                                                {% endif %}
+                                    {% for bundle in item.bundles %}
+                                    <div class="col-md-12 p-r-none">
+                                        <div class="rounded bg-default no-border source-product">
+                                            <div class="col-md-4 no-text-overflow">
+                                                {{bundle.product.title}}
                                             </div>
-                                            {% endif %}
 
+                                            <div class="col-md-4 header-column">
+                                                <label class="pull-left"><p>Supplier:</p></label>
+                                                <div><p>
+                                                    <span>{{bundle.supplier.supplier_type|supplier_type}}</span>
+                                                    {% if bundle.supplier %}
+                                                        <a {% if bundle.supplier.supplier_url %}
+                                                            href="{{bundle.supplier.supplier_url|default:'#'}}" target="_blank"
+                                                        {% else %}
+                                                            href="#"
+                                                        {% endif %}
+
+                                                        {% if user.id == 883 and bundle.order_track %}
+                                                            class="order-supplier-store"
+                                                            source-order-id="{{bundle.order_track.source_id}}"
+                                                        {% endif %}
+                                                        >{{bundle.supplier.supplier_name|truncatechars:25}}</a>
+                                                    {% else %}
+                                                        N/A
+                                                    {% endif %}
+                                                </p></div>
+                                            </div>
+
+                                            <div class="col-md-4 text-right">
+                                                <label>{{bundle.quantity}}x {{ bundle.variant|variant_names }}</label>
                                             </div>
                                         </div>
                                     </div>
-                                    {% endwith %}
+                                    {% empty %}
+                                    <div class="col-md-12 p-r-none">
+                                        <div class="rounded bg-default no-border source-product">
+                                            <div class="col-md-4 no-text-overflow">
+                                                {{item.title}}
+                                            </div>
+
+                                            <div class="col-md-4 header-column">
+                                                <label class="pull-left"><p>Supplier:</p></label>
+                                                <div>
+                                                    <p>
+
+                                                    <span>{{item.supplier.supplier_type|supplier_type}}</span>
+                                                    {% if item.supplier %}
+                                                        <a {% if item.supplier.supplier_url %}
+                                                            href="{{item.supplier.supplier_url|default:'#'}}" target="_blank"
+                                                        {% else %}
+                                                            href="#"
+                                                        {% endif %}
+
+                                                        {% if user.id == 883 and item.order_track %}
+                                                            class="order-supplier-store"
+                                                            source-order-id="{{item.order_track.source_id}}"
+                                                        {% endif %}
+                                                        >{{item.supplier.supplier_name|truncatechars:25}}</a>
+                                                    {% elif user|can:'product_supplier.use' %}
+                                                    <a class="add-supplier-btn" store-id="{{store.id}}" shopify-product="{{item.product_id}}">
+                                                        Connect Supplier
+                                                    </a>
+                                                    {% endif %}
+                                                </p></div>
+                                            </div>
+
+                                            <div class="col-md-4 text-right">
+                                                {% if item.order_data %}
+                                                <label>{{item.order_data.quantity}}x {{ item.order_data.variant|variant_names }}</label>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
                                     {% endfor %}
                                 </div>
                             </div>
+                            {% endwith %}
+                            {% endfor %}
                         </div>
-                        {% empty %}
-
-                        {% if api_error %}
-                            <p class="text-center">WooCommerce Error: {{api_error}}</p>
-                            <p class="text-center">Please Try again in a few seconds by reloading the page.</p>
-                        {% elif request.user.models_user.profile.plan.auto_fulfill_limit == 0 %}
-                            {% include 'common/partial/upsell_order.html' %}
-                        {% else %}
-                            <h3 class="text-center">
-                                No orders found.
-                            </h3>
-                        {% endif %}
-                        {% endfor %}
                     </div>
-
-                    {% if request.user.models_user.profile.plan.auto_fulfill_limit == 0 %}
-                    {% include "common/partial/upsell.html" with top="200px" message="Add Automated Ordering and Fulfillment to your Plan" only %}
-                    {% endif %}
-                    {% include "partial/paginator.html" %}
                 </div>
+                {% empty %}
+
+                {% if api_error %}
+                <p class="text-center">WooCommerce Error: {{api_error}}</p>
+                <p class="text-center">Please Try again in a few seconds by reloading the page.</p>
+                {% elif request.user.models_user.profile.plan.auto_fulfill_limit == 0 %}
+                {% include 'common/partial/upsell_order.html' %}
+                {% else %}
+                <h3 class="text-center">
+                    No orders found.
+                </h3>
+                {% endif %}
+                {% endfor %}
+
+                {% if request.user.models_user.profile.plan.auto_fulfill_limit == 0 %}
+                {% include "common/partial/upsell.html" with top="200px" message="Add Automated Ordering and Fulfillment to your Plan" only %}
+                {% endif %}
+                {% include "partial/paginator.html" %}
             </div>
         </div>
     </div>

@@ -133,7 +133,7 @@ class Index(common_views.IndexView):
         return reverse('pls:product')
 
     def get_breadcrumbs(self):
-        return [{'title': 'Products', 'url': reverse('pls:index')}]
+        return ['Private Label', {'title': 'Products', 'url': reverse('pls:index')}]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -162,6 +162,7 @@ class Product(common_views.ProductAddView):
 
     def get_breadcrumbs(self):
         return [
+            'Private Label',
             {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Add New Product', 'url': reverse('pls:product')},
         ]
@@ -222,6 +223,7 @@ class ProductEdit(Product):
     def get_breadcrumbs(self, supplement_id):
         kwargs = {'supplement_id': supplement_id}
         return [
+            'Private Label',
             {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Edit Product', 'url': reverse('pls:product_edit', kwargs=kwargs)},
         ]
@@ -427,6 +429,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         url = reverse('pls:supplement',
                       kwargs={'supplement_id': supplement_id})
         breadcrumbs = [
+            'Private Label',
             {'title': 'Products', 'url': reverse('pls:index')},
             {'title': 'Product', 'url': url},
         ]
@@ -631,6 +634,7 @@ class UserSupplementView(Supplement):
         url = reverse('pls:user_supplement',
                       kwargs={'supplement_id': supplement_id})
         breadcrumbs = [
+            'Private Label',
             {'title': 'Products', 'url': reverse('pls:index')},
             {'title': 'My Products', 'url': url},
         ]
@@ -766,6 +770,7 @@ class LabelHistory(UserSupplementView):
         url = reverse('pls:user_supplement',
                       kwargs={'supplement_id': supplement.id})
         breadcrumbs = [
+            'Private Label',
             {'title': 'Products', 'url': reverse('pls:index')},
             {'title': supplement.title, 'url': url},
             {'title': 'Label History', 'url': self.request.path},
@@ -902,6 +907,7 @@ class MySupplements(LoginRequiredMixin, View):
 
     def get(self, request):
         breadcrumbs = [
+            'Private Label',
             {'title': 'Products', 'url': reverse('pls:index')},
             {'title': 'My Products', 'url': reverse('pls:my_supplements')},
         ]
@@ -1022,6 +1028,7 @@ class AllUserSupplements(MyLabels, ListView):
 
     def get_breadcrumbs(self):
         return [
+            'Private Label',
             {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'User Products', 'url': reverse('pls:all_user_supplements')},
         ]
@@ -1177,6 +1184,7 @@ class Order(common_views.OrderView):
 
     def get_breadcrumbs(self):
         return [
+            'Private Label',
             {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Payments', 'url': reverse('pls:order_list')},
         ]
@@ -1263,6 +1271,7 @@ class Order(common_views.OrderView):
 class OrderDetailMixin(LoginRequiredMixin, View):
     def get_breadcrumbs(self, order):
         return [
+            'Private Label',
             {'title': 'Products', 'url': reverse('pls:index')},
             {'title': 'My Payments', 'url': reverse('pls:my_orders')},
             {'title': order.order_number, 'url': reverse('pls:order_detail', kwargs={'order_id': order.id})}
@@ -1336,6 +1345,7 @@ class MyOrders(common_views.OrderView):
 
     def get_breadcrumbs(self):
         return [
+            'Private Label',
             {'title': 'Products', 'url': reverse('pls:index')},
             {'title': 'My Payments', 'url': reverse('pls:my_orders')},
         ]
@@ -1454,6 +1464,7 @@ class PayoutView(common_views.PayoutView):
 
     def get_breadcrumbs(self):
         return [
+            'Private Label',
             {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Payouts', 'url': reverse('pls:payout_list')},
         ]
@@ -1549,6 +1560,7 @@ class PayoutDetail(LoginRequiredMixin, TemplateView):
 
     def get_breadcrumbs(self):
         return [
+            'Private Label',
             {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Payouts', 'url': reverse('pls:payout_list')},
             self.payout.reference_number,
@@ -1590,6 +1602,7 @@ class OrderItemListView(common_views.OrderItemListView):
 
     def get_breadcrumbs(self):
         return [
+            'Private Label',
             {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Order Items', 'url': '%s?cancelled=on' % reverse('pls:orderitem_list')},
         ]
@@ -1716,6 +1729,7 @@ class Billing(LoginRequiredMixin, TemplateView):
 
     def get_breadcrumbs(self):
         return [
+            'Private Label',
             {'title': 'Products', 'url': reverse('pls:index')},
             'Billing',
         ]
@@ -1823,6 +1837,7 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
 
     def get_breadcrumbs(self):
         return [
+            'Private Label',
             {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Import / Export', 'url': reverse('pls:upload_json')},
         ]
@@ -1938,6 +1953,7 @@ class Reports(LoginRequiredMixin, TemplateView):
 
     def get_breadcrumbs(self):
         return [
+            'Private Label',
             {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Reports', 'url': reverse('pls:reports')},
         ]
@@ -2783,6 +2799,7 @@ class Basket(LoginRequiredMixin, TemplateView):
 
     def get(self, request):
         breadcrumbs = [
+            'Private Label',
             {'title': 'Supplements', 'url': reverse('pls:index')},
             {'title': 'My Basket', 'url': reverse('pls:my_basket')},
         ]
@@ -2809,6 +2826,7 @@ class BasketCheckout(LoginRequiredMixin, TemplateView):
 
     def get(self, request):
         breadcrumbs = [
+            'Private Label',
             {'title': 'Supplements', 'url': reverse('pls:index')},
             {'title': 'Checkout', 'url': reverse('pls:checkout')},
         ]
@@ -2842,6 +2860,7 @@ class ProductAnnouncements(LoginRequiredMixin, TemplateView):
 
     def get(self, request, **kwargs):
         breadcrumbs = [
+            'Private Label',
             {'title': 'Supplements', 'url': reverse('pls:index')},
             {'title': 'Product News', 'url': reverse('pls:plod-product-announcements')},
         ]

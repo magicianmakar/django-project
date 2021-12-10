@@ -1,6 +1,5 @@
 .logo {
-  text-align: center;
-  margin-top: 22px;
+  margin: 35px 0 0 16px;
 }
 
 .sidebar .profile {
@@ -39,14 +38,15 @@
 }
 
 .sidebar ul {
+  margin-top: 25px;
   list-style: none;
-  margin: 0;
-  margin-top: 20px;
-  padding-left: 20px;
-  font-family: Lato;
-  font-size: 15px;
-  color: rgb(167, 177, 194);
-  line-height: 1.5;
+  padding-left: 4px;
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 16px;
+  color: #FFFFFF;
 }
 
 .sidebar ul a {

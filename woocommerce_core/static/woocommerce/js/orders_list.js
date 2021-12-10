@@ -118,15 +118,11 @@ $('#fullfill-order-btn').click(function (e) {
 });
 
 $('.filter-btn').click(function (e) {
-    Cookies.set('orders_filter', !$('.filter-form').is(':visible'));
+    Cookies.set('orders_filter', !$('#filter-form').hasClass('active'));
 
-    ga('clientTracker.send', 'event', 'Order Filter Toggle', 'WooCommerce', sub_conf.shop);
+    ga('clientTracker.send', 'event', 'Order Filter Toggle', 'Shopify', sub_conf.shop);
 
-    if (!$('.filter-form').is(':visible')) {
-        $('.filter-form').fadeIn('fast');
-    } else {
-        $('.filter-form').fadeOut('fast');
-    }
+    $('#filter-form').toggleClass('active');
 });
 
 $(".filter-form").submit(function() {
@@ -909,7 +905,7 @@ function pusherSub() {
 
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {
-        $('.filter-form').show();
+        $('#filter-form').addClass('active');
     }
 
     pusherSub();

@@ -26,11 +26,11 @@ class ProductChange(models.Model):
         index_together = ['user', 'seen', 'hidden']
 
     user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
-    shopify_product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE)
-    chq_product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE)
-    gkart_product = models.ForeignKey(GrooveKartProduct, null=True, on_delete=models.CASCADE)
-    woo_product = models.ForeignKey(WooProduct, null=True, on_delete=models.CASCADE)
-    bigcommerce_product = models.ForeignKey(BigCommerceProduct, null=True, on_delete=models.CASCADE)
+    shopify_product = models.ForeignKey(ShopifyProduct, blank=True, null=True, on_delete=models.CASCADE)
+    chq_product = models.ForeignKey(CommerceHQProduct, blank=True, null=True, on_delete=models.CASCADE)
+    gkart_product = models.ForeignKey(GrooveKartProduct, blank=True, null=True, on_delete=models.CASCADE)
+    woo_product = models.ForeignKey(WooProduct, blank=True, null=True, on_delete=models.CASCADE)
+    bigcommerce_product = models.ForeignKey(BigCommerceProduct, blank=True, null=True, on_delete=models.CASCADE)
     store_type = models.CharField(max_length=255, blank=True, default='shopify')
     data = models.TextField(blank=True, default='')
     hidden = models.BooleanField(default=False, verbose_name='Archived change')

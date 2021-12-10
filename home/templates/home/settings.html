@@ -8,16 +8,19 @@
 {% block main-container %}
 
     <div class="tabs-container m-b-xl">
-        <ul class="nav nav-tabs" role="tablist">
-            <li>
-                <a class="nav-link" href="{% url 'index' %}"><i class="fa fa-bars"></i> Stores</a>
-            </li>
-            <li class="active">
-                <a class="nav-link active" data-toggle="tab" href="#settings"><i class="fa fa-cogs"></i> Settings</a>
-            </li>
-        </ul>
         <div class="tab-content">
             <div role="tabpanel" id="settings" class="tab-pane active">
+                <div class="panel-heading m-b-none p-none no-border-bottom rounded">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li>
+                            <a class="nav-link" href="{% url 'index' %}"><i class="fa fa-bars"></i> Stores</a>
+                        </li>
+                        <li class="active">
+                            <a class="nav-link active" data-toggle="tab" href="#settings"><i class="fa fa-cogs"></i> Settings</a>
+                        </li>
+                    </ul>
+                </div>
+
                 <div class="panel-body">
                     {% include 'home/partial/settings.html'%}
                 </div>

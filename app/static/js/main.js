@@ -1011,6 +1011,28 @@ $(function() {
             $(btn.data('dismissible-target')).remove();
         });
     });
+
+    $(".side-menu-dropdown").each(function() {
+        var collapsed = localStorage.getItem($(this.children[0].children[1].children[0]).text());
+        if (collapsed === "collapsed") {
+            $(this).toggleClass("collapsed");
+            this.nextElementSibling.style.display = "none";
+            $(this.children[0].children[1].children[1]).css({"transform": "rotate(180deg)"});
+        }
+        $(this).on("click", function() {
+            $(this).toggleClass("collapsed");
+            var dropdownContent = this.nextElementSibling;
+            if (!$(this).hasClass("collapsed")) {
+                dropdownContent.style.display = "block";
+                $(this.children[0].children[1].children[1]).css({"transform": "none"});
+                localStorage.removeItem($(this.children[0].children[1].children[0]).text());
+            } else {
+                dropdownContent.style.display = "none";
+                $(this.children[0].children[1].children[1]).css({"transform": "rotate(180deg)"});
+                localStorage.setItem($(this.children[0].children[1].children[0]).text(), 'collapsed');
+            }
+        });
+    });
 });
 
 $('a[data-auto-click]').each(function (i, el) {
@@ -1249,6 +1271,27 @@ $(".copy-text-btn").on("click", function() {
     .catch(function(err){
         toastr.warning("Unable to copy the Registration link");
     });
+});
+
+
+$.merge(
+    $('.hidden-form[data-hidden-link]').map(function() {return $($(this).data('hidden-link'));}),
+    $('.hidden-form > a')
+).on('click', function(e) {
+    e.preventDefault();
+    var wrapper = $(this).parent('.hidden-form');
+    if (wrapper.hasClass('active')) {
+        wrapper.removeClass('active');
+    } else {
+        wrapper.addClass('active');
+        $(document).on('click.hidden-form', function(e) {
+            var clickedElem = $(e.target);
+            if (wrapper.find('*').index(clickedElem) === -1) {
+                wrapper.removeClass('active');
+                $(this).off('click.hidden-form');
+            }
+        });
+    }
 });
 
 function copyLink(e) {

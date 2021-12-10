@@ -51,21 +51,45 @@
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
                     <div class="panel-body">
-                        <div class="row">
-                            <div class=" col-md-12 col-md-offset-0 ">
-                                <form id="user-profile" method="get" class="form-horizontal">
-                                    <div class="form-group"><label class="col-sm-2 control-label">Name</label>
-                                        <div class="col-sm-4">
+                        <div class="">
+                            <form id="user-profile" method="get" class="">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="control-label">First Name</label>
                                             <input type="text" name="first_name" value="{{ user.first_name }}" class="form-control" placeholder="First Name">
                                         </div>
-                                        <div class="col-sm-4">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="control-label">Last Name</label>
                                             <input type="text" name="last_name" value="{{ user.last_name }}" class="form-control" placeholder="Last Name">
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div class="form-group"><label class="col-sm-2 control-label">Country</label>
-                                        <div class="col-sm-10">
-                                            <select id="country" name="country" current="{{user.profile.timezone}}" style="width:350px;">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="control-label">Time Zone</label>
+                                            <select id="timezone" name="timezone" style="width:350px;">
+                                                <option value=""></option>
+                                                {% for item in timezones %}
+                                                <option value="{{item.0}}"
+                                                    {% if user.profile.timezone == item.0 %}selected="selected"{% endif %}
+                                                    >{{item.1}}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <span>
+                                               <i>(Now: {{ now|date:'DATETIME_FORMAT' }})</i>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="control-label">Country</label>
+                                            <select id="country" name="country" current="{{user.profile.timezone}}" class="form-control">
                                                 <option value=""></option>
                                                 {% for item in countries %}
                                                 <option value="{{item.0}}"
@@ -75,123 +99,112 @@
                                             </select>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div class="form-group">
-                                        <label class="col-sm-2 control-label">Time Zone</label>
-                                        <div class="col-sm-10">
-                                            <div class="row">
-                                                <div class="col-sm-12">
-                                                    <select id="timezone" name="timezone" style="width:350px;">
-                                                        <option value=""></option>
-                                                        {% for item in timezones %}
-                                                        <option value="{{item.0}}"
-                                                            {% if user.profile.timezone == item.0 %}selected="selected"{% endif %}
-                                                            >{{item.1}}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                    <span>
-                                                       <i>(Now: {{ now|date:'DATETIME_FORMAT' }})</i>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-sm-12">
-                                                    <label>
-                                                        <input type="checkbox" name="use_relative_dates"
-                                                            {% with check=user.profile.get_config.use_relative_dates %}
-                                                            {% if check != False %}checked="checked" {% endif %}>
-                                                            {% endwith %}
-                                                        Use “relative” dates when possible (ex. “{{example_dates.1}}” instead of “{{example_dates.0}}“)
-                                                    </label>
-                                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input type="checkbox" name="use_relative_dates"
+                                                        {% with check=user.profile.get_config.use_relative_dates %}
+                                                        {% if check != False %}checked="checked" {% endif %}>
+                                                        {% endwith %}
+                                                    Use “relative” dates when possible (ex. “{{example_dates.1}}” instead of “{{example_dates.0}}“)
+                                                </label>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    {% include 'partial/profile_address.html' with title='Company' slug='company' company=user.profile.company countries=countries profile=user.profile only %}
+                                {% include 'partial/profile_address.html' with title='Company' slug='company' company=user.profile.company countries=countries profile=user.profile only %}
 
-                                    {% if user|can:'supplement_samples.use' %}
-                                        {% include 'partial/profile_address.html' with title='Samples Shipping Address' slug='user_address' company=user.profile.address countries=countries  profile=user.profile only %}
+                                {% if user|can:'supplement_samples.use' %}
+                                    {% include 'partial/profile_address.html' with title='Samples Shipping Address' slug='user_address' company=user.profile.address countries=countries  profile=user.profile only %}
 
-                                        {% if user.samples.count %}
-                                            <div class="hr-line-dashed"></div>
-                                            <div style="margin-left:230px">
-                                                <h4>Sent Samples</h4>
-                                                <ul style="padding: 5px 20px">
+                                    {% if user.samples.count %}
+                                        <div class="hr-line-dashed"></div>
+                                        <div style="margin-left:230px">
+                                            <h4>Sent Samples</h4>
+                                            <ul style="padding: 5px 20px">
 
-                                                {% for sample in user.samples.all %}
-                                                    <li>
-                                                        {{ sample.name }}:
-                                                        <a href="{{ sample.tracking_url }}" target="_blank">{{ sample.tracking_number }}</a>
-                                                        <i>({% date_humanize sample.created_at %})</i>
-                                                    </li>
-                                                {% endfor %}
-                                                </ul>
-                                            </div>
+                                            {% for sample in user.samples.all %}
+                                                <li>
+                                                    {{ sample.name }}:
+                                                    <a href="{{ sample.tracking_url }}" target="_blank">{{ sample.tracking_number }}</a>
+                                                    <i>({% date_humanize sample.created_at %})</i>
+                                                </li>
+                                            {% endfor %}
+                                            </ul>
+                                        </div>
 
-                                        {% endif %}
                                     {% endif %}
+                                {% endif %}
 
-                                    <div class="hr-line-dashed"></div>
+                                <div class="hr-line-dashed"></div>
+                            </form>
 
-                                </form>
-                            </div>
-
-                            <div class=" col-md-10 col-md-offset-1 ">
-                                  <button id="save-profile" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                            <div class="row">
+                                <div class="col-md-12">
+                                      <button id="save-profile" class="btn btn-primary">Save <i class="fa fa-save"></i></button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div id="tab-2" class="tab-pane">
                     <div class="panel-body">
-                        <div class="row">
-                            <div class=" col-md-12 col-md-offset-0 ">
-                                <form id="user-email" method="get" class="form-horizontal">
-                                    {% if not shopify_apps_customer %}
+                        <form id="user-email" method="get">
+                            <div class="row">
+                                <div class="col-md-4">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Current Password</label>
-                                        <div class="col-sm-4">
-                                            <input type="password" class="form-control" name="password" required>
-                                            <span class="help-block">(Required)</span>
-                                        </div>
+                                        <label class="control-label">Email</label>
+                                        <input type="email" name="email" value="{{ user.email }}" class="form-control">
                                     </div>
-
-                                    <div class="hr-line-dashed"></div>
-                                    {% else %}
-                                        <input type="hidden" class="form-control" name="password" value="password">
-                                    {% endif %}
-
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Email</label>
-                                        <div class="col-sm-4">
-                                            <input type="email" name="email" value="{{ user.email }}" class="form-control">
-                                        </div>
-                                    </div>
-
-                                    {% if not shopify_apps_customer %}
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">New Password</label>
-
-                                        <div class="col-sm-4">
-                                            <input type="password" class="form-control" name="password1">
-                                        </div>
-                                        <span class="help-block ">(Leave blank if you don't want to change it)</span>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Confirm Password</label>
-                                        <div class="col-sm-4">
-                                            <input type="password" class="form-control" name="password2">
-                                        </div>
-                                    </div>
-                                    {% endif %}
-
-                                    <div class="hr-line-dashed"></div>
-                                </form>
-
-                                <div class=" col-md-10 col-md-offset-1 ">
-                                      <button id="save-email" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
                                 </div>
+                            </div>
+
+                            <div class="hr-line-dashed"></div>
+
+                            {% if shopify_apps_customer %}
+                            <input type="hidden" class="form-control" name="password" value="password">
+                            {% else %}
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="control-label">Current Password</label>
+                                        <input type="password" class="form-control" name="password" placeholder="Don't use &quot;QUERTY&quot;" required>
+                                        <span class="help-block">Required</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="control-label">New Password</label>
+                                        <input type="password" class="form-control" name="password1">
+                                        <span class="help-block">Leave blank if you don't want to change it</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="control-label">Confirm Password</label>
+                                        <input type="password" class="form-control" name="password2">
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </form>
+
+                        <div class="hr-line-dashed"></div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button id="save-email" class="btn btn-primary">Save <i class="fa fa-save"></i></button>
                             </div>
                         </div>
                     </div>
@@ -206,7 +219,7 @@
                 <div id="tab-3" class="tab-pane">
                     <div class="panel-body">
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-12" id="panel-current-plan">
                                 {% if shopify_apps_customer %}
                                     {% include "partial/plans/shopify.html" with current_plan=user.profile.plan %}
                                 {% elif user.stripesubscription_set.exists %}
@@ -217,7 +230,7 @@
                             </div>
                         </div>
 
-                        {% if shopify_apps_customer %}
+                        {% if shopify_apps_customer or True %}
                             {% include "partial/plans/shopify_subscription.html" with current_plan=user.profile.plan %}
                         {% elif stripe_customer %}
                             {% include "partial/plans/stripe_subscription.html" with current_plan=user.profile.plan %}
@@ -288,7 +301,7 @@
                                 </div>
                             </div>
                             {% else %}
-                                <p>This account does not have a credit card.</p>
+                                <p>This account does not have a credit card</p>
                                 {% if extra_bundle.message %}
                                 <p>{{extra_bundle.message|safe}}</p>
                                 {% endif %}
@@ -353,7 +366,7 @@
 
                             <div class=" col-md-12 col-md-offset-0 m-t">
                                 <div class="col-md-6 col-md-offset-1 text-right">
-                                    <button id="save-aliexpress-integration" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                                    <button id="save-aliexpress-integration" class="btn btn-primary">Save <i class="fa fa-save"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -384,7 +397,7 @@
                                     </div>
 
                                     <div class="col-md-6 col-md-offset-1 text-right">
-                                        <button id="save-youzign-integration" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                                        <button id="save-youzign-integration" class="btn btn-primary">Save <i class="fa fa-save"></i></button>
                                     </div>
                                 </form>
                             </div>
@@ -450,12 +463,6 @@
         }
         .nav-tabs.centered {
             border-bottom: inherit;
-        }
-        .tabs-container .nav-tabs.centered > li.active > a,
-        .tabs-container .nav-tabs.centered > li.active > a:hover,
-        .tabs-container .nav-tabs.centered > li.active > a:focus {
-            border-bottom-color: #e7eaec;
-
         }
         .nav-tabs.centered > li > a {
             border-radius: 4px 4px 4px 4px;

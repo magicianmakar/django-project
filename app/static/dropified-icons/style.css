@@ -1,0 +1,92 @@
+@font-face {
+  font-family: 'dropified-icons';
+  src:
+    url('fonts/dropified-icons.ttf?vev258') format('truetype'),
+    url('fonts/dropified-icons.woff?vev258') format('woff'),
+    url('fonts/dropified-icons.svg?vev258#dropified-icons') format('svg');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+.dropified-icons {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'dropified-icons' !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.di-double-check:before {
+  content: "\e914";
+}
+.di-file:before {
+  content: "\e915";
+}
+.di-bolt:before {
+  content: "\e912";
+}
+.di-user-check:before {
+  content: "\e913";
+}
+.di-check:before {
+  content: "\e911";
+}
+.di-arrow-down:before {
+  content: "\e900";
+}
+.di-arrow-up:before {
+  content: "\e901";
+}
+.di-erase:before {
+  content: "\e902";
+}
+.di-folder:before {
+  content: "\e903";
+}
+.di-gear:before {
+  content: "\e904";
+}
+.di-heart:before {
+  content: "\e905";
+}
+.di-heart-o:before {
+  content: "\e906";
+}
+.di-link:before {
+  content: "\e907";
+}
+.di-mail:before {
+  content: "\e908";
+}
+.di-money:before {
+  content: "\e909";
+}
+.di-pencil:before {
+  content: "\e90a";
+}
+.di-person:before {
+  content: "\e90b";
+}
+.di-recycle:before {
+  content: "\e90c";
+}
+.di-save:before {
+  content: "\e90d";
+}
+.di-search:before {
+  content: "\e90e";
+}
+.di-trash:before {
+  content: "\e90f";
+}
+.di-view:before {
+  content: "\e910";
+}

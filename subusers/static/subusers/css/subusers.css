@@ -1,0 +1,275 @@
+h3 {
+  font-size: 20px;
+}
+
+.table.dataTable {
+  border: none;
+}
+
+.table.dataTable > thead > tr > th,
+.table.dataTable > tbody > tr > td {
+  border-bottom: 1px solid #e6ebef;
+  border-left: none;
+  border-right: none;
+  padding: 18px 0 18px 18px;
+}
+
+.table.dataTable > thead > tr > th {
+  color: #A7B1C2;
+  font-weight: 500;
+}
+
+.dataTables_filter > label > input.form-control {
+  width: 437px;
+  height: 35px;
+  border-radius: 8px;
+}
+
+.pagination > li > a {
+  margin: 0 0 0 10px;
+  height: 34px;
+  width: 34px;
+  padding: 6px 0 0 12px;
+  border: 1px solid #A7B1C2;
+  border-radius: 8px;
+}
+
+.pagination > li:first-child > a {
+  visibility: hidden;
+  margin-right: -4px;
+}
+
+.pagination > li:first-child > a:before {
+  visibility: visible;
+  content: "\f053";  /* this is your text. You can also use UTF-8 character codes as I do here */
+  font-family: FontAwesome;
+  font-size: 10px;
+  position: absolute;
+  top: -1px;
+  left: -5px;
+  height: 34px;
+  width: 34px;
+  padding: 9px 11px;
+  border: 1px solid #A7B1C2;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.pagination > li:last-child > a {
+  visibility: hidden;
+  margin-left: 14px;
+}
+
+.pagination > li:last-child > a:before {
+  visibility: visible;
+  content: "\f054";  /* this is your text. You can also use UTF-8 character codes as I do here */
+  font-family: FontAwesome;
+  font-size: 10px;
+  position: absolute;
+  top: 0px;
+  left: -5px;
+  height: 34px;
+  width: 34px;
+  padding: 9px 13px;
+  border: 1px solid #A7B1C2;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.pagination > .active > a {
+  background: #6bAA55;
+  border-color: #6bAA55;
+  color: #ffffff;
+}
+
+.action-btn {
+  padding: 6px;
+  background: #FFFFFF;
+  border: 1px solid #E8E8E8;
+  box-sizing: border-box;
+  box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  margin: 0px 5px;
+  font-size: 14px;
+}
+
+.action-btn:focus {
+  color: #FFFFFF;
+}
+
+.sweet-alert {
+  padding: 20px;
+  background: #FFFFFF;
+  border-radius: 8px;
+  height: 410px;
+  width: 428px;
+}
+
+.sweet-alert .sa-icon.sa-custom {
+  display: block !important;
+  background: url('/static/img/star.svg');
+  border: 1px solid #DBDBDB;
+  border-radius: 70px;
+  height: 120px;
+  width: 120px;
+}
+
+.sweet-alert h2 {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 32px;
+  text-align: center;
+  letter-spacing: -0.4px;
+  color: #1D262F;
+  margin: 12px 0px;
+}
+
+.sweet-alert p {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 15px;
+  line-height: 22px;
+  text-align: center;
+  letter-spacing: -0.2px;
+  color: #3B4D5E;
+  margin: 12px 0px;
+}
+
+.sweet-alert input {
+  width: 370px;
+  height: 40px;
+  padding: 10px;
+  background: #FFFFFF;
+  border: 1px solid #B0BFCE;
+  box-sizing: border-box;
+  border-radius: 8px;
+  margin: 10px 0 0 10px;
+}
+
+.sa-input-error {
+  margin: -8px;
+}
+
+.sa-error-container.show {
+  height: 35px;
+  background: #FFFFFF;
+}
+
+.sa-error-container.show > div.icon {
+  display: block;
+  position: absolute;
+  bottom: 68px;
+  left: 125px;
+}
+
+.sa-error-container.show p {
+  display: block;
+  position: absolute;
+  bottom: 58px;
+  left: 155px;
+}
+
+.sa-button-container {
+  position: absolute;
+  bottom: -35px;
+}
+
+.sweet-alert button {
+  display: flex !important;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 22px;
+  letter-spacing: -0.1px;
+  border-radius: 8px;
+  color: #FFFFFF;
+}
+
+.sweet-alert button.cancel {
+  padding: 7px 12px;
+  width: 150px;
+  right: 20px;
+  background: #FFFFFF;
+  border: 1px solid #E8E8E8;
+  box-sizing: border-box;
+  box-shadow: 0px 1px 3px #0000000D, 0px 2px 1px #00000008, 0px 1px 1px #0000000A;
+  margin: 15px 25px;
+  color: black;
+}
+
+.sweet-alert .sa-confirm-button-container {
+  bottom: 53px;
+  left: 150px;
+}
+
+.sweet-alert button.confirm {
+  padding: 8px 25px;
+  width: 220px;
+  background: #6BAA55;
+  box-shadow: 0px 1px 3px #0000000D, 0px 2px 1px #00000008, 0px 1px 1px #0000000A;
+  margin: 0px 16px;
+}
+
+.sweet-alert  .la-ball-fall {
+  top: 6px;
+}
+
+.modal-header {
+  margin: 20px 20px 0;
+}
+
+.model-content h4 {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.form-group ul li label:last-child {
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.user-profile-btn {
+    margin-right: 5px;
+}
+
+#id_subuser_stores, #id_subuser_chq_stores {
+    padding: 0 0 0 20px;
+}
+
+#id_subuser_stores li, #id_subuser_chq_stores li {
+    list-style: none;
+}
+
+#id_subuser_stores, #id_subuser_woo_stores {
+    padding: 0 0 0 20px;
+}
+
+#id_subuser_stores li, #id_subuser_woo_stores li {
+    list-style: none;
+}
+
+#id_subuser_stores, #id_subuser_gkart_stores {
+    padding: 0 0 0 20px;
+}
+
+#id_subuser_stores li, #id_subuser_gkart_stores li {
+    list-style: none;
+}
+
+#id_subuser_stores, #id_subuser_bigcommerce_stores {
+    padding: 0 0 0 20px;
+}
+
+#id_subuser_stores li, #id_subuser_bigcommerce_stores li {
+    list-style: none;
+}

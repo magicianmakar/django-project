@@ -12,20 +12,11 @@
           <div class="sk-double-bounce1"></div>
           <div class="sk-double-bounce2"></div>
         </div>
-        <table class="table">
-          <thead>
-            <th>Order</th>
-            <th>Item</th>
-            <th width="70px">Quantity</th>
-            <th>Price</th>
-            <th>Subtotal</th>
-            <th width="130px">Shipping</th>
-            <th class="tax-view">Pay Duties & Taxes</th>
-            <th>Total</th>
-            <th>Status</th>
-          </thead>
-          <tbody></tbody>
-        </table>
+        <div class="row">
+          <table class="table">
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
       <div class="modal-footer">
         <div class="pull-left totals">
@@ -48,22 +39,22 @@
 <script id="id-order-detail-template" type="text/x-handlebars-template">
   {{#each orders}}{{#each this.items}}
   <tr class="supplement-item-payment" supplement-order-data-id="{{ this.id }}" order-id="{{ this.order_id }}">
-    <td>{{ this.order_name }}</td>
-    <td>
-      <img src="{{ this.supplement.image_url }}" height="40" style="margin-right: 5px;">
-      {{ this.supplement.title }}
-    </td>
+    <td><img src="{{ this.supplement.image_url }}" style="max-width: 48px; max-height: 48px;"></td>
+    <td class="title">{{ this.supplement.title }}</td>
     <td class="text-center">
-      {{#if this.supplement.quantity}}
-      {{ this.supplement.quantity }}x
-      {{/if}}
     </td>
-    <td>{{ this.supplement.price }}</td>
-    <td class="product-cost-{{ this.order_id }}"
-        data-cost="{{ this.supplement.subtotal }}">
-      {{ this.supplement.currency_subtotal }}
+    <td class="header-column product-cost-{{ this.order_id }}" data-cost="{{ this.supplement.subtotal }}" style="width: 140px;">
+      <label class="pull-left">
+        <p>Quantity:</p>
+        <p>Price:</p>
+      </label>
+      <div>
+        <p>
+          {{#if this.supplement.quantity}}{{ this.supplement.quantity }}{{else}}1{{/if}}
+        </p>
+        <p>{{ this.supplement.price }}</p>
+      </div>
     </td>
-
     {{#unless @index}}
     <td rowspan="{{ ../items.length }}">
       {{#each ../shippings}}

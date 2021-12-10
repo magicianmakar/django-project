@@ -364,14 +364,14 @@
                 }
                 }).then(function(data) {
                     orders.success += 1;
-                    updateOrderStatus(order, data);    
+                    updateOrderStatus(order, data);
                 }).fail(function(data) {
                     // Couldn't get Supplier order info
                     orders.error += 1;
                     addOrderUpdateItem(order, {'error': getAjaxError(data)});
                 }).always(function() {
                     updateProgress();
-                });        
+                });
         }
 
         return new P(function(resolve, reject) {
@@ -452,7 +452,7 @@
         }
 
         if (order.source_type == 'ebay') {
-            order.source_url = 'https://vod.ebay.com/vod/FetchOrderDetails?orderId=' + order.source_id + 'purchaseOrderId=' + order.source_id;
+            order.source_url = 'https://vod.ebay.com/vod/FetchOrderDetails?orderId=' + order.source_id;
         } else if (order.source_type == 'supplements') {
             order.source_url = source.source_url;
         } else if (order.source_type == 'alibaba') {

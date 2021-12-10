@@ -2,7 +2,7 @@
 
 {% if 'research' not in request.user.profile.plan.slug %}
 {% if request.GET.store == 'n' or request.GET.store == 'c' or request.GET.store == None %}
-<div class="row filter-col m-b">
+<div class="row filter-col m-b platform-selection">
     <div class="col-md-1">
         <label for="">Platform:</label>
     </div>

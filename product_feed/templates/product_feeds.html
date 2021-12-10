@@ -8,8 +8,9 @@
 
 {% block main-container %}
 <div class="tabs-container">
-    {% include 'home/partial/tabs/feeds.html' %}
     <div class="tab-content margin-before-banner">
+        {% include 'home/partial/tabs/feeds.html' %}
+
         <div id="tab-1" class="tab-pane active">
             <div class="panel-body">
                 <p>
@@ -25,7 +26,7 @@
 
                 {% if user|can:"product_feeds.use" or user|can:"google_product_feed.use" %}
                 <div class="x-scroll-wrapper">
-                    <table class="table table-bordered m-t-lg">
+                    <table class="table m-t-lg">
                         <thead>
                             {% with pos_at='top center' pos_my='bottom center' %}
                             <tr>

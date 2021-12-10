@@ -6,286 +6,402 @@
 
 {% block title %}Alerts{% endblock %}
 
+{% block breadcrumb-right %}
+<div class="text-right">
+    <div class="dropdown-container">
+        <a data-toggle="dropdown" href="#" aria-expanded="false" class="btn btn-primary dropdown-toggle btn-dropdown">
+          <span>Archive Alerts</span>
+          <img src="{% static 'img/archive.svg' %}"></a>
+        <ul class="dropdown-menu archive-dropdown">
+            <li>
+                <a store-id="{{store.id}}" id="archive-all-alerts" href="#">Archive All Alerts</a>
+            </li>
+            <li>
+                <a store-id="{{store.id}}" id="delete-all-alerts" href="#">Delete All Alerts</a>
+            </li>
+            <li>
+              {% if show_hidden %}
+                  <a href="{% url 'chq:product_alerts' %}?store={{ request.GET.store }}">View All Alerts</a>
+              {% else %}
+                  <a href="{% url 'chq:product_alerts' %}?hidden=1&store={{ request.GET.store }}">View Archived Alerts</a>
+              {% endif %}
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
 {% block main-container %}
+<div class="tabs-container">
+    {% include 'home/partial/tabs/product_alerts.html' %}
+    {% if not request.session.old_layout %}
+    <ul class="actions">
+      <form id="filter-form" class="form-inline" method="get">
+        <input type="hidden" name="store" value="{{request.GET.store}}">
+        <input type="hidden" name="hidden" value="{{request.GET.hidden}}">
+          <li>
+            <a data-toggle="dropdown" href="#" aria-expanded="false" class="text-default">
+              Filter by
+              <span class="dropified-icons di-arrow-down"></span>
+            </a>
+            <ul class="dropdown-menu alert-filter-menu">
+              <li class="filter-submenu">
+                <a href="#" class="filter-link filter-category">
+                  <span>Category</span>
+                  <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                </a>
+                <ul class="filter-item expanded">
+                  <select class="filter-cat-item" name="category">
+                    <option value="">Select Category</option>
+                    <option {% if category == "product:offline" %} selected {% endif %} value="product:offline">Availability</option>
+                    <option {% if category == "variant:quantity" %} selected {% endif %} value="variant:quantity">Quantity</option>
+                    <option {% if category == "variant:price" %} selected {% endif %} value="variant:price">Price</option>
+                    <option {% if category == "variant:var_added" %} selected {% endif %} value="variant:var_added">Variant Added</option>
+                    <option {% if category == "variant:var_removed" %} selected {% endif %} value="variant:var_removed">Variant Removed</option>
+                  </select>
+                </ul>
+              </li>
+              <li class="filter-submenu">
+                <a href="#" class="filter-link filter-type">
+                  <span>Product Type</span>
+                  <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                </a>
+                <ul class="filter-item">
+                  <input name="product_type" type="text" class="filter-type-item" value="{{product_type}}" placeholder="Type">
+                </ul>
+              </li>
+              <div class="filter-btn text-right">
+                <button id="apply-btn" class="btn btn-primary">Apply</button>
+              </div>
+            </ul>
+          </li>
+          <li class="pull-right">
+            <select class="form-control m-l-sm" name="product" id="product" data-store="{{store.id}}">
+              <option value="">Search by product name</option>
+              {% if product %}
+              <option value="{{product.id}}" selected="">{{product.title|truncatewords:5}}</option>
+              {% endif %}
+            </select>
+          </li>
+      </form>
+    </ul>
+    {% endif %}
+    <div class="tab-content">
+        <div id="tab-1" class="tab-pane active">
+          <div class="panel-body alerts-body">
+            <table class="table alert-table">
+              <tbody>
+                {% for item in product_changes %}
+                {% for change in item.changes.product.offline %}
+                {% if forloop.first %}
+                <tr class="header" alert-id="{{item.id}}">
+                  <td class="category details-toggle">Availability</td>
+                  <td class="alert-details">
+                    {% if not change.new_value %}
+                    Product
+                    <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a>
+                    Is now <b style="color:green">Online</b>
+                    {% else %}
+                    Product
+                    <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a>
+                    Is now <b style="color:red">Offline</b>
+                    {% endif %}
+                  </td>
+                  <td class="alert-date details-toggle">{{item.qelem.updated_at|date}}</td>
+                  <td class="text-right alert-actions">
+                    <a data-toggle="dropdown" href="#" aria-expanded="false" class="dropdown-toggle btn small">
+                      <span>Actions</span> <i class="fa fa-caret-down" aria-hidden="true"></i>
+                    </a>
+                    <ul class="dropdown-menu action-dropdown">
+                      <li>
+                        <a class="view-details" href="#">View Details</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-original-link="{{item.original_link}}" data-key="original" href="#">Original Product</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-store-link="{{item.chq_link|default:''}}" data-key="store" href="#">Open in CommerceHQ</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-product-id="{{item.product.id}}" data-key="shopified" href="#">Open in Dropified</a>
+                      </li>
+                      <li>
+                        <a class="open-orders-btn" href="{% url 'orders' %}" data-product="{{ item.qelem.product.pk }}" data-orders="{{orders}}">
+                          Find Orders
+                        </a>
+                      </li>
+                      {% if not request.GET.hidden %}
+                      <li>
+                        <a class="archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                      </li>
+                      {% endif %}
+                    </ul>
+                  </td>
+                </tr>
+                <tr class="details" alert-id="{{item.id}}">
+                  {% endif %}
+                  {% if forloop.last %}
+                </tr>
+                {% endif %}
+                {% endfor %}
 
-<div class="row">
-    <div class="col-md-12">
-         <div class="tabs-container">
-            {% include 'home/partial/tabs/product_alerts.html' %}
-            <div class="tab-content">
-                <div id="tab-1" class="tab-pane active">
-                    <div class="panel-body">
-                        {% if upsell %}
-                        {% if request.user.profile.plan.support_addons %}
-                        {% include "common/partial/upsell.html" with addon_id=20 message="Add Alerts to your Plan" only %}
-                        {% else %}
-                        {% include "common/partial/upsell.html" with addon_id='' message="Please upgrade your Plan to add Alerts" only %}
-                        {% endif %}
-                        {% endif %}
-                        <div class="row">
-                            <div class="col-md-8 filter-col">
-                                <form id="filter-form" class="form-inline" method="get">
-                                    <input type="hidden" name="store" value="{{request.GET.store}}">
-                                    <input type="hidden" name="hidden" value="{{request.GET.hidden}}">
-                                    <label for="selected-actions" class="filter-col-item">Category:</label>
-                                    <select class="form-control filter-col-item" name="category">
-                                        <option value=""></option>
-                                        <option {% if category == "product:offline" %} selected {% endif %} value="product:offline">Availability</option>
-                                        <option {% if category == "variant:quantity" %} selected {% endif %} value="variant:quantity">Quantity</option>
-                                        <option {% if category == "variant:price" %} selected {% endif %} value="variant:price">Price</option>
-                                        <option {% if category == "variant:var_added" %} selected {% endif %} value="variant:var_added">Variant Added</option>
-                                        <option {% if category == "variant:var_removed" %} selected {% endif %} value="variant:var_removed">Variant Removed</option>
-                                    </select>
-                                    <label for="selected-actions" class="filter-col-item">Product Type:</label>
-                                    <input name="product_type" type="text" class="form-control filter-col-item" value="{{product_type}}" placeholder="">
-                                    <label for="selected-actions" class="filter-col-item">Product:</label>
-                                    <select name="product" id="product" data-store="{{store.id}}">
-                                        {% if product %}
-                                        <option value="{{product.id}}" selected="">{{product.title|truncatewords:5}}</option>
-                                        {% endif %}
-                                    </select>
-                                    <button id="apply-btn" class="btn btn-primary filter-col-item">Apply</button>
-                                </form>
-                            </div>
-                            <div class="col-md-4 text-right">
-                            {% if show_hidden %}
-                                <a href="{% url 'chq:product_alerts' %}?store={{ request.GET.store }}" class="btn btn-rounded btn-outline btn-sm expand-btn btn-default btn-reverse active">Archived Alerts</a>
-                            {% else %}
-                                <a href="{% url 'chq:product_alerts' %}?hidden=1&store={{ request.GET.store }}" class="btn btn-rounded btn-outline btn-sm expand-btn btn-default">Archived Alerts</a>
-                            {% endif %}
-                                <a data-toggle="dropdown" href="#" aria-expanded="false" class="dropdown-toggle btn btn-circle btn-outline btn-sm expand-btn btn-default"><i class="fa fa-cog"></i></a>
-                                <ul class="dropdown-menu dropdown-user">
-                                    <li>
-                                        <a store-id="{{store.id}}" id="archive-all-alerts" href="#">Archive All Alerts</a>
-                                    </li>
-                                    <li>
-                                        <a store-id="{{store.id}}" id="delete-all-alerts" href="#">Delete All Alerts</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <table class="table alert-table">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Description</th>
-                                    <th>Date</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in product_changes %}
-                                    {% for change in item.changes.product.offline %}
-                                        {% if forloop.first %}
-                                        <tr class="header" alert-id="{{item.id}}">
-                                            <td class="category">Availability</td>
-                                            <td class="details-toggle">
-                                                {% if not change.new_value %}
-                                                    Product
-                                                    <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a>
-                                                    Is now <b style="color:green">Online</b>
-                                                {% else %}
-                                                    Product
-                                                    <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a>
-                                                    Is now <b style="color:red">Offline</b>
-                                                {% endif %}
-                                            </td>
-                                            <td>{{item.qelem.updated_at|date}}</td>
-                                            <td>
-                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
-                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" chq-link="{{item.chq_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
-
-                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
-                                            </td>
-                                        </tr>
-                                        <tr class="details" alert-id="{{item.id}}">
-                                        {% endif %}
-                                        {% if forloop.last %}
-                                        </tr>
-                                        {% endif %}
-                                    {% endfor %}
-
-                                    {% for change in item.changes.variants.price %}
-                                        {% if forloop.first %}
-                                        <tr class="header" alert-id="{{item.id}}" >
-                                            <td class="category">Price</td>
-                                            <td class="details-toggle">The <b>Price</b> of one or more Variants of <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a> has changed</td>
-                                            <td>{{item.qelem.updated_at|date}}</td>
-                                            <td>
-                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
-                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" chq-link="{{item.chq_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
-
-                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
-                                            </td>
-                                        </tr>
-                                        <tr class="details" alert-id="{{item.id}}">
-                                            <td class="well" colspan="5">
-                                                <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                                                    <div class="col-md-offset-1 col-md-1 var-name"><b>Variant</b></div>
-                                                    <div class="col-md-2"></div>
-                                                    <div class="col-md-2"><b>Old Price</b></div>
-                                                    <div class="col-md-2"><b>New Price</b></div>
-                                                    <div class="col-md-2"><b>Store Price(before change)</b></div>
-                                                    {% if change.new_store_price %}
-                                                    <div class="col-md-2"><b>Store Price</b></div>
-                                                    {% else %}
-                                                    <div class="col-md-2"><b>CommerceHQ</b></div>
-                                                    {% endif %}
-                                                </div>
-
-                                        {% endif %}
-                                                <div class="row">
-                                                    <div class="col-md-offset-1 col-md-1 var-name">{{change.sku_readable}}</div>
-                                                    <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
-                                                    <div class="col-md-2">{% money_format change.old_value store %}</div>
-                                                    <div class="col-md-2">{% money_format change.new_value store %}</div>
-                                                    <div class="col-md-2">
-                                                        {% if change.store_price_before_change %}
-                                                        {% money_format change.store_price_before_change store %}
-                                                        {% else %}
-                                                        N/A
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                    {% if change.new_store_price %}
-                                                        {% money_format change.new_store_price store %}
-                                                    {% else %}
-                                                        {% if change.chq_value_label %}
-                                                        {{ change.chq_value_label }}
-                                                        {% else %}
-                                                        {% money_format change.chq_value store %}
-                                                        {% endif %}
-                                                    {% endif %}
-                                                    </div>
-                                                </div>
-                                        {% if forloop.last %}
-                                            </td>
-                                        </tr>
-                                        {% endif %}
-                                    {% endfor %}
-
-                                    {% for change in item.changes.variants.quantity %}
-                                        {% if forloop.first %}
-                                        <tr class="header" alert-id="{{item.id}}" >
-                                            <td class="category">Quantity</td>
-                                            <td class="details-toggle">The <b>Quantity</b> of one or more Variants of <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a> has changed</td>
-                                            <td>{{item.qelem.updated_at|date}}</td>
-                                            <td>
-                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
-                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" chq-link="{{item.chq_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
-
-                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
-                                            </td>
-                                        </tr>
-                                        <tr class="details" alert-id="{{item.id}}">
-                                            <td class="well" colspan="5">
-                                                <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
-                                                    <div class="col-md-2"></div>
-                                                    <div class="col-md-2"><b>Old Quantity</b></div>
-                                                    <div class="col-md-2"><b>New Quantity</b></div>
-                                                    <div class="col-md-2"><b>CommerceHQ</b></div>
-                                                </div>
-
-                                        {% endif %}
-                                                <div class="row">
-                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.sku_readable}}</div>
-                                                    <div class="col-md-2">{% price_diff change.old_value change.new_value True %}</div>
-                                                    <div class="col-md-2">{{change.old_value}}</div>
-                                                    <div class="col-md-2">{{change.new_value}}</div>
-                                                    <div class="col-md-2">{{change.chq_value}}</div>
-                                                </div>
-                                        {% if forloop.last %}
-                                            </td>
-                                        </tr>
-                                        {% endif %}
-                                    {% endfor %}
-
-                                    {# New Variants #}
-                                    {% for change in item.changes.variants.var_added %}
-                                        {% if forloop.first %}
-                                        <tr class="header" alert-id="{{item.id}}" >
-                                            <td class="category">New Variant</td>
-                                            <td class="details-toggle">A <b>new variant</b> has been added to <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a></td>
-                                            <td>{{item.qelem.updated_at|date}}</td>
-                                            <td>
-                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
-                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" chq-link="{{item.chq_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
-
-                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
-                                            </td>
-                                        </tr>
-                                        <tr class="details" alert-id="{{item.id}}">
-                                            <td class="well" colspan="5">
-                                                <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
-                                                    <div class="col-md-2"></div>
-                                                </div>
-
-                                        {% endif %}
-                                                <div class="row">
-                                                    <div class="col-md-offset-1 col-md-3 var-name" style="color:green">
-                                                        {{change.sku_readable}}
-                                                    </div>
-                                                    <div class="col-md-2"></div>
-                                                </div>
-                                        {% if forloop.last %}
-                                            </td>
-                                        </tr>
-                                        {% endif %}
-                                    {% endfor %}
-
-                                    {# Removed Product Variants #}
-                                    {% for change in item.changes.variants.var_removed %}
-                                        {% if forloop.first %}
-                                        <tr class="header" alert-id="{{item.id}}" >
-                                            <td class="category">Removed Variant</td>
-                                            <td class="details-toggle">A variant has been removed from <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a></td>
-                                            <td>{{item.qelem.updated_at|date}}</td>
-                                            <td>
-                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
-                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" chq-link="{{item.chq_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
-
-                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
-                                            </td>
-                                        </tr>
-                                        <tr class="details" alert-id="{{item.id}}">
-                                            <td class="well" colspan="5">
-                                                <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
-                                                    <div class="col-md-2"></div>
-                                                </div>
-
-                                        {% endif %}
-                                                <div class="row">
-                                                    <div class="col-md-offset-1 col-md-3 var-name" style="color:red">
-                                                        {{change.sku_readable}}
-                                                    </div>
-                                                    <div class="col-md-2"></div>
-                                                </div>
-                                        {% if forloop.last %}
-                                            </td>
-                                        </tr>
-                                        {% endif %}
-
-                                    {% endfor %}
-                                {% empty %}
-                                    <tr>
-                                        <td class="text-center" colspan="5">
-                                            <i>No alerts to display at this time</i>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-
-                        {% include "partial/paginator.html" %}
+                {% for change in item.changes.variants.price %}
+                {% if forloop.first %}
+                <tr class="header" alert-id="{{item.id}}" >
+                  <td class="category details-toggle">Price</td>
+                  <td class="alert-details">The <b>Price</b> of one or more Variants of <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a> has changed</td>
+                  <td class="alert-date details-toggle">{{item.qelem.updated_at|date}}</td>
+                  <td class="text-right alert-actions">
+                    <a data-toggle="dropdown" href="#" aria-expanded="false" class="dropdown-toggle btn small">
+                      <span>Actions</span> <i class="fa fa-caret-down" aria-hidden="true"></i>
+                    </a>
+                    <ul class="dropdown-menu action-dropdown">
+                      <li>
+                        <a class="view-details" href="#">View Details</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-original-link="{{item.original_link}}" data-key="original" href="#">Original Product</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-store-link="{{item.chq_link|default:''}}" data-key="store" href="#">Open in CommerceHQ</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-product-id="{{item.product.id}}" data-key="shopified" href="#">Open in Dropified</a>
+                      </li>
+                      <li>
+                        <a class="open-orders-btn" href="{% url 'orders' %}" data-product="{{ item.qelem.product.pk }}" data-orders="{{orders}}">
+                          Find Orders
+                        </a>
+                      </li>
+                      {% if not request.GET.hidden %}
+                      <li>
+                        <a class="archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                      </li>
+                      {% endif %}
+                    </ul>
+                  </td>
+                </tr>
+                <tr class="details" alert-id="{{item.id}}">
+                  <td class="well" colspan="4" style="background: #F6F8F9;">
+                    <div class="row alert-row-header">
+                      <div class="col-md-offset-1 col-md-3 text-right">Variant</div>
+                      <div class="col-md-2">Rate</div>
+                      <div class="col-md-2">Old Price</div>
+                      <div class="col-md-2">New Price</div>
+                      <div class="col-md-2">CommerceHQ</div>
                     </div>
-                </div>
-            </div>
+
+
+                    {% endif %}
+                    <div class="row alert-row-detail">
+                      <div class="col-md-offset-1 col-md-3 text-right">{{change.sku_readable}}</div>
+                      <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
+                      <div class="col-md-2">{% money_format change.old_value store %}</div>
+                      <div class="col-md-2">{% money_format change.new_value store %}</div>
+                      <div class="col-md-2">
+                        {% if change.chq_value_label %}
+                        {{ change.chq_value_label }}
+                        {% else %}
+                        {% money_format change.chq_value store %}
+                        {% endif %}
+                      </div>
+                    </div>
+                    {% if forloop.last %}
+                  </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+
+                {% for change in item.changes.variants.quantity %}
+                {% if forloop.first %}
+                <tr class="header" alert-id="{{item.id}}" >
+                  <td class="category details-toggle">Quantity</td>
+                  <td class="alert-details">The <b>Quantity</b> of one or more Variants of <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a> has changed</td>
+                  <td class="alert-date details-toggle">{{item.qelem.updated_at|date}}</td>
+                  <td class="text-right alert-actions">
+                    <a data-toggle="dropdown" href="#" aria-expanded="false" class="dropdown-toggle btn small">
+                      <span>Actions</span> <i class="fa fa-caret-down" aria-hidden="true"></i>
+                    </a>
+                    <ul class="dropdown-menu action-dropdown">
+                      <li>
+                        <a class="view-details" href="#">View Details</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in"  data-original-link="{{item.original_link}}" data-key="original" href="#">Original Product</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-store-link="{{item.chq_link|default:''}}" data-key="store" href="#">Open in CommerceHQ</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-product-id="{{item.product.id}}" data-key="shopified" href="#">Open in Dropified</a>
+                      </li>
+                      <li>
+                        <a class="open-orders-btn" href="{% url 'orders' %}" data-product="{{ item.qelem.product.pk }}" data-orders="{{orders}}">
+                          Find Orders
+                        </a>
+                      </li>
+                      {% if not request.GET.hidden %}
+                      <li>
+                        <a class="archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                      </li>
+                      {% endif %}
+                    </ul>
+                  </td>
+                </tr>
+                <tr class="details" alert-id="{{item.id}}">
+                  <td class="well" colspan="4" style="background: #F6F8F9;">
+                    <div class="row alert-row-header">
+                      <div class="col-md-offset-1 col-md-3 text-right">Variant</div>
+                      <div class="col-md-2">Rate</div>
+                      <div class="col-md-2">Old Quantity</div>
+                      <div class="col-md-2">New Quantity</div>
+                      <div class="col-md-2">CommerceHQ</div>
+                    </div>
+
+                    {% endif %}
+                    <div class="row alert-row-detail">
+                      <div class="col-md-offset-1 col-md-3 text-right">{{change.sku_readable}}</div>
+                      <div class="col-md-2">{% price_diff change.old_value change.new_value True %}</div>
+                      <div class="col-md-2">{{change.old_value}}</div>
+                      <div class="col-md-2">{{change.new_value}}</div>
+                      <div class="col-md-2">{{change.chq_value}}</div>
+                    </div>
+                    {% if forloop.last %}
+                  </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+
+                {# New Variants #}
+                {% for change in item.changes.variants.var_added %}
+                {% if forloop.first %}
+                <tr class="header" alert-id="{{item.id}}" >
+                  <td class="category details-toggle">New Variant</td>
+                  <td class="alert-details">A <b>new variant</b> has been added to <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a></td>
+                  <td class="alert-date details-toggle">{{item.qelem.updated_at|date}}</td>
+                  <td class="text-right alert-actions">
+                    <a data-toggle="dropdown" href="#" aria-expanded="false" class="dropdown-toggle btn small">
+                      <span>Actions</span> <i class="fa fa-caret-down" aria-hidden="true"></i>
+                    </a>
+                    <ul class="dropdown-menu action-dropdown">
+                      <li>
+                        <a class="view-details" href="#">View Details</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-original-link="{{item.original_link}}" data-key="original" href="#">Original Product</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-store-link="{{item.chq_link|default:''}}" data-key="store" href="#">Open in CommerceHQ</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-product-id="{{item.product.id}}" data-key="shopified" href="#">Open in Dropified</a>
+                      </li>
+                      <li>
+                        <a class="open-orders-btn" href="{% url 'orders' %}" data-product="{{ item.qelem.product.pk }}" data-orders="{{orders}}">
+                          Find Orders
+                        </a>
+                      </li>
+                      {% if not request.GET.hidden %}
+                      <li>
+                        <a class="archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                      </li>
+                      {% endif %}
+                    </ul>
+                  </td>
+                </tr>
+                <tr class="details" alert-id="{{item.id}}">
+                  <td class="well" colspan="4" style="background: #F6F8F9;">
+                    <div class="row alert-row-header">
+                      <div class="col-md-offset-1 col-md-3 text-right">Variant</div>
+                      <div class="col-md-2"></div>
+                    </div>
+
+                    {% endif %}
+                    <div class="row alert-row-detail">
+                      <div class="col-md-offset-1 col-md-3 text-right" style="color:green">
+                        {{change.sku_readable}}
+                      </div>
+                      <div class="col-md-2"></div>
+                    </div>
+                    {% if forloop.last %}
+                  </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+
+                {# Removed Product Variants #}
+                {% for change in item.changes.variants.var_removed %}
+                {% if forloop.first %}
+                <tr class="header" alert-id="{{item.id}}" >
+                  <td class="category details-toggle">Removed Variant</td>
+                  <td class="alert-details">A variant has been removed from <a href="{{item.qelem.product_link}}" target="_blank" class="itooltip" title="{{item.qelem.product.title}}">{{item.qelem.product.title|truncatewords:5}}</a></td>
+                  <td class="alert-date details-toggle">{{item.qelem.updated_at|date}}</td>
+                  <td class="text-right alert-actions">
+                    <a data-toggle="dropdown" href="#" aria-expanded="false" class="dropdown-toggle btn small">
+                      <span>Actions</span> <i class="fa fa-caret-down" aria-hidden="true"></i>
+                    </a>
+                    <ul class="dropdown-menu action-dropdown">
+                      <li>
+                        <a class="view-details" href="#">View Details</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-original-link="{{item.original_link}}" data-key="original" href="#">Original Product</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-store-link="{{item.chq_link|default:''}}" data-key="store" href="#">Open in CommerceHQ</a>
+                      </li>
+                      <li>
+                        <a class="open-product-in" data-product-id="{{item.product.id}}" data-key="shopified" href="#">Open in Dropified</a>
+                      </li>
+                      <li>
+                        <a class="open-orders-btn" href="{% url 'orders' %}" data-product="{{ item.qelem.product.pk }}" data-orders="{{orders}}">
+                          Find Orders
+                        </a>
+                      </li>
+                      {% if not request.GET.hidden %}
+                      <li>
+                        <a class="archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                      </li>
+                      {% endif %}
+                    </ul>
+                  </td>
+                </tr>
+                <tr class="details" alert-id="{{item.id}}">
+                  <td class="well" colspan="4"  style="background: #F6F8F9;">
+                    <div class="row alert-row-header">
+                      <div class="col-md-offset-1 col-md-3 text-right">Variant</div>
+                      <div class="col-md-2"></div>
+                    </div>
+
+                    {% endif %}
+                    <div class="row alert-row-detail">
+                      <div class="col-md-offset-1 col-md-3 text-right" style="color:red">
+                        {{change.sku_readable}}
+                      </div>
+                      <div class="col-md-2"></div>
+                    </div>
+                    {% if forloop.last %}
+                  </td>
+                </tr>
+                {% endif %}
+
+                {% endfor %}
+                {% empty %}
+                <tr>
+                  <td class="text-center no-border-bottom" colspan="4">
+                    <i>No alerts to display at this time</i>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+
+            {% include "partial/paginator.html" %}
+          </div>
         </div>
     </div>
 </div>
+
 
 {% endblock %}
 
@@ -294,88 +410,88 @@
 <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
 {% endcompress %}
 <style type="text/css">
-    tbody tr.header {
-        height: 50px !important;
-    }
+  tbody tr.header {
+      height: 50px !important;
+      max-height: 50px !important;
+  }
 
-    tbody tr td {
-        vertical-align: middle !important;
-    }
+  tbody tr td {
+      vertical-align: middle !important;
+  }
 
-    tr td.category {
-        font-weight: bold;
-    }
+  .details {
+      display: none;
+  }
 
-    .details {
-        display: none;
-    }
-
-    .var-name {
-        text-align: right;
-    }
-
-    {% if request.GET.hidden %}
-    .archive-alert {
-        display:none;
-    }
-    {% endif %}
-
-    .filter-col {
-        display: flex;
-        align-items: center;
-    }
-
-    .filter-col .filter-col-item {
-        margin-right: 5px;
-    }
-
-    .filter-col select {
-        padding-top: 2px;
-        display: inline-block;
-        width: 191px;
-    }
-
-    .select2-results .select2-results__options .select2-results__option {
-        min-height: 51px;
-        padding: 0;
-        border-bottom: 1px solid #ccc;
-    }
-    .select2-results .select2-results__options .select2-results__option img {
-        height: 50px;
-        float: left;
-        margin-right: 5px;
-    }
-    .select2.select2-container.select2-container--default {
-        width: 300px !important;
-    }
-    .select2-container--default .select2-selection--multiple .select2-selection__rendered li {
-        padding: 3px 0 0 10px !important;
-    }
-    .select2-container--default .select2-selection--multiple {
-        border: 1px solid #e5e6e7 !important;
-        border-radius: 0 !important;
-    }
-    .select2-container--default.select2-container--disabled .select2-selection--multiple {
-        background-color: #fff;
-    }
-    .select2-container--default .select2-selection--single {
-        border: 1px solid #e5e6e7;
-        border-radius: 1px;
-        height: 34px;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 32px;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 32px;
-    }
-    .select2-dropdown {
-        border: 1px solid #e5e6e7;
-        z-index: 1200;
-    }
-    .select2-results__option--highlighted a {
-        color: white;
-    }
+  .select2-results {
+      color: #1D262F;
+      padding: 5px;
+  }
+  .select2-results .select2-results__options .select2-results__message {
+      height: 35px !important;
+  }
+  .select2-results .select2-results__options .select2-results__option {
+      height: 70px;
+      padding: 5px;
+      margin: 5px 0;
+      font-weight: normal;
+      font-size: 16px;
+      line-height: 20px;
+  }
+  .select2-results .select2-results__options .select2-results__option img {
+      height: 60px;
+      float: left;
+      margin-right: 5px;
+  }
+  .select2.select2-container.select2-container--default {
+      width: 420px !important;
+      background: #FFFFFF;
+      border: 1px solid #E6EBEF;
+      box-sizing: border-box;
+      border-radius: 8px;
+      height: 40px;
+      padding: 3px;
+  }
+  .select2-search__field {
+      height: 35px;
+      border: 1px solid #B0BFCE;
+      box-sizing: border-box;
+      border-radius: 8px;
+      font-weight: normal;
+      font-size: 15px;
+      line-height: 22px;
+  }
+  .select2-container--default .select2-selection--multiple .select2-selection__rendered li {
+      padding: 3px 0 0 10px !important;
+  }
+  .select2-container--default .select2-selection--multiple {
+      border: 1px solid #e5e6e7 !important;
+      border-radius: 0 !important;
+  }
+  .select2-container--default.select2-container--disabled .select2-selection--multiple {
+      background-color: #fff;
+  }
+  .select2-container--default .select2-selection--single {
+      border: none;
+      height: 34px;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 35px;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 32px;
+  }
+  .select2-dropdown {
+      border: 1px solid #e5e6e7;
+      z-index: 1200;
+  }
+  .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      color: #1D262F;
+      background: #EAF3E7;
+  }
+  .select2-results__option--highlighted a {
+      color: #1D262F;
+  }
 </style>
 {% endblock %}
 

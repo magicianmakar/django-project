@@ -221,7 +221,7 @@ def product_alerts(request):
             'product_changes': get_mocked_alert_changes(),
             'page': 'product_alerts',
             'store': store,
-            'breadcrumbs': [{'title': 'Products', 'url': '/bigcommerce/products'}, 'Alerts'],
+            'breadcrumbs': ['Alerts'],
             'selected_menu': 'products:alerts',
         })
 
@@ -339,7 +339,7 @@ def product_alerts(request):
         'store': store,
         'category': category,
         'product_type': product_type,
-        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts'],
+        'breadcrumbs': ['Alerts'],
     })
 
 
@@ -1218,6 +1218,11 @@ class OrdersTrackList(ListView):
             order_map['-' + k] = '-' + v
 
         sorting = self.request.GET.get('sort', '-update')
+        if self.request.GET.get('sort'):
+            if self.request.GET.get('desc'):
+                sorting = sorting if sorting.startswith('-') else f"-{sorting}"
+            else:
+                sorting = sorting[1:] if sorting.startswith('-') else sorting
         sorting = order_map.get(sorting, 'status_updated_at')
 
         query = self.request.GET.get('query')
@@ -1329,7 +1334,11 @@ class BoardsList(ListView):
 
     def get_queryset(self):
         qs = super(BoardsList, self).get_queryset()
-        return qs.filter(user=self.request.user.models_user)
+        qs = qs.filter(user=self.request.user.models_user)
+        search_title = self.request.GET.get('search') or None
+        if search_title is not None:
+            qs = qs.filter(title__icontains=search_title)
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super(BoardsList, self).get_context_data(**kwargs)

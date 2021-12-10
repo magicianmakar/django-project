@@ -15,7 +15,7 @@
                                 <label for="fulfill-location-id">
                                     Location
                                 </label>
-                                <select class="form-control" name="fulfill-location-id" id="fulfill-location-id" style="width:60%">
+                                <select class="form-control" name="fulfill-location-id" id="fulfill-location-id">
                                     {% for location in store.get_locations %}
                                         <option value="{{location.id}}" {% if location.id == store.get_primary_location %}selected{% endif %}>{{location.name}}</option>
                                     {% endfor %}
@@ -27,7 +27,7 @@
                                 <label for="fulfill-traking-number">Tracking Number
                                 {% include 'partial/help_tooltip.html' with help="If you don't have a Tracking Number, leave this field blank" %}
                                 </label>
-                                <input type="text" id="fulfill-traking-number" name="fulfill-traking-number" class="form-control" style="width:200px">
+                                <input type="text" id="fulfill-traking-number" name="fulfill-traking-number" class="form-control">
                             </div>
 
                             {% if notify %}
@@ -35,7 +35,7 @@
                                 <label for="fulfill-notify-customer">
                                     Send shipping confirmation email to the customer
                                 </label>
-                                <select class="form-control" name="fulfill-notify-customer" id="fulfill-notify-customer" style="width:100px">
+                                <select class="form-control" name="fulfill-notify-customer" id="fulfill-notify-customer">
                                     <option value="no">No</option>
                                     <option value="yes">Yes</option>
                                 </select>
@@ -47,7 +47,7 @@
                                     Order Tracking Link
                                     {% include 'partial/help_tooltip.html' with help="Which tracking link would you like to send to the customer?<br><b>AfterShip:</b> Track the Order with <a href='aftership.com'>aftership.com</a><br><b>USPS:</b> Track Order in USPS website, Select this option for ePacket (US customers only)" %}
                                 </label>
-                                <select class="form-control" name="fulfill-tarcking-link" id="fulfill-notify-customer" style="width:120px">
+                                <select class="form-control" name="fulfill-tarcking-link" id="fulfill-notify-customer">
                                     {% if shipping_carriers %}
                                         {% for carrier in shipping_carriers %}
                                             <option value="{{carrier.id}}">{{carrier.title}}</option>

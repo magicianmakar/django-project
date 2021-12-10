@@ -421,3 +421,19 @@ def select_option(context, **kwargs):
         select.append(request.GET.get(key) == str(val))
 
     return 'selected' if select and all(select) else ''
+
+
+@register.filter
+def variant_names(variants, join=' / '):
+    names = []
+    if isinstance(variants, list):
+        for variant in variants:
+            if not isinstance(variant, dict):
+                names.append(variant)
+            else:
+                if 'title' in variant and variant['title'] != 'Default Title':
+                    names.append(variant['title'])
+    else:
+        return variant_names([variants])
+
+    return join.join(names)

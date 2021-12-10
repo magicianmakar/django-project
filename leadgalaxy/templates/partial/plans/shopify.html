@@ -1,16 +1,11 @@
 <div class="row">
     <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                Plan
-            </div>
+        <div class="panel">
             <div class="panel-body">
-                <p style="margin:0">You are Subscribed to:</p>
+                <p class="title">Your Current Plan:</p>
                 <ul class="list-unstyled">
                     <li class="list-group-item" style="border:0 none">
-                        <b>
                         {{ current_plan.get_description }}
-                        </b>
 
                         {% if not user.profile.plan.is_free %}
                         <button class="btn

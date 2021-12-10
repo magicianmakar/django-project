@@ -44,12 +44,15 @@ def get_menu_structure(namespace, request):
     except:
         pass
 
-    if is_black:
-        footer = [('help', ['help']), ('plod_help', ['plod_help'])]
-    elif is_plod:
-        footer = [('plod_help', ['plod_help'])]
+    if request.session.get('old_layout'):
+        if is_black:
+            footer = [('help', ['help']), ('plod_help', ['plod_help'])]
+        elif is_plod:
+            footer = [('plod_help', ['plod_help'])]
+        else:
+            footer = [('help', ['help'])]
     else:
-        footer = [('help', ['help'])]
+        footer = [('help', ['help', 'faq', 'account'])]
 
     named = [
         ('account', ['account']),
@@ -83,6 +86,7 @@ def get_menu_item_data(request):
     is_black = False
     is_research = False
     is_plod = False
+    is_old_layout = request.session.get('old_layout')
 
     try:
         if request.user.is_authenticated:
@@ -103,12 +107,14 @@ def get_menu_item_data(request):
             'url_name': 'orders_list',
             'permissions': ['orders.view'],
             'match': r'(/\w+)?/orders$',
+            'icon': 'img/place-order.svg',
         },
         'tracking': {
             'title': 'Tracking',
             'url_name': 'orders_track',
             'permissions': ['orders.view'],
             'match': r'(/\w+)?/orders/track',
+            'icon': 'img/tracking.svg',
         },
         'products': {
             'title': 'Products',
@@ -117,7 +123,8 @@ def get_menu_item_data(request):
         'all-products': {
             'title': 'Saved Products',
             'url_name': 'products_list',
-            'match': r'(/chq|/gear|/gkart|/woo|/ebay|/bigcommerce)?/products$',
+            'match': r'(/chq|/gear|/gkart|/woo|/ebay|/bigcommerce)?/products?($|\?\w+)',
+            'icon': 'img/saved-product.svg',
         },
         'import-products': {
             'title': 'Import Products',
@@ -125,6 +132,7 @@ def get_menu_item_data(request):
             'url_kwargs': {"slug_article": "source-import-products"},
             'permissions': ["import_list.use"],
             'match': r'(/\w+)?/pages/content/source-import-products',
+            'icon': 'img/import-product.svg',
         },
         'alibaba-products': {
             'title': 'Alibaba Products',
@@ -133,19 +141,22 @@ def get_menu_item_data(request):
             'match': r'(/\w+)?/alibaba/products',
             'is_ns_aware': False,
             'new_tab': True,
+            'icon': 'img/import-product.svg',
         },
         'boards': {
             'title': 'Boards',
             'url_name': 'boards_list',
             'permissions': ['view_product_boards.use', 'view_product_boards.sub'],
             'match': r'(/\w+)?/boards/list',
+            'icon': 'img/board.svg',
         },
         'alerts': {
             'title': 'Alerts',
             'url_name': 'product_alerts',
             'permissions': ['price_changes.use', 'price_change_options.use'],
             'match': r'(/\w+)?/products/update',
-            'platforms': ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce']
+            'platforms': ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce'],
+            'icon': 'img/alert.svg',
         },
         'business': {
             'title': 'Business',
@@ -156,7 +167,8 @@ def get_menu_item_data(request):
             'url_name': 'profit_dashboard.views.index',
             'permissions': ['profit_dashboard.view'],
             'match': r'(/\w+)?/profit-dashboard',
-            'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq']
+            'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq'],
+            'icon': 'img/profit-dashboard.svg',
         },
         'callflex': {
             'title': 'CallFlex',
@@ -164,12 +176,14 @@ def get_menu_item_data(request):
             'match': r'(/\w+)?/callflex',
             'permissions': ['phone_automation.use'],
             'is_ns_aware': False,
+            'icon': 'img/callflex.svg',
         },
         'marketing-feeds': {
             'title': 'Marketing Feeds',
             'url_name': 'product_feeds',
             'permissions': ['product_feeds.use', 'google_product_feed.use'],
             'match': r'(/\w+)?/marketing/feeds',
+            'icon': 'img/marketing.svg',
         },
         'tubehunt': {
             'title': 'TubeHunt',
@@ -177,19 +191,22 @@ def get_menu_item_data(request):
             'permissions': ['youtube_ads.use'],
             'match': r'(/\w+)?/tubehunt',
             'is_ns_aware': False,
+            'icon': 'img/tubehunt.svg',
         },
         'us-product-database': {
             'title': 'US Products',
             'url_name': 'products_collections',
             'permissions': ['us_products.use'],
             'url_kwargs': {'collection': 'us'},
-            'match': r'/products/collections/\w+',
+            'match': r'(/\w+)?/products/collections/\w+',
+            'icon': 'img/us-product.svg',
         },
         'subusers': {
             'title': 'Sub Users',
             'url_name': 'subusers',
             'permissions': ['sub_users.use'],
             'match': r'(/\w+)?/subusers',
+            'icon': 'img/sub-user.svg',
         },
         'tools': {
             'title': 'Tools',
@@ -207,29 +224,39 @@ def get_menu_item_data(request):
             'url': 'https://academy.dropified.com/training/',
         },
         'account': {
-            'title': 'Manage Account',
+            'title': 'Manage Account' if is_old_layout else '',
             'url_name': 'user_profile',
             'match': r'(/\w+)?/user/profile',
+            'fa_icon': 'fa-user',
         },
         'help': {
-            'title': f'{"Dropified " if is_black else ""}Help Center',
+            'title': f'{"Dropified " if is_black else ""}Help Center' if is_old_layout else '',
             'url': 'https://learn.dropified.com/',
+            'fa_icon': 'fa-cog',
+        },
+        'faq': {
+            'title': '',
+            'url': '#',
+            'fa_icon': 'fa-question-circle',
         },
         'plod_help': {
             'title': f'{"PLOD " if is_black or is_plod else ""} Help Center',
             'url': 'https://plod.dropified.com/',
+            'fa_icon': 'fa-cog',
         },
         'settings': {
             'title': 'Settings',
             'url_name': 'settings',
             'match': r'(/\w+)?/settings',
             'is_ns_aware': False,
+            'icon': 'img/setting.svg',
         },
         'get-started': {
             'title': 'Manage Stores',
             'url_name': 'manage_stores' if is_research else 'index',
             'match': r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/$',
             'is_ns_aware': not is_research,
+            'icon': 'img/manage-store.svg',
         },
         'dashboard': {
             'title': 'Dashboard',
@@ -258,6 +285,7 @@ def get_menu_item_data(request):
             'match': r'^/insider-reports',
             'is_ns_aware': False,
             'permissions': ['insider_reports.use'],
+            'icon': 'img/insider-report.svg',
         },
     }
 

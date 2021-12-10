@@ -7,129 +7,95 @@
 
 {% block main-container %}
 
-<div class="row">
+<div class="row panel-heading m-b-none p-none no-border-bottom rounded">
     <div class="col-md-12">
-        <div class="ibox float-e-margins">
 
-             <div class="ibox-title">
-                <h5>Manage Sub Users<small></small></h5>
-            </div>
+      <div class="col-md-6">
+        <h3>Manage Sub Users<small></small></h3>
+      </div>
 
-            <div class="ibox-content">
-                {% if user|can:'sub_users.use' %}
-                <table class="table table-bordered dataTables">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Join Date</th>
-                            <th>Last Activity</th>
-                            <th style="width:100px">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in sub_users %}
-                        <tr>
-                            <td>
-                                <a class="edit-user-prems" user-id="{{item.id}}" href="#">
-                                {% if item.get_full_name %}
-                                    {{item.get_full_name}}
-                                {% else %}
-                                    {{item.username}}
-                                {% endif %}
-                                </a>
-                            </td>
-                            <td>{{item.email}}</td>
-                            <td>{% date_humanize item.date_joined %}</td>
-                            <td>{% date_humanize item.last_seen %}</td>
-                            <td>
-                                <button class="btn btn-danger btn-xs delete-sub-user" user-id="{{item.id}}" user-name="{{item.username}}">
-                                    <i class="fa fa-user-times"></i> Remove
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+      {% if user|can:'sub_users.use' %}
+      <table class="table table-bordered dataTables">
+          <thead>
+              <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Join Date</th>
+                  <th>Last Activity</th>
+                  <th>Status</th>
+                  <th style="width:150px">Actions</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for item in sub_users %}
+              <tr>
+                {% if not item.is_invite %}
+                <td>
+                    <a class="edit-user-prems" user-id="{{item.id}}" href="#">
+                    {{item.name}}
+                    </a>
+                </td>
+                <td>{{item.email}}</td>
+                <td>{{item.date_joined|date:'n/j/Y'}}</td>
+                <td>{% date_humanize item.last_seen %}</td>
+                <td></td>
+                <td>
+                    <button class="btn btn-danger btn-xs btn-outline action-btn itooltip delete-sub-user" title="Remove" user-id="{{item.id}}" user-name="{{item.username}}">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+                </td>
+                {% elif item.is_invite %}
+                <td>{{item.name}}</td>
+                <td>{{item.email|urlize}}</td>
+                <td>{{item.created_at|date:'n/j/Y'}}</td>
+                <td></td>
+                <td>
+                    {% if not item.expired %}
+                         Awaiting User Registration
+                     {% else %}
+                         User Doesn't have access to any store
+                     {% endif %}
+                 </td>
+                <td>
+                    {% if not item.expired %}
+                        <a class="btn btn-success btn-outline btn-xs action-btn itooltip" href="{% app_link 'accounts/register' item.register_hash %}" target="_blank" title="Registration Link">
+                            <img src="{% static 'img/link.svg' %}" alt=""></a>
 
-                <button class="btn btn-success invite-subuser" data-extra={{ extra_subusers|lower }} data-cost="{{ extra_user_cost }}">
-                    <i class="fa fa-user-plus"></i> Add User
-                </button>
-                {% else %}
-                {% include "subusers/subusers_upsell.html" %}
-                {% include "common/partial/upsell.html" with message="Add Sub Users to your Plan" only %}
+                        <a class="btn btn-primary btn-outline btn-xs action-btn email-link-btn itooltip" title="Email Link"
+                            href="mailto:{{item.email}}?subject=Invitation to join Dropified&body=Hello%2C%0D%0AYou%20can%20register%20at%20Dropified%20using%20this%20link%3A%0D%0A{% app_link 'accounts/register' item.register_hash %}">
+                            <img src="{% static 'img/mail.svg' %}" alt=""></a>
+
+                        <button class="btn btn-danger btn-outline btn-xs action-btn itooltip cancel-invitation-user"
+                                invite-id="{{item.id}}" title="Cancel This Invitation">
+                            <i class="fa fa-user-times"></i>
+                        </button>
+                    {% else %}
+                        <a class="btn btn-primary btn-outline btn-xs action-btn edit-user-prems itooltip" user-id="{{item.user.id}}" href="#" title="Change Permissions">
+                            <img src="{% static 'img/perms.svg' %}" alt=""></a>
+                    {% endif %}
+                </td>
                 {% endif %}
-            </div>
-        </div>
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+
+      <button class="btn btn-primary invite-subuser" data-extra={{ extra_subusers|lower }} data-cost="{{ extra_user_cost }}">
+         Add User <i class="fa fa-user-plus"></i>
+      </button>
+      {% else %}
+      {% include "subusers/subusers_upsell.html" %}
+      {% include "common/partial/upsell.html" with message="Add Sub Users to your Plan" only %}
+      {% endif %}
     </div>
 </div>
-
-{% if invitation %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="ibox float-e-margins">
-
-             <div class="ibox-title">
-                <h5>Sent Invitations<small></small></h5>
-            </div>
-
-            <div class="ibox-content">
-                <table class="table table-bordered dataTables">
-                    <thead>
-                        <tr>
-                            <th class="no-wrap" width="99%">Email</th>
-                            <th class="no-wrap">Date</th>
-                            <th class="no-wrap">Status</th>
-                            <th class="no-wrap">Registration Link</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in invitation %}
-                        {% if not item.have_access %}
-                        <tr>
-                            <td class="no-wrap">{{item.email|urlize}}</td>
-                            <td class="no-wrap">{{item.created_at|date}}</td>
-                            <td class="no-wrap">
-                                {% if not item.expired %}
-                                     Awaiting User Registration
-                                 {% else %}
-                                     User Doesn't have access to any store
-                                 {% endif %}
-                             </td>
-                            <td class="no-wrap">
-                                {% if not item.expired %}
-                                    <a class="btn btn-success btn-xs copy-text-btn" href="javascript:void(0)" data-link="{% app_link 'accounts/register' item.register_hash %}">
-                                        <i class="fa fa-external-link"></i> Copy Link</a>
-
-                                    <a class="btn btn-primary btn-xs email-link-btn"
-                                        href="mailto:{{item.email}}?subject=Invitation to join Dropified&body=Hello%2C%0D%0AYou%20can%20register%20at%20Dropified%20using%20this%20link%3A%0D%0A{% app_link 'accounts/register' item.register_hash %}"><i class="fa fa-envelope-o"></i> Email Link</a>
-
-                                    <button class="btn btn-danger btn-xs itooltip cancel-invitation-user"
-                                            invite-id="{{item.id}}" title="Cancel This Invitation">
-                                        <i class="fa fa-user-times"></i> Cancel
-                                    </button>
-                                {% else %}
-                                    <a class="btn btn-primary btn-xs edit-user-prems" user-id="{{item.user.id}}" href="#">
-                                        <i class="fa fa-unlock-alt"></i> Change Permissions</a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
 
 <div id="modal-subuser-prems" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">×</button>
-                <h3></h3>
+                <h3>Change Permissions</h3>
             </div>
             <div class="modal-body">
                 <div class="row">
@@ -148,49 +114,7 @@
     <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
-
-    <style type="text/css">
-    tbody td {
-        padding: 0px;
-        margin: 0px;
-    }
-
-    .user-profile-btn {
-        margin-right: 5px;
-    }
-
-    #id_subuser_stores, #id_subuser_chq_stores {
-        padding: 0 20px;
-    }
-
-    #id_subuser_stores li, #id_subuser_chq_stores li {
-        list-style: none;
-    }
-
-    #id_subuser_stores, #id_subuser_woo_stores {
-        padding: 0 20px;
-    }
-
-    #id_subuser_stores li, #id_subuser_woo_stores li {
-        list-style: none;
-    }
-
-    #id_subuser_stores, #id_subuser_gkart_stores {
-        padding: 0 20px;
-    }
-
-    #id_subuser_stores li, #id_subuser_gkart_stores li {
-        list-style: none;
-    }
-
-    #id_subuser_stores, #id_subuser_bigcommerce_stores {
-        padding: 0 20px;
-    }
-
-    #id_subuser_stores li, #id_subuser_bigcommerce_stores li {
-        list-style: none;
-    }
-    </style>
+    <link href="{% static 'subusers/css/subusers.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
@@ -218,11 +142,19 @@
                 responsive: true,
                 dom: 'T<"clear">lfrtip',
                 bLengthChange: false,
-                iDisplayLength: 50,
+                iDisplayLength: 10,
                 order: [],
                 tableTools: {
                     aButtons: [],
-                }
+                },
+                language: {
+                  search: "_INPUT_",            // Removes the 'Search' field label
+                  searchPlaceholder: "Search by Name or Email"   // Placeholder for the search box
+                },
+                search: {
+                  addClass: 'form-control input-lg col-xs-12'
+                },
+                pagingType: "simple_numbers",
             });
         });
 
@@ -237,7 +169,6 @@
                             displayAjaxError('User Permissions', JSON.parse(response));
                         }
                     });
-            $('#modal-subuser-prems .modal-header h3').text($(this).text() + 'Permissions');
             $('#modal-subuser-prems').modal('show');
         });
 
@@ -246,13 +177,13 @@
             var subuser_id = $(this).attr('user-id');
 
             swal({
-                title: "Delete " + subuser_name + " Account",
-                text: "This will remove the " + subuser_name + " permanently. Are you sure you want to remove this sub user?",
-                type: "warning",
+                title: "Delete <span style='color:#7a0f13'>" + subuser_name + "</span> Account",
+                text: "This will remove the <b>" + subuser_name + "</b> permanently. Are you sure you want to remove this sub user?",
+                html: true,
                 showCancelButton: true,
                 closeOnCancel: true,
                 closeOnConfirm: false,
-                confirmButtonColor: "#DD6B55",
+                confirmButtonColor: "#DE1C22",
                 confirmButtonText: "Remove Permanently",
                 cancelButtonText: "Cancel"
             },
@@ -265,15 +196,14 @@
                             subuser: subuser_id,
                         },
                         success: function(data) {
-                            swal.close();
-                            toastr.success("Delete Sub User", "User has been deleted.");
+                            swal("Delete Sub User", "User has been deleted.");
 
                             setTimeout(function() {
                                 window.location.reload();
                             }, 1000);
                         },
                         error: function(data) {
-                            displayAjaxError('Delete Sub User', data);
+                            swal('Delete Sub User', getAjaxError(data));
                         }
                     });
                 }
@@ -284,15 +214,14 @@
             var invite_id = $(this).attr('invite-id');
 
             swal({
-                title: "Cancel Sub User Invitation",
+                title: "Cancel Sub User Invitation?",
                 text: "This will Cancel the Invitation link. \nAre you sure you want to continue?",
-                type: "warning",
                 showCancelButton: true,
                 closeOnCancel: true,
                 closeOnConfirm: false,
                 confirmButtonColor: "#DD6B55",
-                confirmButtonText: "Yes, Cancel the Invitation",
-                cancelButtonText: "No, Keep the Invitation"
+                confirmButtonText: "Yes, Cancel Invite",
+                cancelButtonText: "No, Keep Invite"
             },
             function(isConfirmed) {
                 if (isConfirmed) {
@@ -300,15 +229,14 @@
                         url: '/api/subusers/invite?' + $.param({invite: invite_id}),
                         type: 'DELETE',
                         success: function(data) {
-                            swal.close();
-                            toastr.success("Cancel Invitation", "Invitation has been Canceled.");
+                            swal("Cancel Invitation", "Invitation has been Canceled.");
 
                             setTimeout(function() {
                                 window.location.reload();
                             }, 1000);
                         },
                         error: function(data) {
-                            displayAjaxError('Cancel Invitation', data);
+                            swal('Cancel Invitation', getAjaxError(data));
                         }
                     });
                 }
@@ -324,7 +252,7 @@
                 text = "<p>You are about to add an additional user to your plan for <b>$" + extra_user_cost + "/month</b>, Would you like to continue?</p>";
             }
             swal({
-                title: "Add Sub User",
+                title: "Add Sub User?",
                 text: text,
                 type: "input",
                 html: true,
@@ -335,6 +263,7 @@
                 inputPlaceholder: "Email address",
                 showLoaderOnConfirm: true,
                 confirmButtonText: "Yes, Add This Sub User",
+                confirmButtonColor: "#6BAA55",
             }, function(inputValue) {
                 if (inputValue === false) {
                     return;
@@ -361,19 +290,19 @@
                             swal({
                                 title: 'Invitation Sent',
                                 text: msg,
-                                type: 'success',
                                 html: true,
+                                confirmButtonColor: "#6BAA55",
                             }, function(r) {
                                 setTimeout(function() {
                                     window.location.reload();
                                 }, 500);
                             });
                         } else {
-                            displayAjaxError('Add Sub User', data);
+                            swal.showInputError(getAjaxError(data));
                         }
                     },
                     error: function (data) {
-                        displayAjaxError('Add Sub User', data);
+                        swal.showInputError(getAjaxError(data));
                     },
                     complete: function () {
                     }

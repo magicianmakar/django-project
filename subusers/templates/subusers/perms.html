@@ -1,7 +1,7 @@
 {% load static %}
 {% load widget_tweaks %}
 
-<h4><i>{{subuser.get_full_name|default:subuser.username}}</i> Can manage the following stores:</h4>
+<h4><i>{{subuser.get_full_name|default:subuser.username}}</i> &nbsp; Can manage the following stores:</h4>
 <div class="row">
     <div class="col-md-12">
         <form method="POST" class="m-t-xs" role="form" action="{% url template_config.url.namespace|add:'subusers_perms' user_id=subuser.id %}">
@@ -9,39 +9,43 @@
                 {% render_field form.subuser_stores  %}
                 {{ form.subuser_stores.errors | safe }}
             </div>
-            {% if form.subuser_chq_stores %}
+            <hr />
+            {% if form.subuser_chq_stores.field.choices.queryset.all|length %}
             <h4>CommerceHQ Stores</h4>
             <div class="form-group">
                 {% render_field form.subuser_chq_stores  %}
                 {{ form.subuser_chq_stores.errors | safe }}
             </div>
+            <hr />
             {% endif %}
-            {% if form.subuser_woo_stores %}
+            {% if form.subuser_woo_stores.field.choices.queryset.all|length %}
             <h4>WooCommerce Stores</h4>
             <div class="form-group">
                 {% render_field form.subuser_woo_stores  %}
                 {{ form.subuser_woo_stores.errors | safe }}
             </div>
+            <hr />
             {% endif %}
-            {% if form.subuser_gkart_stores %}
+            {% if form.subuser_gkart_stores.field.choices.queryset.all|length %}
             <h4>GrooveKart Stores</h4>
             <div class="form-group">
                 {% render_field form.subuser_gkart_stores  %}
                 {{ form.subuser_gkart_stores.errors | safe }}
             </div>
+            <hr />
             {% endif %}
-            {% if form.subuser_bigcommerce_stores %}
+            {% if form.subuser_bigcommerce_stores.field.choices.queryset.all|length %}
             <h4>BigCommerce Stores</h4>
             <div class="form-group">
                 {% render_field form.subuser_bigcommerce_stores  %}
                 {{ form.subuser_bigcommerce_stores.errors | safe }}
             </div>
+            <hr />
             {% endif %}
-            <p class="text-right">
-                <a href="{% url template_config.url.namespace|add:'subuser_perms_edit' subuser.id %}" class="btn btn-warning m-b">Edit Permissions</a>
-                <button type="submit" class="btn btn-primary m-b">Save</button>
-            </p>
+            <div class="pull-right">
+              <a href="{% url template_config.url.namespace|add:'subuser_perms_edit' subuser.id %}" class="btn btn-warning m-b">Edit Permissions</a>
+              <button type="submit" class="btn btn-primary m-b">Save</button>
+            </div>
         </form>
     </div>
 </div>
-

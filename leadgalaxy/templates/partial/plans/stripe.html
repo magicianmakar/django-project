@@ -1,17 +1,13 @@
 <div class="row">
     <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                Plan
-            </div>
+        <div class="panel">
             <div class="panel-body">
-                <p style="margin:0">You are Subscribed to:</p>
+                <p class="title">Your Current Plan:</p>
                 <ul class="list-unstyled">
                     {% for item in user.stripesubscription_set.all %}
                         {% with status=item.get_status %}
 
                         <li class="list-group-item subscription-item" style="border:0 none">
-                            <b>
                             {{ item.plan.get_description }}
                                 {% if item.is_active %}
                                     <span class="badge badge-primary">
@@ -35,7 +31,6 @@
                                     {% include 'partial/help_tooltip.html' with help="You have canceled your subscription, but it will stay active until the end of the billing period.<br>You will not be billed at the period end." nostyle=True %}
                                     </span>
                                 {% endif %}
-                            </b>
 
                             {% if item.can_cancel and not item.plan.is_free and not item.plan.has_installments and not item.plan.is_lifetime_free %}
                             <button class="btn

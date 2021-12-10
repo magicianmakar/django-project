@@ -13,31 +13,27 @@
 {% endblock %}
 
 {% block main-container %}
-<div class="row">
+<div class="row panel-heading m-b-none p-none no-border-bottom rounded">
     <div class="col-md-12">
-        <div class="ibox collapsed border-bottom">
-            <div class="ibox-title">
-                <h5>GrooveKart Store Permissions</h5>
-            </div>
-            <div class="ibox-content" style="display:block">
-                {% for error in form.permissions.errors %}
-                    <p class="text-danger">{{ error }}</p>
-                {% endfor %}
-                <form
-                    method="POST"
-                    role="form"
-                    action="{% url template_config.url.namespace|add:'subuser_gkart_store_permissions' subuser.id form.initial.store.id %}"
-                >
-                    <div class="form-group">
-                        {% render_field form.permissions %}
-                    </div>
-                    <p>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fa fa-save"></i> Save
-                        </button>
-                    </p>
-                </form>
-            </div>
+        <h3>GrooveKart Store Permissions</h3>
+        <div class="ibox-content" style="display:block">
+            {% for error in form.permissions.errors %}
+                <p class="text-danger">{{ error }}</p>
+            {% endfor %}
+            <form
+                method="POST"
+                role="form"
+                action="{% url template_config.url.namespace|add:'subuser_gkart_store_permissions' subuser.id form.initial.store.id %}"
+            >
+                <div class="form-group">
+                    {% render_field form.permissions %}
+                </div>
+                <p>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save"></i> Save
+                    </button>
+                </p>
+            </form>
         </div>
     </div>
 </div>

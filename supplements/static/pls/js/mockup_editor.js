@@ -14,7 +14,7 @@ var MockupEditor = (function() {
         minZoom: 50,
         useControls: window.location.href.indexOf('debug=1') > -1,
         useWrap: window.location.href.indexOf('wrap=1') > -1,
-        imageType: 'image/png',
+        imageType: 'image/jpeg',
         imageQuality: 1.0,
         control: 'label',  // label or mockup
         controlIndex: null,
@@ -149,11 +149,13 @@ var MockupEditor = (function() {
 
                 var canvas = $('<canvas width="' + layer.image.width + '" height="' + layer.image.height + '">').get(0);
                 var context = canvas.getContext('2d');
+                context.fillStyle = '#fff';
+                context.fillRect(0, 0, canvas.width, canvas.height);
                 combined.forEach(function(l) {
                     context.globalCompositeOperation = l.mode || 'source-over';
                     context.drawImage(l.image, 0, 0);
                 });
-                layer.image.src = canvas.toDataURL(MockupEditor.imageType, MockupEditor.imageQuality);
+                layer.image.src = canvas.toDataURL('image/png', MockupEditor.imageQuality);
                 layer.combined = false;
             });
         },
@@ -411,13 +413,54 @@ var MockupEditor = (function() {
                 mockup.canvas.remove();
                 mockup.bgCanvas.remove();
             });
+
+            // $('.previews .mockup-item:nth-child(' + (index + 1) + ') img').attr(
+            //     'src', canvas.toDataURL(MockupEditor.imageType, MockupEditor.imageQuality));
             $('.previews .mockup-item:nth-child(' + (index + 1) + ') img').attr(
-                'src', canvas.toDataURL(MockupEditor.imageType, MockupEditor.imageQuality));
+                'src', MockupEditor.canvasToImage(context, '#ffffff'));
             canvas.remove();
 
             MockupEditor.labelMockups[index] = MockupEditor.getDimensions();
             MockupEditor.unloadCanvas();
             MockupEditor.currentZoom = 100;
+        },
+        canvasToImage: function(context, backgroundColor) {
+            canvas = context.canvas;
+            //cache height and width
+            var w = canvas.width;
+            var h = canvas.height;
+
+            var data;
+
+            //get the current ImageData for the canvas.
+            data = context.getImageData(0, 0, w, h);
+
+            //store the current globalCompositeOperation
+            var compositeOperation = context.globalCompositeOperation;
+
+            //set to draw behind current content
+            context.globalCompositeOperation = "destination-over";
+
+            //set background color
+            context.fillStyle = backgroundColor;
+
+            //draw background / rect on entire canvas
+            context.fillRect(0,0,w,h);
+
+            //get the image data from the canvas
+            var imageData = canvas.toDataURL(MockupEditor.imageType, MockupEditor.imageQuality);
+
+            //clear the canvas
+            context.clearRect (0,0,w,h);
+
+            //restore it with original / cached ImageData
+            context.putImageData(data, 0,0);
+
+            //reset the globalCompositeOperation to what it was
+            context.globalCompositeOperation = compositeOperation;
+
+            //return the Base64 encoded data url string
+            return imageData;
         }
     };
 }());
@@ -517,8 +560,12 @@ $('#save-mockups').on('click', function(e) {
     e.stopPropagation();
 
     var selectedMockups = $('.previews .mockup-item [type="checkbox"]:checked + img');
+    var imageExtension = '.png';
+    if (MockupEditor.imageType === 'image/jpeg') {
+        imageExtension = '.jpeg';
+    }
     selectedMockups.each(function() {
-        mockupsUploader.addFile(MockupEditor.dataURLtoFile(this.src, $(this).attr('id') + 'img.png'));
+        mockupsUploader.addFile(MockupEditor.dataURLtoFile(this.src, $(this).attr('id') + 'img' + imageExtension));
     });
     var labelInput = $('#modal-mockup-images [type="file"]').get(0);
     if (labelInput.files.length) {

@@ -592,33 +592,18 @@ fieldset[disabled] .btn-primary.active {
   border-color: #b3d5a4;
 }
 
-.calendar .daterangepicker_input .fa-calendar:before {
-    content: "\f073";
+.p-none {
+    padding: 0;
 }
 
-.calendar .calendar-table .table-condensed .fa-chevron-left:before {
-    content: "\f053";
+.no-border-bottom {
+    border-bottom: 0 none !important;
 }
 
-.calendar .calendar-table .table-condensed .fa-chevron-right:before {
-    content: "\f054";
+.old-layout-hidden {
+    display: none !important;
 }
 
-button.btn-update-plan {
-    margin: 5px 10px 0 0;
+.sidebar ul li a i.item-icon {
+    display: none;
 }
-
-div.panel-plan-update {
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-}
-
-input.profit-other-costs::-webkit-outer-spin-button,
-input.profit-other-costs::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input.profit-other-costs {
-    width: 70% !important;
-}
-

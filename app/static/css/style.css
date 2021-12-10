@@ -378,7 +378,7 @@ body.canvas-menu.mini-navbar .footer {
 body.fixed-sidebar .navbar-static-side,
 body.canvas-menu .navbar-static-side {
   position: fixed;
-  width: 220px;
+  width: 228px;
   z-index: 2001;
   height: 100%;
 }
@@ -386,7 +386,7 @@ body.fixed-sidebar.mini-navbar .navbar-static-side {
   width: 0px;
 }
 body.fixed-sidebar.mini-navbar #page-wrapper {
-  margin: 0 0 0 0px;
+  margin: 0 0 0 70px;
 }
 body.body-small.fixed-sidebar.mini-navbar #page-wrapper {
   margin: 0 0 0 220px;
@@ -3311,7 +3311,7 @@ video {
 @media (min-width: 768px) {
   #page-wrapper {
     position: inherit;
-    margin: 0 0 0 240px;
+    margin: 0 0 0 228px;
     min-height: 1000px;
   }
 }
@@ -7542,7 +7542,7 @@ body.skin-3 {
 @media (min-width: 768px) {
   #page-wrapper {
     position: inherit;
-    margin: 0 0 0 220px;
+    margin: 0 0 0 228px;
     min-height: 1200px;
   }
   .navbar-static-side {

@@ -3,15 +3,82 @@
 {% load static %}
 {% load compress %}
 
+{% block breadcrumb-right %}
+    <button class="btn btn-primary add-board-btn pull-right">
+        <i class="fa fa-plus"></i> Add Board
+    </button>
+{% endblock %}
+
 {% block main-container %}
 
 {% include 'home/partial/candu.html' with mount_id='candu-boards-info-above' %}
 
 <div class="tabs-container">
     {% include 'home/partial/tabs/boards.html' %}
+    <ul class="actions old-layout-hidden">
+        <li class="pull-right group">
+            <form id="board-search-form" method="get" role="form" class="form-inline">
+                <input type="text" class="form-control m-l-sm" name="search" placeholder="Search by name" value="{{ request.GET.search|default:'' }}">
+                <a href="javascript:;" class="btn btn-primary btn-icon">
+                    <i class="fa fa-search"></i>
+                </a>
+            </form>
+        </li>
+    </ul>
+
     <div class="tab-content margin-before-banner">
         <div id="tab-1" class="tab-pane active">
-            <div class="panel-body">
+            <div class="panel-body row old-layout-hidden no-background">
+                {% for item in boards %}
+                <div class="col-md-3">
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            <a class="color-info" board-id="{{item.id}}" href="/boards/{{item.id}}">
+                                {{item.title}}
+                            </a>
+                            <div class="more-actions">
+                                <a href="#">
+                                    <i class="glyphicon glyphicon-option-horizontal"></i>
+                                </a>
+                                <ul class="actions">
+                                    <li>
+                                        <a href="#" class="board-edit" board-id="{{item.id}}">
+                                            <i class="fa fa-edit"></i> Edit
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="board-empty" board-id="{{item.id}}">
+                                            <i class="fa fa-eraser"></i> Empty
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="board-delete" board-id="{{item.id}}">
+                                            <i class="fa fa-times"></i> Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <br>
+                            <span class="text-muted">{{item.updated_at|date}}</span>
+                        </div>
+                        <div class="ibox-content">
+                            <a href="/boards/{{item.id}}?store=n">
+                                <span class="badge">{{ item.saved|default:"0" }}</span>
+                                <span>Saved</span>
+                            </a>
+                            <br>
+                            <a href="/boards/{{item.id}}?store=c">
+                                <span class="badge">{{ item.connected|default:"0" }}</span>
+                                <span>Connected</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="panel-body new-layout-hidden">
                 <table class="table table-bordered dataTables">
                     <thead>
                         <tr>

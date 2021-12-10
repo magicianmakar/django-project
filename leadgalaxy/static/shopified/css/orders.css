@@ -173,15 +173,6 @@ ul.shipping-method {
     width: 100% !important;
 }
 
-.select2-container--default .select2-selection--multiple .select2-selection__rendered li {
-    padding: 3px 0 0 10px !important;
-}
-
-.select2-container--default .select2-selection--multiple {
-    border: 1px solid #e5e6e7 !important;
-    border-radius: 0 !important;
-}
-
 .bundle-items {
     margin-bottom: 0;
     border: 0;
