@@ -398,9 +398,12 @@ def sync_bigcommerce_product_quantities(self, product_id):
                 idx = variant_index_from_supplier_sku(product, sku, product_data['variants'])
                 if idx is not None:
                     variant_id = product_data['variants'][idx]['id']
-                if variant_id > 0 and product_data['base_variant_id'] != variant_id:
+                if variant_id > 0:
                     product_data['variants'][idx]['inventory_level'] = variant['availabe_qty']
-                    product_data['inventory_tracking'] = 'variant'
+                    if len(product_data['variants'][idx]['option_values']):  # BigCommerce product will always have a variant
+                        product_data['inventory_tracking'] = 'variant'
+                    else:
+                        product_data['inventory_tracking'] = 'product'
                 elif len(product_data.get('variants', [])) == 0 or variant_id < 0 or product_data['base_variant_id'] == variant_id:
                     product_data['inventory_level'] = variant['availabe_qty']
                     product_data['inventory_tracking'] = 'product'
@@ -532,20 +535,23 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
                     else:
                         idx = variant_index_from_supplier_sku(product, sku, product_data['variants'])
 
-                        variant_id = 0
-                        if idx is not None:
-                            variant_id = product_data['variants'][idx]['id']
-                        if variant_id > 0:
-                            product_data['variants'][idx]['inventory_level'] = variant['availabe_qty']
+                    variant_id = 0
+                    if idx is not None:
+                        variant_id = product_data['variants'][idx]['id']
+                    if variant_id > 0:
+                        product_data['variants'][idx]['inventory_level'] = variant['availabe_qty']
+                        if len(product_data['variants'][idx]['option_values']):  # BigCommerce product will always have a variant
                             product_data['inventory_tracking'] = 'variant'
-                        elif len(product_data.get('variants', [])) == 0 or variant_id < 0:
-                            product_data['inventory_level'] = variant['availabe_qty']
+                        else:
                             product_data['inventory_tracking'] = 'product'
-                        if idx is None:
-                            if len(product_data['variants']) == 1 and len(supplier_variants) == 1:
-                                idx = 0
-                            else:
-                                continue
+                    elif len(product_data.get('variants', [])) == 0 or variant_id < 0:
+                        product_data['inventory_level'] = variant['availabe_qty']
+                        product_data['inventory_tracking'] = 'product'
+                    if idx is None:
+                        if len(product_data['variants']) == 1 and len(supplier_variants) == 1:
+                            idx = 0
+                        else:
+                            continue
 
                     mapped_variants[str(product_data['variants'][idx]['id'])] = True
                     # Sync price
