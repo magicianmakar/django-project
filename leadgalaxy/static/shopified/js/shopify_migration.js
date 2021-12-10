@@ -85,6 +85,17 @@ $('.add-supplier-info-btn').click(function (e) {
         });
 });
 
+function disconnectHtml(product_id){
+    var product = $('[data-product="' + product_id + '"]').closest('tr');
+
+    product.find(".icheckbox_square-blue").removeClass('checked');
+    product.find("input[data-product][name=product]:checked").prop('checked', false);
+    product.find('td').eq(2).html(product.find('td').eq(2).text());
+    product.find('td').eq(4).html('');
+    product.find('td').eq(5).find('.no-wrap').html('<i class="fa fa-circle text-danger"></i> Not Connected');
+    product.find('td').eq(6).html('<button data-shopify="' + product.attr('product-id') + '" class="btn btn-rounded product-connection-connect">CONNECT</button>');
+}
+
 function disconnect(product_id) {
     swal({
         title: "Disconnect Product",
@@ -106,6 +117,7 @@ function disconnect(product_id) {
                 type: 'DELETE',
                 success: function (data) {
                     toastr.success('Shopify Migration', 'Product Successfully Disconnected!');
+                    disconnectHtml(product_id);
                 },
                 error: function (data) {
                     displayAjaxError('Connect Product', data);
@@ -136,7 +148,7 @@ $('#apply-btn').click(function (e) {
                 type: "warning",
                 showCancelButton: true,
                 closeOnCancel: true,
-                closeOnConfirm: false,
+                closeOnConfirm: true,
                 confirmButtonColor: "#DD6B55",
                 confirmButtonText: "Disconnect",
                 cancelButtonText: "Cancel"
@@ -149,7 +161,10 @@ $('#apply-btn').click(function (e) {
                         }),
                         type: 'DELETE',
                         success: function (data) {
-                            toastr.success('Shopify Migration', 'Product Successfully Connected!');
+                            toastr.success('Shopify Migration', 'Product Successfully Disconnected!');
+                            product_ids.map(function(product_id){
+                                disconnectHtml(product_id);
+                            });
                         },
                         error: function (data) {
                             displayAjaxError('Connect Product', data);
@@ -221,7 +236,7 @@ Vue.component('shopify-products-table', {
                                     disconnect(product_id);
                                 });
 
-                                $('.product-connection-connect').click(function (e) {
+                                $(document).on('click', '.product-connection-connect').click(function (e) {
                                     e.preventDefault();
                                     connect(sub_conf.store, $(this).data('shopify'));
                                 });
