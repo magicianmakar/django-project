@@ -1,3 +1,5 @@
+{% load perms_helper %}
+
 {% if 'research' not in request.user.profile.plan.slug %}
 {% if request.GET.store == 'n' or request.GET.store == 'c' or request.GET.store == None %}
 <div class="row filter-col m-b">
@@ -41,7 +43,7 @@
                     <a href="{% url 'bigcommerce:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">BigCommerce</a>
                 </li>
                 {% endif %}
-                {% if section != 'eBay' %}
+                {% if section != 'eBay' and request.user|can:'ebay.use' %}
                 <li>
                     <a href="{% url 'ebay:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">eBay</a>
                 </li>
