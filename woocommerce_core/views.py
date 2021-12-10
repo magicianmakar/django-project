@@ -2,6 +2,7 @@ import json
 import re
 import arrow
 import requests
+from requests.auth import HTTPBasicAuth
 from munch import Munch
 from decimal import Decimal
 
@@ -414,6 +415,29 @@ class ProductDetailView(DetailView):
 
         context['product_data'] = self.object.parsed
         context['breadcrumbs'] = [{'title': 'Products', 'url': products}, self.object.title]
+
+        # get product description over direct request to WooCommerce WP
+        headers = {'User-Agent': 'WooCommerce-Python-REST-API/3.0.0'}
+
+        # compose url for request
+        request_url = self.object.store.api_url
+        if request_url.endswith("/") is False:
+            request_url = f"{request_url}/"
+        request_endpoint = f"products/{self.object.source_id}"
+        request_url = f"{request_url}wp-json/{self.object.store.api_version}/{request_endpoint}"
+
+        try:
+            response = requests.post(
+                url=request_url,
+                headers=headers,
+                timeout=self.object.store.api_timeout,
+                auth=HTTPBasicAuth(self.object.store.api_key, self.object.store.api_password)
+            )
+            response.raise_for_status()
+            context['product_data']['description'] = response.json()['description']
+            context['product_data']['short_description'] = response.json()['short_description']
+        except:
+            pass
 
         if self.object.store:
             store_title = self.object.store.title

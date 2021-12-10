@@ -132,6 +132,7 @@ def update_product_api_data(api_data, data, store):
         api_data['regular_price'] = str(data['price'])
         api_data['sale_price'] = ''
     api_data['description'] = data.get('description')
+    api_data['short_description'] = data.get('short_description')
 
     try:
         api_data['weight'] = str(match_weight(safe_float(data['weight']), data['weight_unit'], store))

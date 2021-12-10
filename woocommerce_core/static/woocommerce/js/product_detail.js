@@ -181,6 +181,7 @@ $('#product-update-btn').click(function (e) {
         'weight_unit': $('#product-weight-unit').val(),
 
         'description': document.editor.getData(),
+        'short_description': $('#product-short-description').val(),
 
         'variants': [],
         'images': product.images,
@@ -362,6 +363,7 @@ function productSave(btn, callback) {
     var api_data = {
         'title': $('#product-title').val().trim(),
         'description': document.editor.getData(),
+        'short_description': $('#product-short-description').val(),
         'price': parseFloat($('#product-price').val()),
         'compare_at_price': parseFloat($('#product-compare-at').val()),
         'images': product.images,
