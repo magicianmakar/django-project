@@ -316,7 +316,7 @@ class OrdersList(ListView):
         if params_sort in ['dateutc', 'dateupdatedutc', 'total', 'shippingcountry']:
             filters['orderby'] = params_sort
         else:
-            filters['orderby'] = 'dateupdatedutc'
+            filters['orderby'] = 'dateutc'
 
         # Use the descending order by default so that the newest products are displayed first
         params_sort_order = params.get('desc', 'true') == 'true'
