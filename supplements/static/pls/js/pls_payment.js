@@ -267,11 +267,6 @@ function formatAPIDetails(data) {
                 'tax': data.taxes[orderStatus.order_id] || {},
                 'items': []
             };
-
-            // Push 1 notification for each order
-            if (orderStatus.placed && ChurnZero) {
-                ChurnZero.push(['trackEvent', 'Auto Order Placed', 'supplement']);
-            }
         }
 
         if (orderStatus.supplements && orderStatus.supplements.length) {

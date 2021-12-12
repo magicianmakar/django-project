@@ -6,31 +6,11 @@ from django.http import QueryDict
 import simplejson as json
 
 from lib.exceptions import capture_exception, capture_message
+from shopified_core.utils import jwt_decode
 from .exceptions import ApiLoginException
 
 
-class ApiResponseMixin(View):
-    login_non_required = []
-
-    def api_error(self, description, status=500):
-        return JsonResponse({
-            'error': description
-        }, status=status)
-
-    def api_success(self, rep=None, status=200, safe=True):
-        if rep is None:
-            rep = {}
-
-        if safe:
-            rep.update({'status': 'ok'})
-
-        return JsonResponse(rep, status=status, safe=safe)
-
-    def method_name(self, *args):
-        return '_'.join([
-            i.lower().replace('-', '_') for i in args
-        ])
-
+class RequestDataMixin:
     def request_data(self, request):
         if request.method == 'POST':
             if request.POST:
@@ -55,6 +35,8 @@ class ApiResponseMixin(View):
         elif request.method == 'GET':
             return request.GET
 
+
+class AuthenticationMixin(RequestDataMixin):
     def get_user(self, request, data=None, assert_login=True):
         """
             Return User from the current request data
@@ -114,18 +96,42 @@ class ApiResponseMixin(View):
         return user
 
     def user_from_token(self, token):
-        if not token:
-            return None
+        if token:
+            try:
+                return User.objects.get(accesstoken__token=token)
+            except User.DoesNotExist:
+                pass
+            except:
+                capture_exception()
 
-        try:
-            user = User.objects.get(accesstoken__token=token)
-        except User.DoesNotExist:
-            return None
-        except:
-            capture_exception()
-            return None
+            try:
+                info = jwt_decode(token)
+                return User.objects.get(id=info['id'])
+            except:
+                pass
 
-        return user
+
+class ApiResponseMixin(AuthenticationMixin, View):
+    login_non_required = []
+
+    def api_error(self, description, status=500):
+        return JsonResponse({
+            'error': description
+        }, status=status)
+
+    def api_success(self, rep=None, status=200, safe=True):
+        if rep is None:
+            rep = {}
+
+        if safe:
+            rep.update({'status': 'ok'})
+
+        return JsonResponse(rep, status=status, safe=safe)
+
+    def method_name(self, *args):
+        return '_'.join([
+            i.lower().replace('-', '_') for i in args
+        ])
 
     def dispatch(self, request, *args, **kwargs):
         if request.method.lower() not in self.http_method_names:

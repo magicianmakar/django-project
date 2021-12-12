@@ -29,6 +29,8 @@ from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils.module_loading import import_string
 
+from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
+
 ALIEXPRESS_REJECTED_STATUS = {
     "buyer_pay_timeout": "Order Payment Timeout",
     "risk_reject_closed": "Rejected By Risk Control",
@@ -169,6 +171,28 @@ def app_link(*args, **kwargs):
         path = '{}?{}'.format(path, urlencode(kwargs))
 
     return '{}/{}'.format(settings.APP_URL, path.lstrip('/')).rstrip('/')
+
+
+def external_link(url, **kwargs):
+    """
+    Get full link to a web app page
+
+    Example:
+        app_link('https://google.com', query=1001)
+    """
+
+    params = ''
+
+    if kwargs:
+        for k, v in list(kwargs.items()):
+            if type(v) is bool:
+                kwargs[k] = str(v).lower()
+            elif isinstance(v, str):
+                kwargs[k] = v
+
+        params = f'?{urlencode(kwargs)}'
+
+    return f"{url}{params}"
 
 
 def remove_trailing_slash(t):
@@ -535,7 +559,7 @@ def orders_update_limit(orders_count, check_freq=30, total_time=360, min_count=2
     return max(limit, min_count)
 
 
-def order_phone_number(request, user, phone_number, customer_country):
+def order_phone_number(user, phone_number, customer_country):
     if not phone_number or user.get_config('order_default_phone') != 'customer':
         phone_number = user.get_config('order_phone_number')
         country = user.profile.country
@@ -920,6 +944,41 @@ def jwt_decode(payload, key=settings.API_SECRECT_KEY):
         algorithms=['HS256'])
 
 
+def fix_order_data(user, order):
+    if not order['shipping_address'].get('address2'):
+        order['shipping_address']['address2'] = ''
+
+    if order.get('supplier_type') == 'ebay':
+        order['shipping_address']['country_code'] = ebay_country_code_map(order['shipping_address']['country_code'])
+    else:
+        order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
+
+    order['ordered'] = False
+    order['fast_checkout'] = user.get_config('_fast_order_checkout', True)  # Use Cart for all orders
+    order['solve'] = user.models_user.get_config('aliexpress_solve_captcha', True)
+
+    phone = order['order']['phone']
+    if type(phone) is dict:
+        phone_country, phone_number = order_phone_number(user.models_user, phone['number'], phone['country'])
+        order['order']['phone'] = phone_number
+        order['order']['phoneCountry'] = phone_country
+
+    if not order['order']['phone']:
+        order['order']['phone'] = '0000000000'
+
+    if not order['order']['phoneCountry']:
+        try:
+            order['order']['phoneCountry'] = f"+{phonenumbers.country_code_for_region(order['shipping_address']['country_code'])}"
+        except:
+            pass
+
+    if order.get('supplier_type') != 'ebay' and safe_str(order['shipping_address']['country_code']).lower() == 'fr':
+        if order['order']['phone'] and not order['order']['phone'].startswith('0'):
+            order['order']['phone'] = order['order']['phone'].rjust(10, '0')
+
+    return order
+
+
 def bulk_order_format(queue_order, first_line_id):
     items_count = len(queue_order['items'])
     if items_count:
@@ -954,12 +1013,13 @@ def get_next_page_from_request(request, page):
     ))
 
 
-def format_queueable_orders(request, orders, current_page, store_type='shopify'):
+def format_queueable_orders(orders, current_page, store_type='shopify', request=None, orders_only=False):
     orders_result = []
     enable_supplier_grouping = False
-    is_dropified_print = request.GET.get('is_dropified_print') == '1'
-    only_private_label_orders = request.GET.get('is_supplement_bulk_order') == '1'
-    single_supplier = request.GET.get('single_supplier')
+
+    is_dropified_print = request.GET.get('is_dropified_print') == '1' if request else None
+    only_private_label_orders = request.GET.get('is_supplement_bulk_order') == '1' if request else None
+    single_supplier = request.GET.get('single_supplier') if request else None
 
     if store_type in ['shopify', '']:
         orders_place_url = reverse('orders_place')
@@ -1102,15 +1162,18 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                 orders_result.append(queue_order)
 
     next_page_url = None
-    if current_page.has_next():
+    if current_page.has_next() and request:
         next_page_number = current_page.next_page_number()
         next_page_url = get_next_page_from_request(request, next_page_number)
 
-    return JsonResponse({
-        'orders': orders_result,
-        'next': next_page_url,
-        'pages': current_page.paginator.num_pages,
-    })
+    if orders_only:
+        return orders_result
+    else:
+        return JsonResponse({
+            'orders': orders_result,
+            'next': next_page_url,
+            'pages': current_page.paginator.num_pages,
+        })
 
 
 def normalize_product_title(title):
@@ -1174,7 +1237,7 @@ def get_cached_order(user, store_type, order_data_id):
     order = order_data_cache(key)
 
     phone = order['order']['phone']
-    phone_country_code, phone_number = order_phone_number(None, user.models_user, phone['number'], phone['country'])
+    phone_country_code, phone_number = order_phone_number(user.models_user, phone['number'], phone['country'])
     order['order']['phone'] = {
         'country': phone['country'],
         'number': phone_number,

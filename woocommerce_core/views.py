@@ -2,6 +2,7 @@ import json
 import re
 import arrow
 import requests
+from requests.auth import HTTPBasicAuth
 from munch import Munch
 from decimal import Decimal
 
@@ -41,6 +42,7 @@ from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     app_link,
     aws_s3_context,
+    fix_order_data,
     jwt_encode,
     safe_int,
     url_join,
@@ -414,6 +416,29 @@ class ProductDetailView(DetailView):
         context['product_data'] = self.object.parsed
         context['breadcrumbs'] = [{'title': 'Products', 'url': products}, self.object.title]
 
+        # get product description over direct request to WooCommerce WP
+        headers = {'User-Agent': 'WooCommerce-Python-REST-API/3.0.0'}
+
+        # compose url for request
+        request_url = self.object.store.api_url
+        if request_url.endswith("/") is False:
+            request_url = f"{request_url}/"
+        request_endpoint = f"products/{self.object.source_id}"
+        request_url = f"{request_url}wp-json/{self.object.store.api_version}/{request_endpoint}"
+
+        try:
+            response = requests.post(
+                url=request_url,
+                headers=headers,
+                timeout=self.object.store.api_timeout,
+                auth=HTTPBasicAuth(self.object.store.api_key, self.object.store.api_password)
+            )
+            response.raise_for_status()
+            context['product_data']['description'] = response.json()['description']
+            context['product_data']['short_description'] = response.json()['short_description']
+        except:
+            pass
+
         if self.object.store:
             store_title = self.object.store.title
             store_products = '{}?store={}'.format(products, self.object.store.id)
@@ -716,7 +741,7 @@ class OrdersList(ListView):
 
     def render_to_response(self, context, **response_kwargs):
         if self.bulk_queue:
-            return format_queueable_orders(self.request, context['orders'], context['page_obj'], store_type='woo')
+            return format_queueable_orders(context['orders'], context['page_obj'], store_type='woo', request=self.request)
 
         return super().render_to_response(context, **response_kwargs)
 
@@ -737,10 +762,10 @@ class OrdersList(ListView):
         if daterange and not daterange == 'all':
             filters['after'], filters['before'] = get_daterange_filters(daterange)
 
-        product_id = params.get('product')
+        product_id = params.get('query_product')
         if product_id:
-            self.product_filter = WooProduct.objects.filter(pk=safe_int(product_id)).first()
-            filters['product'] = self.product_filter.source_id if self.product_filter else 0
+            self.product_filter = WooProduct.objects.filter(pk=safe_int(product_id))
+            filters['product'] = self.product_filter.first().source_id if self.product_filter else 0
 
         if params.get('query_customer'):
             filters['customer'] = get_customer_id(self.get_store(), params['query_customer'])
@@ -1162,6 +1187,7 @@ class OrdersList(ListView):
                                         'image_url': item['image'],
                                     })
 
+                        order_data = fix_order_data(self.request.user, order_data)
                         orders_cache['woo_order_{}'.format(order_data_id)] = order_data
                         item['order_data'] = order_data
 

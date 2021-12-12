@@ -23,3 +23,7 @@ class ApiProcessException(Exception):
 
 class ProductExportException(Exception):
     pass
+
+
+class AliexpressFulfillException(Exception):
+    pass

@@ -2,7 +2,6 @@ import simplejson as json
 import arrow
 import itertools
 
-import phonenumbers
 from lib.exceptions import capture_exception
 
 from django.contrib.auth.models import User
@@ -24,15 +23,12 @@ from shopified_core.utils import (
     dict_val,
     safe_int,
     safe_float,
-    safe_str,
     order_data_cache,
-    order_phone_number,
     orders_update_limit,
     serializers_orders_track,
     using_replica,
 )
 from shopified_core.models_utils import get_store_model, get_user_upload_model
-from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
 from shopified_core.decorators import HasSubuserPermission
 from product_core.models import ProductBoard
 
@@ -340,37 +336,6 @@ class ApiBase(ApiResponseMixin, View):
             if user.models_user.get_config('_static_shipping_address'):
                 order['shipping_address'] = user.models_user.get_config('_static_shipping_address')
 
-            if not order['shipping_address'].get('address2'):
-                order['shipping_address']['address2'] = ''
-
-            if order.get('supplier_type') == 'ebay':
-                order['shipping_address']['country_code'] = ebay_country_code_map(order['shipping_address']['country_code'])
-            else:
-                order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
-
-            order['ordered'] = False
-            order['fast_checkout'] = user.get_config('_fast_order_checkout', True)  # Use Cart for all orders
-            order['solve'] = user.models_user.get_config('aliexpress_solve_captcha', True)
-
-            phone = order['order']['phone']
-            if type(phone) is dict:
-                phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
-                order['order']['phone'] = phone_number
-                order['order']['phoneCountry'] = phone_country
-
-            if not order['order']['phone']:
-                order['order']['phone'] = '0000000000'
-
-            if not order['order']['phoneCountry']:
-                try:
-                    order['order']['phoneCountry'] = f"+{phonenumbers.country_code_for_region(order['shipping_address']['country_code'])}"
-                except:
-                    capture_exception()
-
-            if order.get('supplier_type') != 'ebay' and safe_str(order['shipping_address']['country_code']).lower() == 'fr':
-                if order['order']['phone'] and not order['order']['phone'].startswith('0'):
-                    order['order']['phone'] = order['order']['phone'].rjust(10, '0')
-
             if user.models_user.get_config('_aliexpress_telephone_workarround'):
                 order['order']['telephone_workarround'] = True
 
@@ -379,7 +344,7 @@ class ApiBase(ApiResponseMixin, View):
 
                 order['ordered'] = {
                     'time': arrow.get(track.created_at).humanize(),
-                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id']))
+                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id'])) if request else ''
                 }
 
             except ObjectDoesNotExist:
@@ -387,7 +352,11 @@ class ApiBase(ApiResponseMixin, View):
             except:
                 capture_exception()
 
-            return JsonResponse(order, safe=False)
+            if data.get('no_format') == 1:
+                return order
+            else:
+                return JsonResponse(order, safe=False)
+
         else:
             return self.api_error('Not found: {}'.format(data.get('order')), status=404)
 

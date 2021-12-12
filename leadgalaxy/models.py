@@ -1,6 +1,5 @@
 import arrow
 import hashlib
-import hmac
 import re
 import requests
 import simplejson as json
@@ -485,20 +484,6 @@ class UserProfile(models.Model):
                         perms.append(i)
 
         return perms
-
-    @cached_property
-    def churnzero_account_id_hash(self):
-        churnzero_secret_token = settings.CHURNZERO_SECRET_TOKEN.encode()
-        account_owner = self.user.models_user.username.encode()
-
-        return hmac.new(churnzero_secret_token, account_owner, hashlib.sha256).hexdigest()
-
-    @cached_property
-    def churnzero_contact_id_hash(self):
-        churnzero_secret_token = settings.CHURNZERO_SECRET_TOKEN.encode()
-        account = self.user.username.encode()
-
-        return hmac.new(churnzero_secret_token, account, hashlib.sha256).hexdigest()
 
     def import_stores(self):
         ''' Return Stores the User can import products from '''
@@ -1270,6 +1255,12 @@ class AccessToken(models.Model):
 
     def __str__(self):
         return f'<AccessToken: {self.id}>'
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = get_random_string(128)
+
+        super().save(*args, **kwargs)
 
 
 class ShopifyProduct(ProductBase):
@@ -2538,13 +2529,16 @@ def user_get_access_token(self):
     try:
         access_token = AccessToken.objects.filter(user=self).latest('created_at')
     except:
-        token = get_random_string(32)
-        token = hashlib.md5(token.encode()).hexdigest()
-
-        access_token = AccessToken(user=self, token=token)
+        access_token = AccessToken(user=self)
         access_token.save()
 
     return access_token.token
+
+
+@add_to_class(User, 'get_jwt_access_token')
+def user_get_jwt_access_token(self):
+    from shopified_core.utils import jwt_encode
+    return jwt_encode({'id': self.id})
 
 
 @add_to_class(User, 'can')

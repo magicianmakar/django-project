@@ -25,10 +25,6 @@
                 toastr.error('Product is already in Orders Queue');
             }
         });
-
-        if (ChurnZero) {
-            ChurnZero.push(['trackEvent', 'Auto Order Placed', order.supplier_type]);
-        }
     }
 
     function orderBundle(order_data_id, order_name, store_type, fail_callback) {

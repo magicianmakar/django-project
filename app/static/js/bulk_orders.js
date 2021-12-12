@@ -19,6 +19,27 @@ function bulkAddOrderToQueue(order) {
     });
 }
 
+function addOrdersToQuickAliExpressOrdering(orders) {
+    var orderDataIDs = [];
+    for (var i = 0, iLength = orders.length; i < iLength; i++) {
+        var bulkItems = orders[i].items;
+        if (bulkItems) {
+            for (var y = 0, yLength = bulkItems.length; y < yLength; y++) {
+                orderDataIDs.push(bulkItems[y].order_data);
+            }
+        } else {
+            orderDataIDs.push(window.bulkOrderQueue.data[i].order_data);
+        }
+    }
+
+    var orderDetailTemplate = Handlebars.compile($("#aliexpress-bulk-order").html());
+    var ordersElem = $(orderDetailTemplate({'orders': window.bulkOrderQueue.data}));
+    $('#modal-quick-aliexpress-order tbody').append(ordersElem);
+    $('#modal-quick-aliexpress-order').modal('show');
+    return true;
+}
+
+
 function addOrdersToPrivateLabel(orders) {
     var orderDataIDs = [];
     for (var i = 0, iLength = orders.length; i < iLength; i++) {
@@ -132,6 +153,9 @@ $('#bulk-order-button-wrapper').on('click', '.bulk-order-btn', function (e) {
     var isAlibaba = source === 'alibaba';
     bulkModal.data('alibaba', isAlibaba);
 
+    var isQuickAliexpressOrder = source === 'aliexpress';
+    bulkModal.data('aliexpress', isQuickAliexpressOrder);
+    
     if (window.bulkOrderQueue && window.bulkOrderQueue.data.length) {
         if (isPrivateLabel && window.bulkOrderQueue.is_supplement_bulk_order) {
             addOrdersToPrivateLabel(window.bulkOrderQueue.data);
@@ -144,6 +168,12 @@ $('#bulk-order-button-wrapper').on('click', '.bulk-order-btn', function (e) {
             $('#modal-alibaba-order-detail').modal('show');
             return true;
         }
+
+        if (isQuickAliexpressOrder && window.bulkOrderQueue.is_aliexpress_quick_order) {
+            addOrdersToQuickAliExpressOrdering(window.bulkOrderQueue.data);
+            $('#modal-quick-aliexpress-order').modal('show');
+            return true;
+        }
     }
 
     window.bulkOrderQueue = {
@@ -154,6 +184,7 @@ $('#bulk-order-button-wrapper').on('click', '.bulk-order-btn', function (e) {
         is_dropified_print: isPrintOnDemand,
         is_supplement_bulk_order: isPrivateLabel,
         is_alibaba_bulk_order: isAlibaba,
+        is_aliexpress_quick_order: isQuickAliexpressOrder,
     };
 
     var is_dropified_print = window.bulkOrderQueue.is_dropified_print;
@@ -287,7 +318,10 @@ function startBulkOrderSteps() {
                 addOrdersToPrivateLabel(window.bulkOrderQueue.data);
             } else if (window.bulkOrderQueue.is_alibaba_bulk_order) {
                 addOrdersToAlibaba(window.bulkOrderQueue.data);
-            } else {
+            } else if (window.bulkOrderQueue.is_aliexpress_quick_order) {
+                addOrdersToQuickAliExpressOrdering(window.bulkOrderQueue.data);
+            }
+            else {
                 $.each(window.bulkOrderQueue.data, function (i, order) {
                     bulkAddOrderToQueue(order);
                 });

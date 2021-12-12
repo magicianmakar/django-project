@@ -1,0 +1,29 @@
+{% load perms_helper template_helper %}
+
+{% if user|can:'aliexpress_api_integration.use' %}
+<div id="aliexpress-settings" class="panel panel-default">
+    <div class="panel-heading">
+        Aliexpress Accounts
+    </div>
+
+    <div class="panel-body">
+        {% for account in aliexpress_accounts %}
+        <div class="row well m">
+            <div class="col-sm-4">{{ account.aliexpress_username }} ({{ account.aliexpress_user_id }})</div>
+            <div class="col-sm-4">Added {% date_humanize account.created_at %}</div>
+            <div class="col-sm-4 text-right">
+                <a href="#" class="del-aliexpress-account text-danger" data-account="{{ account.id }}">
+                    <i class="fa fa-times"></i> Remove
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="row m">
+            <div class="col-sm-12">
+                <a href="{% url 'aliexpress.oauth' %}" class="btn btn-success"><i class="fa fa-plus"></i> Link Aliexpress Account</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

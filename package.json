@@ -13,8 +13,8 @@
   "scripts": {
     "postinstall": "bower install",
     "jshint": "scripts/jshint.sh",
-    "server": "python3 manage.py runserver",
-    "celery": "celery -A app.celery_base worker -Q celery,priority_high -O fair -l INFO"
+    "server": "./runner_dev.sh web",
+    "celery": "./runner_dev.sh worker"
   },
   "cacheDirectories": [
     "node_modules",
@@ -22,6 +22,6 @@
   ],
   "engines": {
     "node": "14.x",
-    "npm": "8.0.0"
+    "npm": "8.2.0"
   }
 }

@@ -189,6 +189,21 @@ class ShopifyStoreApi(ApiBase):
 
         return JsonResponse(json.loads(product.data), safe=False)
 
+    def get_ali_order_info(self, request, user, data):
+        source_id = data.get('source_id')
+        order = data.get('order')
+        store_id = data.get('store_id')
+
+        result = shopify_orders_tasks.get_order_info_via_api(order, source_id, store_id)
+        return self.api_success(result)
+
+    def get_order_tracking_info(self, request, user, data):
+        source_id = data.get('source_id')
+        store_id = data.get('store_id')
+        order = data.get('order')
+        shopify_orders_tasks.get_order_tracking_info_via_api(order, source_id, store_id)
+        return HttpResponse(status=200)
+
     def post_shopify(self, request, user, data):
         store = data.get('store') if safe_int(data.get('store')) > 0 else None
 

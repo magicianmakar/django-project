@@ -111,9 +111,9 @@
                                         <th style="width:150px;">Options</th>
                                     </tr>
                                 </thead>
-                                {% for twilio_phone_number in twilio_phone_numbers %}
                                 <tbody>
-                                    <tr class="table-item" data-company-id="{{ twilio_phone_number.company.id }}">
+                                    {% for twilio_phone_number in twilio_phone_numbers %}
+                                        <tr class="table-item" data-company-id="{{ twilio_phone_number.company.id }}">
                                         <td class="text-center">
                                             {{ twilio_phone_number.incoming_number|phone_number }}
                                         </td>
@@ -159,8 +159,8 @@
 
                                         </td>
                                     </tr>
+                                    {% endfor %}
                                 </tbody>
-                                {% endfor %}
                             </table>
                         </div>
                         {% else %}

@@ -40,6 +40,7 @@ urlpatterns = [
     url(r'^ckeditor/', include('ckeditor_uploader.urls')),
     url(r'^offer/', include('offers.urls', 'offers')),
     url(r'^alibaba/', include('alibaba_core.urls', 'alibaba')),
+    url(r'^aliexpress/', include('aliexpress_core.urls')),
     url(r'^webhook/', include('webhooks.urls')),
     url(r'^products/', include('product_core.urls')),
     url(r'^insider-reports/', include('insider_reports.urls')),

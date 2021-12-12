@@ -243,8 +243,6 @@
                     setTimeout(function() {
                         window.location.reload();
                     }, 1000);
-
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'Shopify']);
                 },
                 error: function(data) {
                     displayAjaxError('Delete Store', data);
@@ -1135,8 +1133,6 @@
                 success: function() {
                     $('#chq-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
-
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'CommerceHQ']);
                 }
             });
         });
@@ -1236,8 +1232,6 @@
                 success: function() {
                     $('#gear-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
-
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'GearBubble']);
                 }
             });
         });
@@ -1315,8 +1309,6 @@
                 success: function() {
                     $('#woo-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
-
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'WooCommerce']);
                 }
             });
         });
@@ -1444,8 +1436,6 @@
                 success: function() {
                     $('#gk-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
-
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'GrooveKart']);
                 }
             });
         });
@@ -1496,8 +1486,6 @@
                 success: function() {
                     $('#bigcommerce-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
-
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'BigCommerce']);
                 }
             });
         });
@@ -1619,8 +1607,6 @@
                 success: function() {
                     $('#ebay-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
-
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'eBay']);
                 },
                 error: function(data) {
                     displayAjaxError('Delete Store', data);
@@ -1855,6 +1841,19 @@
             if(e.target !== storeTr) {
                 $(storeTr).prop('shown', false);
             }
+        });
+    });
+
+    $('.del-aliexpress-account').on('click', function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: api_url('account', 'aliexpress') + '?' + $.param({account: $(e.currentTarget).data('account')}),
+            method: 'DELETE',
+        }).done(function(data) {
+            window.location.reload();
+        }).error(function(data) {
+            displayAjaxError('Delete Aliexpress Account', data);
         });
     });
 

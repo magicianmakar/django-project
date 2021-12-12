@@ -3,17 +3,13 @@ import simplejson as json
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.auth.signals import user_logged_in
 from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
 from django.db.models import Q
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import Signal, receiver
 
-from addons_core.models import Addon
 from addons_core.tasks import cancel_all_addons
-from analytic_events.models import LoginEvent, StoreCreatedEvent
-from churnzero_core.utils import post_churnzero_addon_update, post_churnzero_change_plan_event, set_churnzero_account
 from goals.models import Goal, UserGoalRelationship
 from hubspot_core.tasks import update_hubspot_user
 from leadgalaxy.models import (
@@ -55,12 +51,6 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
     except:
         return
 
-    try:
-        if current_plan and current_plan.is_shopify() and change_log.plan.is_shopify() and current_plan != change_log.plan:
-            post_churnzero_change_plan_event(instance.user, current_plan.title)
-    except:
-        pass
-
     if current_plan != change_log.plan:
         change_log.previous_plan = change_log.plan
         change_log.plan = current_plan
@@ -85,9 +75,6 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
 
     if settings.HUPSPOT_API_KEY:
         update_hubspot_user.apply_async([user.id], expires=500)
-
-    if instance.plan and not instance.has_churnzero_account and not user.is_subuser and not user.is_staff:
-        set_churnzero_account(user)
 
 
 @receiver(post_save, sender=UserProfile)
@@ -323,27 +310,6 @@ def shopify_send_keen_event_for_product(sender, instance, created, **kwargs):
         }
 
         keen_send_event.delay('product_save', keen_data)
-
-
-@receiver(user_logged_in)
-def post_login(sender, user, request, **kwargs):
-    if user.models_user.profile.has_churnzero_account:
-        LoginEvent.objects.create(user=user)
-
-
-@receiver(m2m_changed, sender=UserProfile.addons.through)
-def addons_count_change(sender, instance, pk_set, action, **kwargs):
-    models_user = instance.user.models_user
-    if models_user.profile.has_churnzero_account and action in ["post_add", "post_remove"]:
-        addons = Addon.objects.filter(pk__in=pk_set)
-        action = 'added' if action == 'post_add' else 'removed'
-        post_churnzero_addon_update(instance.user, addons=addons, action=action)
-
-
-@receiver(post_save, sender=ShopifyStore)
-def store_saved(sender, instance, created, **kwargs):
-    if created:
-        StoreCreatedEvent.objects.create(user=instance.user, platform='Shopify')
 
 
 main_subscription_canceled = Signal(providing_args=["stripe_sub"])

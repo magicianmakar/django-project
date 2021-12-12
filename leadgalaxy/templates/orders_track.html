@@ -39,10 +39,18 @@
                                 <ul class="dropdown-menu">
 
                                     <li>
-                                        <a class="btn-success btn-outline sync-selected-btn" store-id="{{store.id}}">
+                                        <a class="btn-success btn-outline sync-selected-btn" id="sync-selected-orders" store-id="{{store.id}}">
                                             <i class="fa fa-refresh"></i> Sync Selected Orders
                                         </a>
                                     </li>
+
+                                    {% if not use_aliexpress_api %}
+                                    <li>
+                                        <a class="btn-success btn-outline quick-sync-selected-btn" id="quick-sync-selected-orders" store-id="{{store.id}}">
+                                            <i class="fa fa-refresh"></i> Sync Selected Orders with API
+                                        </a>
+                                    </li>
+                                    {% endif %}
 
                                     <li>
                                         <a class="btn-danger btn-outline delete-order-id-btn" store-id="{{store.id}}">

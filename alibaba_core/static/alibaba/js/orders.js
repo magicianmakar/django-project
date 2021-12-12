@@ -105,7 +105,6 @@ var orderItemsAlibaba = (function() {
         orderTotalElem.text(formatUSD(shippingCost + productsCost));
     }
     function loadTooltip(elem) {
-        console.log(elem);
         elem.each(function() {
             var wrapper = $(this);
             if (wrapper.prop('offsetWidth') < wrapper.prop('scrollWidth')) {

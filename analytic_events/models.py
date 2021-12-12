@@ -320,38 +320,18 @@ class SuccessfulPaymentEvent(Event):
 
 class LoginEvent(Event):
     def get_scripts(self):
-        return ''.join([self.churnzero_script])
-
-    @cached_property
-    def churnzero_script(self):
-        return "<script>ChurnZero.push(['trackEvent', 'Logged In']);</script>"
+        return ''
 
 
 class StoreCreatedEvent(Event):
     platform = models.CharField(max_length=100)
 
     def get_scripts(self):
-        return ''.join([self.churnzero_script])
-
-    @cached_property
-    def churnzero_script(self):
-        return f"""
-            <script>
-                ChurnZero.push(['trackEvent', 'Connected Store', '{self.platform}']);
-            </script>
-        """.strip()
+        return ''
 
 
 class SupplementLabelForApprovalEvent(Event):
     product_name = models.CharField(max_length=200)
 
     def get_scripts(self):
-        return ''.join([self.churnzero_script])
-
-    @cached_property
-    def churnzero_script(self):
-        return f"""
-            <script>
-                ChurnZero.push(['trackEvent', 'Sent Label for Approval', '{self.product_name}']);
-            </script>
-        """.strip()
+        return ''

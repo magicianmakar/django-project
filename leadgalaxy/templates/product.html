@@ -47,8 +47,13 @@
                 {% if request.user|can:'product_filters.view' %}
                     <button class="btn btn-success btn-outline filter-btn filter-col-item">Filter</button>
                     {% if filter_products %}
-                        <a href="{% url 'product' %}?store={{ request.GET.store }}" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>
-{#                    <a href="/product" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>#}
+                        {% if store.id %}
+                            <a href="/product?store={{store.id}}" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>
+                        {% elif request.GET.store == 'c' %}
+                            <a href="/product?store=c" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>
+                        {% else %}
+                            <a href="/product/" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>
+                        {% endif %}
                     {% endif %}
                 {% endif %}
 

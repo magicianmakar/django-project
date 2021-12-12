@@ -49,11 +49,11 @@ class UtilsTestCase(BaseTestCase):
     def test_order_phone_number(self):
         user = Mock(get_config=Mock(return_value='customer'))
 
-        country_code, phone_number = order_phone_number(self.request, user, '0652413300', 'FR')
+        country_code, phone_number = order_phone_number(user, '0652413300', 'FR')
         self.assertEqual(country_code, '+33')
         self.assertEqual(phone_number, '652413300')
 
-        country_code, phone_number = order_phone_number(self.request, user, '19716454717', 'ES')
+        country_code, phone_number = order_phone_number(user, '19716454717', 'ES')
         self.assertEqual(country_code, '+34')
         self.assertEqual(phone_number, '19716454717')
 
@@ -64,7 +64,7 @@ class UtilsTestCase(BaseTestCase):
 
         user = Mock(get_config=get_config, profile=Mock(country='ES'))
 
-        country_code, phone_number = order_phone_number(self.request, user, '', 'FR')
+        country_code, phone_number = order_phone_number(user, '', 'FR')
         self.assertEqual(country_code, '+34')
         self.assertEqual(phone_number, '9716454717')
 
@@ -75,52 +75,52 @@ class UtilsTestCase(BaseTestCase):
 
         user = Mock(get_config=get_config, profile=Mock(country='ES'))
 
-        country_code, phone_number = order_phone_number(self.request, user, '', 'FR')
+        country_code, phone_number = order_phone_number(user, '', 'FR')
         self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '8889846283')
 
     def test_order_phone_number_pad(self):
         user = Mock(get_config=Mock(return_value='customer'))
 
-        country_code, phone_number = order_phone_number(self.request, user, '0033652413300', 'FR')
+        country_code, phone_number = order_phone_number(user, '0033652413300', 'FR')
         self.assertEqual(country_code, '+33')
         self.assertEqual(phone_number, '652413300')
 
-        country_code, phone_number = order_phone_number(self.request, user, '+33652413300', 'FR')
+        country_code, phone_number = order_phone_number(user, '+33652413300', 'FR')
         self.assertEqual(country_code, '+33')
         self.assertEqual(phone_number, '652413300')
 
-        country_code, phone_number = order_phone_number(self.request, user, '33652413300', 'FR')
+        country_code, phone_number = order_phone_number(user, '33652413300', 'FR')
         self.assertEqual(country_code, '+33')
         self.assertEqual(phone_number, '652413300')
 
     def test_empty_order_phone_numbers(self):
         user = Mock(get_config=Mock(return_value='000000000000'))
 
-        country_code, phone_number = order_phone_number(self.request, user, '0652413300', 'US')
+        country_code, phone_number = order_phone_number(user, '0652413300', 'US')
         self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '000000000000')
 
         user = Mock(get_config=Mock(return_value='000-0000'))
 
-        country_code, phone_number = order_phone_number(self.request, user, '0652413300', 'US')
+        country_code, phone_number = order_phone_number(user, '0652413300', 'US')
         self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '0000000')
 
         user = Mock(get_config=Mock(return_value='000-0000'))
 
-        country_code, phone_number = order_phone_number(self.request, user, '0652413300', 'AU')
+        country_code, phone_number = order_phone_number(user, '0652413300', 'AU')
         self.assertEqual(country_code, '+61')
         self.assertEqual(phone_number, '0000000')
 
-        country_code, phone_number = order_phone_number(self.request, user, '0652413300', '')
+        country_code, phone_number = order_phone_number(user, '0652413300', '')
         self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '0000000')
 
     def test_null_order_phone_numbers(self):
         user = Mock(get_config=Mock(return_value='customer'))
 
-        country_code, phone_number = order_phone_number(self.request, user, None, 'US')
+        country_code, phone_number = order_phone_number(user, None, 'US')
         self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '')
 
@@ -131,7 +131,7 @@ class UtilsTestCase(BaseTestCase):
 
         user = Mock(get_config=get_config, profile=Mock(country='ES'))
 
-        country_code, phone_number = order_phone_number(self.request, user, '', 'FR')
+        country_code, phone_number = order_phone_number(user, '', 'FR')
         # self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '0000000000')
 
@@ -143,7 +143,7 @@ class UtilsTestCase(BaseTestCase):
         user = Mock(get_config=get_config, profile=Mock(country='ES'), username='chase')
         user.models_user = user
 
-        country_code, phone_number = order_phone_number(self.request, user, '', 'FR')
+        country_code, phone_number = order_phone_number(user, '', 'FR')
         # self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '2056577766')
 

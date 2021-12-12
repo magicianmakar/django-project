@@ -895,8 +895,6 @@ $(function() {
                     }
 
                     $('#add-board-name').val('');
-
-                    ChurnZero.push(['trackEvent', 'Create a Board', board_name]);
                 } else {
                     displayAjaxError('Create Board', data);
                 }
