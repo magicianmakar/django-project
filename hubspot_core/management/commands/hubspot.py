@@ -1,15 +1,19 @@
-import arrow
-
+import json
 from collections import defaultdict
 from queue import Queue
 from threading import Thread
 
+import arrow
+import requests
+
+from django.conf import settings
 from django.contrib.auth.models import User
 
-from hubspot_core.utils import INTERVALS, api_requests, clean_plan_name, create_contact, update_contact
 from hubspot_core.models import HubspotAccount
+from hubspot_core.utils import INTERVALS, api_requests, clean_plan_name, create_contact, update_contact
 from last_seen.models import LastSeen
-from leadgalaxy.models import GroupPlan, ShopifyStore
+from leadgalaxy.models import GroupPlan, ShopifyStore, UserProfile
+from lib.exceptions import capture_exception
 from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import safe_int, safe_float, safe_str
 
@@ -38,6 +42,7 @@ class Command(DropifiedBaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--create', action='store_true', help='Create Properties only')
         parser.add_argument('--orders', action='store_true', help='Load orders stats')
+        parser.add_argument('--mrr', action='store_true', help='Get MRR/LTV data')
         parser.add_argument('--missing', action='store_true', help='Add Missing users only')
         parser.add_argument('--skip', action='store', type=int, default=0, help='Skip this number of users')
         parser.add_argument('--threads', action='store', type=int, default=2, help='Number of threads')
@@ -50,6 +55,10 @@ class Command(DropifiedBaseCommand):
         if options['orders']:
             self.write('Orders data...')
             return self.find_orders()
+
+        if options['mrr']:
+            self.write('Get MRR data...')
+            return self.find_mrr()
 
         q = Queue()
 
@@ -66,14 +75,7 @@ class Command(DropifiedBaseCommand):
         for user in users.all():
             self.progress_update()
 
-            try:
-                last_seen = LastSeen.objects.when(user, 'website')
-            except KeyboardInterrupt:
-                raise
-            except:
-                last_seen = None
-
-            if last_seen and last_seen > arrow.utcnow().replace(years=-2).datetime:
+            if self.is_seen(user):
                 if not options['missing'] or not HubspotAccount.objects.filter(hubspot_user=user).exists():
                     active_users.append(user)
 
@@ -133,6 +135,9 @@ class Command(DropifiedBaseCommand):
         self.create_property('dr_orders_120_day_sum', 'Orders Sum last 120 Days', 'number', 'number')
         self.create_property('dr_orders_365_day_sum', 'Orders Sum last 365 Days', 'number', 'number')
         self.create_property('dr_orders_all_sum', 'Orders Sum All time', 'number', 'number')
+
+        self.create_property('dr_mrr', 'Users MRR', 'number', 'number')
+        self.create_property('dr_ltv', 'Users LTV', 'number', 'number')
 
         self.update_plan_property_options()
 
@@ -312,3 +317,130 @@ class Command(DropifiedBaseCommand):
                     'count': user_orders_count[uid],
                     'sum': user_orders_sum[uid]
                 })
+
+    def is_seen(self, user):
+        try:
+            last_seen = LastSeen.objects.when(user, 'website')
+            return last_seen and last_seen > arrow.utcnow().replace(years=-2).datetime
+        except KeyboardInterrupt:
+            raise
+        except:
+            return False
+
+    def find_mrr(self):
+        self.load_baremetrics()
+        self.write('> Get Shopify Users')
+
+        profiles = UserProfile.objects.filter(shopify_app_store=True).order_by('-id')
+        self.progress_total(profiles.count())
+        for profile in profiles:
+            self.progress_update()
+            if self.is_seen(profile.user):
+                mrr = 0
+                ltv = 0
+                for store in profile.get_shopify_stores():
+                    try:
+                        info = json.loads(store.info)['id']
+                    except:
+                        self.write(f'> Error: {store.shop}')
+                        continue
+
+                    customer = self.get_baremetrics_shopify_customer(info)
+                    if customer:
+                        mrr += customer['mrr']
+                        ltv += customer['ltv']
+
+                profile.user.set_config('_baremetrics_sub', {
+                    'mrr': mrr,
+                    'ltv': ltv
+                })
+
+        self.progress_close()
+
+        self.write('> Get Stripe Users')
+        profiles = UserProfile.objects.filter(shopify_app_store=False).order_by('-id')
+        self.progress_total(profiles.count())
+        for profile in profiles:
+            self.progress_update()
+            if profile.user.is_stripe_customer() and self.is_seen(profile.user):
+                customer = self.get_baremetrics_stripe_customer(profile.user.stripe_customer.customer_id)
+                if customer:
+                    profile.user.set_config('_baremetrics_sub', {
+                        'mrr': customer['mrr'],
+                        'ltv': customer['ltv']
+                    })
+
+        self.progress_close()
+
+    def get_baremetrics_customer(self, source_id, customer_id):
+        return self.bm_data.get(f'{source_id}-{customer_id}')
+
+        if settings.BAREMETRICS_API_KEY:
+            try:
+                response = requests.get(
+                    url=f'https://api.baremetrics.com/v1/{source_id}/customers/{customer_id}',
+                    headers={
+                        'Authorization': f'Bearer {settings.BAREMETRICS_API_KEY}',
+                        'Accept': 'application/json'
+                    })
+
+                if response.ok:
+                    response.raise_for_status()
+                    customer = response.json()['customer']
+                    return {
+                        'mrr': customer['current_mrr'],
+                        'ltv': customer['ltv']
+                    }
+                else:
+                    self.write(f'> Get Customer {customer_id} from {source_id}: {response.status_code} {response.text}')
+            except KeyboardInterrupt:
+                raise
+            except:
+                capture_exception()
+
+    def get_baremetrics_shopify_customer(self, shopify_store_id):
+        return self.get_baremetrics_customer('68ff6d63-5ed3-4e3a-b5d5-54b43a94026c', f'Shop-{shopify_store_id}')
+
+    def get_baremetrics_stripe_customer(self, customer_id):
+        return self.get_baremetrics_customer('3cmEvFZPe5gYI7', customer_id)
+
+    def load_baremetrics(self):
+        try:
+            self.bm_data = json.load(open('bm_data.json'))
+            return
+        except:
+            self.write('Load Baremetrics data from API...')
+
+        self.bm_data = {}
+        headers = {
+            'cookie': ''
+        }
+
+        self.progress_total(620)
+        page = 1
+        while True:
+            self.progress_update()
+            resp = requests.get(
+                url=f'https://app.baremetrics.com/api/v2/proxy/customers?per_page=200&page={page}',
+                headers=headers
+            )
+
+            if not resp.ok:
+                self.write('> ERROR:', resp.text)
+
+            page_data = resp.json()
+
+            for c in page_data['customers']:
+                self.bm_data[f"{c['source_id']}-{c['oid']}"] = {
+                    'mrr': c['current_mrr'],
+                    'ltv': c['ltv'],
+                }
+
+            if page_data['meta']['pagination']['has_more']:
+                page += 1
+            else:
+                break
+
+        self.progress_close()
+
+        open('bm_data.json', 'wt').write(json.dumps(self.bm_data, indent=2))

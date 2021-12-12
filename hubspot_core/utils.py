@@ -142,6 +142,11 @@ def generate_create_contact(user: User):
                 if shopify_orders_stat.get(stat_info_name):
                     data['properties'][f'dr_orders_{name}_{stat_info_name}'] = int(shopify_orders_stat[stat_info_name][inter])
 
+    baremetrics_sub_stat = user.get_config('_baremetrics_sub')
+    if baremetrics_sub_stat:
+        data['properties']['mrr'] = baremetrics_sub_stat['mrr']
+        data['properties']['ltv'] = baremetrics_sub_stat['ltv']
+
     return data
 
 
