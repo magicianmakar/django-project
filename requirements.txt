@@ -44,7 +44,7 @@ django-redis==4.12.1
 django-storages==1.6.6
 django-test-without-migrations==0.6
 django-widget-tweaks==1.4.2
-Django==2.2.24
+Django==2.2.25
 djangorestframework==3.12.4
 docutils==0.14
 elasticsearch-dsl==6.4.0
