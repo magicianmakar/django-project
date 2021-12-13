@@ -144,8 +144,8 @@ def generate_create_contact(user: User):
 
     baremetrics_sub_stat = user.get_config('_baremetrics_sub')
     if baremetrics_sub_stat:
-        data['properties']['mrr'] = baremetrics_sub_stat['mrr']
-        data['properties']['ltv'] = baremetrics_sub_stat['ltv']
+        data['properties']['dr_mrr'] = baremetrics_sub_stat['mrr']
+        data['properties']['dr_ltv'] = baremetrics_sub_stat['ltv']
 
     return data
 
