@@ -65,14 +65,6 @@
         </ul>
     </div>
     {% endif %}
-{% elif item.product_id %}
-{% if user|can:'product_supplier.use' %}
-    <button class="btn btn-xs btn-info add-supplier-btn"
-            store-id="{{store.id}}" woo-product="{{item.product_id}}">
-        <i class="fa fa-plus"></i> Add Supplier
-    </button>
-{% endif %}
-
-{% else %}
+{% elif not item.product_id %}
     <span class="label label-warning">Not Tracked</span>
 {% endif %}

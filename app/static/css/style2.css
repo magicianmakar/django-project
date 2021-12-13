@@ -1598,17 +1598,32 @@ a.text-default:focus > .dropified-icons:before {
     border-color: #E6F9EB;
     color: #00BA34;
 }
+.label-primary.badge:empty,
+.badge-primary.badge:empty {
+    background-color: #00BA34;
+    border-color: #00BA34;
+}
 .label-success,
 .badge-success {
     background-color: #1c84c6;
     border-color: #1c84c6;
     color: #FFFFFF;
 }
+.label-success.badge:empty,
+.badge-success.badge:empty {
+    background-color: #1c84c6;
+    border-color: #1c84c6;
+}
 .label-warning,
 .badge-warning {
-    background-color: #f8ac59;
-    border-color: #f8ac59;
-    color: #FFFFFF;
+    background-color: #FFF5E9;
+    border-color: #FFF5E9;
+    color: #FF961B;
+}
+.label-warning.badge:empty,
+.badge-warning.badge:empty {
+    background-color: #FF961B;
+    border-color: #FF961B;
 }
 .label-warning-light,
 .badge-warning-light {
@@ -1618,15 +1633,25 @@ a.text-default:focus > .dropified-icons:before {
 }
 .label-danger,
 .badge-danger {
-    background-color: #ed5565;
-    border-color: #ed5565;
-    color: #FFFFFF;
+    background-color: #FFECEC;
+    border-color: #FFECEC;
+    color: #FF3B3B;
+}
+.label-danger.badge:empty,
+.badge-danger.badge:empty {
+    background-color: #FF3B3B;
+    border-color: #FF3B3B;
 }
 .label-info,
 .badge-info {
-    background-color: #23c6c8;
-    border-color: #23c6c8;
-    color: #FFFFFF;
+    background-color: #E6F3FF;
+    border-color: #E6F3FF;
+    color: #0085FF;
+}
+.label-info.badge:empty,
+.badge-info.badge:empty {
+    background-color: #0085FF;
+    border-color: #0085FF;
 }
 .label-inverse,
 .badge-inverse {
@@ -1911,6 +1936,7 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
 
 .dropdown-menu {
     border-radius: 8px;
+    z-index1001
 }
 
 #bulk-order-btn + .dropdown-menu {

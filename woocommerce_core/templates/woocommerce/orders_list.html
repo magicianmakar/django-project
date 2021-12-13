@@ -529,7 +529,7 @@
                                     </div>
                                     <div class="col-md-3 pull-right text-right no-padding">
                                         {% if not item.is_pls %}
-                                            {% include 'partial/place_order_btn.html' %}
+                                            {% include 'woocommerce/partial/place_order_btn.html' %}
                                         {% endif %}
                                     </div>
 
@@ -579,25 +579,26 @@
                                                 <div>
                                                     <p>
 
-                                                    <span>{{item.supplier.supplier_type|supplier_type}}</span>
-                                                    {% if item.supplier %}
-                                                        <a {% if item.supplier.supplier_url %}
-                                                            href="{{item.supplier.supplier_url|default:'#'}}" target="_blank"
-                                                        {% else %}
-                                                            href="#"
-                                                        {% endif %}
+                                                        <span>{{item.supplier.supplier_type|supplier_type}}</span>
+                                                        {% if item.supplier %}
+                                                            <a {% if item.supplier.supplier_url %}
+                                                                href="{{item.supplier.supplier_url|default:'#'}}" target="_blank"
+                                                            {% else %}
+                                                                href="#"
+                                                            {% endif %}
 
-                                                        {% if user.id == 883 and item.order_track %}
-                                                            class="order-supplier-store"
-                                                            source-order-id="{{item.order_track.source_id}}"
+                                                            {% if user.id == 883 and item.order_track %}
+                                                                class="order-supplier-store"
+                                                                source-order-id="{{item.order_track.source_id}}"
+                                                            {% endif %}
+                                                            >{{item.supplier.supplier_name|truncatechars:25}}</a>
+                                                        {% elif user|can:'product_supplier.use' %}
+                                                        <a class="add-supplier-btn" store-id="{{store.id}}" woo-product="{{item.product_id}}">
+                                                            Connect Supplier
+                                                        </a>
                                                         {% endif %}
-                                                        >{{item.supplier.supplier_name|truncatechars:25}}</a>
-                                                    {% elif user|can:'product_supplier.use' %}
-                                                    <a class="add-supplier-btn" store-id="{{store.id}}" shopify-product="{{item.product_id}}">
-                                                        Connect Supplier
-                                                    </a>
-                                                    {% endif %}
-                                                </p></div>
+                                                    </p>
+                                                </div>
                                             </div>
 
                                             <div class="col-md-4 text-right">
