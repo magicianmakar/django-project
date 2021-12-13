@@ -199,12 +199,12 @@ class ProductsApiTestCase(BaseTestCase):
         self.assertFalse(r.json()['ordered'])
 
         # Test aliexpress_country_code_map
-        data['shipping_address']['country_code'] = 'GB'
+        data['shipping_address']['country_code'] = 'UK'
         caches['orders'].set(f'order_{order_key}', data)
 
         r = self.client.get('/api/shopify/order-data', {'order': f'{order_key}'})
         self.assertEqual(r.status_code, 200)
-        self.assertNotEqual(r.json()['shipping_address']['country_code'], data['shipping_address']['country_code'])
+        self.assertEqual(r.json()['shipping_address']['country_code'], data['shipping_address']['country_code'])
         self.assertEqual(r.json()['shipping_address']['country_code'], 'UK')
 
         # Order Track exist
