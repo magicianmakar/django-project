@@ -246,7 +246,7 @@ function validatePriceValue() {
 
     if ($('#product-price').val() > $('#product-compare-at').val()) {
         $('#product-compare-at').parent().addClass('has-error');
-        priceError++;
+        comparePriceError++;
     } else {
         $('#product-compare-at').parent().removeClass('has-error');
     }
