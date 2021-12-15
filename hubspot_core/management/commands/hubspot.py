@@ -1,7 +1,9 @@
 import json
+import re
 from collections import defaultdict
 from queue import Queue
 from threading import Thread
+from argparse import FileType
 
 import arrow
 import requests
@@ -46,6 +48,7 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--missing', action='store_true', help='Add Missing users only')
         parser.add_argument('--skip', action='store', type=int, default=0, help='Skip this number of users')
         parser.add_argument('--threads', action='store', type=int, default=2, help='Number of threads')
+        parser.add_argument('--admitad', action='append', type=FileType('rb'), help='Admitad file')
 
     def start_command(self, *args, **options):
         if options['create']:
@@ -59,6 +62,10 @@ class Command(DropifiedBaseCommand):
         if options['mrr']:
             self.write('Get MRR data...')
             return self.find_mrr()
+
+        if options['admitad']:
+            self.write('Load admitad data')
+            return self.load_admitad(options['admitad'])
 
         q = Queue()
 
@@ -444,3 +451,39 @@ class Command(DropifiedBaseCommand):
         self.progress_close()
 
         open('bm_data.json', 'wt').write(json.dumps(self.bm_data, indent=2))
+
+    def load_admitad(self, files):
+        users = defaultdict(int)
+        for f in files:
+            for row in self.get_xsl_vlaues(f):
+                if row['SubID'] and re.match(r'u[0-9]+$', row['SubID']):
+                    users[row['SubID'][1:]] += row['Payment Sum Approved'] + row['Payment Sum Open']
+
+        for user, revenue in users.items():
+            user.set_config('_adm_revene', {
+                'sum': revenue
+            })
+
+    def get_xsl_vlaues(self, data_file):
+        import openpyxl
+
+        wb = openpyxl.load_workbook(filename=data_file, data_only=True)
+        ws = wb[list(wb.sheetnames).pop()]
+        first_row = True
+        column_names = []
+
+        for r in ws.rows:
+            row_value = {}
+            col_index = 0
+            for c in r:
+                if first_row:
+                    column_names.append(c.value)
+                else:
+                    row_value[column_names[col_index]] = c.value
+
+                col_index += 1
+
+            if not first_row:
+                yield row_value
+            else:
+                first_row = False

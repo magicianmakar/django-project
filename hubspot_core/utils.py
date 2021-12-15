@@ -6,7 +6,7 @@ import time
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from shopified_core.utils import safe_str
+from shopified_core.utils import safe_int, safe_str
 from .models import HubspotAccount
 
 INTERVALS = ['7', '14', '30', '90', '120', '365', '-1']
@@ -146,6 +146,10 @@ def generate_create_contact(user: User):
     if baremetrics_sub_stat:
         data['properties']['dr_mrr'] = baremetrics_sub_stat['mrr']
         data['properties']['dr_ltv'] = baremetrics_sub_stat['ltv']
+
+    admitad_revenue = user.get_config('_adm_re)vene')
+    if admitad_revenue:
+        data['properties']['store_revenue'] = admitad_revenue['sum']
 
     return data
 
