@@ -76,10 +76,8 @@
     <link href="{% static 'css/bootstrap-tour.min.css' %}" rel="stylesheet">
     <link href="{% static 'css/extra.css' %}" rel="stylesheet">
     <link href="{% static 'shopified/css/side_navigation.css' %}" rel="stylesheet">
-    {% endcompress %}
-    {% if not request.session.old_layout %}
     <link href="{% static 'css/style2.css' %}" rel="stylesheet">
-    {% endif %}
+    {% endcompress %}
 
     {% block extracss %}{% endblock %}
 
