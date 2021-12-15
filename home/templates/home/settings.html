@@ -22,12 +22,6 @@
             </li>
             {% endif %}
 
-            {% if user|can:'aliexpress_settings.use' %}
-            <li class="aliexpress-tab">
-                <a data-toggle="tab" href="#tab-aliexpress" data-auto-hash="aliexpress" data-auto-click="true" aria-expanded="false">AliExpress</a>
-            </li>
-            {% endif %}
-
             {% if user|can:'price_change_options.use' %}
             <li class="alerts-tab">
                 <a data-toggle="tab" href="#tab-alerts" data-auto-hash="alerts" data-auto-click="true" aria-expanded="false">Alerts</a>
@@ -37,6 +31,12 @@
             {% if user|can:'orders.use' %}
             <li class="orders-tab">
                 <a data-toggle="tab" href="#tab-orders" data-auto-hash="orders" data-auto-click="true" aria-expanded="false">Orders</a>
+            </li>
+            {% endif %}
+
+            {% if user|can:'aliexpress_settings.use' %}
+            <li class="aliexpress-tab">
+                <a data-toggle="tab" href="#tab-aliexpress" data-auto-hash="aliexpress" data-auto-click="true" aria-expanded="false">AliExpress</a>
             </li>
             {% endif %}
 

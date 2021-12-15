@@ -11,7 +11,90 @@
     <div class="tabs-container">
         {% include 'home/partial/tabs/products.html' %}
 
+        {% if not request.session.old_layout %}
+        <ul class="actions">
+            <form method="get">
+                <input type="hidden" name="f" value="1">
+                <input type="hidden" name="ppp" value="{{request.GET.ppp}}">
+                <input type="hidden" name="store" value="{{request.GET.store}}">
+                <li class="hidden-form">
+                        <a href="javascript:;" class="text-default">
+                            Filter by
+                            <span class="dropified-icons di-arrow-down"></span>
+                        </a>
 
+                        <div class="form" style="width: 300px;">
+                            <h3>Filter</h3>
+                            <div class="form-group">
+                                <label>Product Title</label>
+                                <input name="title" type="text" class="form-control" value="{{request.GET.title}}" placeholder="">
+                            </div>
+                            <div class="form-group">
+                                <label style="width: 100%;">Price</label>
+                                <input name="price_min" type="text" class="form-control" value="{{request.GET.price_min}}" placeholder="Min." style="width: 49%;">
+                                <input name="price_max" type="text" class="form-control" value="{{request.GET.price_max}}" placeholder="Max." style="width: 49%; margin-left: 2%;">
+                            </div>
+                            <div class="form-group">
+                                <label>{{filter_product_type|default:'Product Type'}}</label>
+                                <input id="filter-type" name="type" type="text" class="form-control" value="{{request.GET.type}}" placeholder="">
+                            </div>
+                            {% if not filter_no_tag %}
+                            <div class="form-group">
+                                <label>Product Tag</label>
+                                <input id="filter-tag" name="tag" type="text" class="form-control" value="{{request.GET.tag}}" placeholder="">
+                            </div>
+                            {% endif %}
+                            <div class="form-group">
+                                <label>Supplier</label>
+                                <input id="filter-vendor" name="vendor" type="text" class="form-control" value="{{request.GET.vendor}}" placeholder="">
+                            </div>
+                            <div class="form-group">
+                                <label>Products on Board</label>
+                                <select name="product_board" class="form-control">
+                                    <option selected disabled value="">Select an option</option>
+                                    <option {% if request.GET.product_board == "all" %} selected {% endif %} value="all">All Products</option>
+                                    <option {% if request.GET.product_board == "added" %} selected {% endif %} value="added">Added on Board</option>
+                                    <option {% if request.GET.product_board == "not_added" %} selected {% endif %} value="not_added">Not Added on Board</option>
+                                </select>
+                            </div>
+
+                            <button class="btn btn-primary">Apply</button>
+                        </div>
+                </li>
+                <li class="hidden-form">
+                    <a href="javascript:;" class="text-default">
+                        Sort by
+                        <span class="dropified-icons di-arrow-down"></span>
+                    </a>
+
+                    <div class="form" style="width: 300px;">
+                        <h3>Sort</h3>
+                        <div class="form-group">
+                            <select name="sort" class="form-control">
+                                <option value="">Select an option</option>
+                                <option {% if request.GET.sort == "title" %} selected {% endif %} value="title">Product Title (asc)</option>
+                                <option {% if request.GET.sort == "-title" %} selected {% endif %} value="-title">Product Title (desc)</option>
+                                <option {% if request.GET.sort == "price" %} selected {% endif %} value="price">Price (asc)</option>
+                                <option {% if request.GET.sort == "-price" %} selected {% endif %} value="-price">Price (desc)</option>
+                                <option {% if request.GET.sort == "date" %} selected {% endif %} value="date">Date (asc)</option>
+                                <option {% if request.GET.sort == "-date" %} selected {% endif %} value="-date">Date (desc)</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary">Apply</button>
+                    </div>
+                </li>
+            </form>
+            <li class="pull-right border-left group">
+                <input type="text" class="form-control m-l-sm" name="search-name" placeholder="Search by name">
+                <a href="javascript:;" class="btn btn-primary btn-icon">
+                    <i class="fa fa-search"></i>
+                </a>
+            </li>
+            <li class="pull-right">
+                {% include 'home/partial/platform_selection_dropdown.html' with section='eBay' %}
+            </li>
+        </ul>
+        {% endif %}
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
@@ -84,7 +167,7 @@
                                         </span>
                                         <small class="text-muted">{{item.parsed.type}}</small>
                                         {% if item.default_supplier %}
-                                        <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
+                                        <small class="text-muted product-source" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
                                             <a href="{{item.default_supplier.product_url}}" target="_blank">{{item.default_supplier.supplier_name}}</a>
                                         </small>
                                         {% endif %}
@@ -92,7 +175,7 @@
                                         <a href="{% url 'ebay:product_detail' store_index=item.store.id pk=item.guid %}" class="visible-xs product-name" style="font-size: 12px"> {{item.title|truncatewords:5}}</a>
 
                                         <div class="small m-t-xs">
-                                            Submitted at {{item.created_at|date}}
+                                            Added at {{item.created_at|date}}
                                         </div>
                                         <div class="m-t row">
                                             <div class="col-md-4" style="padding-right:0">

@@ -239,6 +239,7 @@ function deleteOrderID(tr_parent, order_id, line_id) {
             $.ajax({
                 url: api_url('order-fulfill', 'shopify') + '?' + $.param({'order_id': order_id, 'line_id': line_id, }),
                 type: 'DELETE',
+
                 context: {tr: tr_parent},
                 success: function (data) {
                     if (data.status == 'ok') {
@@ -919,7 +920,7 @@ function pusherSub() {
         line.find('.line-order-id').find('a').remove();
         line.find('.line-order-id').append($('<a>', {
             'class': 'mark-as-ordered',
-            'text': 'Add',
+            'text': 'Add Supplier ID',
             'order-id': data.order_id,
             'line-id': data.line_id,
             'store': data.store_id,
@@ -1052,6 +1053,7 @@ function pusherSub() {
                     displayAjaxError('Failed to Get Order Risks', data);
                 }
             });
+
         }
     });
 

@@ -7,56 +7,16 @@
 {% load compress %}
 {% load cache %}
 
-{% block main-container %}
+{% block breadcrumb-right %}
+    {% include 'common/partial/order_track_actions.html' %}
+{% endblock %}
 
+{% block main-container %}
     <div class="tabs-container">
         {% include 'home/partial/tabs/orders_track.html' %}
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
-                    <div class="row m-b">
-                        <div class="col-md-4">
-                            <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter</button>
-                            <span class="btn btn-white btn-rounded btn-sm">Tracking count: {{paginator.count}} </span>
-                        </div>
-
-                        <div class="col-md-6 col-md-offset-2 text-right">
-                            {% if request.user|can:'order_imports.use' %}
-                            <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip m-r-xs"
-                                title="Import Tracking IDs"
-                                href="{% url 'order_imports_index' %}"><i class="fa fa-download"></i> Import</a>
-                            {% endif %}
-
-                            <div class="btn-group ">
-                                <button data-toggle="dropdown" class="btn btn-default btn-outline btn-rounded btn-sm dropdown-toggle m-r-xs" aria-expanded="false">
-                                    <i class="fa fa-cog"></i> Bulk Actions <span class="caret"></span></button>
-                                <ul class="dropdown-menu">
-
-                                    <li>
-                                        <a class="btn-success btn-outline sync-selected-btn" store-id="{{store.id}}">
-                                            <i class="fa fa-refresh"></i> Sync Selected Orders
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="btn-danger btn-outline delete-order-id-btn" store-id="{{store.id}}">
-                                            <i class="fa fa-times"></i> Delete Order IDs
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="archive-selected-orders-btn" store-id="{{store.id}}">
-                                            <i class="fa fa-archive"></i> Archive Orders
-                                        </a>
-                                    </li>
-                                    </ul>
-                            </div>
-
-                            <button class="btn btn-success btn-rounded btn-outline btn-sm itooltip aliexpress-sync-btn" data-store="{{store.id}}"
-                            title="Click Sync with Supplier to fetch order updates from AliExpress & eBay.">
-                                <i class="fa fa-refresh"></i> Sync with Supplier</button>
-                        </div>
-                    </div>
                     <form method="get" class="filter-form m-t-sm" style="display:none;">
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
@@ -187,11 +147,9 @@
                                 </div>
                             </td>
                             <td>
-                                <a class="itooltip" href="{{item.get_ebay_link}}" target="_blank" title="{{item.line.title}}">
+                                <a class="itooltip font-common" href="{{item.get_ebay_link}}" target="_blank" title="{{item.line.title}}">
                                     <span class="badge badge-primary">#{{item.order.details.ExtendedOrderID}}</span>
-                                    <span class="m-l-xs visible-lg-inline">
-                                        {{item.line.title|truncatewords:10}}
-                                    </span>
+                                    {{item.line.title|truncatewords:10}}
                                 </a>
                             </td>
                             <td><a href="{{item.get_source_url}}" target="_blank">#{{item.source_id}}</a></td>
@@ -207,32 +165,7 @@
                             <td class="no-wrap">{% date_humanize item.created_at %}</td>
                             <td class="no-wrap">{% date_humanize item.updated_at %}</td>
                             <td class="no-wrap">
-                                {% if item.line.fulfillment_status != 'fulfilled' %}
-                                <button class="btn btn-success btn-xs fulfill-btn itooltip"
-                                        store="{{item.store_id}}"
-                                        order-id="{{item.order_id}}"
-                                        line-id="{{item.line_id}}"
-                                        product-id="{{item.product_id}}"
-                                        quantity="{{item.line.quantity}}"
-                                        tracking-number="{{item.source_tracking|default:''}}"
-                                        title="Fulfill this item in eBay"
-                                        >Fulfill</button>
-                                {% else %}
-                                    <span class="badge badge-primary">
-                                        {{item.line.fulfillment_status|default:"Unfulfilled"|title}}
-                                    </span>
-                                {% endif %}
-
-                                {% if item.auto_fulfilled %}
-                                    <span class="badge badge-primary itooltip" title="Item was Automatically fulfilled by Dropified">Auto</span>
-                                {% endif %}
-
-                                {% if not item.hidden %}
-                                <button order-id="{{item.id}}" class="btn btn-info btn-xs btn-outline hide-order itooltip"
-                                        title="Archive in Tracking page">Archive</button>
-                                {% else %}
-                                <button order-id="{{item.id}}" class="btn btn-success btn-xs btn-outline show-order">Un-Archive</button>
-                                {% endif %}
+                                {% include 'common/partial/order_track_item_actions.html' with platform="eBay" %}
                             </td>
                         </tr>
                         {% empty %}

@@ -42,7 +42,7 @@ def supplier_type(s):
         return s
 
     if s == 'aliexpress':
-        return 'Aliexpress'
+        return 'AliExpress'
     elif s == 'ebay':
         return 'eBay'
     elif s == 'pls':

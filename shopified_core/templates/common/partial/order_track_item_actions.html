@@ -1,0 +1,53 @@
+{% if item.auto_fulfilled %}
+    <span class="badge badge-primary big itooltip" title="Item was Automatically fulfilled by Dropified">Auto</span>
+{% endif %}
+
+{% if item.errors > 0 %}
+<span class="badge badge-warning" qtip-my="right center" qtip-at="left center"
+    qtip-tooltip="{{item.get_errors_details|join:'<br>'}}">
+    {{item.get_errors|join:", "}}
+</span>
+{% endif %}
+
+<div class="btn-group">
+    {% if item.line.fulfillment_status != 'fulfilled' and False %}
+    <button class="btn btn-primary small fulfill-btn itooltip"
+            store="{{item.store_id}}"
+            order-id="{{item.order.id}}"
+            line-id="{{item.line.id}}"
+            product-id="{{item.line.product_id}}"
+            quantity="{{item.line.quantity}}"
+            tracking-number="{{item.source_tracking|default:''}}"
+            title="Fulfill this item in {{platform}}"
+            >Fulfill <i class="dropified-icons di-double-check"></i></button>
+    {% else %}
+        <button class="btn btn-primary btn-disabled small">
+            {{item.line.fulfillment_status|default:"Fulfilled"|title}}
+        </button>
+    {% endif %}
+
+    <button type="button" class="btn btn-primary small dropdown-toggle"
+            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="dropified-icons di-arrow-up"></span>
+    </button>
+
+    <ul class="dropdown-menu pull-right">
+        <li>
+            {% if item.hidden %}
+            <a order-id="{{item.id}}" class="show-order">
+                <i class="dropified-icons di-file"></i> Un-Archive</a>
+            {% else %}
+            <a order-id="{{item.id}}" class="hide-order itooltip"
+                    title="Archive in Tracking page"><i class="dropified-icons di-file"></i> Archive</a>
+            {% endif %}
+        </li>
+        {% if show_logs %}
+        <li>
+            <a store="{{item.store_id}}" order-id="{{item.order.id}}" line-id="{{item.line.id}}"
+                    class="track-details itooltip">
+                Details
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</div>

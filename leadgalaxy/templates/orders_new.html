@@ -274,13 +274,13 @@
                                     </label>
 
                                     <div>
-                                        <p>
+                                        <p class="no-text-overflow">
                                             <a href="{{order.order_url}}" target="_blank" id="order_{{order.name}}">{{order.name}}</a>
                                             {% if order_debug %}
                                             <a class="badge badge-info hidden-xs" target="_blank" href="{{order.order_api_url}}">order</a>
                                             {% endif %}
                                         </p>
-                                        <p>{% date_humanize order.date relative=False %}</p>
+                                        <p class="no-text-overflow">{% date_humanize order.date relative=False %}</p>
                                     </div>
                                 </div>
                                 <div class="col-md-3 col-xs-6 header-column">
@@ -290,7 +290,7 @@
                                     </label>
 
                                     <div>
-                                        <p>
+                                        <p class="no-text-overflow">
                                             <span class="badge badge-{% if order.financial_status != 'paid' %}warning{% else %}primary{% endif %}"></span>
                                             {{order.financial_status|title}}
                                             {% if order_risk_levels_enabled %}
@@ -299,29 +299,50 @@
                                             {% endif %}
                                             {% endif %}
                                         </p>
-                                        <p>{% money_format order.total_price store %}</p>
+                                        <p class="no-text-overflow">{% money_format order.total_price store %}</p>
                                     </div>
                                 </div>
-                                <div class="col-md-2 col-xs-6 header-column">
+                                <div class="col-md-3 col-xs-6 header-column">
                                     <label class="pull-left">
                                         <p>Shipping:</p>
-                                        <p>Country:</p>
+                                        <p>Ship To:</p>
                                     </label>
 
                                     <div>
-                                        <p>
+                                        <p class="no-text-overflow">
                                             <span class="badge badge-{% if not order.fulfillment_status %}danger{% else %}primary{% endif %}"></span>
                                             {{order.fulfillment_status|default:"Unfulfilled"|title}}
                                         </p>
                                         {% if order.shipping_address.country_code %}
-                                        <p>
+                                        <p class="no-text-overflow">
                                             <img class="itooltip m-r-xs shipping-country-code" shipping-country-code="{{order.shipping_address.country_code|lower}}"
                                                  style="width: 28px; margin-bottom: 4px;" title="{{order.shipping_address.country}}" src="//cdn.dropified.com/static/flags/{{order.shipping_address.country_code|lower}}.svg">
+                                            <span style="text-decoration: underline;" class="itooltip" data-html="true"
+                                                  title="
+                                                    {{order.shipping_address.address1}}<br>
+                                                    {% if order.shipping_address.address2 %}{{order.shipping_address.address2}}<br>{% endif %}
+                                                    {% if order.corrections.city and order.corrections.city.lower != order.shipping_address.city.lower %}
+                                                    {{order.corrections.city|default:'Canoas'}} (was &quot;{{order.shipping_address.city}}&quot;)<br>
+                                                    {% else %}
+                                                    {{order.shipping_address.city}}<br>
+                                                    {% endif %}
+                                                    {% if order.corrections.province and order.corrections.province.lower != order.shipping_address.province.lower %}
+                                                    {{order.corrections.province}} (was &quot;{{order.shipping_address.province|default:'N/A'}}&quot;)<br>
+                                                    {% else %}
+                                                    {{order.shipping_address.province|default:'N/A'}}<br>
+                                                    {% endif %}
+                                                    {{order.shipping_address.zip}}, {{order.shipping_address.country}}<br>
+                                                    {{order.shipping_address.phone}}">
+                                                {{order.shipping_address.first_name|default:''}} {{order.shipping_address.last_name|default:''}}
+                                                {% if order.shipping_address.company %}
+                                                    - {{order.shipping_address.company}}
+                                                {% endif %}
+                                            </span>
                                         </p>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="col-md-4 col-xs-6 header-column">
+                                <div class="col-md-3 col-xs-6 header-column actions">
                                     {% if order.lines_count %}
                                     {% if use_aliexpress_api %}
                                     <a class="place-order btn btn-info small pull-right" href="#"
@@ -331,19 +352,24 @@
                                        ><i class="fa fa-bolt"></i> Quick Order</a>
                                     {% endif %}
 
+                                    {% if 'alibaba' in order.supplier_types or 'aliexpress' in order.supplier_types or 'ebay' in order.supplier_types %}
                                     <div class="btn-group pull-right">
+                                        {% if not order.mixed_supplier_types %}
                                         <button class="btn btn-primary small order-items" order-id="{{order.id}}"
-                                                type="button" style="border-right:1px solid #66a8cc; {% if order.mixed_supplier_types %}display:none{% endif %}">
+                                                type="button">
                                             Order Items
                                         </button>
-
-                                        <button type="button" class="btn btn-primary small dropdown-toggle order-by-supplier"
+                                        <button type="button" class="btn btn-primary small dropdown-toggle"
                                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            {% if order.mixed_supplier_types %}
-                                            Order Items From
-                                            {% endif %}
                                             <span class="caret"></span>
                                         </button>
+                                        {% else %}
+                                        <button type="button" class="btn btn-primary small dropdown-toggle order-by-supplier"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Order Items From
+                                            <span class="caret"></span>
+                                        </button>
+                                        {% endif %}
 
                                         <ul class="dropdown-menu pull-right">
                                             {% if order.mixed_supplier_types %}
@@ -353,8 +379,17 @@
                                             {% else %}
                                                 <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
                                             {% endif %}
+                                            <li>
+                                                <a store="{{store.id}}" order-id="{{order.id}}"
+                                                   class="track-details itooltip"
+                                                   {% if not order.order_log %}
+                                                       style="display:none"
+                                                   {% endif %}
+                                                   title="Order History Logs">Logs</a>
+                                            </li>
                                         </ul>
                                     </div>
+                                    {% endif %}
                                     {% endif %}
 
                                     {% if use_fulfillbox %}
@@ -382,7 +417,7 @@
                                     {% if 'dropified-print' in order.supplier_types %}
                                     <div class="btn-group pull-right">
                                         <button class="btn btn-primary small order-prints" order-id="{{order.id}}"
-                                                type="button" style="border-right:1px solid #66a8cc;">
+                                                type="button">
                                             Print On Demand
                                         </button>
 
@@ -396,25 +431,6 @@
                                         </ul>
                                     </div>
                                     {% endif %}
-
-                                    <button store="{{store.id}}" order-id="{{order.id}}"
-                                            {% if not order.order_log %}
-                                                style="display:none"
-                                            {% endif %}
-
-                                            class="btn small btn-outline track-details itooltip pull-right
-                                            {% if order.order_log.seen == 2 %}
-                                                btn-warning
-                                            {% elif order.order_log.seen == 1 %}
-                                                btn-info
-                                            {% else %}
-                                                btn-white
-                                            {% endif %}
-                                            "
-                                            title="Order History Logs"
-                                            >
-                                        Logs
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -431,6 +447,25 @@
                                             {% endif %}
                                         </span>
                                     </p>
+
+                                    <span class="itooltip" title="
+                                    {{order.shipping_address.address1}}<br>
+                                    {{order.shipping_address.address2}}<br>
+                                    {% if order.corrections.city and order.corrections.city.lower != order.shipping_address.city.lower %}
+                                    {{order.corrections.city}}(was &quot;{{order.shipping_address.city}}&quot;),<br>
+                                    {% else %}
+                                    {{order.shipping_address.city}},<br>
+                                    {% endif %}
+                                    {% if order.corrections.province and order.corrections.province.lower != order.shipping_address.province.lower %}
+                                    {{order.corrections.province}}(was &quot;{{order.shipping_address.province|default:'N/A'}}&quot;),<br>
+                                    {% else %}
+                                    {{order.shipping_address.province|default:'N/A'}},<br>
+                                    {% endif %}
+                                    {{order.shipping_address.zip}},
+                                    {{order.shipping_address.country}} - {{order.shipping_address.phone}}
+                                    " data-placement="auto right">
+
+                                    </span>
 
                                     <p class="m-n">
                                         <span class="itooltip" title="Address" data-placement="auto right">
@@ -562,7 +597,7 @@
                                 {% if item.is_pls %}is-pls="true"{% endif %}
                                 {% if excluded_product %}excluded-product="true"{% endif %}>
 
-                                <div class="hidden-xs" style="padding-top: 5px;">
+                                <div class="hidden-xs" style="padding-top: 5px; width: 32px;">
                                     <input class="line-checkbox icheck" type="checkbox"
                                         {% if item.is_pls %}
                                             {% if item.is_paid or item.supplier.is_supplement_deleted %}
@@ -572,7 +607,7 @@
                                     >
                                 </div>
 
-                                <div style="flex-grow: 4;">
+                                <div style="width: 100%">
                                     <div class="col-md-3 product-preview">
                                         <img class="product-img cached-img no-img no-img-sm unveil pull-left"
                                             store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
@@ -592,7 +627,7 @@
                                                 data-link-shopify="{{item.variant_link}}"
                                                 data-link-connections="/product/{{item.product.id}}#connections"
                                                 data-link-mapping="{% url 'product_mapping' item.product.id %}"
-                                            >{{item.title}}</a>
+                                            >{{item.title}} </a>
 
                                             {% if item.item_note %}
                                             <div class="custom-properties m-t-xs">
@@ -613,14 +648,14 @@
                                             </span>
                                         {% endif %}
                                     </div>
-                                    <div class="col-md-3 line-order-id header-column">
+                                    <div class="col-md-3 header-column">
                                         <label class="pull-left">
                                             <p>Supplier ID:</p>
                                             <p>Status:</p>
                                         </label>
 
                                         <div>
-                                            <p>
+                                            <p class="line-order-id">
                                                 {% if item.order_track %}
                                                 <a class="placed-order-details" href="#" order-id="{{order.id}}"
                                                     source-order-id="{{item.order_track.source_id}}"
@@ -661,28 +696,32 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="col-md-3 line-order-id header-column">
+                                    <div class="col-md-3 header-column">
                                         <label class="pull-left">
                                             <p>Variant:</p>
                                             <p>Tracking:</p>
                                         </label>
 
                                         <div>
-                                            <p>
+                                            <p class="no-text-overflow">
                                                 {{item.quantity}}x
-                                                {% if item.changed_variant %}
-                                                {% include 'partial/help_tooltip.html' with help="Variant was changed" qtipstyle="color:#BBB" pos_at="right center" pos_my="left bottom" %}
-                                                <a href="{{item.variant_link}}" target="_blank">{{item.variant_title|default:'&lt;Default&gt;'}}</a>
-                                                {% else %}
-                                                <a href="{{item.variant_link}}" target="_blank">{{item.variant_title|default:'&lt;Default&gt;'}}</a>
-                                                {% endif %}
-
                                                 {% if item.product %}
                                                 <a href="#" class="changed-variant itooltip" title="Change Variant"
                                                     data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>" data-store="{{store.id}}"
                                                     data-order="{{order.id}}" data-line="{{item.id}}" data-product="{{item.product.id}}"
                                                     data-changed="{{item.changed_variant|yesno:'true,false'}}" data-current-variant="{{item.variant_id}}">
-                                                    <i class="dropified-icons di-pencil"></i></a>
+                                                {% endif %}
+
+                                                {% if item.changed_variant %}
+                                                {% include 'partial/help_tooltip.html' with help="Variant was changed" qtipstyle="color:#BBB" pos_at="right center" pos_my="left bottom" %}
+                                                {{item.variant_title|default:'&lt;Default&gt;'}}
+                                                {% else %}
+                                                {{item.variant_title|default:'&lt;Default&gt;'}}
+                                                {% endif %}
+
+                                                {% if item.product %}
+                                                    <i class="dropified-icons di-pencil"></i>
+                                                </a>
                                                 {% endif %}
                                             </p>
                                             <p>

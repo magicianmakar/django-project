@@ -23,7 +23,7 @@ $(document).ready(function() {
         }
     });
 
-    $('.woo-add-board-btn').click(function(e) {
+    $('.add-board-btn').click(function(e) {
         e.preventDefault();
         $('#woo-modal-board-add').modal('show');
     });
@@ -57,9 +57,9 @@ $(document).ready(function() {
         });
     });
 
-    $('.woo-edit-board-btn').click(function(e) {
+    $('.board-edit').click(function(e) {
         e.preventDefault();
-        var boardId = $(this).data('board-id');
+        var boardId = $(this).attr('board-id');
 
         $.get(api_url('board-config', 'woo'), {'board_id': boardId}).done(function(data) {
             var $form = $('#woo-board-update-form');
@@ -88,9 +88,9 @@ $(document).ready(function() {
         });
     });
 
-    $('.woo-delete-board-btn').click(function(e) {
+    $('.board-delete').click(function(e) {
         e.preventDefault();
-        var boardId = $(this).data('board-id');
+        var boardId = $(this).attr('board-id');
 
         swal({
             title: 'Are you sure?',
@@ -126,9 +126,9 @@ $(document).ready(function() {
         });
     });
 
-    $('.woo-empty-board-btn').click(function(e) {
+    $('.board-empty').click(function(e) {
         e.preventDefault();
-        var boardId = $(this).data('board-id');
+        var boardId = $(this).attr('board-id');
 
         swal({
             title: "Empty Board",

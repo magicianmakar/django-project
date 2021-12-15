@@ -56,7 +56,7 @@
             </li>
         </ul>
         <div id="filter-form" class="hidden-form" data-hidden-link=".filter-btn">
-            <form method="get" action="/orders" class="form" style="position: relative;">
+            <form method="get" class="form" style="position: relative;">
                 {% if request.GET.store %}
                 <input type="hidden" name="store" value="{{ request.GET.store }}">
                 {% endif %}
@@ -123,10 +123,10 @@
                                     </label>
 
                                     <div>
-                                        <p>
+                                        <p class="no-text-overflow">
                                             <a href="{{order.order_url}}" target="_blank">#{{order.id}}</a>
                                         </p>
-                                        <p>{% date_humanize order.date relative=False %}</p>
+                                        <p class="no-text-overflow">{% date_humanize order.date relative=False %}</p>
                                     </div>
                                 </div>
                                 <div class="col-md-3 col-xs-6 header-column">
@@ -136,51 +136,81 @@
                                     </label>
 
                                     <div>
-                                        <p class="itooltip" title="{% date_humanize order.date_paid html=False %}">
+                                        <p class="itooltip no-text-overflow" title="{% date_humanize order.date_paid html=False %}">
                                             {% if order.date_paid %}
                                                 <span class="badge badge-primary"></span> Paid
                                             {% else %}
                                                 <span class="badge badge-warning"></span> Unpaid
                                             {% endif %}
                                         </p>
-                                        <p>{% money_format order.total_inc_tax store %}</p>
+                                        <p class="no-text-overflow">{% money_format order.total_inc_tax store %}</p>
                                     </div>
                                 </div>
-                                <div class="col-md-2 col-xs-6 header-column">
+                                <div class="col-md-3 col-xs-6 header-column">
                                     <label class="pull-left">
                                         <p>Shipping:</p>
-                                        <p>Country:</p>
+                                        <p>Ship To:</p>
                                     </label>
 
                                     <div>
-                                        <p>
+                                        <p class="no-text-overflow">
                                             <span class="badge badge-{% if not order.fulfillment_status %}danger{% else %}primary{% endif %}"></span>
                                             {{order.fulfillment_status|default:"Unfulfilled"|title}}
                                         </p>
                                         {% if order.shipping_address.country_iso2 %}
-                                        <p>
+                                        <p class="no-text-overflow">
                                             <img class="itooltip shipping-country-code" shipping-country-code="{{order.shipping_address.country_iso2|lower}}"
                                                  style="width: 28px; margin-bottom: 4px;" title="{{order.shipping_address.country_iso2}}"
                                                  src="//cdn.dropified.com/static/flags/{{order.shipping_address.country_iso2|lower}}.svg">
+                                            <span style="text-decoration: underline;" class="itooltip" data-html="true"
+                                                  title="
+                                                    {% if order.has_shipping_address %}
+                                                        {{order.shipping_address.street_1}}<br>
+                                                        {{order.shipping_address.street_2}}
+                                                        {% if order.shipping_address.street_2 %}<br>{% endif %}
+                                                        {{order.shipping_address.city}}{% if order.shipping_address.state %},{{order.shipping_address.state}}{% endif %}{% if order.shipping_address.zip %}, {{order.shipping_address.zip}}{% endif %}
+                                                        {{order.shipping_address.country}}
+                                                    {% else %}
+                                                        {{order.billing_address.street_1}}<br>
+                                                        {{order.billing_address.street_2}}
+                                                        {% if order.billing_address.street_2 %}<br>{% endif %}
+                                                        {{order.billing_address.city}}{% if order.billing_address.state %}, {{order.billing_address.state}}{% endif %}{% if order.billing_address.zip %}, {{order.billing_address.zip}}{% endif %}
+                                                        {{order.billing_address.country}}
+                                                    {% endif %}
+                                                    <br> {{order.billing_address.phone}}">
+                                                {% if order.has_shipping_address %}
+                                                    {{order.shipping_address.first_name|default:''}} {{order.shipping_address.last_name|default:''}}
+                                                    {% if order.shipping_address.company %}
+                                                        - {{order.shipping_address.company}}
+                                                    {% endif %}
+                                                {% else %}
+                                                    {{order.billing_address.first_name|default:''}} {{order.billing_address.last_name|default:''}}
+                                                {% endif %}
+                                            </span>
                                         </p>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="col-md-4 col-xs-6 header-column">
+                                <div class="col-md-3 col-xs-6 header-column actions">
                                     {% if order.lines_count %}
+                                    {% if 'alibaba' in order.supplier_types or 'aliexpress' in order.supplier_types or 'ebay' in order.supplier_types %}
                                     <div class="btn-group pull-right">
-                                        <button class="btn btn-primary small order-items" order-id="{{order.number}}"
-                                                type="button" style="border-right:1px solid #66a8cc; {% if order.mixed_supplier_types %}display:none{% endif %}">
+                                        {% if not order.mixed_supplier_types %}
+                                        <button class="btn btn-primary small order-items" order-id="{{order.id}}"
+                                                type="button">
                                             Order Items
                                         </button>
-
-                                        <button type="button" class="btn btn-primary small dropdown-toggle order-by-supplier"
+                                        <button type="button" class="btn btn-primary small dropdown-toggle"
                                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            {% if order.mixed_supplier_types %}
-                                            Order Items From
-                                            {% endif %}
                                             <span class="caret"></span>
                                         </button>
+                                        {% else %}
+                                        <button type="button" class="btn btn-primary small dropdown-toggle order-by-supplier"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Order Items From
+                                            <span class="caret"></span>
+                                        </button>
+                                        {% endif %}
 
                                         <ul class="dropdown-menu pull-right">
                                             {% if order.mixed_supplier_types %}
@@ -192,6 +222,7 @@
                                             {% endif %}
                                         </ul>
                                     </div>
+                                    {% endif %}
                                     {% endif %}
 
                                     {% if use_fulfillbox %}
@@ -219,7 +250,7 @@
                                     {% if 'dropified-print' in order.supplier_types %}
                                     <div class="btn-group pull-right">
                                         <button class="btn btn-primary small order-prints" order-id="{{order.id}}"
-                                                type="button" style="border-right:1px solid #66a8cc;">
+                                                type="button">
                                             Print On Demand
                                         </button>
 
@@ -370,7 +401,7 @@
                                     >
                                 </div>
 
-                                <div style="flex-grow: 4;">
+                                <div style="width: 100%;">
                                     <div class="col-md-3 product-preview">
                                         <img class="product-img cached-img no-img no-img-sm unveil pull-left"
                                             store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
@@ -389,7 +420,7 @@
                                         </span>
                                         {% endif %}
                                     </div>
-                                    <div class="col-md-3 line-order-id header-column">
+                                    <div class="col-md-3 header-column">
                                         <label class="pull-left">
                                             <p>Supplier ID:</p>
                                             <p>Status:</p>
@@ -436,7 +467,7 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="col-md-3 line-order-id header-column">
+                                    <div class="col-md-3 header-column">
                                         <label class="pull-left">
                                             <p>Variant:</p>
                                             <p>Tracking:</p>

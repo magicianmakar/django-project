@@ -1,0 +1,84 @@
+<ul class="actions">
+  <form id="filter-form" method="get">
+    <input type="hidden" name="store" value="{{request.GET.store}}">
+    <input type="hidden" name="hidden" value="{{request.GET.hidden}}">
+      <li class="hidden-form">
+        <a data-toggle="dropdown" href="#" aria-expanded="false" class="text-default">
+          Filter by
+          <span class="dropified-icons di-arrow-down"></span>
+        </a>
+        <div class="form dropdown-menu" style="width:350px;">
+          <div class="form-group pull-left" style="width: 100%;">
+            <label>Category</label>
+            <select class="form-control" name="category">
+              <option value="">Select Category</option>
+              <option {% if category == "product:offline" %} selected {% endif %} value="product:offline">Availability</option>
+              <option {% if category == "variant:quantity" %} selected {% endif %} value="variant:quantity">Quantity</option>
+              <option {% if category == "variant:price" %} selected {% endif %} value="variant:price">Price</option>
+              <option {% if category == "variant:var_added" %} selected {% endif %} value="variant:var_added">Variant Added</option>
+              <option {% if category == "variant:var_removed" %} selected {% endif %} value="variant:var_removed">Variant Removed</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Product Type</label>
+            <input name="product_type" type="text" class="form-control" value="{{product_type}}" placeholder="Type">
+          </div>
+
+          <div class="form-group pull-left" style="width: 100%;">
+            <button id="apply-btn" class="btn btn-primary">Apply</button>
+          </div>
+        </div>
+      </li>
+      <li class="pull-right">
+        <select class="form-control m-l-sm" name="product" id="product" data-store="{{store.id}}">
+          <option value="">Search by product name</option>
+          {% if product %}
+          <option value="{{product.id}}" selected="">{{product.title|truncatewords:5}}</option>
+          {% endif %}
+        </select>
+      </li>
+  </form>
+</ul>
+
+<style type="text/css">
+    .select2-results {
+        color: #1D262F;
+        padding: 5px;
+    }
+    .select2-results .select2-results__options .select2-results__message {
+        height: 35px !important;
+    }
+    .select2-results .select2-results__options .select2-results__option {
+        height: 70px;
+        padding: 5px;
+        margin: 5px 0;
+        font-weight: normal;
+        font-size: 16px;
+        line-height: 20px;
+    }
+    .select2-results .select2-results__options .select2-results__option img {
+        height: 60px;
+        float: left;
+        margin-right: 5px;
+    }
+    .select2-dropdown {
+        border: 1px solid #e5e6e7;
+        z-index: 1200;
+    }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        color: #1D262F;
+        background: #EAF3E7;
+    }
+    .select2-results__option--highlighted a {
+        color: #1D262F;
+    }
+</style>
+
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function() {
+    $('#product').on('change', function() {
+      $('#filter-form').trigger('submit');
+    });
+  });
+</script>

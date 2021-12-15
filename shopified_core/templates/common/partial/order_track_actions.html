@@ -9,13 +9,13 @@ title="Click Sync with Supplier to fetch order updates from AliExpress & eBay.">
         Bulk Actions <i class="dropified-icons di-bolt" style="color: #969696;"></i></button>
     <ul class="dropdown-menu">
         <li>
-            <a class="btn-success btn-outline sync-selected-btn" store-id="{{store.id}}">
+            <a class="sync-selected-btn" store-id="{{store.id}}">
                 <i class="fa fa-refresh"></i> Sync Selected Orders
             </a>
         </li>
         {% if not use_aliexpress_api %}
         <li>
-            <a class="btn-success btn-outline quick-sync-selected-btn" id="quick-sync-selected-orders" store-id="{{store.id}}">
+            <a class="quick-sync-selected-btn" id="quick-sync-selected-orders" store-id="{{store.id}}">
                 <i class="fa fa-refresh"></i> Sync Selected Orders with API
             </a>
         </li>
@@ -30,17 +30,18 @@ title="Click Sync with Supplier to fetch order updates from AliExpress & eBay.">
                 <i class="fa fa-times"></i> Delete Order IDs
             </a>
         </li>
+        <li>
+            {% if show_export_btn and not request.user.is_subuser %}
+            <a class="itooltip export-tracked-orders"
+               title="Clicking Export will export this page with Tracking numbers to a CSV file" data-store="{{ store.id }}"><i class="fa fa-upload"></i> Export </a>
+            {% endif %}
+        </li>
+        <li>
+            {% if request.user|can:'order_imports.use' %}
+            <a class="itooltip"
+                title="Import Tracking IDs"
+                href="{% url 'order_imports_index' %}"><i class="fa fa-download"></i> Import</a>
+            {% endif %}
+        </li>
     </ul>
 </div>
-
-{% if show_export_btn and not request.user.is_subuser %}
-<a class="btn btn-outline btn-default btn-rounded btn-sm itooltip export-tracked-orders pull-right" style="background-color: #F7F7F7; color: #1C1C1C;"
-    title="Clicking Export will export this page with Tracking numbers to a CSV file" data-store="{{ store.id }}"><i class="fa fa-upload"></i> Export </a>
-{% endif %}
-
-{% if request.user|can:'order_imports.use' %}
-<a class="btn btn-outline btn-default btn-rounded btn-sm itooltip pull-right"
-    title="Import Tracking IDs"
-    href="{% url 'order_imports_index' %}"
-    style="background-color: #F7F7F7; color: #1C1C1C;"><i class="fa fa-download"></i> Import</a>
-{% endif %}

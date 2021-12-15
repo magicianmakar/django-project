@@ -200,7 +200,7 @@
                                     {% if 'dropified-print' in order.supplier_types %}
                                     <div class="btn-group">
                                         <button class="btn btn-success btn-xs order-prints" order-id="{{order.id}}"
-                                                type="button" style="border-right:1px solid #66a8cc;">
+                                                type="button">
                                             Print On Demand
                                         </button>
 
@@ -218,7 +218,7 @@
                                     {% if order.lines_count %}
                                     {% if 'pls' in order.supplier_types %}
                                     <div class="btn-group pull">
-                                      <button class="btn btn-success btn-xs pay-all-lines" type="button" style="border-right:1px solid #66a8cc;">
+                                      <button class="btn btn-success btn-xs pay-all-lines" type="button">
                                         Pay For Supplements
                                       </button>
 
@@ -234,18 +234,22 @@
                                     {% endif %}
 
                                     <div class="btn-group">
-                                        <button class="btn btn-success btn-xs order-items" order-id="{{order.id}}"
-                                                type="button" style="border-right:1px solid #66a8cc; {% if order.mixed_supplier_types %}display:none{% endif %}">
+                                        {% if not order.mixed_supplier_types %}
+                                        <button class="btn btn-primary small order-items" order-id="{{order.id}}"
+                                                type="button">
                                             Order Items
                                         </button>
-
-                                        <button type="button" class="btn btn-success btn-xs dropdown-toggle order-by-supplier"
+                                        <button type="button" class="btn btn-primary small dropdown-toggle"
                                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            {% if order.mixed_supplier_types %}
-                                            Order Items From
-                                            {% endif %}
                                             <span class="caret"></span>
                                         </button>
+                                        {% else %}
+                                        <button type="button" class="btn btn-primary small dropdown-toggle order-by-supplier"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Order Items From
+                                            <span class="caret"></span>
+                                        </button>
+                                        {% endif %}
 
                                         <ul class="dropdown-menu pull-right">
                                             {% if order.mixed_supplier_types %}

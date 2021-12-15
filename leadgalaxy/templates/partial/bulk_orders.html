@@ -21,14 +21,14 @@
                 {% if use_aliexpress_api %}
                 <li>
                     <a href="#" class="bulk-order-btn" data-source="aliexpress">
-                        Quick Aliexpress orders
+                        Quick AliExpress orders
                     </a>
                 </li>
                 {% endif %}
                 {% if request.user|can:'bulk_order.use' %}
                 <li>
                     <a href="#" class="bulk-order-btn">
-                        For Aliexpress/eBay orders
+                        For AliExpress orders
                     </a>
                 </li>
                 {% endif %}

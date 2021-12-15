@@ -2,12 +2,12 @@
     {% if request.GET.store %}<input type="hidden" name="store" value="{{ request.GET.store }}">{% endif %}
     {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
     <li class="hidden-form">
-        <a href="javascript:;" class="text-default">
+        <a href="javascript:;" class="text-default dropdown-toggle" data-target="#form-filter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Filter by
             <span class="dropified-icons di-arrow-down"></span>
         </a>
 
-        <div class="form" style="width: 300px;">
+        <div class="form dropdown-menu" style="width: 350px;" id="form-filter">
             <h3>Filter</h3>
             {% if show_date_range %}
             <div class="form-group">
@@ -17,6 +17,7 @@
                     <span>All Time</span>
                     <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
                 </div>
+                <div class="datepicker-placeholder"></div>
                 <input type="hidden" type="text" name="date" value="{{ date|default:'' }}" />
                 <span class="help-block"></span>
             </div>

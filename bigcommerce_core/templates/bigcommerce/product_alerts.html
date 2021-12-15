@@ -34,58 +34,8 @@
 {% block main-container %}
 <div class="tabs-container">
   {% include 'home/partial/tabs/product_alerts.html' %}
-  {% if not request.session.old_layout %}
-  <ul class="actions">
-    <form id="filter-form" class="form-inline" method="get">
-      <input type="hidden" name="store" value="{{request.GET.store}}">
-      <input type="hidden" name="hidden" value="{{request.GET.hidden}}">
-        <li>
-          <a data-toggle="dropdown" href="#" aria-expanded="false" class="text-default">
-            Filter by
-            <span class="dropified-icons di-arrow-down"></span>
-          </a>
-          <ul class="dropdown-menu alert-filter-menu">
-            <li class="filter-submenu">
-              <a href="#" class="filter-link filter-category">
-                <span>Category</span>
-                <i class="fa fa-chevron-down" aria-hidden="true"></i>
-              </a>
-              <ul class="filter-item expanded">
-                <select class="filter-cat-item" name="category">
-                  <option value="">Select Category</option>
-                  <option {% if category == "product:offline" %} selected {% endif %} value="product:offline">Availability</option>
-                  <option {% if category == "variant:quantity" %} selected {% endif %} value="variant:quantity">Quantity</option>
-                  <option {% if category == "variant:price" %} selected {% endif %} value="variant:price">Price</option>
-                  <option {% if category == "variant:var_added" %} selected {% endif %} value="variant:var_added">Variant Added</option>
-                  <option {% if category == "variant:var_removed" %} selected {% endif %} value="variant:var_removed">Variant Removed</option>
-                </select>
-              </ul>
-            </li>
-            <li class="filter-submenu">
-              <a href="#" class="filter-link filter-type">
-                <span>Product Type</span>
-                <i class="fa fa-chevron-down" aria-hidden="true"></i>
-              </a>
-              <ul class="filter-item">
-                <input name="product_type" type="text" class="filter-type-item" value="{{product_type}}" placeholder="Type">
-              </ul>
-            </li>
-            <div class="filter-btn text-right">
-              <button id="apply-btn" class="btn btn-primary">Apply</button>
-            </div>
-          </ul>
-        </li>
-        <li class="pull-right">
-          <select class="form-control m-l-sm" name="product" id="product" data-store="{{store.id}}">
-            <option value="">Search by product name</option>
-            {% if product %}
-            <option value="{{product.id}}" selected="">{{product.title|truncatewords:5}}</option>
-            {% endif %}
-          </select>
-        </li>
-    </form>
-  </ul>
-  {% endif %}
+  {% include 'home/partial/product_alerts_filter.html' %}
+
   <div class="tab-content">
       <div id="tab-1" class="tab-pane active">
         <div class="panel-body alerts-body">
@@ -422,74 +372,8 @@
       display: none;
   }
 
-  .select2-results {
-      color: #1D262F;
-      padding: 5px;
-  }
-  .select2-results .select2-results__options .select2-results__message {
-      height: 35px !important;
-  }
-  .select2-results .select2-results__options .select2-results__option {
-      height: 70px;
-      padding: 5px;
-      margin: 5px 0;
-      font-weight: normal;
-      font-size: 16px;
-      line-height: 20px;
-  }
-  .select2-results .select2-results__options .select2-results__option img {
-      height: 60px;
-      float: left;
-      margin-right: 5px;
-  }
   .select2.select2-container.select2-container--default {
       width: 420px !important;
-      background: #FFFFFF;
-      border: 1px solid #E6EBEF;
-      box-sizing: border-box;
-      border-radius: 8px;
-      height: 40px;
-      padding: 3px;
-  }
-  .select2-search__field {
-      height: 35px;
-      border: 1px solid #B0BFCE;
-      box-sizing: border-box;
-      border-radius: 8px;
-      font-weight: normal;
-      font-size: 15px;
-      line-height: 22px;
-  }
-  .select2-container--default .select2-selection--multiple .select2-selection__rendered li {
-      padding: 3px 0 0 10px !important;
-  }
-  .select2-container--default .select2-selection--multiple {
-      border: 1px solid #e5e6e7 !important;
-      border-radius: 0 !important;
-  }
-  .select2-container--default.select2-container--disabled .select2-selection--multiple {
-      background-color: #fff;
-  }
-  .select2-container--default .select2-selection--single {
-      border: none;
-      height: 34px;
-  }
-  .select2-container--default .select2-selection--single .select2-selection__arrow {
-      height: 35px;
-  }
-  .select2-container--default .select2-selection--single .select2-selection__rendered {
-      line-height: 32px;
-  }
-  .select2-dropdown {
-      border: 1px solid #e5e6e7;
-      z-index: 1200;
-  }
-  .select2-container--default .select2-results__option--highlighted[aria-selected] {
-      color: #1D262F;
-      background: #EAF3E7;
-  }
-  .select2-results__option--highlighted a {
-      color: #1D262F;
   }
 </style>
 {% endblock %}

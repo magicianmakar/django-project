@@ -10,7 +10,7 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label for="auto_margin" class="control-label">
-                            Price Markup
+                            Price Markup Percentage
                             {% include 'partial/help_tooltip.html' with help="For example: If you set Price Markup to <b>50%</b>, a product that costs $10.00 will be set to $15.00." qtipstyle="color:#BBB" %}
                         </label>
                         <input type="text"
@@ -28,7 +28,7 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label for="auto_compare_at" class="control-label">
-                            Compare At Price Markup
+                            Compare At Price Markup Percentage
                             {% include 'partial/help_tooltip.html' with help="For example: If set to <b>50%</b>, a product that costs <i>(after Auto Margin)</i> $10.00 will be compared to $15.00" qtipstyle="color:#BBB" %}
                         </label>
                         <input type="text"
@@ -266,7 +266,7 @@
                     </label>
                     <input type="text" class="form-control" {% if can_use %}id="order_phone_number" name="order_phone_number" value="{{config.order_phone_number}}"{% endif %}>
                     <div id="phone-invalid" class="has-error">
-                        <span class="help-block">Invalid Phone number, Aliexpress allows only numbers and hyphens.</span>
+                        <span class="help-block">Invalid Phone number, AliExpress allows only numbers and hyphens.</span>
                     </div>
                 </div>
 
@@ -299,7 +299,7 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label for="aliexpress_shipping_method" class="control-label">
-                            Aliexpress Shipping Method
+                            AliExpress Shipping Method
                             {% include 'partial/help_tooltip.html' with help="Automatically selects the chosen shipping method on AliExpress for all items." qtipstyle="color:#BBB" %}
                         </label>
                         <select id="aliexpress_shipping_method" name="aliexpress_shipping_method" class="form-control">
@@ -430,8 +430,8 @@
                         <input type="checkbox" class="js-switch" id="aliexpress_fix_address"
                             name="aliexpress_fix_address" {% if config.aliexpress_fix_address == None or config.aliexpress_fix_address %}checked="checked"{% endif %}>
                         <label for="aliexpress_fix_address" class="control-label">
-                            Fix Aliexpress Address Province Selection issues
-                            {% include 'partial/help_tooltip.html' with help="Select 'Other' in Aliexpress province if the customer entered province is not found" qtipstyle="color:#BBB" %}
+                            Fix AliExpress Address Province Selection issues
+                            {% include 'partial/help_tooltip.html' with help="Select 'Other' in AliExpress province if the customer entered province is not found" qtipstyle="color:#BBB" %}
                         </label>
                     </div>
                 </div>
@@ -443,7 +443,7 @@
                         <input type="checkbox" class="js-switch" id="aliexpress_fix_city"
                             name="aliexpress_fix_city" {% if config.aliexpress_fix_city == None or config.aliexpress_fix_city %}checked="checked"{% endif %}>
                         <label for="aliexpress_fix_city" class="control-label">
-                            Fix Aliexpress Address City Selection issues
+                            Fix AliExpress Address City Selection issues
                             {% include 'partial/help_tooltip.html' with help="If the U.S. City the user entered is not found in the AliExpress dropdown, the app will select “Other” from the dropdown and add the City name to second address input (Also apply to Spain customers).<br><br>This option is only a workaround the AliExpress limitation. <b>Please enable it only if you understand the behavior and it works for you. We do not recommend or guarantee your packages will be delivered because of this.</b>" qtipstyle="color:#BBB" %}
                         </label>
                     </div>
@@ -454,7 +454,7 @@
 
             {% if not user.is_superuser %}
             {% if user|can:'aliexpress_affiliate.use' and not user|can:'admitad_affiliate.use' %}
-            <h3>Aliexpress Affiliate Program</h3>
+            <h3>AliExpress Affiliate Program</h3>
             <div class="row m-t-lg">
                 <div class="col-md-4">
                     <div class="form-group">
@@ -678,7 +678,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <div class="form-group">
                         <input id="order_custom_line_attr" name="order_custom_line_attr" type="checkbox"
                             class="js-switch" {% if config.order_custom_line_attr %}checked{% endif %} />
@@ -704,7 +704,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <div class="form-group">
                         <input id="sync_delay_notify" name="sync_delay_notify" type="checkbox"
                             class="js-switch" {% if config.sync_delay_notify %}checked{% endif %} />

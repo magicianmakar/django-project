@@ -175,7 +175,7 @@
                                         </span>
                                         <small class="text-muted">{{item.parsed.type}}</small>
                                         {% if item.default_supplier %}
-                                        <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
+                                        <small class="text-muted product-source" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
                                             <a href="{{item.default_supplier.product_url}}" target="_blank">{{item.default_supplier.supplier_name}}</a>
                                         </small>
                                         {% endif %}
@@ -183,7 +183,7 @@
                                         <a href="{% url 'gkart:product_detail' pk=item.id %}" class="visible-xs product-name" style="font-size: 12px"> {{item.title|truncatewords:5}}</a>
 
                                         <div class="small m-t-xs">
-                                            Submitted at {{item.created_at|date}}
+                                            Added at {{item.created_at|date}}
                                         </div>
                                         <div class="m-t row">
                                             <div class="col-md-4" style="padding-right:0">

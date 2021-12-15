@@ -10,7 +10,12 @@ function setupDateRangePicker(elment_id, input_id, useAllTime) {
     if (useAllTime) {
         dateRanges['All Time'] = 'all-time';
     }
+    var parentEl = $(elment_id).parent();
+    if ($(elment_id).siblings('.datepicker-placeholder').length) {
+        parentEl = $(elment_id).siblings('.datepicker-placeholder');
+    }
     $(elment_id).daterangepicker({
+        parentEl: parentEl,
         format: 'MM/DD/YYYY',
         minDate: moment().subtract(30 * 24, 'days'),
         showDropdowns: true,

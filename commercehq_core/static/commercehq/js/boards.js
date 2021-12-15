@@ -23,7 +23,7 @@ $(document).ready(function() {
         }
     });
 
-    $('.chq-add-board-btn').click(function(e) {
+    $('.add-board-btn').click(function(e) {
         e.preventDefault();
         $('#chq-modal-board-add').modal('show');
     });
@@ -57,9 +57,9 @@ $(document).ready(function() {
         });
     });
 
-    $(document).on('click', '.chq-edit-board-btn', function(e) {
+    $(document).on('click', '.board-edit', function(e) {
         e.preventDefault();
-        var boardId = $(this).data('board-id');
+        var boardId = $(this).attr('board-id');
 
         $.get(api_url('board-config', 'chq'), {'board_id': boardId}).done(function(data) {
             var $form = $('#chq-board-update-form');
@@ -88,9 +88,9 @@ $(document).ready(function() {
         });
     });
 
-    $(document).on('click', '.chq-delete-board-btn', function(e) {
+    $(document).on('click', '.board-delete', function(e) {
         e.preventDefault();
-        var boardId = $(this).data('board-id');
+        var boardId = $(this).attr('board-id');
 
         swal({
             title: 'Are you sure?',
@@ -126,9 +126,9 @@ $(document).ready(function() {
         });
     });
 
-    $('.chq-empty-board-btn').click(function(e) {
+    $('.board-empty').click(function(e) {
         e.preventDefault();
-        var boardId = $(this).data('board-id');
+        var boardId = $(this).attr('board-id');
 
         swal({
             title: "Empty Board",

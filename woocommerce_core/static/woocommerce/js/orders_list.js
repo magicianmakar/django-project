@@ -817,7 +817,7 @@ function pusherSub() {
         line.find('.line-order-id').find('a').remove();
         line.find('.line-order-id').append($('<a>', {
             'class': 'mark-as-ordered',
-            'text': 'Add',
+            'text': 'Add Supplier ID',
             'order-id': data.order_id,
             'line-id': data.line_id,
             'product-id': data.product_id,

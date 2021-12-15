@@ -9,8 +9,10 @@
     <div class="tabs-container m-b-xl">
         <div class="tab-content">
             <div role="tabpanel" id="stores" class="tab-pane active">
-                <div class="panel-body">
-                    {% include 'home/partial/stores_list.html' %}
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        {% include 'home/partial/stores_list.html' %}
+                    </div>
                 </div>
 
                 {% if 'research' not in request.user.profile.plan.slug %}

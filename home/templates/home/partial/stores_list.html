@@ -100,33 +100,33 @@
                                 <li class="divider"></li>
 
                                 <li>
-                                    <a store-id="{{item.id}}" class="verify-api-url btn-success btn-outline"
+                                    <a store-id="{{item.id}}" class="verify-api-url"
                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                                         <i class="fa fa-check-circle-o"></i> Verify
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.id}}" store-shop="{{item.get_shop}}" class="re-install-store btn-info btn-outline">
+                                    <a store-id="{{item.id}}" store-shop="{{item.get_shop}}" class="re-install-store">
                                         <i class="fa fa-refresh"></i> Re-Install
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.id}}" store-type="" class="change-tracking-url btn-success btn-outline">
+                                    <a store-id="{{item.id}}" store-type="" class="change-tracking-url">
                                         <i class="fa fa-chain"></i> Custom Tracking URL
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.id}}" class="change-default-location btn-success btn-outline">
+                                    <a store-id="{{item.id}}" class="change-default-location">
                                         <i class="fa fa-building-o"></i> Select Primary Location
                                     </a>
                                 </li>
 
                                 {% if item.version == 1 %}
                                 <li>
-                                    <a class="edit-store  " store-id="{{item.id}}"
+                                    <a class="edit-store" store-id="{{item.id}}"
                                             store-name="{{item.title}}" store-version="{{item.version}}"
                                             store-url="{% if item.version == 1 %}{{item.get_api_url}}{% endif %}">
                                         <i class="fa fa-edit"></i> Edit
@@ -176,20 +176,20 @@
 
                                 <li class="divider"></li>
                                 <li>
-                                    <a data-store-id="{{item.pk}}" class="chq-verify-api-url btn-success btn-outline"
+                                    <a data-store-id="{{item.pk}}" class="chq-verify-api-url"
                                         data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                                         <i class="fa fa-check-circle-o"></i> Verify
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.pk}}" store-type="chq" class="change-tracking-domain btn-success btn-outline">
+                                    <a store-id="{{item.pk}}" store-type="chq" class="change-tracking-domain">
                                         <i class="fa fa-chain"></i> Custom Tracking Domain
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.pk}}" store-type="chq" class="change-currency btn-success btn-outline">
+                                    <a store-id="{{item.pk}}" store-type="chq" class="change-currency">
                                         <i class="fa fa-dollar"></i> Store Currency
                                     </a>
                                 </li>
@@ -247,20 +247,20 @@
 
                                 <li class="divider"></li>
                                 <li>
-                                    <a data-store-id="{{item.pk}}" class="woo-verify-api-url btn-success btn-outline"
+                                    <a data-store-id="{{item.pk}}" class="woo-verify-api-url"
                                         data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                                         <i class="fa fa-check-circle-o"></i> Verify
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.id}}" store-type="woo" class="change-tracking-url btn-success btn-outline">
+                                    <a store-id="{{item.id}}" store-type="woo" class="change-tracking-url">
                                         <i class="fa fa-chain"></i> Custom Tracking URL
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.pk}}" store-type="woo" class="change-currency btn-success btn-outline">
+                                    <a store-id="{{item.pk}}" store-type="woo" class="change-currency">
                                         <i class="fa fa-dollar"></i> Store Currency
                                     </a>
                                 </li>
@@ -318,27 +318,27 @@
 
                                 <li class="divider"></li>
                                 <li>
-                                    <a data-store-id="{{item.pk}}" class="ebay-verify-api-url btn-success btn-outline"
+                                    <a data-store-id="{{item.pk}}" class="ebay-verify-api-url"
                                         data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                                         <i class="fa fa-check-circle-o"></i> Verify
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a data-store-id="{{item.id}}" class="reauthorize-ebay-store btn-info btn-outline"
+                                    <a data-store-id="{{item.id}}" class="reauthorize-ebay-store"
                                         data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
                                         <i class="fa fa-refresh"></i> Re-Authorize
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.pk}}" store-type="ebay" class="change-tracking-url btn-success btn-outline">
+                                    <a store-id="{{item.pk}}" store-type="ebay" class="change-tracking-url">
                                         <i class="fa fa-chain"></i> Custom Tracking URL
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.pk}}" store-type="ebay" class="change-currency btn-success btn-outline">
+                                    <a store-id="{{item.pk}}" store-type="ebay" class="change-currency">
                                         <i class="fa fa-dollar"></i> Store Currency
                                     </a>
                                 </li>
@@ -459,20 +459,20 @@
                                 <li class="divider"></li>
 
                                 <li>
-                                    <a data-store-id="{{item.pk}}" class="gkart-verify-api-url btn-success btn-outline"
+                                    <a data-store-id="{{item.pk}}" class="gkart-verify-api-url"
                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                                         <i class="fa fa-check-circle-o"></i> Verify
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.pk}}" store-type="gkart" class="change-currency btn-success btn-outline">
+                                    <a store-id="{{item.pk}}" store-type="gkart" class="change-currency">
                                         <i class="fa fa-dollar"></i> Store Currency Symbol
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.pk}}" store-type="gkart" class="change-tracking-url btn-success btn-outline">
+                                    <a store-id="{{item.pk}}" store-type="gkart" class="change-tracking-url">
                                         <i class="fa fa-chain"></i> Custom Tracking URL
                                     </a>
                                 </li>
@@ -530,14 +530,14 @@
                                 <li class="divider"></li>
 
                                 <li>
-                                    <a data-store-id="{{item.id}}" class="bigcommerce-verify-api-url btn-success btn-outline"
+                                    <a data-store-id="{{item.id}}" class="bigcommerce-verify-api-url"
                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                                         <i class="fa fa-check-circle-o"></i> Verify
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.id}}" store-type="bigcommerce" class="change-tracking-url btn-success btn-outline">
+                                    <a store-id="{{item.id}}" store-type="bigcommerce" class="change-tracking-url">
                                         <i class="fa fa-chain"></i> Custom Tracking URL
                                     </a>
                                 </li>

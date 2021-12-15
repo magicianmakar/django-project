@@ -21,7 +21,7 @@
 
             {% if not paginator.is_infinte %}
             <li class="pull-right border-right">
-                <span class="text-default">{{paginator.count}} Tracking(s)</span>
+                <span class="text-default">{{paginator.count}} Item(s)</span>
             </li>
             {% endif %}
         </ul>
@@ -68,11 +68,9 @@
                                 </div>
                             </td>
                             <td>
-                                <a class="itooltip" href="{{item.get_commercehq_link}}" target="_blank" title="{{item.line.title}}">
+                                <a class="itooltip font-common" href="{{item.get_commercehq_link}}" target="_blank" title="{{item.line.title}}">
                                     <span class="badge badge-primary">#{{item.order.id}}</span>
-                                    <span class="m-l-xs visible-lg-inline">
-                                        {{item.line.title|truncatewords:10}}
-                                    </span>
+                                    {{item.line.title|truncatewords:10}}
                                 </a>
                             </td>
                             <td><a href="{{item.get_source_url}}" target="_blank">#{{item.source_id}}</a></td>
@@ -88,32 +86,7 @@
                             <td class="no-wrap">{% date_humanize item.created_at %}</td>
                             <td class="no-wrap">{% date_humanize item.updated_at %}</td>
                             <td class="no-wrap">
-                                {% if item.auto_fulfilled %}
-                                    <span class="badge badge-primary big itooltip" title="Item was Automatically fulfilled by Dropified">Auto</span>
-                                {% endif %}
-
-                                {% if item.line.fulfillment_status != 'fulfilled' %}
-                                <button class="btn btn-primary small fulfill-btn itooltip"
-                                        store="{{item.store_id}}"
-                                        order-id="{{item.order.id}}"
-                                        line-id="{{item.line.id}}"
-                                        quantity="{{item.line.quantity}}"
-                                        tracking-number="{{item.source_tracking|default:''}}"
-                                        title="Fulfill this item in CommerceHQ"
-                                        >Fulfill <i class="dropified-icons di-double-check"></i></button>
-                                {% else %}
-                                    <span class="badge badge-primary big">
-                                        {{item.line.fulfillment_status|default:"Unfulfilled"|title}}
-                                    </span>
-                                {% endif %}
-
-                                {% if item.hidden %}
-                                <button order-id="{{item.id}}" class="btn btn-default small btn-outline show-order">
-                                    Un-Archive <i class="dropified-icons di-file"></i></button>
-                                {% else %}
-                                <button order-id="{{item.id}}" class="btn btn-default small btn-outline hide-order itooltip"
-                                        title="Archive in Tracking page">Archive <i class="dropified-icons di-file"></i></button>
-                                {% endif %}
+                                {% include 'common/partial/order_track_item_actions.html' with platform="CommerceHQ" %}
                             </td>
                         </tr>
                         {% empty %}

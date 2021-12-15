@@ -1,20 +1,23 @@
 {% load template_helper %}
 
-<form role="search" class="navbar-form-custom" method="get"
+<form id="top-search-form" role="search" class="navbar-form-custom" method="get"
     {% if searchable %}
         action="{{request.path}}"
     {% else %}
-        {% comment %}
         action="{% url 'gkart:products_list' %}"
-        {% endcomment %}
     {% endif %}
 >
     <div class="form-group">
-        <input type="text" placeholder="{% if request.GET.store == 'c' %}Search connected products{% else %}Search imported products{% endif %}" class="form-control" name="title" id="top-search"
-        {% if request.GET.title and request.GET.f %}
-            value="{% base64_decode_params request.GET.title %}"
-        {% endif %}
-        >
+        <div class="input-group">
+            <a href="#" class="input-group-addon old-layout-hidden">
+                <i class="fa fa-search"></i>
+            </a>
+            <input type="text" placeholder="{% if request.GET.store == 'c' %}Search connected products{% else %}Search imported products{% endif %}" class="form-control" name="title" id="top-search"
+            {% if request.GET.title and request.GET.f %}
+                   value="{% base64_decode_params request.GET.title %}"
+            {% endif %}
+            >
+        </div>
         <input type="hidden" name="f" value="1">
 
         {% if request.GET.store %}
@@ -22,3 +25,17 @@
         {% endif %}
     </div>
 </form>
+
+<script type="text/javascript">
+    document.querySelector('#top-search-form .input-group-addon').addEventListener('click', function() {
+        var inputGroup = document.querySelector('#top-search-form .input-group');
+        var inputGroupClasses = inputGroup.className.split(' ');
+        var openIndex = inputGroupClasses.indexOf('open');
+        if (openIndex > -1) {
+            inputGroupClasses.splice(openIndex, 1);
+        } else {
+            inputGroupClasses.push('open');
+        }
+        inputGroup.className = inputGroupClasses.join(' ');
+    });
+</script>

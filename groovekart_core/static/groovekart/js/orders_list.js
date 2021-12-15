@@ -119,13 +119,11 @@ $('#fullfill-order-btn').click(function (e) {
 });
 
 $('.filter-btn').click(function (e) {
-    Cookies.set('orders_filter', !$('.filter-form').is(':visible'));
+    Cookies.set('orders_filter', !$('#filter-form').hasClass('active'));
 
-    if (!$('.filter-form').is(':visible')) {
-        $('.filter-form').fadeIn('fast');
-    } else {
-        $('.filter-form').fadeOut('fast');
-    }
+    ga('clientTracker.send', 'event', 'Order Filter Toggle', 'Shopify', sub_conf.shop);
+
+    $('#filter-form').toggleClass('active');
 });
 
 $(".filter-form").submit(function() {
@@ -852,7 +850,7 @@ function pusherSub() {
         line.find('.line-order-id').find('a').remove();
         line.find('.line-order-id').append($('<a>', {
             'class': 'mark-as-ordered',
-            'text': 'Add',
+            'text': 'Add Supplier ID',
             'order-id': data.order_id,
             'line-id': data.line_id,
             'store': data.store_id,
@@ -891,7 +889,7 @@ function pusherSub() {
 
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {
-        $('.filter-form').show();
+        $('#filter-form').addClass('active');
     }
 
     pusherSub();
