@@ -17,3 +17,4 @@ app/static/libs/bower_components
 .vscode/*
 .coverage
 htmlcov
+__pycache__
