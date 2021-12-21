@@ -268,12 +268,14 @@ def get_order_info_via_api(self, order, source_id, store_id):
         if order_data is None:
             return None
         order_data = order_data.get('result')
+        fulfillment_data['tracking_number'] = ''
         tracking_number_obj = order_data.get('logistics_info_list').get('aeop_order_logistics_info')
         if tracking_number_obj is not None:
             fulfillment_data['tracking_number'] = tracking_number_obj[0]['logistics_no']
         fulfillment_data['end_reason'] = ''
         fulfillment_data['status'] = order_data['order_status']
-        fulfillment_data['orderStatus'] = STATUS_MAP[order_data['order_status']]
+        fulfillment_data['orderStatus'] = order_data['order_status']
+        fulfillment_data['order_status'] = STATUS_MAP[order_data['order_status']]
 
         # product data starts here
         product_data = order_data.get("child_order_list", None)

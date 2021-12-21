@@ -195,7 +195,7 @@ class ShopifyStoreApi(ApiBase):
         store_id = data.get('store_id')
 
         result = shopify_orders_tasks.get_order_info_via_api(order, source_id, store_id)
-        return self.api_success(result)
+        return JsonResponse(result, status=200, safe=True)
 
     def get_order_tracking_info(self, request, user, data):
         source_id = data.get('source_id')
