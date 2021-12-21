@@ -82,9 +82,13 @@ $(document).ready(function() {
             product_type: $(this).find('input[name="product-type"]').val().trim()
         };
 
-        $.post(api_url('board-config', 'gear'), data).done(function() {
+        $.post(api_url('board-config', 'gear'), data)
+        .done(function() {
             $('#gear-modal-board-update').modal('hide');
             window.location.href = window.location.href;
+        })
+        .fail(function (data) {
+            displayAjaxError('Update Board', data);
         });
     });
 

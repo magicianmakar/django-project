@@ -37,6 +37,13 @@ from stripe_subscription.signals import get_extra_model_from_store
 
 from product_alerts.models import ProductChange
 
+from bigcommerce_core.models import BigCommerceBoard
+from commercehq_core.models import CommerceHQBoard
+from gearbubble_core.models import GearBubbleBoard
+from groovekart_core.models import GrooveKartBoard
+from leadgalaxy.models import ShopifyBoard
+from woocommerce_core.models import WooBoard
+
 
 class ApiBase(ApiResponseMixin, View):
     store_label = None
@@ -46,6 +53,7 @@ class ApiBase(ApiResponseMixin, View):
     order_track_model = None
     store_model = None
     helper = None
+    board_models = (BigCommerceBoard, CommerceHQBoard, GearBubbleBoard, GrooveKartBoard, ShopifyBoard, WooBoard)
 
     def __init__(self):
         super(ApiBase, self).__init__()
@@ -139,6 +147,8 @@ class ApiBase(ApiResponseMixin, View):
         except ObjectDoesNotExist:
             return self.api_error('Board not found.', status=404)
 
+        if board.title != data.get('title') and self.check_board_title_exist(user=user, title=data.get('title')):
+            return self.api_error('Board name is already exist.', status=501)
         board.title = data.get('title')
         board.config = json.dumps({
             'title': data.get('product_title'),
@@ -151,6 +161,13 @@ class ApiBase(ApiResponseMixin, View):
         self.helper.smart_board_sync(user.models_user, board)
 
         return self.api_success()
+
+    def check_board_title_exist(self, user, title):
+        for board_model in self.board_models:
+            if board_model.objects.filter(user=user, title=title):
+                return True
+
+        return False
 
     @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def post_board_add_products(self, request, user, data):

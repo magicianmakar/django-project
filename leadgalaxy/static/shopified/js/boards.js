@@ -309,6 +309,19 @@ $('.board-edit').click(function(e) {
 $('#smartboard-save-changes').click(function(e) {
     e.preventDefault();
 
+    var board_name = $('#board-title').val();
+    var boardId = $(this).closest('.modal').find('#smartboard-board').val();
+    var namesArr = [];
+
+    $('.table-bordered').find('.edit-user-premsc').not('[board-id=' + boardId +']').each(function(){
+        namesArr.push($(this).text().trim());
+    });
+
+    if (namesArr.includes(board_name)) {
+        swal('Edit Board', 'Board name is already exist.', 'error');
+        return;
+    }
+
     $.ajax({
         url: '/api/board-config',
         type: 'POST',
