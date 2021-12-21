@@ -86,7 +86,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['id'])] = item
 
         if not need_fulfill_items:
-            return self.order_error('Order have no items that need fulfillements')
+            return self.order_error('Order has no items that need ordering')
 
         self.items = need_fulfill_items
 
@@ -113,7 +113,7 @@ class AliexpressFulfillHelper():
 
         aliexpress_account = AliexpressAccount.objects.filter(user=self.store.user).first()
         if not aliexpress_account:
-            return self.order_error("No Aliexpress Account is found")
+            return self.order_error("No AliExpress account found")
 
         for line_id, line_item in self.items.items():
             req.product_items = []
@@ -147,7 +147,7 @@ class AliexpressFulfillHelper():
                     )
                 except Exception:
                     capture_exception()
-                    self.order_item_error(line_id, f'Could not mark as ordered, Aliexpress Order ID: {aliexpress_order_id}')
+                    self.order_item_error(line_id, f'Could not mark as ordered, AliExpress Order ID: {aliexpress_order_id}')
             else:
                 error_message = 'Could not place order'
                 if result:
