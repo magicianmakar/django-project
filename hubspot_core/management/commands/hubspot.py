@@ -459,7 +459,12 @@ class Command(DropifiedBaseCommand):
                 if row['SubID'] and re.match(r'u[0-9]+$', row['SubID']):
                     users[row['SubID'][1:]] += row['Payment Sum Approved'] + row['Payment Sum Open']
 
-        for user, revenue in users.items():
+        for user_id, revenue in users.items():
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                continue
+
             user.set_config('_adm_revene', {
                 'sum': revenue
             })
