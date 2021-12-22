@@ -55,6 +55,20 @@ if [ ! "$?" == "0" ]; then
     EXIT_CODE="-1"
 fi
 
+STATIC_MISSING=""
+for i in $(grep -n -E --recursive --exclude-dir=.idea --exclude-dir=.git --exclude-dir=aliexpress_api --exclude-dir=patches --exclude-dir=backups --exclude-dir="node_*" --exclude-dir="bower*" --exclude-dir="venv*" --files-with-matches --include='*.html' '{% +static' . | sort -u);
+do
+	MATCH_COUNT="$(grep -E '{% load.+static.* %}' $i --count)"
+	if [ "$?" != "0" ]; then
+        STATIC_MISSING="\t$i\n$STATIC_MISSING"
+	fi
+done
+
+if [ -n "$STATIC_MISSING" ]; then
+    printf "Static template tag not not loaded in following files:\n$STATIC_MISSING"
+    EXIT_CODE="-1"
+fi
+
 DJANGO_ADMIN_ERROR=""
 for i in */models.py; do
     app_name="$(dirname $i)"
