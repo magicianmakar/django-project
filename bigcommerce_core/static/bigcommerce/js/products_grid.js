@@ -4,13 +4,9 @@
 (function(boardsMenu) {
 'use strict';
 
-$('#apply-btn').click(function(e) {
-    var action = $('#selected-actions').val();
-
-    if (action.length === 0) {
-        swal('Please select an action first', '', "warning");
-        return;
-    }
+$('.bulk-action').on('click', function(e) {
+    e.preventDefault();
+    var action = $(this).attr('data-bulk-action');
 
     if (!$('input.item-select[type=checkbox]').is(':checked')) {
         swal('Please select a product first', '', "warning");

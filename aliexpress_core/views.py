@@ -52,4 +52,4 @@ class TokenView(RedirectView):
             op = 'created' if created else 'updated'
             messages.success(self.request, f"Your Aliexpress account ({account.aliexpress_username}) was successfully {op}")
 
-            return '/settings#aliexpress-settings'
+            return '/settings#aliexpress'

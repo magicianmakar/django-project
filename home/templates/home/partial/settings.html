@@ -289,7 +289,11 @@
                                 Custom Note To The Supplier
                             {% include 'partial/help_tooltip.html' with help="This message will be passed to the supplier.<br>You could include a message similar to '<b>Please do not include an invoice as we are dropshipping</b>'." qtipstyle="color:#BBB" %}
                         </label>
-                        <input type="text" class="form-control" {% if can_use %}id="order_custom_note" name="order_custom_note" value="{{config.order_custom_note}}"{% endif %}>
+                        {% if can_use %}
+                        <textarea id="order_custom_note" name="order_custom_note" rows="3" class="form-control">{{config.order_custom_note}}</textarea>
+                        {% else %}
+                        <input type="text" class="form-control">
+                        {% endif %}
                         <span class="help-block"></span>
                     </div>
                 </div>
@@ -448,12 +452,12 @@
                         </label>
                     </div>
                 </div>
-                <div class="col-md-12"><hr /></div>
             </div>
 
-
-            {% if not user.is_superuser %}
             {% if user|can:'aliexpress_affiliate.use' and not user|can:'admitad_affiliate.use' %}
+            <div class="row">
+                <div class="col-md-12"><hr /></div>
+            </div>
             <h3>AliExpress Affiliate Program</h3>
             <div class="row m-t-lg">
                 <div class="col-md-4">
@@ -472,6 +476,9 @@
             </div>
 
             {% elif user|can:'admitad_affiliate.use' %}
+            <div class="row">
+                <div class="col-md-12"><hr /></div>
+            </div>
             <h3>Admitad Affiliate Program</h3>
             <div class="row m-t-lg">
                 <div class="col-md-4">
@@ -488,9 +495,44 @@
                 </div>
             </div>
             {% endif %}
-            {% endif %}
 
-            {% include "home/partial/aliexpress_accounts.html" %}
+            {% if user|can:'aliexpress_api_integration.use' %}
+            <div class="row">
+                <div class="col-md-12"><hr /></div>
+                <div class="col-md-12">
+                    <h3 class="pull-left">AliExpress Accounts</h3>
+                    <a href="{% url 'aliexpress.oauth' %}" class="btn btn-success btn-small pull-right">Link Aliexpress Account <i class="fa fa-plus"></i></a>
+                </div>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Added</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in aliexpress_accounts %}
+                    <tr>
+                        <td>{{ account.aliexpress_username }} ({{ account.aliexpress_user_id }})</td>
+                        <td style="white-space: nowrap;">{% date_humanize account.created_at %}</td>
+                        <td class="text-right">
+                            <a href="#" class="del-aliexpress-account text-danger" data-account="{{ account.id }}">
+                                <i class="dropified-icons di-trash" style="font-size: 15px;"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="row">
+                <div class="col-sm-12">
+
+                </div>
+            </div>
+            {% endif %}
 
             <div class="row">
                 <div class="col-md-12"><hr /></div>
@@ -913,7 +955,7 @@
                         <i class="fa fa-external-link"></i> Access Dropshipping Products
                     </a>
                     {% else %}
-                    <span qtip-tooltip="Connect your alibaba account to see dropshipping products">
+                    <span qtip-tooltip="Connect your Alibaba account to see dropshipping products">
                         <a href="javascript:;">
                             <i class="fa fa-external-link"></i> Access Dropshipping Products
                         </a>

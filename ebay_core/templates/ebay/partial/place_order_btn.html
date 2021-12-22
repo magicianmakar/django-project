@@ -64,14 +64,6 @@
         </ul>
     </div>
     {% endif %}
-{% elif item.product %}
-    {% if user|can:'product_supplier.use' %}
-        <button class="btn btn-xs btn-info add-supplier-btn"
-                store-id="{{store.id}}" ebay-product="{{item.product.parent_product_id}}">
-            <i class="fa fa-plus"></i> Add Supplier
-        </button>
-    {% endif %}
-
 {% else %}
     <span class="label label-warning">Not Tracked</span>
 {% endif %}

@@ -152,7 +152,7 @@ def delete_product_monitor(monitor_id):
 def monitor_product(product, stdout=None):
     """
     product_id: Source Product ID (ex. Aliexpress ID)
-    store_id: Source Store ID (ex. Aliexpress Store ID)
+    store_id: Source Store ID (ex. Aliexpres Store ID)
     """
     original_monitor_id = product.monitor_id
     if is_monitorable(product):
