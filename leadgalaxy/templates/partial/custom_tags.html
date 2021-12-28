@@ -5,10 +5,6 @@
 <script src="//h2sbr9ckt5yj.statuspage.io/embed/script.js" async></script>
 
 <script>
-
-</script>
-
-<script>
     {% if user.is_authenticated and not DEBUG  %}
         {% with plan=user.profile.plan %}
         var dataLayer = [{
@@ -80,6 +76,7 @@
 
             window.hsConversationsSettings = {
                 identificationEmail: currentUser.email,
+                loadImmediately: false,
             };
 
             {% if user.is_stripe_customer %}
@@ -279,4 +276,18 @@
             },
         });
     }
+</script>
+
+<script type="text/javascript" id="hs-script-loader" async defer src="//js-na1.hs-scripts.com/9267974.js"></script>
+<script>
+    setTimeout(function() {
+        $.post(api_url('verify', 'hubspot')).done(function(data) {
+            window.hsConversationsSettings = {
+                identificationEmail: data.email,
+                identificationToken: data.token
+            };
+
+            window.HubSpotConversations.widget.load();
+        })
+    }, 100);
 </script>
