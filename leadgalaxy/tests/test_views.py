@@ -373,7 +373,7 @@ class AffiliateTestCase(BaseTestCase):
         )
 
         admitad_url.return_value = (
-            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
+            rf'https://alitems.site/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
             r'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F-%2F32735736988.html'
         )
 
@@ -408,7 +408,7 @@ class AffiliateTestCase(BaseTestCase):
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
     def test_user_without_affiliate_admitad(self, affiliate_url, aliexpress_url):
         affiliate_url.return_value = (
-            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
+            rf'https://alitems.site/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
             r'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F-%2F32735736988.html'
         )
 
@@ -454,7 +454,7 @@ class AffiliateTestCase(BaseTestCase):
         self.user.set_config('admitad_site_id', '987654321')
 
         affiliate_url.return_value = (
-            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
+            rf'https://alitems.site/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
             r'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F-%2F32735736988.html'
         )
 
@@ -475,7 +475,7 @@ class AffiliateTestCase(BaseTestCase):
         self.user.set_config('admitad_site_id', '987654321')
 
         get_admitad_affiliate_url.return_value = (
-            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
+            rf'https://alitems.site/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
             r'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F-%2F32735736988.html'
         )
 

@@ -424,10 +424,10 @@ class ShopifiedApi(ApiResponseMixin, View):
 
         return JsonResponse({
             'ptr': 'https://',
-            'base': 'alitems.com',
+            'base': 'alitems.site',
             'sid': f'/g/{settings.DROPIFIED_ADMITAD_ID}/?subid={subid}&ulp=',
             'mch': r"^https://.+\.aliexpress\.com/item/",
-            'ematch': r"(aff_platform=|alitems\.com)",
+            'ematch': r"(aff_platform=|alitems\.site)",
             'status': 'ok'
         })
 

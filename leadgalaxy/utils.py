@@ -1875,7 +1875,7 @@ def affiliate_link_set_query(url, name, value):
 
         return set_url_query(url, 'dl_target_url', dl_target_url)
 
-    elif 'alitems.com' in url:
+    elif 'alitems.com' in url or 'alitems.site' in url:
         if name not in ['ulp', 'subid']:
             ulp = parse_qs(urlparse(url).query)['ulp'].pop()
             ulp = set_url_query(ulp, name, value)
@@ -1931,7 +1931,7 @@ def get_admitad_credentials(user):
 
 
 def get_admitad_affiliate_url(site_id, url, user=None):
-    api_url = 'https://alitems.com/g/{}/'.format(site_id)
+    api_url = 'https://alitems.site/g/{}/'.format(site_id)
 
     api_url = affiliate_link_set_query(api_url, 'ulp', url)
 
