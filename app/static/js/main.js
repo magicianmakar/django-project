@@ -1306,6 +1306,16 @@ function copyLink(e) {
     });
 }
 
+$("#bulk-order-close").on("click", function() {
+    $(".main-ordering-div").hide("slow");
+    $("div#bulk-ordering-app-launcher").show("slow");
+});
+
+$("div#bulk-ordering-app-launcher").on("click", function() {
+    $(".main-ordering-div").show("slow");
+    $(this).hide("slow");
+});
+
 $(function() {
     setTimeout(function() {
         var version = $('.extension-version').data('extension-version');

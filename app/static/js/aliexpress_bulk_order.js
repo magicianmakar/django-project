@@ -72,22 +72,16 @@ function placeBulkApiOrder(btn, final_ids) {
 $('.quick-bundle-order').on("click", function(e) {
     e.preventDefault();
     btn = $(this);
-    btn.button('loading');
-
-    var order_data = $(e.target).attr('order-data');
-    order_data = order_data.split('_');
-    $.ajax({
-        url: '/api/order-place',
-        type: 'POST',
-        data: {
-            'store': order_data[0], // store id
-            'order_id': order_data[1], // order id
-            'line_id': order_data[2]
+    var msg = {
+        subject: 'add-order',
+        order: {
+            'name': btn.attr('order-name'),
+            'store': btn.attr('store'),
+            'order_id': btn.attr('order-id'),
+            'line_id': btn.attr('line-id'),
+            'order_data': JSON.parse(atob(btn.attr('order-data')))
         },
-    }).done(function(data) {
-        btn.button('reset');
-        toastr.success('All items ordered', 'Order Placed');
-    }).fail(function(data) {
-        btn.button('reset');
-    });
+    };
+    document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
+    toastr.success("Items added to Queue");
 });

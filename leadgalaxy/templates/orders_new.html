@@ -347,10 +347,16 @@
                                     {% if 'alibaba' in order.supplier_types or 'aliexpress' in order.supplier_types or 'ebay' in order.supplier_types %}
                                     <div class="btn-group pull-right">
                                         {% if not order.mixed_supplier_types %}
-                                        <button class="btn btn-primary small" order-id="{{order.id}}"
+                                        {% if use_aliexpress_api %}                                        
+                                            <button class="btn btn-primary small quick-order-btn" href="#" data-target="all" store="{{store.id}}" order-id="{{order.id}}" order-name="{{order.name}}"><i class="fa fa-bolt"></i>
+                                                Quick Order items
+                                            </button>
+                                        {% else %}
+                                        <button class="btn btn-primary small order-items" order-id="{{order.id}}"
                                                 type="button">
                                             Order Items
                                         </button>
+                                        {% endif %}
                                         <button type="button" class="btn btn-primary small dropdown-toggle"
                                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             <span class="caret"></span>
@@ -366,19 +372,19 @@
                                         <ul class="dropdown-menu pull-right">
                                             {% if use_aliexpress_api %}
                                                 <li>
-                                                    <a class="quick-order-btn" href="#" data-target="all" store="{{store.id}}" order-id="{{order.id}}" order-name="{{order.name}}"><i class="fa fa-bolt"></i>
-                                                        Quick Order items
-                                                    </a>
-                                                </li>
-                                                <li>
                                                     <a class="quick-order-btn" href="#" data-target="selected" store="{{store.id}}" order-id="{{order.id}}" order-name="{{order.name}}">
                                                         <i class="fa fa-bolt"></i> Quick Order selected items
                                                     </a>
                                                 </li>
+                                                {% if not order.mixed_supplier_types %}
+                                                <li>
+                                                    <a class="order-items" href="#" order-id="{{order.id}}">
+                                                        Order Items
+                                                    </a>
+                                                </li>
                                             {% endif %}
-                                            {% if not order.mixed_supplier_types %}
-                                            <li><a class="order-items" href="#" order-id="{{order.id}}">Order Items</a></li>
                                             {% endif %}
+                                            
                                             {% if order.mixed_supplier_types %}
                                                 {% for type in order.supplier_types %}
                                                     <li><a class="order-seleted-suppliers" supplier-type="{{type}}" href="#">{{type|supplier_type}} Suppliers</a></li>
@@ -749,14 +755,7 @@
                                         {% endif %}
                                         {% if item.is_bundle %}
                                             {% if not order.pending_payment and not item.refunded %}
-                                                {% if use_aliexpress_api %}
-                                                    <button class="btn btn-success small quick-bundle-order {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
-                                                                store-type="shopify" supplier-type="{{item.supplier_type}}" order-number="{{order.name}}" store="{{store.id}}" order-id="{{order.id}}"
-                                                                line-id="{{item.id}}" order-name="{{order.name}}"
-                                                                order-data="{% json_dumps item.order_data 'base64' %}">
-                                                            Quick Bundle Order
-                                                        </button>
-                                                {% endif %}
+                                                
                                             {% endif %}
                                         {% endif %}
                                     </div>
@@ -871,13 +870,6 @@
                 {% endfor %}
             </div> <!-- /order-content-list -->
 
-            <div class="col-md-3 order-content-list-iframe hidden" style="padding:0;margin:0">
-                <iframe
-                    id="orders-aliexpress-frm"
-                    src="{% app_setting 'DROPIFIED_ORDERS_URL' %}/?token={{ user.get_jwt_access_token }}"
-                    style=" width: 100%; min-height: 800px; padding: 0; margin: 0; border: 0px solid #655858cc;">
-                </iframe>
-            </div> <!-- /order-content-list-iframe -->
         </div> <!-- /row -->
 
                 {% if request.user.models_user.profile.plan.auto_fulfill_limit == 0 %}

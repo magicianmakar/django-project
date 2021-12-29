@@ -470,11 +470,12 @@ function addOrderSourceRequest(data_api, callback) {
 $('.mark-as-ordered').click(addOrderSourceID);
 
 function showOrderIframe() {
-    $('.order-content-list').removeClass('col-md-12').addClass('col-md-9');
-    $('.order-content-list-iframe').removeClass('hidden');
+    // $('.order-content-list').removeClass('col-md-12').addClass('col-md-9');
+    ///$('.order-content-list-iframe').removeClass('hidden');
 }
 
-$(".quick-order-btn").on("click", function(el) {
+$(".quick-order-btn").on("click", function(e) {
+    e.preventDefault();
     var data_target = $(this).attr("data-target");
 
     var elObj = $(this).closest("div.order");
@@ -490,7 +491,7 @@ $(".quick-order-btn").on("click", function(el) {
             var obj = $(el).closest('div.line');
             var btn= '';
             if ($(obj).hasClass("bundled")) {
-                btn = obj.find('button.quick-bundle-order');
+                btn = obj.find('a.quick-bundle-order');
             }
             else {
                 btn = obj.find('a.place-order');
@@ -511,6 +512,7 @@ $(".quick-order-btn").on("click", function(el) {
     });
     if (selected) {
         showOrderIframe();
+        toastr.success("Items added to Queue");
     } else {
         toastr.warning('Please select an item to add to queue');
     }
@@ -535,6 +537,7 @@ $('.place-order').on('click', function(e) {
     showOrderIframe();
 
     document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
+    toastr.success("Item added to Queue");
 });
 
 window.onmessage = function (e) {

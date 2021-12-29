@@ -37,6 +37,20 @@
     {% endif %}
 
         <ul class="dropdown-menu pull-right">
+            {% if item.is_bundle %}
+                {% if not order.pending_payment and not item.refunded %}
+                    {% if use_aliexpress_api %}
+                        <li>
+                            <a class="quick-bundle-order {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
+                                        store-type="shopify" supplier-type="{{item.supplier_type}}" order-number="{{order.name}}" store="{{store.id}}" order-id="{{order.id}}"
+                                        line-id="{{item.id}}" order-name="{{order.name}}"
+                                        order-data="{% json_dumps item.order_data 'base64' %}">
+                                    Quick Bundle Order
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
             {% if use_aliexpress_api and not item.is_bundle %}
                 <li>
                     <a class="place-order" href="#"
