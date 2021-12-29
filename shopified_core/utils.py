@@ -1237,9 +1237,14 @@ def get_cached_order(user, store_type, order_data_id):
     order = order_data_cache(key)
 
     phone = order['order']['phone']
-    phone_country_code, phone_number = order_phone_number(user.models_user, phone['number'], phone['country'])
+
+    # for old cached records
+    if type(phone) is dict:
+        phone = phone['number']
+
+    phone_country_code, phone_number = order_phone_number(user.models_user, phone, order['shipping_address']['country_code'])
     order['order']['phone'] = {
-        'country': phone['country'],
+        'country': order['shipping_address']['country_code'],
         'number': phone_number,
         'code': phone_country_code,
     }
