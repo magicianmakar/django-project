@@ -13,7 +13,7 @@ title="Click Sync with Supplier to fetch order updates from AliExpress & eBay.">
                 <i class="fa fa-refresh"></i> Sync Selected Orders
             </a>
         </li>
-        {% if not use_aliexpress_api %}
+        {% if use_aliexpress_api %}
         <li>
             <a class="quick-sync-selected-btn" id="quick-sync-selected-orders" store-id="{{store.id}}">
                 <i class="fa fa-refresh"></i> Sync Selected Orders with API

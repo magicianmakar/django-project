@@ -109,10 +109,10 @@
             <div class="modal-footer">
                 <button class="btn btn-primary pull-left start-update-btn" id="start-update-btn"
                     data-store="{{store.id}}">Start Update</button>
-
-                <button class="btn btn-primary pull-left quick-update-btn" id="quick-api-update"
-                    data-store="{{store.id}}">Quick Api Update</button>
-
+                {% if use_aliexpress_api %}
+                    <button class="btn btn-primary pull-left quick-update-btn" id="quick-api-update"
+                        data-store="{{store.id}}">Quick API Update</button>
+                {% endif %}
                 <button class="btn btn-danger btn-outline pull-left stop-update-btn" style="display:none"
                     data-store="{{store.id}}">Stop Update</button>
 
