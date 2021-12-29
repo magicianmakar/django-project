@@ -9,7 +9,7 @@
 </span>
 {% endif %}
 
-<div class="btn-group">
+<div class="btn-group" style="display: flex;">
     {% if item.line.fulfillment_status != 'fulfilled' and False %}
     <button class="btn btn-primary small fulfill-btn itooltip"
             store="{{item.store_id}}"

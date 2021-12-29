@@ -488,11 +488,11 @@
                                             {% endif %} />
 
                                         {% if item.product %}
-                                        <a href="{% url 'woo:product_detail' item.product.id %}" target="_blank" title="{{item.name}}">
+                                        <a href="{% url 'woo:product_detail' item.product.id %}" class="multi-line-text-overflow" target="_blank" title="{{item.name}}">
                                             {{item.name|truncatewords:7}}
                                         </a>
                                         {% else %}
-                                        <span title="{{item.name}}">
+                                        <span title="{{item.name}}" class="multi-line-text-overflow">
                                             {{item.name|truncatewords:7}}
                                         </span>
                                         {% endif %}

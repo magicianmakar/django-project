@@ -366,6 +366,9 @@ fieldset[disabled] .btn {
 .btn > .dropified-icons:not(.di-arrow-up) {
     padding-left: 5px;
 }
+.btn.btn-icon > i.dropified-icons {
+    padding: 0px 3px 0;
+}
 
 .btn-primary {
     background-color: #6bAA55;
@@ -966,6 +969,13 @@ a.text-default:focus > .dropified-icons:before {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+}
+
+.multi-line-text-overflow {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 .slimScrollDiv {
@@ -1657,6 +1667,9 @@ a.text-default:focus > .dropified-icons:before {
     border-color: #E6F9EB;
     color: #00BA34;
 }
+.label-primary > a {
+    color: #00BA34 !important;
+}
 .label-primary.badge:empty,
 .badge-primary.badge:empty {
     background-color: #00BA34;
@@ -1937,6 +1950,18 @@ a span.badge + span:not(.badge) {
 .header-column.actions > .btn,
 .header-column.actions > .btn-group {
     margin: 0 10px 5px 0;
+}
+
+.btn-actions > .btn,
+.btn-actions > .btn-group,
+.btn-actions > a {
+    margin: 0 0 5px 10px !important;
+}
+.btn-actions > .btn:last-child,
+.btn-actions > .btn-group:last-child,
+.btn-actions > a:last-child {
+    margin-left: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 .order .details .line {
