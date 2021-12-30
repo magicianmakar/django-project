@@ -526,7 +526,7 @@ def get_woo_webhook(store, topic):
 
 
 def get_woo_order(store, order_id):
-    rep = requests.get(store.wcapi.get(f"orders/{order_id}"))
+    rep = store.wcapi.get(f"orders/{order_id}")
     rep.raise_for_status()
 
     return rep.json()

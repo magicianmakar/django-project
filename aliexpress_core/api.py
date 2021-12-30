@@ -8,7 +8,9 @@ from aliexpress_core.models import AliexpressAccount
 from aliexpress_core.settings import API_KEY, API_SECRET
 from aliexpress_core.utils import MaillingAddress, PlaceOrder, PlaceOrderRequest, ProductBaseItem
 from leadgalaxy.models import ShopifyOrderTrack, ShopifyProduct, ShopifyStore
+from woocommerce_core.models import WooOrderTrack, WooProduct, WooStore
 from leadgalaxy.utils import get_shopify_order
+from woocommerce_core.utils import get_woo_order
 from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.exceptions import AliexpressFulfillException
@@ -46,6 +48,46 @@ class AliexpressFulfillHelper():
                 'items': self.order_item_errors,
             }
         }
+
+    def fulfill_woo_order(self):
+        self.order = get_woo_order(self.store, self.order_id)
+        order_tracks = {}
+        for i in WooOrderTrack.objects.filter(store=self.store, order_id=self.order['id']).defer('data'):
+            order_tracks[f'{i.order_id}-{i.line_id}'] = i
+
+        need_fulfill_items = {}
+        for el in self.order['line_items']:
+            if str(el['id']) not in self.items:
+                continue
+            item = self.items[str(el['id'])]
+            variant_id = el['variation_id']
+            if not el['product_id']:
+                if variant_id:
+                    product = WooProduct.objects.filter(store=self.store, title=el['title'], source_id__gt=0).first()
+                else:
+                    product = None
+            else:
+                product = WooProduct.objects.filter(store=self.store, source_id=el['product_id']).first()
+            woo_order = order_tracks.get(f"{self.order['id']}-{el['id']}")
+            if not product or woo_order:
+                continue
+            variant_id = product.get_real_variant_id(variant_id)
+            supplier = product.get_supplier_for_variant(variant_id)
+
+            if product.have_supplier() and supplier and supplier.is_aliexpress:
+                item.update({
+                    'line': el,
+                    'supplier': supplier,
+                    'product': product
+                })
+
+                need_fulfill_items[str(el['id'])] = item
+
+        if not need_fulfill_items:
+            return self.order_error('Order have no items that need fulfillements')
+
+        self.items = need_fulfill_items
+        self.fulfill_aliexpress_order('woo')
 
     def fulfill_shopify_order(self):
         self.order = get_shopify_order(self.store, self.order_id)
@@ -90,9 +132,13 @@ class AliexpressFulfillHelper():
 
         self.items = need_fulfill_items
 
-        self.fulfill_aliexpress_order()
+        self.fulfill_aliexpress_order('shopify')
 
-    def fulfill_aliexpress_order(self):
+    def fulfill_aliexpress_order(self, store_type):
+        order_fulfill_url = app_link('api/order-fulfill')
+        if store_type == 'woo':
+            order_fulfill_url = app_link('api/woo/order-fulfill')
+
         aliexpress_order = PlaceOrder()
         aliexpress_order.set_app_info(API_KEY, API_SECRET)
 
@@ -117,18 +163,29 @@ class AliexpressFulfillHelper():
 
         for line_id, line_item in self.items.items():
             req.product_items = []
-            item = ProductBaseItem()
-            item.product_count = line_item['quantity']
-            item.product_id = line_item['source_id']
+            if line_item['is_bundle']:
+                for i in line_item['products']:
+                    item = ProductBaseItem()
+                    item.product_count = i['quantity']
+                    item.product_id = i['source_id']
+                    temp_variants = i.get('variants') or i.get('variant')
+                    item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in temp_variants])
+                    # item.logistics_service_name = "DHL"  # TODO: handle shipping method
+                    # item.order_memo = i['order']['note'] or order_data['order']['note']
+                    req.add_item(item)
+            else:
+                item = ProductBaseItem()
+                item.product_count = line_item['quantity']
+                item.product_id = line_item['source_id']
 
-            try:
-                item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
-            except:
-                self.order_item_error(line_id, 'Variant mapping is not set for this item')
+                try:
+                    item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
+                except:
+                    self.order_item_error(line_id, 'Variant mapping is not set for this item')
 
-            # item.logistics_service_name = "DHL"  # TODO: handle shipping method
-            item.order_memo = 'No Invoice'  # TODO: Memo
-            req.add_item(item)
+                # item.logistics_service_name = "DHL"  # TODO: handle shipping method
+                item.order_memo = 'No Invoice'  # TODO: Memo
+                req.add_item(item)
 
             aliexpress_order.set_info(req)
 
@@ -140,7 +197,7 @@ class AliexpressFulfillHelper():
 
                 try:
                     result = requests.post(
-                        url=app_link('api/order-fulfill'),
+                        url=order_fulfill_url,
                         data=dict(store=self.store.id, order_id=self.order['id'], line_id=line_id,
                                   aliexpress_order_id=aliexpress_order_id, source_type=''),
                         headers=dict(Authorization=self.store.user.get_access_token())
@@ -164,12 +221,20 @@ class AliexpressFulfillHelper():
 class AliexpressApi(ApiResponseMixin):
 
     def post_order(self, request, user, data):
-        store = ShopifyStore.objects.get(id=data['store'])
+
+        storeType = data.get('store_type', 'shopify')
+        if storeType == 'shopify':
+            store = ShopifyStore.objects.get(id=data['store'])
+        elif storeType == 'woo':
+            store = WooStore.objects.get(id=data['store'])
         permissions.user_can_view(user, store)
 
         try:
             helper = AliexpressFulfillHelper(store, data['order_id'], data['items'], data['shipping_address'])
-            helper.fulfill_shopify_order()
+            if storeType == 'shopify':
+                helper.fulfill_shopify_order()
+            elif storeType == 'woo':
+                helper.fulfill_woo_order()
 
         except AliexpressFulfillException:
             pass

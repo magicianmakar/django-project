@@ -1273,6 +1273,65 @@ $(".copy-text-btn").on("click", function() {
     });
 });
 
+function sendOrdersToVueApp(btn) {
+    var msg = {
+        subject: 'add-order',
+        order: {
+            'name': btn.attr('order-name'),
+            'store': btn.attr('store'),
+            'store_type': window.storeType,
+            'order_id': btn.attr('order-id'),
+            'line_id': btn.attr('line-id'),
+            'order_data': JSON.parse(atob(btn.attr('order-data')))
+        },
+    };
+    document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
+}
+
+$(".quick-order-btn").on("click", function(e) {
+    e.preventDefault();
+    var data_target = $(this).attr("data-target");
+    var elObj = $(this).closest("div.order");
+    var selected = 0;
+    elObj.find('.line-checkbox').each(function (i, el) {
+        var isChecked = true;
+        if (data_target == "selected") {
+            isChecked = el.checked;
+        }
+        if(isChecked) {
+            selected += 1;
+            var obj = $(el).closest('div.line');
+            var btn= '';
+            if ($(obj).hasClass("bundled")) {
+                btn = obj.find('a.quick-bundle-order');
+            }
+            else {
+                btn = obj.find('a.place-order');
+            }
+            btn = $(btn);
+            sendOrdersToVueApp(btn);
+        }
+    });
+    if (selected) {
+        toastr.success("Items added to Queue");
+    } else {
+        toastr.warning('Please select an item to add to queue');
+    }
+});
+
+$('.place-order').on('click', function(e) {
+    e.preventDefault();
+    var btn = $(e.target);
+    sendOrdersToVueApp(btn);
+    toastr.success("Item added to Queue");
+});
+
+$('.quick-bundle-order').on("click", function(e) {
+    e.preventDefault();
+    btn = $(this);
+    sendOrdersToVueApp(btn);
+    toastr.success("Items added to Queue");
+});
 
 $.merge(
     $('.hidden-form[data-hidden-link]').map(function() {return $($(this).data('hidden-link'));}),
