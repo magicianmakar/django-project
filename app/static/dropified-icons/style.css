@@ -1,9 +1,9 @@
 @font-face {
   font-family: 'dropified-icons';
   src:
-    url('fonts/dropified-icons.ttf?vev258') format('truetype'),
-    url('fonts/dropified-icons.woff?vev258') format('woff'),
-    url('fonts/dropified-icons.svg?vev258#dropified-icons') format('svg');
+    url('fonts/dropified-icons.ttf?9kvd12') format('truetype'),
+    url('fonts/dropified-icons.woff?9kvd12') format('woff'),
+    url('fonts/dropified-icons.svg?9kvd12#dropified-icons') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -24,6 +24,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.di-perms:before {
+  content: "\e916";
+}
 .di-double-check:before {
   content: "\e914";
 }

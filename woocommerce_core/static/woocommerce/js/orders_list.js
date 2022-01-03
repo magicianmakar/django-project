@@ -1038,6 +1038,7 @@ $(document).ready(function() {
     }
 });
 
+
 $('select#product').select2({
     placeholder: 'Select a Product',
     ajax: {

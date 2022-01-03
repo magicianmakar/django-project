@@ -458,8 +458,8 @@
                                                      </td>
                                                     <td>
                                                         {% if item.product %}
-                                                            <a class="open-product-in"
-                                                                href="/product/{{item.product.id}}"
+                                                            <a class="open-product-in multi-line-text-overflow"
+                                                                href="/chq/product/{{item.product.id}}"
                                                                 target="_blank"
                                                                 title="{{item.title}}"
                                                                 data-link-dropified="{% url 'chq:product_detail' pk=item.product.id %}"
@@ -468,7 +468,7 @@
                                                                 data-link-mapping="{% url 'chq:product_mapping' item.product.id %}"
                                                             >{{item.title|truncatewords:9}}</a>
                                                         {% else %}
-                                                            <span title="{{item.title}}">
+                                                            <span class="multi-line-text-overflow" title="{{item.title}}">
                                                                 {{item.title|truncatewords:9}}
                                                             </span>
                                                         {% endif %}

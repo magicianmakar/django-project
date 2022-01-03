@@ -347,7 +347,7 @@
                                     {% if 'alibaba' in order.supplier_types or 'aliexpress' in order.supplier_types or 'ebay' in order.supplier_types %}
                                     <div class="btn-group pull-right">
                                         {% if not order.mixed_supplier_types %}
-                                        {% if use_aliexpress_api %}                                        
+                                        {% if use_aliexpress_api %}
                                             <button class="btn btn-primary small quick-order-btn" href="#" data-target="all" store="{{store.id}}" order-id="{{order.id}}" order-name="{{order.name}}"><i class="fa fa-bolt"></i>
                                                 Quick Order items
                                             </button>
@@ -384,7 +384,7 @@
                                                 </li>
                                             {% endif %}
                                             {% endif %}
-                                            
+
                                             {% if order.mixed_supplier_types %}
                                                 {% for type in order.supplier_types %}
                                                     <li><a class="order-seleted-suppliers" supplier-type="{{type}}" href="#">{{type|supplier_type}} Suppliers</a></li>
@@ -632,33 +632,34 @@
                                             {% endif %} />
 
                                         {% if item.product %}
-                                            <a class="open-product-in"
-                                                href="/product/{{item.product.id}}"
-                                                target="_blank"
-                                                title="{{item.title}}"
-                                                data-link-dropified="/product/{{item.product.id}}"
-                                                data-link-shopify="{{item.variant_link}}"
-                                                data-link-connections="/product/{{item.product.id}}#connections"
-                                                data-link-mapping="{% url 'product_mapping' item.product.id %}"
-                                            >{{item.title}} </a>
+                                        <a class="open-product-in multi-line-text-overflow"
+                                           href="/product/{{item.product.id}}"
+                                           target="_blank"
+                                           title="{{item.title}}"
+                                           data-link-dropified="/product/{{item.product.id}}"
+                                           data-link-shopify="{{item.variant_link}}"
+                                           data-link-connections="/product/{{item.product.id}}#connections"
+                                           data-link-mapping="{% url 'product_mapping' item.product.id %}">
+                                            {{item.title}}
+                                        </a>
 
-                                            {% if item.item_note %}
-                                            <div class="custom-properties m-t-xs">
-                                                {% for custom_property in item.properties %}
-                                                {% if custom_property.name and custom_property.name.0 != '_' %}
-                                                <div class="badge badge-info property-line m-r">
-                                                    <span class="property-name">{{ custom_property.name }}:</span>
-                                                    <span class="property-value">{{ custom_property.value }}</span>
-                                                </div>
-                                                {% endif %}
-                                                {% endfor %}
+                                        {% if item.item_note %}
+                                        <div class="custom-properties m-t-xs">
+                                            {% for custom_property in item.properties %}
+                                            {% if custom_property.name and custom_property.name.0 != '_' %}
+                                            <div class="badge badge-info property-line m-r">
+                                                <span class="property-name">{{ custom_property.name }}:</span>
+                                                <span class="property-value">{{ custom_property.value }}</span>
                                             </div>
                                             {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
 
                                         {% else %}
-                                            <span title="{{item.title}}">
-                                                {{item.title}}
-                                            </span>
+                                        <span class="multi-line-text-overflow" title="{{item.title}}">
+                                            {{item.title}}
+                                        </span>
                                         {% endif %}
                                     </div>
                                     <div class="col-md-3 header-column">
@@ -749,13 +750,13 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="col-md-3 pull-right text-right no-padding">
+                                    <div class="col-md-3 pull-right text-right no-padding btn-actions">
                                         {% if not item.is_pls %}
                                             {% include 'partial/place_order_btn.html' %}
                                         {% endif %}
                                         {% if item.is_bundle %}
                                             {% if not order.pending_payment and not item.refunded %}
-                                                
+
                                             {% endif %}
                                         {% endif %}
                                     </div>

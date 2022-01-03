@@ -559,12 +559,12 @@
                                             {% endif %} />
 
                                         {% if item.product %}
-                                        <a href="{% url 'woo:product_detail' item.product.id %}" target="_blank" title="{{item.name}}">
-                                            {{item.name|truncatewords:7}}
+                                        <a href="{% url 'ebay:product_detail' item.product.id %}" class="multi-line-text-overflow" target="_blank" title="{{item.name}}">
+                                            {{item.name}}
                                         </a>
                                         {% else %}
-                                        <span title="{{item.name}}">
-                                            {{item.name|truncatewords:7}}
+                                        <span class="multi-line-text-overflow" title="{{item.name}}">
+                                            {{item.name}}
                                         </span>
                                         {% endif %}
                                     </div>

@@ -32,18 +32,16 @@
                       {% for item in sub_users %}
                       <tr>
                         {% if not item.is_invite %}
-                        <td>
-                            <a class="edit-user-prems" user-id="{{item.id}}" href="#">
-                            {{item.name}}
-                            </a>
-                        </td>
+                        <td>{{item.name}}</td>
                         <td>{{item.email}}</td>
                         <td>{{item.date_joined|date:'n/j/Y'}}</td>
                         <td>{% date_humanize item.last_seen %}</td>
                         <td></td>
                         <td>
-                            <button class="btn btn-danger btn-xs btn-outline action-btn itooltip delete-sub-user" title="Remove" user-id="{{item.id}}" user-name="{{item.username}}">
-                                <i class="fa fa-trash-o"></i>
+                            <button class="btn btn-primary btn-icon btn-outline btn-xs action-btn edit-user-prems itooltip" user-id="{{item.id}}" href="#" title="Change Permissions">
+                                <i class="dropified-icons di-perms"></i></button>
+                            <button class="btn btn-danger btn-xs btn-icon btn-outline action-btn itooltip delete-sub-user" title="Remove" user-id="{{item.id}}" user-name="{{item.username}}">
+                                <i class="dropified-icons di-trash"></i>
                             </button>
                         </td>
                         {% elif item.is_invite %}
@@ -60,20 +58,20 @@
                          </td>
                         <td>
                             {% if not item.expired %}
-                                <a class="btn btn-success btn-outline btn-xs action-btn itooltip" href="{% app_link 'accounts/register' item.register_hash %}" target="_blank" title="Registration Link">
-                                    <img src="{% static 'img/link.svg' %}" alt=""></a>
+                                <a class="btn btn-success btn-icon btn-outline btn-xs action-btn itooltip" href="{% app_link 'accounts/register' item.register_hash %}" target="_blank" title="Registration Link">
+                                    <i class="dropified-icons di-link"></i></a>
 
-                                <a class="btn btn-primary btn-outline btn-xs action-btn email-link-btn itooltip" title="Email Link"
+                                <a class="btn btn-primary btn-icon btn-outline btn-xs action-btn email-link-btn itooltip" title="Email Link"
                                     href="mailto:{{item.email}}?subject=Invitation to join Dropified&body=Hello%2C%0D%0AYou%20can%20register%20at%20Dropified%20using%20this%20link%3A%0D%0A{% app_link 'accounts/register' item.register_hash %}">
-                                    <img src="{% static 'img/mail.svg' %}" alt=""></a>
+                                    <i class="dropified-icons di-mail"></i></a>
 
-                                <button class="btn btn-danger btn-outline btn-xs action-btn itooltip cancel-invitation-user"
+                                <button class="btn btn-danger btn-icon btn-outline btn-xs action-btn itooltip cancel-invitation-user"
                                         invite-id="{{item.id}}" title="Cancel This Invitation">
-                                    <i class="fa fa-user-times"></i>
+                                    <i class="dropified-icons di-trash"></i>
                                 </button>
                             {% else %}
-                                <a class="btn btn-primary btn-outline btn-xs action-btn edit-user-prems itooltip" user-id="{{item.user.id}}" href="#" title="Change Permissions">
-                                    <img src="{% static 'img/perms.svg' %}" alt=""></a>
+                                <a class="btn btn-primary btn-icon btn-outline btn-xs action-btn edit-user-prems itooltip" user-id="{{item.user.id}}" href="#" title="Change Permissions">
+                                    <i class="dropified-icons di-perms"></i></a>
                             {% endif %}
                         </td>
                         {% endif %}

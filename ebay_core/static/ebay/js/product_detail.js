@@ -237,36 +237,43 @@ function validatePriceValue() {
     var priceError = 0;
     var comparePriceError = 0;
 
-    if ($('#product-price').val() < 0.99) {
-        $('#product-price').parent().addClass('has-error');
+    var productPrice = $('#product-price');
+    var productPriceVal = parseFloat(productPrice.val());
+    var compareAtPrice = $('#product-compare-at');
+    var compareAtPriceVal = parseFloat(compareAtPrice.val());
+
+    if (isNaN(productPriceVal) || productPriceVal < 0.99) {
+        productPrice.parent().addClass('has-error');
         priceError++;
     } else {
-        $('#product-price').parent().removeClass('has-error');
+        productPrice.parent().removeClass('has-error');
     }
 
-    if ($('#product-price').val() > $('#product-compare-at').val()) {
-        $('#product-compare-at').parent().addClass('has-error');
+    if (!isNaN(compareAtPriceVal) && compareAtPriceVal !== 0 && productPriceVal > compareAtPriceVal) {
+        compareAtPrice.parent().addClass('has-error');
         comparePriceError++;
     } else {
-        $('#product-compare-at').parent().removeClass('has-error');
+        compareAtPrice.parent().removeClass('has-error');
     }
 
     $('#ebay-variants').find('.ebay-variant').each(function() {
-        var price = $(this).find('input[name="price"]');
-        var compareatPrice = $(this).find('input[name="compareatprice"]');
+        productPrice = $(this).find('input[name="price"]');
+        compareAtPrice = $(this).find('input[name="compareatprice"]');
+        productPriceVal = parseFloat(productPrice.val());
+        compareAtPriceVal = parseFloat(compareAtPrice.val());
 
-        if (price.val() < 0.99) {
-            price.parent().addClass('has-error');
+        if (isNaN(productPriceVal) || productPriceVal < 0.99) {
+            productPrice.parent().addClass('has-error');
             priceError++;
         } else {
-            price.parent().removeClass('has-error');
+            productPrice.parent().removeClass('has-error');
         }
 
-        if (price.val() > compareatPrice.val()) {
+        if (!isNaN(compareAtPriceVal) && compareAtPriceVal !== 0 && productPriceVal > compareAtPriceVal) {
             comparePriceError++;
-            compareatPrice.parent().addClass('has-error');
+            compareAtPrice.parent().addClass('has-error');
         } else {
-            compareatPrice.parent().removeClass('has-error');
+            compareAtPrice.parent().removeClass('has-error');
         }
     });
 
@@ -276,7 +283,7 @@ function validatePriceValue() {
     }
 
     if (comparePriceError) {
-        swal('Invalid Compare Price Value', 'Compare price value must be greater than the current price.', 'error');
+        swal('Invalid Compare Price Value', 'Compare price value must be greater than or equal to the current price.', 'error');
         return false;
     }
 
@@ -346,7 +353,7 @@ $('#product-update-btn').click(function (e) {
     var productComparePrice = parseFloat($('#product-compare-at').val());
     var store_id = $('#store-select').val();
 
-    if(productComparePrice != '' && productComparePrice < productPrice) {
+    if(productComparePrice != '' && productComparePrice != 0 && productComparePrice < productPrice) {
         toastr.warning('Compare at price should be greater than Product Price');
         return;
     }

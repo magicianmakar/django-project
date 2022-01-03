@@ -145,13 +145,18 @@
                                             {% money_format item.price item.store %}
                                         </span>
                                         <small class="text-muted">{{item.parsed.type}}</small>
-                                        {% if item.default_supplier %}
+                                        {% if item.get_original_info %}
                                         <small class="text-muted product-source" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
-                                            <a href="{{item.default_supplier.product_url}}" target="_blank">{{item.default_supplier.supplier_name}}</a>
+                                            <a href="{{item.default_supplier.product_url}}" target="_blank">{{item.get_original_info.source}}</a>
                                         </small>
                                         {% endif %}
+
+                                        {% if request.session.old_layout %}
                                         <a href="{% url 'ebay:product_detail' store_index=item.store.id pk=item.guid %}" class="hidden-xs product-name"> {{item.title|truncatewords:13}}</a>
                                         <a href="{% url 'ebay:product_detail' store_index=item.store.id pk=item.guid %}" class="visible-xs product-name" style="font-size: 12px"> {{item.title|truncatewords:5}}</a>
+                                        {% else %}
+                                        <a href="{% url 'ebay:product_detail' store_index=item.store.id pk=item.guid %}" class="product-name"> {{item.title}}</a>
+                                        {% endif %}
 
                                         <div class="small m-t-xs">
                                             Added at {{item.created_at|date}}

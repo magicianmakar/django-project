@@ -794,6 +794,7 @@ class OrdersList(ListView):
         context['created_at_daterange'] = self.request.GET.get('created_at_daterange', '')
         context['product_filter'] = getattr(self, 'product_filter', None)
         context['countries'] = get_counrties_list()
+        context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
 
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': self.url},
