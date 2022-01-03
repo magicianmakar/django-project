@@ -251,7 +251,7 @@ function validatePriceValue() {
 
     if (!isNaN(compareAtPriceVal) && compareAtPriceVal !== 0 && productPriceVal > compareAtPriceVal) {
         compareAtPrice.parent().addClass('has-error');
-        priceError++;
+        comparePriceError++;
     } else {
         compareAtPrice.parent().removeClass('has-error');
     }
