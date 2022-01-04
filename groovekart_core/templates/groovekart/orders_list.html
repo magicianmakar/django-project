@@ -182,7 +182,7 @@
                                     </label>
 
                                     <div>
-                                        <p class="itooltip no-text-overflow" title="{% date_humanize order.date_paid %}">
+                                        <p class="itooltip no-text-overflow" title="{% date_humanize order.date_paid html=False %}">
                                             {% if order.order_status in 'Refunded,Payment error' %}
                                             <span class="badge badge-danger"></span>
                                             {{order.order_status|title}}

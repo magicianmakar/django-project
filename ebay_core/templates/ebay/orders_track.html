@@ -14,100 +14,20 @@
 {% block main-container %}
     <div class="tabs-container">
         {% include 'home/partial/tabs/orders_track.html' %}
+
+        <ul class="actions">
+            {% include 'common/partial/order_track_filters.html' with platform='eBay' %}
+
+            {% if not paginator.is_infinte %}
+            <li class="pull-right border-right">
+                <span class="text-default">{{paginator.count}} Item(s)</span>
+            </li>
+            {% endif %}
+        </ul>
+
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
-                    <form method="get" class="filter-form m-t-sm" style="display:none;">
-                    <div class="row">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                            <label>Query:</label>
-                        </div>
-                        <div class="col-md-4">
-                            <input name="query" value="{{request.GET.query|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Order ID or Tracking number">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                            <label>Tracking #:</label>
-                        </div>
-                        <div class="col-md-2">
-                            <select name="tracking" class="form-control" style="padding: 6px 0px">
-                                <option {% if request.GET.tracking != '0' and  request.GET.tracking != '1' %}selected="selected"{% endif %} value="">Any</option>
-                                <option {% if request.GET.tracking == '1' %}selected="selected"{% endif %} value="1">Has Tracking #</option>
-                                <option {% if request.GET.tracking == '0' %}selected="selected"{% endif %} value="0">No Tracking #</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                            <label>eBay Status:</label>
-                        </div>
-                        <div class="col-md-2">
-                            <select name="fulfillment" class="form-control" style="padding: 6px 0px">
-                                <option {% if not request.GET.fulfillment  or request.GET.fulfillment == '2' %}selected="selected"{% endif %} value="2">Any</option>
-                                <option {% if request.GET.fulfillment == '1' %}selected="selected"{% endif %} value="1">Fulfilled</option>
-                                <option {% if request.GET.fulfillment == '0' %}selected="selected"{% endif %} value="0">Not Fulfilled</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                            <label>Supplier Status:</label>
-                        </div>
-                        <div class="col-md-2">
-                            <select name="reason" class="form-control" style="padding: 6px 0px">
-                                <option {% if not request.GET.reason %}selected="selected"{% endif %} value="">Any</option>
-                                <optgroup label="Order Status">
-                                    <option {% if request.GET.reason == '_PLACE_ORDER_SUCCESS' %}selected="selected"{% endif %} value="_PLACE_ORDER_SUCCESS">Awaiting Payment</option>
-                                    <option {% if request.GET.reason == '_IN_CANCEL' %}selected="selected"{% endif %} value="_IN_CANCEL">Awaiting Cancellation</option>
-                                    <option {% if request.GET.reason == '_WAIT_SELLER_SEND_GOODS' %}selected="selected"{% endif %} value="_WAIT_SELLER_SEND_GOODS">Awaiting Shipment</option>
-                                    <option {% if request.GET.reason == '_SELLER_PART_SEND_GOODS' %}selected="selected"{% endif %} value="_SELLER_PART_SEND_GOODS">Partial Shipment</option>
-                                    <option {% if request.GET.reason == '_WAIT_BUYER_ACCEPT_GOODS' %}selected="selected"{% endif %} value="_WAIT_BUYER_ACCEPT_GOODS">Awaiting delivery</option>
-                                    <option {% if request.GET.reason == '_WAIT_GROUP_SUCCESS' %}selected="selected"{% endif %} value="_WAIT_GROUP_SUCCESS">Pending operation success</option>
-                                    <option {% if request.GET.reason == '_FINISH' %}selected="selected"{% endif %} value="_FINISH">Order Completed</option>
-                                    <option {% if request.GET.reason == '_IN_ISSUE' %}selected="selected"{% endif %} value="_IN_ISSUE">Dispute Orders</option>
-                                    <option {% if request.GET.reason == '_IN_FROZEN' %}selected="selected"{% endif %} value="_IN_FROZEN">Frozen Orders</option>
-                                    <option {% if request.GET.reason == '_WAIT_SELLER_EXAMINE_MONEY' %}selected="selected"{% endif %} value="_WAIT_SELLER_EXAMINE_MONEY">Payment not yet confirmed</option>
-                                    <option {% if request.GET.reason == '_RISK_CONTROL' %}selected="selected"{% endif %} value="_RISK_CONTROL">Payment being verified</option>
-                                    <option {% if request.GET.reason == '_IN_PRESELL_PROMOTION' %}selected="selected"{% endif %} value="_IN_PRESELL_PROMOTION">Promotion is on</option>
-                                    <option {% if request.GET.reason == '_FUND_PROCESSING' %}selected="selected"{% endif %} value="_FUND_PROCESSING">Fund Processing</option>
-                                </optgroup>
-
-                                <optgroup label="Order Cancellation Reason">
-                                    {% for key, value in rejected_status.items %}
-                                    <option {% if request.GET.reason == key %}selected="selected"{% endif %}
-                                            value="{{ key }}">{{ value }}</option>
-                                    {% endfor %}
-                                </optgroup>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                            <label>Archived:</label>
-                        </div>
-                        <div class="col-md-2">
-                            <select name="hidden" class="form-control" style="padding: 6px 0px">
-                                <option {% if request.GET.hidden == '2' %}selected="selected"{% endif %} value="2">Any</option>
-                                <option {% if not request.GET.hidden or request.GET.hidden == '0' %}selected="selected"{% endif %} value="0">Not Archived</option>
-                                <option {% if request.GET.hidden == '1' %}selected="selected"{% endif %} value="1">Archived</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                            {% if request.GET.store %}  <input type="hidden" name="store" value="{{ request.GET.store }}"> {% endif %}
-                            {% if request.GET.sort %}   <input type="hidden" name="sort" value="{{ request.GET.sort }}"> {% endif %}
-
-                            <button class="btn btn-primary">Apply</button>
-                        </div>
-                    </div>
-                    <hr >
-                    </form>
-
                     <table class="table table-condensed xtable-hover">
                       <thead>
                         <tr>
@@ -118,13 +38,13 @@
                                   </div>
                               </div>
                           </th>
-                          <th  class="" style="width:26%">
+                          <th style="width:26%">
                               <a href="{% url_toggle 'sort' '-order,order' %}">eBay Order {% sort_icon 'sort' 'order' %}</a></th>
-                          <th class=""><a href="{% url_toggle 'sort' '-source,source' %}">Supplier Order {% sort_icon 'sort' 'source' %}</a></th>
-                          <th class=""><a href="{% url_toggle 'sort' '-status,status' %}">Supplier Status {% sort_icon 'sort' 'status' %}</a></th>
-                          <th class=""><a href="{% url_toggle 'sort' '-tracking,tracking' %}">Tracking Number {% sort_icon 'sort' 'tracking' %}</a></th>
-                          <th class=""><a href="{% url_toggle 'sort' '-add,add' %}">Order Date {% sort_icon 'sort' 'add' %}</a></th>
-                          <th class=""><a href="{% url_toggle 'sort' '-update,update' %}">Updated {% sort_icon 'sort' 'update' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-source,source' %}">Supplier Order {% sort_icon 'sort' 'source' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-status,status' %}">Supplier Status {% sort_icon 'sort' 'status' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-tracking,tracking' %}">Tracking Number {% sort_icon 'sort' 'tracking' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-add,add' %}">Order Date {% sort_icon 'sort' 'add' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-update,update' %}">Updated {% sort_icon 'sort' 'update' %}</a></th>
                           <th></th>
                         </tr>
                       </thead>

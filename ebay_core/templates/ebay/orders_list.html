@@ -233,7 +233,7 @@
                                     </label>
 
                                     <div>
-                                        <p class="itooltip no-text-overflow" title="{% date_humanize order.date_paid %}">
+                                        <p class="itooltip no-text-overflow" title="{% date_humanize order.date_paid html=False %}">
                                             {% if order.date_paid %}
                                                 <span class="badge badge-primary"></span> Paid {% date_humanize order.date_paid %}
                                             {% else %}
@@ -365,46 +365,6 @@
                                             <li><a class="order-seleted-prints" href="#">Order Selected Items</a></li>
                                         </ul>
                                     </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="header">
-                            <div class="row">
-                                <div class="col-xs-3 text-right">
-                                    {% if 'dropified-print' in order.supplier_types %}
-                                    <div class="btn-group" style="margin-right: 5px;">
-                                        <button class="btn btn-success btn-xs order-prints" order-id="{{order.id}}"
-                                                type="button">
-                                            Print On Demand
-                                        </button>
-                                    </div>
-                                    {% endif %}
-
-                                    {% if 'pls' in order.supplier_types %}
-                                    <div class="btn-group pull">
-
-                                      <button class="btn btn-success btn-xs pay-all-lines" type="button">
-                                        Pay For Supplements
-                                      </button>
-
-                                      <button type="button" class="btn btn-success btn-xs dropdown-toggle"
-                                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <span class="caret"></span>
-                                      </button>
-
-                                      <ul class="dropdown-menu pull-right">
-                                        <li><a class="pay-selected-lines" href="#">Pay for Selected Items</a></li>
-                                      </ul>
-                                    </div>
-                                    {% endif %}
-                                    &nbsp;
-                                    {% if order.lines_count %}
-                                    <button class="btn btn-success btn-xs pull-right order-items" order-id="{{order.number}}"
-                                            type="button" style="border-right:1px solid #66a8cc">
-                                        Order Items
-                                    </button>
                                     {% endif %}
                                 </div>
                             </div>
@@ -559,7 +519,7 @@
                                             {% endif %} />
 
                                         {% if item.product %}
-                                        <a href="{% url 'ebay:product_detail' item.product.id %}" class="multi-line-text-overflow" target="_blank" title="{{item.name}}">
+                                        <a href="{% url 'ebay:product_detail' store_index=store.id pk=item.product.sku %}" class="multi-line-text-overflow" target="_blank" title="{{item.name}}">
                                             {{item.name}}
                                         </a>
                                         {% else %}

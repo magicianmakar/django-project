@@ -444,6 +444,11 @@ class OrdersTrackList(ListView):
             order_map['-' + k] = '-' + v
 
         sorting = self.request.GET.get('sort', '-update')
+        if self.request.GET.get('sort'):
+            if self.request.GET.get('desc'):
+                sorting = sorting if sorting.startswith('-') else f"-{sorting}"
+            else:
+                sorting = sorting[1:] if sorting.startswith('-') else sorting
         sorting = order_map.get(sorting, 'status_updated_at')
 
         query = self.request.GET.get('query')

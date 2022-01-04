@@ -126,7 +126,7 @@
             <div class="form-group" style="position: relative;">
                 <label for="sort-desc" class="control-label">
                     <input type="checkbox" name="desc" value="true" class="icheck"
-                           {% if '-' in request.GET.sort|default:'-update' %}checked{% endif %}>
+                           {% if '-' in request.GET.sort|default:'-update' or request.GET.desc %}checked{% endif %}>
                     Descending
                 </label>
             </div>

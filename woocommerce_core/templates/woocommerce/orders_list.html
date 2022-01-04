@@ -200,7 +200,7 @@
                                     </label>
 
                                     <div>
-                                        <p class="itooltip no-text-overflow" title="{% date_humanize order.date_paid %}">
+                                        <p class="itooltip no-text-overflow" title="{% date_humanize order.date_paid html=False %}">
                                             {% if order.date_paid %}
                                                 <span class="badge badge-primary"></span> Paid
                                             {% else %}
@@ -265,7 +265,7 @@
                                     {% if 'alibaba' in order.supplier_types or 'aliexpress' in order.supplier_types or 'ebay' in order.supplier_types %}
                                     <div class="btn-group pull-right">
                                         {% if not order.mixed_supplier_types %}
-                                        {% if use_aliexpress_api %}                                        
+                                        {% if use_aliexpress_api %}
                                             <button class="btn btn-primary small quick-order-btn" href="#" data-target="all" store="{{store.id}}" order-id="{{order.id}}" order-name="{{order.name}}"><i class="fa fa-bolt"></i>
                                                 Quick Order items
                                             </button>
@@ -293,7 +293,7 @@
                                                     <li><a class="order-seleted-suppliers" supplier-type="{{type}}" href="#">{{type|supplier_type}} Suppliers</a></li>
                                                 {% endfor %}
                                             {% else %}
-                                            {% if use_aliexpress_api %}                                                
+                                            {% if use_aliexpress_api %}
                                                 <li>
                                                     <a class="quick-order-btn" href="#" data-target="selected" store="{{store.id}}" order-id="{{order.id}}" order-name="{{order.name}}">
                                                         <i class="fa fa-bolt"></i> Quick Order selected items
