@@ -421,3 +421,8 @@ def select_option(context, **kwargs):
         select.append(request.GET.get(key) == str(val))
 
     return 'selected' if select and all(select) else ''
+
+
+@register.simple_tag()
+def compareatprice(price):
+    return price if float(price) > 0 else ''

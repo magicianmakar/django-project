@@ -10,13 +10,11 @@ function showProductInfo(rproduct) {
     product = rproduct;
     if (product) {
         var product_price = product.price;
-        var compare_price = productDetails.compareatprice ? productDetails.compareatprice : product_price;
         $('#product-title').val(product.title);
         $('#product-price').val(product_price);
         $('#product-type').val(product.product_type);
         $('#product-tag').val(product.tags);
         $('#product-vendor').val(product.vendor);
-        $('#product-compare-at').val(compare_price);
 
         if (variantsConfig.length && !config.connected) {
             variantsConfig.forEach(function(el) {

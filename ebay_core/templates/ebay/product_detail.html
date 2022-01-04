@@ -96,8 +96,8 @@
                                         <label for="product-type">Compare at price</label>
                                         <div class="input-group">
                                             <span class="input-group-addon">{% money_format None product.store %}</span>
-                                            <input type="text" class="form-control" id="product-compare-at"
-                                                   value="{{ product.parsed.compareatprice|default:'' }}">
+                                            <input type="number" class="form-control" id="product-compare-at"
+                                                   value="{% compareatprice product.parsed.compareatprice %}">
                                         </div>
                                     </div>
                                     <div class="form-group col-xs-3">
@@ -221,7 +221,7 @@
                                                                         <span class="input-group-addon input-sm">{% money_format None product.store %}</span>
 
                                                                         <input type="number" name="compareatprice"
-                                                                               value="{{ variant_item.compareatprice|default:'' }}"
+                                                                               value="{% compareatprice variant_item.compareatprice %}"
                                                                                min="0" step="0.1"
                                                                                data-number-to-fixed="2"
                                                                                data-number-stepfactor="100"
