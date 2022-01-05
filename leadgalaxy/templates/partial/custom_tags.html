@@ -74,11 +74,6 @@
                 }
             };
 
-            window.hsConversationsSettings = {
-                identificationEmail: currentUser.email,
-                loadImmediately: false,
-            };
-
             {% if user.is_stripe_customer %}
             window.onboardFlowSettings = {
                 "siteKey": "lCcWxLzX",
@@ -278,16 +273,26 @@
     }
 </script>
 
-<script type="text/javascript" id="hs-script-loader" async defer src="//js-na1.hs-scripts.com/9267974.js"></script>
-<script>
-    setTimeout(function() {
-        $.post(api_url('verify', 'hubspot')).done(function(data) {
-            window.hsConversationsSettings = {
-                identificationEmail: data.email,
-                identificationToken: data.token
-            };
+{% if user.is_authenticated and not DEBUG and not request.session.is_hijacked_user  %}
+    <script>
+        window.hsConversationsSettings = {
+            identificationEmail: currentUser.email,
+            loadImmediately: false,
+        };
+    </script>
 
-            window.HubSpotConversations.widget.load();
-        })
-    }, 100);
-</script>
+    <script type="text/javascript" id="hs-script-loader" async defer src="//js-na1.hs-scripts.com/9267974.js"></script>
+    <script>
+        setTimeout(function() {
+            $.post(api_url('verify', 'hubspot')).done(function(data) {
+                window.hsConversationsSettings = {
+                    identificationEmail: data.email,
+                    identificationToken: data.token
+                };
+
+                window.HubSpotConversations.widget.load();
+            });
+        }, 100);
+    </script>
+
+{% endif %}
