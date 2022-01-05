@@ -725,27 +725,28 @@ def price_monitor_webhook(request):
         if dropified_type == 'shopify':
             try:
                 products = utils.get_shopify_products(store=product.store, product_ids=product.shopify_id, fields='id,title,variants')
+
                 for p in products:
                     vrnts = p['variants']
             except:
-                capture_exception()
+                return JsonResponse({'error': 'Product Not Found'}, status=404)
 
         if dropified_type == 'woo':
             try:
                 vrnts = product.retrieve_variants()
             except:
-                capture_exception()
+                return JsonResponse({'error': 'Product Not Found'}, status=404)
 
         if dropified_type == 'chq':
-            chq_id = product.get_chq_id()
             try:
+                chq_id = product.get_chq_id()
                 if chq_id:
                     products = get_chq_products(store=product.store, product_ids=[chq_id], expand='variants')
                     for p in products:
                         if p.get('id') is not None:
                             vrnts = p.get('variants', None)
             except:
-                capture_exception()
+                return JsonResponse({'error': 'Product Not Found'}, status=404)
 
         for i, changes in enumerate(data):
             if data[i]['name'] == 'price':
