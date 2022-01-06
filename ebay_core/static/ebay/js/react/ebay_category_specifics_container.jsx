@@ -167,6 +167,12 @@ function EbayCategorySpecifics(props) {
                                                 else return null;
                                             })
                                         }
+                                        {
+                                            !Object.keys(props.specifics.required).length &&
+                                                <div>
+                                                    <p>No required fields</p>
+                                                </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -191,6 +197,12 @@ function EbayCategorySpecifics(props) {
                                                     return renderCustomField(specificsKey, specificsDetails, false);
                                                 else return null;
                                             })
+                                        }
+                                        {
+                                            !Object.keys(props.specifics.recommended).length &&
+                                                <div>
+                                                    <p>No recommended fields</p>
+                                                </div>
                                         }
                                     </div>
                                 </div>
