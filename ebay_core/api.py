@@ -474,6 +474,41 @@ class EbayStoreApi(ApiBase):
         pusher = {'key': settings.PUSHER_KEY, 'channel': product.store.pusher_channel()}
         return self.api_success({'pusher': pusher})
 
+    def post_product_duplicate(self, request, user, data):
+        """
+        Duplicate all SureDone product by its SKU
+        :param request:
+        :param user:
+        :param data: API request params:
+            product (str): SKU of the product to duplicate
+        :return: SureDone's API response
+        :rtype: JsonResponse
+        """
+        parent_sku = data.get('product')
+
+        try:
+            product = EbayProduct.objects.get(guid=parent_sku)
+        except EbayProduct.DoesNotExist:
+            return self.api_error('Product not found.', status=404)
+
+        product_data = json.loads(product.data)
+
+        can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
+        if not can_add:
+            return self.api_error(
+                f'Your current plan allows up to {total_allowed} saved product(s). Currently you '
+                f'have {user_count} saved products.', status=401)
+
+        tasks.product_duplicate.apply_async(kwargs={
+            'user_id': user.id,
+            'parent_sku': parent_sku,
+            'product_data': product_data,
+            'store_id': product.store.id,
+        }, countdown=0, expires=120)
+
+        pusher = {'key': settings.PUSHER_KEY, 'channel': product.store.pusher_channel()}
+        return self.api_success({'pusher': pusher})
+
     def post_product_notes(self, request, user, data):
         guid = data.get('product')
         if not guid:

@@ -689,6 +689,42 @@ class SureDoneUtils:
             'api_response': api_response
         }
 
+    def sd_duplicate_product(self, product_data: list):
+        """
+        Add a new (duplicated) product without listing it on eBay.
+
+        :param product_data:
+        :type: list of dict
+        :return: SureDone's API response
+        :rtype: JsonResponse
+        """
+
+        # Generate new parent GUID and SKU
+        parent_guid_prefix = uuid.uuid4().hex[:10].upper()
+        main_sku = f'{parent_guid_prefix}-1'
+
+        guid_index = 1
+        for product in product_data:
+            product['guid'] = f'{parent_guid_prefix}-{guid_index}'
+            guid_index += 1
+            product['sku'] = main_sku
+
+        # Exclude field in the final request to SureDone
+        excluded_fields = ['id', 'mediacount', 'time', 'action', 'uri']
+        fields_set = list(set().union(*(d.keys() for d in product_data)))
+        for field in fields_set:
+            if field[-7:] == 'options':
+                excluded_fields.append(field)
+
+        # Transform the SureDone data from a dictionary format into an array-based bulk edit format
+        api_request_data = self.transform_variant_data_into_sd_list_format(product_data, excluded_fields)
+        api_response = self.api.add_products_bulk(api_request_data, skip_all_channels=True)
+
+        return {
+            'api_response': api_response,
+            'parent_guid': main_sku,
+        }
+
     def delete_product_with_all_variations(self, parent_guid: str):
         # Get all products with the matching SKU
         sd_product_data = self.api.get_item_by_guid(parent_guid)

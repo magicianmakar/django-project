@@ -181,3 +181,7 @@
   content:" *";
   color:red;
 }
+
+a.disabled {
+    pointer-events: none;
+}

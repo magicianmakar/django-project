@@ -913,6 +913,54 @@ class EbayUtils(SureDoneUtils):
 
         return default
 
+    def duplicate_product(self, product_data: dict, store: EbayStore):
+        """
+        Save a new (duplicated) product to SureDone.
+        :param product_data:
+        :type product_data: dict
+        :param store:
+        :type store: EbayStore
+        :return:
+        :rtype:
+        """
+        if not self.api:
+            return
+
+        # Prepare product_data for SureDone format
+        variants = product_data.pop('attributes', {})
+        sd_product_data = [product_data, *list(variants.values())]
+
+        sd_api_result = self.sd_duplicate_product(sd_product_data)
+
+        # If the product was not successfully posted
+        if sd_api_result.get('api_response', {}).get('result') != 'success':
+            return
+
+        parent_guid = sd_api_result.get('parent_guid')
+
+        # Fetch the product from SureDone and save the product if the product was successfully imported
+        created_product = self.get_ebay_product_details(parent_guid)
+
+        # If the SureDone returns no data, then the product did not get imported
+        if not created_product or not isinstance(created_product, EbayProduct):
+            return
+
+        # Init the default supplier
+        store_info = json.loads(product_data.get('store', {}))
+        original_url = product_data.get('original_url', '')
+        supplier = EbaySupplier.objects.create(
+            store=store,
+            product=created_product,
+            product_guid=parent_guid,
+            product_url=safe_str(original_url)[:512],
+            supplier_name=store_info.get('name') if store_info else '',
+            supplier_url=store_info.get('url') if store_info else '',
+            is_default=True
+        )
+        created_product.set_default_supplier(supplier, commit=True)
+
+        return sd_api_result
+
 
 class EbayOrderUpdater:
     def __init__(self, user=None, store: EbayStore = None, order_id: int = None):

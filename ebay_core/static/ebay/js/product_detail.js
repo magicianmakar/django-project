@@ -643,35 +643,47 @@ $('#duplicate-btn').click(function (e) {
 
     e.preventDefault();
 
-    var product_id = $(this).attr('product-id');
+    if (!verifyPusherIsDefined()) {
+        return;
+    }
 
-    $(this).bootstrapBtn('loading');
+    var btn = $('#duplicate-btn');
+    var pusher = new Pusher(config.sub_conf.key);
+    var channel = pusher.subscribe(config.sub_conf.channel);
 
-    $.ajax({
-        url: api_url('product-duplicate', 'ebay'),
-        type: 'POST',
-        data: {
-            product: product_id
-        },
-        context: {btn: $(this)},
-        success: function (data) {
-            var btn = this.btn;
-            btn.bootstrapBtn('reset');
+    btn.bootstrapBtn('loading');
+    btn.addClass('disabled');
 
-            if ('product' in data) {
-                btn.attr('href', data.product.url);
+    channel.bind('product-duplicate', function (eventData) {
+        if (eventData.product === product.guid) {
+            pusher.unsubscribe(channel);
+            if (eventData.success) {
                 toastr.success('Duplicate Product.','Product Duplicated!');
-
-                setTimeout(function() {
-                    btn.html('<i class="fa fa-external-link"></i> Open duplicate');
-                }, 100);
-
-                window.open(data.product.url, '_blank');
+                setTimeout(function() { window.open(eventData.duplicated_product_url, '_blank'); }, 1000);
             }
-        },
-        error: function (data) {
-            this.btn.bootstrapBtn('reset');
+            if (eventData.error) {
+                displayAjaxError('Duplicate Product', eventData);
+            }
+            btn.bootstrapBtn('reset');
+            btn.removeClass('disabled');
         }
+    });
+
+    channel.bind('pusher:subscription_succeeded', function () {
+        $.ajax({
+            url: api_url('product-duplicate', 'ebay'),
+            type: 'POST',
+            data: {
+                product: product.sku
+            },
+            success: function (data) { },
+            error: function (data) {
+                pusher.unsubscribe(channel);
+                displayAjaxError('Duplicate Product', data);
+                btn.bootstrapBtn('reset');
+                btn.removeClass('disabled');
+            }
+        });
     });
 });
 

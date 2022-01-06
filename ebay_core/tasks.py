@@ -600,6 +600,37 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
 
 
 @celery_app.task(base=CaptureFailure)
+def product_duplicate(user_id, parent_sku, product_data, store_id):
+    user = User.objects.get(id=user_id)
+    store = EbayStore.objects.get(id=store_id)
+    pusher_event = 'product-duplicate'
+    try:
+        result = EbayUtils(user).duplicate_product(product_data, store)
+
+        if not result:
+            store.pusher_trigger(pusher_event, {
+                'success': False,
+                'error': "Something went wrong. Please try again."
+            })
+            return
+
+        product_guid = result.get('parent_guid', '')
+        duplicated_product_url = reverse('ebay:product_detail', kwargs={'pk': product_guid, 'store_index': store.pk})
+
+        store.pusher_trigger(pusher_event, {
+            'success': True,
+            'product': parent_sku,
+            'duplicated_product_url': duplicated_product_url,
+        })
+
+    except ValueError as e:
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'error': f'Param {e.args[1]}: {e.args[0]}'
+        })
+
+
+@celery_app.task(base=CaptureFailure)
 def product_delete(user_id, parent_guid, store_id):
     user = User.objects.get(id=user_id)
     store = EbayStore.objects.get(id=store_id)
