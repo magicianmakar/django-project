@@ -1207,6 +1207,18 @@ class EbayOrderItem:
                 self.placed_orders < self.lines_count:
             self.partially_ordered = True
 
+    def __getitem__(self, key):
+        if isinstance(key, str) and hasattr(self, key):
+            return getattr(self, key)
+
+        raise IndexError('Index out of range')
+
+    def get(self, key, default=None):
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        return default
+
     def get_fulfillment_status_per_sku(self, shipments: dict):
         result = {}
         for shipment_info in shipments:

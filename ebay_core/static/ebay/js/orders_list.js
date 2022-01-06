@@ -117,19 +117,14 @@ $('#fullfill-order-btn').click(function (e) {
 });
 
 $('.filter-btn').click(function (e) {
-    var filterFormEl = $('.filter-form');
-    Cookies.set('orders_filter', !filterFormEl.is(':visible'));
+    Cookies.set('orders_filter', !$('#filter-form').hasClass('active'));
 
     ga('clientTracker.send', 'event', 'Order Filter Toggle', 'eBay', sub_conf.shop);
 
-    if (!filterFormEl.is(':visible')) {
-        filterFormEl.fadeIn('fast');
-    } else {
-        filterFormEl.fadeOut('fast');
-    }
+    $('#filter-form').toggleClass('active');
 });
 
-$('.filter-form').submit(function() {
+$('#filter-form').submit(function() {
     $(this).find(':input').filter(function(i, el) {
         if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred'))  {
             // Note: Update in $('.save-filter-btn').click() too
@@ -869,7 +864,7 @@ function pusherSub() {
 
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {
-        $('.filter-form').show();
+        $('#filter-form').addClass('active');
     }
 
     pusherSub();

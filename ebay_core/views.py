@@ -563,7 +563,11 @@ class BoardsList(ListView):
 
     def get_queryset(self):
         qs = super(BoardsList, self).get_queryset()
-        return qs.filter(user=self.request.user.models_user)
+        qs = qs.filter(user=self.request.user.models_user)
+        search_title = self.request.GET.get('search') or None
+        if search_title is not None:
+            qs = qs.filter(title__icontains=search_title)
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super(BoardsList, self).get_context_data(**kwargs)

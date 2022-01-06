@@ -7,11 +7,11 @@
 {% load compress %}
 {% load cache %}
 
-{% block breadcrumb-right %}
+{#% block breadcrumb-right %}
     {% if paginator.count and user|can:'bulk_order.use' %}
     {% include 'partial/bulk_orders.html' with orders_count=paginator.count %}
     {% endif %}
-{% endblock %}
+{% endblock %#}
 
 {% block main-container %}
 
@@ -70,7 +70,21 @@
                         <input type="hidden" type="text" name="created_at_daterange" value="{{ created_at_daterange|default:'' }}" />
                         <span class="help-block"></span>
                     </div>
-
+                    <div class="col-md-4">
+                        <label>Order</label>
+                        <input name="query_order_id" value="{{filters_config.order_id|default:''}}" class="form-control"
+                               placeholder="Order ID">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Product</label>
+                        <select name="query_product" id="product" class="form-control" data-store="{{store.id}}">
+                            {% for p in product_filter %}
+                           <option value="{{p.id}}" selected="">{{p.title|truncatewords:5}}</option>
+                           {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-md-4">
                         <label>Customer</label>
                         <input name="query_customer_first_name" value="{{filters_config.customer.first_name|default:''}}"
@@ -99,11 +113,6 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label>Order</label>
-                        <input name="query_order_id" value="{{filters_config.order_id|default:''}}" class="form-control"
-                               placeholder="Order ID">
-                    </div>
-                    <div class="col-md-4">
                         <label>Country</label>
                         <select name="query_country"  class="form-control" id="country-filter"
                                 data-placeholder="Shipping Country" style="height:30px" multiple>
@@ -125,14 +134,6 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-4">
-                        <label>Product</label>
-                        <select name="query_product" id="product" class="form-control" data-store="{{store.id}}">
-                            {% for p in product_filter %}
-                           <option value="{{p.id}}" selected="">{{p.title|truncatewords:5}}</option>
-                           {% endfor %}
-                        </select>
-                    </div>
                     {% if store_sync_enabled %}
                     <div class="col-md-4">
                         <label>Supplier</label>

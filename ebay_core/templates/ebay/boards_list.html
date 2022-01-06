@@ -3,65 +3,79 @@
 {% load static %}
 {% load compress %}
 
+{% block breadcrumb-right %}
+    <button class="btn btn-primary add-board-btn pull-right">
+        <i class="fa fa-plus"></i> Add Board
+    </button>
+{% endblock %}
+
 {% block main-container %}
 
 {% include 'home/partial/candu.html' with mount_id='candu-boards-info-above' %}
 
 <div class="tabs-container">
     {% include 'home/partial/tabs/boards.html' %}
+    <ul class="actions">
+        <li class="pull-right group">
+            <form id="board-search-form" method="get" role="form" class="form-inline">
+                <input type="text" class="form-control m-l-sm" name="search" placeholder="Search by name" value="{{ request.GET.search|default:'' }}">
+                <a href="javascript:;" class="btn btn-primary btn-icon">
+                    <i class="fa fa-search"></i>
+                </a>
+            </form>
+        </li>
+    </ul>
+
     <div class="tab-content margin-before-banner">
         <div id="tab-1" class="tab-pane active">
-            <div class="panel-body">
-                <table class="table table-bordered dataTables" id="ebay-boards-table">
-                    <thead>
-                        <tr>
-                            <th style="width:50%">Title</th>
-                            <th>Products</th>
-                            <th>Updated</th>
-                            <th>Options</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in boards %}
-                        <tr id="board-row-{{item.id}}" class="board-box">
-                            <td>
-                                <a
-                                    class="edit-user-premsc"
-                                    board-id="{{item.id}}"
-                                    href="{% url 'ebay:board_detail' item.id %}">
-                                    {{item.title}}
+            <div class="panel-body row old-layout-hidden no-background">
+                {% for item in boards %}
+                <div class="col-md-3 board-box">
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            <a class="color-info" board-id="{{item.id}}" href="/boards/{{item.id}}">
+                                {{item.title}}
+                            </a>
+                            <div class="more-actions">
+                                <a href="#">
+                                    <i class="glyphicon glyphicon-option-horizontal"></i>
                                 </a>
-                            </td>
-                            <td class="products-count">
-                                <a href="{% url 'ebay:board_detail' item.id %}?store=n" class="btn btn-outline btn-xs btn-default"><span class="product-count">{{ item.saved_count|default:'0' }}</span> Saved</a>
-                                <a href="{% url 'ebay:board_detail' item.id %}?store=c" class="btn btn-outline btn-xs btn-default"><span class="product-count">{{ item.connected_count|default:'0' }}</span> Connected</a>
-                            </td>
-                            <td>{{item.updated_at|date}}</td>
-                            <td>
-                                <button
-                                    data-board-id="{{item.id}}"
-                                    class="btn btn-xs btn-primary board-edit ebay-edit-board-btn">
-                                    <i class="fa fa-edit"></i>Edit
-                                </button>
-                                <button
-                                    data-board-id="{{item.id}}"
-                                    class="btn btn-xs btn-warning board-empty ebay-empty-board-btn">
-                                    <i class="fa fa-eraser"></i> Empty
-                                </button>
-                                <button
-                                    data-board-id="{{item.id}}"
-                                    class="btn btn-xs btn-danger board-delete ebay-delete-board-btn">
-                                    <i class="fa fa-times"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                <ul class="actions">
+                                    <li>
+                                        <a href="#" class="board-edit" board-id="{{item.id}}">
+                                            <i class="fa fa-edit"></i> Edit
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="board-empty" board-id="{{item.id}}">
+                                            <i class="fa fa-eraser"></i> Empty
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="board-delete" board-id="{{item.id}}">
+                                            <i class="fa fa-times"></i> Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
 
-                <button class="btn btn-success ebay-add-board-btn">
-                    <i class="fa fa-plus"></i> Add Board
-                </button>
+                            <br>
+                            <span class="text-muted">{{item.updated_at|date}}</span>
+                        </div>
+                        <div class="ibox-content">
+                            <a href="/boards/{{item.id}}?store=n">
+                                <span class="badge">{{ item.saved|default:"0" }}</span>
+                                <span>Saved</span>
+                            </a>
+                            <br>
+                            <a href="/boards/{{item.id}}?store=c">
+                                <span class="badge">{{ item.connected|default:"0" }}</span>
+                                <span>Connected</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>

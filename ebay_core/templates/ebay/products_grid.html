@@ -191,13 +191,13 @@
 
                         {% empty %}
                             <h3 class="text-center">No product found.</h3>
-                            {% if store.id and user|can:'product_supplier.use' %}
+                            <!-- {% if store.id and user|can:'product_supplier.use' %}
                                 <p class="text-center">
                                     <a href="#" class="ebay-product-import-btn filter-col-item" store="{{store.id}}">
                                         <i class="fa fa-plus"></i> Import from eBay
                                     </a>
                                 </p>
-                            {% endif %}
+                            {% endif %} -->
                         {% endfor %}
                     </div>
 

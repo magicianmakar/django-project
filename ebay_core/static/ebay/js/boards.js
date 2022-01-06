@@ -3,29 +3,7 @@
 $(document).ready(function() {
     'use strict';
 
-    $('.dataTables').on('draw.dt', function(e) {
-        $('.dataTables tr').each(function(i, el) {
-            var info = $(el).find('td');
-
-            if (info.length === 1) {
-                $(el).find('td').last().text('No board found.').addClass('text-center');
-                return;
-            }
-        });
-    });
-
-    var table = $('.dataTables').dataTable({
-        responsive: true,
-        autoWidth: false,
-        dom: 'T<"clear">lfrtip',
-        bLengthChange: false,
-        iDisplayLength: 25,
-        tableTools: {
-            aButtons: [],
-        }
-    });
-
-    $('.ebay-add-board-btn').click(function(e) {
+    $('.add-board-btn').click(function(e) {
         e.preventDefault();
         $('#ebay-modal-board-add').modal('show');
     });
@@ -46,9 +24,8 @@ $(document).ready(function() {
 
                     if (typeof(window.onBoardAdd) === 'function') {
                         window.onBoardAdd(data.board);
-                    } else {
-                        window.location.href = window.location.href;
                     }
+                    window.location.reload();
                 } else {
                     displayAjaxError('Create Board', data);
                 }
@@ -59,9 +36,9 @@ $(document).ready(function() {
         });
     });
 
-     $('#ebay-boards-table tbody').on('click', '.ebay-edit-board-btn', function(e) {
+     $('.board-edit').on('click', function(e) {
         e.preventDefault();
-        var boardId = $(this).data('board-id');
+        var boardId = $(this).attr('board-id');
 
         $.get(api_url('board-config', 'ebay'), {'board_id': boardId}).done(function(data) {
             var $form = $('#ebay-board-update-form');
@@ -90,9 +67,10 @@ $(document).ready(function() {
         });
     });
 
-    $('#ebay-boards-table tbody').on('click', '.ebay-delete-board-btn', function(e) {
+    $('.board-delete').on('click', function(e) {
         e.preventDefault();
-        var boardId = $(this).data('board-id');
+        var boardId = $(this).attr('board-id');
+        var btn = $(this);
 
         swal({
             title: 'Are you sure?',
@@ -108,15 +86,9 @@ $(document).ready(function() {
                 method: 'DELETE',
                 success: function(data) {
                     if ('status' in data && data.status === 'ok') {
+                        btn.parents('.board-box').remove();
                         swal.close();
                         toastr.success('Board has been deleted.', 'Delete Board');
-                        var selector = '#board-row-' + boardId;
-                        var $row = $(selector);
-                        if ($row.length) {
-                            table.api().rows(selector).remove().draw();
-                        } else {
-                            window.location.href = '/ebay/boards/list';
-                        }
                     } else {
                         displayAjaxError('Delete Board', data);
                     }
@@ -128,9 +100,9 @@ $(document).ready(function() {
         });
     });
 
-    $('#ebay-boards-table tbody').on('click', '.ebay-empty-board-btn', function(e) {
+    $('.board-empty').on('click', function(e) {
         e.preventDefault();
-        var boardId = $(this).data('board-id');
+        var boardId = $(this).attr('board-id');
 
         swal({
             title: "Empty Board",
@@ -159,9 +131,8 @@ $(document).ready(function() {
                         var $row = $(selector);
                         if ($row.length) {
                             $row.find('.product-count').html('0');
-                        } else {
-                            window.location.href = window.location.href;
                         }
+                        window.location.reload();
                     } else {
                         displayAjaxError('Empty Board', data);
                     }
