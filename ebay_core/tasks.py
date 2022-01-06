@@ -238,6 +238,32 @@ def get_advanced_options(user_id, store_id, pusher_channel, event_name=None):
 
         ebay_prefix = ebay_utils.get_ebay_prefix(store.store_instance_id)
         ebay_config = safe_json(all_options.get(f'{ebay_prefix}_attribute_mapping'))
+        ebay_site_id = all_options.get(f'{ebay_prefix}_siteid')
+        ebay_site_id_options = [
+            (1, 'US'),
+            (2, 'Canada'),
+            (3, 'UK'),
+            (15, 'Australia'),
+            (16, 'Austria'),
+            (23, 'Belgium (French)'),
+            (71, 'France'),
+            (77, 'Germany'),
+            (100, 'eBay Motors'),
+            (101, 'Italy'),
+            (123, 'Belgium (Dutch)'),
+            (146, 'Netherlands'),
+            (186, 'Spain'),
+            (193, 'Switzerland'),
+            (201, 'Hong Kong'),
+            (203, 'India'),
+            (205, 'Ireland'),
+            (207, 'Malaysia'),
+            (210, 'Canada (French)'),
+            (211, 'Philippines'),
+            (212, 'Poland'),
+            (216, 'Singapore'),
+            (218, 'Sweden'),
+        ]
         if not ebay_config:
             sd_pusher.trigger(pusher_event, {
                 'success': False,
@@ -255,12 +281,14 @@ def get_advanced_options(user_id, store_id, pusher_channel, event_name=None):
                 'payment_profile_options': list(profile_options.get('payment', {}).values()),
                 'return_profile_options': list(profile_options.get('return', {}).values()),
                 'shippping_profile_options': list(profile_options.get('shipping', {}).values()),
+                'site_id_options': ebay_site_id_options,
             },
             'settings': {
                 'payment_profile_id': ebay_config.get('paymentprofileid', ''),
                 'return_profile_id': ebay_config.get('returnprofileid', ''),
-                'shipping_profile_id': ebay_config.get('shippingprofileid', '')
-            }
+                'shipping_profile_id': ebay_config.get('shippingprofileid', ''),
+                'ebay_siteid': ebay_site_id,
+            },
         })
 
     except Exception as e:
