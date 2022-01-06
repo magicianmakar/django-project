@@ -1045,7 +1045,7 @@ class OrdersList(ListView):
                 item['title'] = item['name']
                 item['variations'] = [m.get('display_value')
                                       for m in item['meta_data']
-                                      if m.get('display_value')
+                                      if isinstance(m.get('display_value'), str)
                                       and m.get('display_value') in item['name']]
                 item['product'] = product
                 item['image'] = next(iter(data['images']), {}).get('src') if data else None

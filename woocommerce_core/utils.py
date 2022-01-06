@@ -1157,7 +1157,13 @@ def get_product_data(store, product_ids=None):
     product_data_by_product_id = {}
     page = 1
     while page:
-        params = {'page': page, 'per_page': store.user.get_config('_woo_product_limit', 25)}
+        # Using edit context bypasses installed extensions and improve speed of response
+        # ** https://woocommerce.com/document/developing-using-woocommerce-crud-objects/#section-4 **
+        # A note on $context: when getting data to use on the frontend or display, view context is used.
+        # This applies filters to the data so extensions can change the values dynamically.
+        # edit context should be used when showing values to edit in the backend, and for saving to the database.
+        # Using edit context does not apply any filters to the data.
+        params = {'context': 'edit', 'page': page, 'per_page': store.user.get_config('_woo_product_limit', 25)}
         if product_ids is not None:
             product_ids = [str(product_id) for product_id in product_ids]
             params['include'] = ','.join(product_ids)
