@@ -83,49 +83,6 @@
                                     </textarea>
                                 </div>
                             </div>
-                            {% if not product or not product.some_variants_are_connected %}
-                                <div class="row">
-                                    <div class="form-group col-xs-3">
-                                        <label for="product-price">Price</label>
-                                        <div class="input-group">
-                                            <span class="input-group-addon">{% money_format None product.store %}</span>
-                                            <input type="text" class="form-control" id="product-price">
-                                        </div>
-                                    </div>
-                                    <div class="form-group col-xs-3">
-                                        <label for="product-type">Compare at price</label>
-                                        <div class="input-group">
-                                            <span class="input-group-addon">{% money_format None product.store %}</span>
-                                            <input type="number" class="form-control" id="product-compare-at"
-                                                   value="{% compareatprice product.parsed.compareatprice %}">
-                                        </div>
-                                    </div>
-                                    <div class="form-group col-xs-3">
-                                        <label for="product-type" style="display: block">Weight</label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="product-weight" style="width:70%">
-                                            <select name="product-weight-unit"
-                                                    id="product-weight-unit"
-                                                    class="input-group-addon form-control"
-                                                    style="width:30%;padding: 0 5px"
-                                            >
-                                                <option value="g" {% if product.parsed.weightunit == 'g' %}selected="selected"{% endif %}>
-                                                    g
-                                                </option>
-                                                <option value="kg" {% if not product.parsed.weightunit or product.parsed.weightunit == 'kg' %}selected="selected"{% endif %}>
-                                                    kg
-                                                </option>
-                                                <option value="oz" {% if product.parsed.weightunit == 'oz' %}selected="selected"{% endif %}>
-                                                    oz
-                                                </option>
-                                                <option value="lb" {% if product.parsed.weightunit == 'lb' %}selected="selected"{% endif %}>
-                                                    {% if product.parsed.weight == "1" %}lb{% else %}lbs{% endif %}
-                                                </option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
                             <div class="row">
                                 <div class="form-group col-xs-3">
                                     <label for="product-type">Type</label>
@@ -155,9 +112,13 @@
 
                                                     <div class="col-xs-6" style="flex: 1;">
                                                         Variants&nbsp;
-                                                        {% if product.some_variants_are_connected %}
-                                                            ({{ product.variants_for_details_view|length }})
-                                                        {% endif %}
+                                                        ({{ product.variants_for_details_view|length }})
+                                                    </div>
+
+                                                    <div>
+                                                        <button class="btn-outline btn btn-default btn-xs" id="bulk-edit-variants-btn">
+                                                            <i class="fa fa-edit"></i> Bulk Edit
+                                                        </button>
                                                     </div>
 
                                                     {% if request.user|can:'aliextractor.use' %}
@@ -178,6 +139,9 @@
                                                             {% if not product.some_variants_are_connected %}display:none; {% endif %}">
                                                         <thead>
                                                         <tr>
+                                                            <th>
+                                                                <input type="checkbox" name="all-variants-selected" id="all-variants-select-checkbox">
+                                                            </th>
                                                             <th>Image</th>
                                                             <th>Title</th>
                                                             <th>Price</th>
@@ -190,6 +154,10 @@
                                                         <tbody>
                                                         {% for variant_item in product.variants_for_details_view %}
                                                             <tr class="ebay-variant" variant-id="{{ variant_item.guid }}">
+                                                                <td>
+                                                                    <input class="variant-checkbox" type="checkbox" name="variant-selected">
+                                                                </td>
+
                                                                 <td>
                                                                     {% if variant_item.image %}
                                                                         <img class="unveil"
@@ -1052,6 +1020,8 @@
             </div>
         </div>
     </div>
+
+{% include "ebay/partial/variant_edit_modal.html" %}
 
 {% endblock %}
 

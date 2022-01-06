@@ -1410,6 +1410,131 @@ function clippingmagicEditImage(data, image) {
     });
 }
 
+function allVariantsAreSelected() {
+    var allVariantsSelected = true;
+
+    $('#ebay-variants tr.ebay-variant').each(function(j, tr) {
+        if (!$('[name="variant-selected"]', tr).prop('checked')) {
+            allVariantsSelected = false;
+            return false;
+        }
+    });
+
+    return allVariantsSelected;
+}
+
+function atLeastOneVariantIsSelected() {
+    var atLeastOneVariantSelected = false;
+
+    $('#ebay-variants tr.ebay-variant').each(function(j, tr) {
+        if ($('[name="variant-selected"]', tr).prop('checked')) {
+            atLeastOneVariantSelected = true;
+            return false;
+        }
+    });
+    return atLeastOneVariantSelected;
+}
+
+$('#bulk-edit-variants-btn').on('click', function(e) {
+    e.preventDefault();
+
+    if (!atLeastOneVariantIsSelected()) {
+        swal('Bulk Edit Variants', 'Please select at least one variant to edit', 'error');
+        return;
+    }
+
+    // Elements
+    var weightUnit = $('#variant-weight-unit');
+
+    // Uncheck all checkboxes
+    $('#modal-ebay-variants-edit-form input.variant-editable-field[type=checkbox]').each(function(i, el) {
+        $(el).prop('checked', false);
+    });
+
+    // Clear and disable all inputs
+    $('#modal-ebay-variants-edit-form input.form-control').each(function(i, el) {
+        $(el).val('');
+        $(el).prop('disabled', true);
+    });
+
+    // Disable all inputs
+    weightUnit.val('g');
+    weightUnit.prop('disabled', true);
+
+    $('#modal-ebay-variants-edit-form').modal('show');
+});
+
+$('#modal-ebay-variants-edit-form #save-changes').on('click', function() {
+    var fields = {
+        price: {
+            enabled: $('#edit-price-checkbox').prop('checked'),
+            value: $('#variant-price').val(),
+        },
+        compareatprice: {
+            enabled: $('#edit-compare-at-checkbox').prop('checked'),
+            value: $('#variant-compare-at').val(),
+        },
+        stock: {
+            enabled: $('#edit-stock-checkbox').prop('checked'),
+            value: $('#variant-stock').val(),
+        },
+        weight: {
+            enabled: $('#edit-weight-checkbox').prop('checked'),
+            value: $('#variant-weight').val(),
+        },
+        weightunit: {
+            enabled: $('#edit-weight-unit-checkbox').prop('checked'),
+            value: $('#variant-weight-unit').val(),
+        }
+    };
+
+    // Update values of enabled fields for each selected variant
+    $('#ebay-variants tr.ebay-variant').each(function(j, tr) {
+        if ($('[name="variant-selected"]', tr).prop('checked')) {
+            Object.keys(fields).forEach(function(fieldName) {
+                if (fields[fieldName].enabled) {
+                    $('[name="' + fieldName + '"]', tr).val(fields[fieldName].value);
+                }
+            });
+        }
+    });
+
+    $('#modal-ebay-variants-edit-form').modal('hide');
+});
+
+$('#edit-price-checkbox').on('click', function() {
+    $('#variant-price').prop('disabled', !$(this).prop('checked'));
+});
+
+$('#edit-compare-at-checkbox').on('click', function() {
+    $('#variant-compare-at').prop('disabled', !$(this).prop('checked'));
+});
+$('#edit-stock-checkbox').on('click', function() {
+    $('#variant-stock').prop('disabled', !$(this).prop('checked'));
+});
+
+$('#edit-weight-checkbox').on('click', function() {
+    $('#variant-weight').prop('disabled', !$(this).prop('checked'));
+});
+
+$('#edit-weight-unit-checkbox').on('click', function() {
+    $('#variant-weight-unit').prop('disabled', !$(this).prop('checked'));
+});
+
+$('#all-variants-select-checkbox').on('click', function() {
+    var selectAllCheckbox = $(this);
+
+    // Update each variant's checkbox value to match the "Select All" checkbox's value
+    $('#ebay-variants tr.ebay-variant').each(function(j, tr) {
+        $('[name="variant-selected"]', tr).prop('checked', selectAllCheckbox.prop('checked'));
+    });
+});
+
+$('.variant-checkbox').on('click', function() {
+    // When a single row gets checked/unchecked, update the "Select All" checkbox's value
+    $('#all-variants-select-checkbox').prop('checked', allVariantsAreSelected());
+});
+
 (function() {
     setup_full_editor('product-description');
     showProductInfo(product);
