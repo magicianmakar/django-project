@@ -1750,6 +1750,15 @@
                         profileName: 'Select Shipping Policy...'
                     }, data.settings.shipping_profile_id));
                     $('#ebay_shipment_profile_default').html(allShippingOptions);
+
+                    // Site ID selection
+                    $('#ebay_site_id').empty();
+                    $.each(data.options.site_id_options, function(index, site_id) {
+                        $('#ebay_site_id').append($("<option></option>").attr("value", site_id[0]).text(site_id[1]));
+                        if (site_id[0] == data.settings.ebay_siteid) {
+                             $('#ebay_site_id option').prop("selected", "true");
+                        }
+                    });
                 } else {
                     displayAjaxError('Advanced eBay Settings', data);
                 }

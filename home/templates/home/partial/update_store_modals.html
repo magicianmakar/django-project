@@ -152,20 +152,35 @@
 <div id="ebay-store-update-modal" class="modal fade" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">eBay Store Advanced Settings</h4>
+            </div>
+
             <div class="modal-body">
                 <div class="row">
                     <div class="col-sm-12">
-                        <h3 class="m-t-none m-b">eBay Store Advanced Settings</h3>
                         <form id="ebay-store-update-settings-form" method="post" role="form">
                             <div id="ebay-loading-container" class="col-sm-12 text-center m-t-lg m-b-lg">
                                 <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
                             </div>
                             <div id="ebay-store-settings-main-container">
+                                <h4 class="m-t-none m-b">General</h4>
+
+                                <div class="form-group">
+                                    <label for="ebay_site_id">
+                                        Site ID
+                                        <i class="fa fa-fw fa-question-circle" qtip-tooltip="Site ID is a unique combination of eBay site, language, and territory. Please select eBay site on which exported products will be listed." style="color:#BBB" data-hasqtip="29"></i>
+                                    </label>
+                                    <select id="ebay_site_id" name="site_id" class="form-control"></select>
+                                </div>
+
+                                <h4 class="m-t m-b">Business Policies</h4>
                                 <input type="hidden" id="ebay_settings_store_id" name="store" />
 
                                 <div class="form-group">
                                     <label for="ebay_payment_profile_default">
-                                        Payment Profile Default
+                                        Default Payment Profile
                                     </label>
                                     <select id="ebay_payment_profile_default" name="payment_profile_id" class="form-control">
                                         <option>Select Payment Profile...</option>
@@ -174,7 +189,7 @@
 
                                 <div class="form-group">
                                     <label for="ebay_shipment_profile_default">
-                                        Shipping Profile Default
+                                        Default Shipping Profile
                                     </label>
                                     <select id="ebay_shipment_profile_default" name="shipping_profile_id" class="form-control">
                                         <option>Select Shipping Profile...</option>
@@ -183,7 +198,7 @@
 
                                 <div class="form-group">
                                     <label for="ebay_return_profile_default">
-                                        Return Profile Default
+                                        Default Return Profile
                                     </label>
                                     <select id="ebay_return_profile_default" name="return_profile_id" class="form-control">
                                         <option>Select Return Profile...</option>
