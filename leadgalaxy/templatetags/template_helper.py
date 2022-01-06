@@ -437,3 +437,8 @@ def variant_names(variants, join=' / '):
         return variant_names([variants])
 
     return join.join(names)
+
+
+@register.simple_tag()
+def compareatprice(price):
+    return price if float(price) > 0 else ''

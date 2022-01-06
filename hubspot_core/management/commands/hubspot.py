@@ -79,18 +79,38 @@ class Command(DropifiedBaseCommand):
         skip = options['skip']
         self.progress_total(users.count())
         active_users = []
+        active_users_map = defaultdict(list)
         for user in users.all():
             self.progress_update()
 
             if self.is_seen(user):
                 if not options['missing'] or not HubspotAccount.objects.filter(hubspot_user=user).exists():
                     active_users.append(user)
+                    active_users_map[user.email.lower()].append(user)
+
+        unique_active_users = []
+        for email, users in active_users_map.items():
+            if len(users) == 1:
+                unique_active_users.append(users[0])
+            else:
+                self.write(f' > Email {email} have {len(users)} duplicates')
+                found_user = None
+                for u in users:
+                    if not u.profile.plan.is_free:
+                        found_user = u
+
+                if not found_user:
+                    found_user = users[0]
+
+                self.write(f' >>> Using plan {found_user.profile.plan.slug}')
+
+                unique_active_users.append(found_user)
 
         self.progress_close()
 
-        self.progress_total(len(active_users) - skip)
+        self.progress_total(len(unique_active_users) - skip)
         total_count = 0
-        for user in active_users:
+        for user in unique_active_users:
             total_count += 1
             if total_count < skip:
                 continue

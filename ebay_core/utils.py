@@ -1510,6 +1510,26 @@ def smart_board_by_product(user, product):
             board.save()
 
 
+def get_ebay_store_specific_currency_options():
+    return [
+        ('', 'Select Currency...', ''),
+        ('USD', 'US Dollar', '$'),
+        ('CAD', 'Canadian Dollar', 'Can$'),
+        ('GBP', 'British Pound', '£'),
+        ('AUD', 'Australian Dollar', 'A$'),
+        ('EUR', 'Euro', '€'),
+        ('CHF', 'Swiss Franc', 'fr'),
+        ('CNY', 'Chinese Renminbi', '¥'),
+        ('HKD', 'Hong Kong Dollar', 'HK$'),
+        ('PHP', 'Philippines Peso', '₱'),
+        ('PLN', 'Polish Zloty', 'zł'),
+        ('SEK', 'Sweden Krona', 'kr'),
+        ('SGD', 'Singapore Dollar', 'S$'),
+        ('TWD', 'Taiwanese Dollar', 'NT$'),
+        ('MYR', 'Malaysian Ringgit', 'RM')
+    ]
+
+
 def get_ebay_currencies_list():
     return [
         ('USD', 'US Dollar'),

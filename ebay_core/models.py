@@ -166,10 +166,7 @@ class EbayProduct(SureDoneProductBase):
 
     @property
     def variant_edit(self):
-        if self.is_connected:
-            return reverse('ebay:variants_edit', args=(self.store.id, self.ebay_store_index))
-
-        return None
+        return reverse('ebay:variants_edit', args=(self.store.id, self.pk))
 
     @property
     def is_connected(self):

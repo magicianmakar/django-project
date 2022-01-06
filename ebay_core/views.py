@@ -233,9 +233,51 @@ class MappingBundleView(DetailView):
 
 class VariantsEditView(DetailView):
     model = EbayProduct
-    # template_name = 'ebay/variants_edit.html'
+    template_name = 'ebay/variants_edit.html'
     slug_field = 'source_id'
     slug_url_kwarg = 'pid'
+    context_object_name = 'product'
+
+    def get_context_data(self, **kwargs):
+        product_data_dict = self.object.parsed
+        sd_product_variants = list(product_data_dict.get('attributes', {}).values())
+        sd_all_product_variants = [product_data_dict, *sd_product_variants]
+        product_data_dict['variants'] = [{
+            'id': index,
+            'title': variant['varianttitle'],
+            'guid': variant['guid']
+        } for index, variant in enumerate(sd_all_product_variants)]
+
+        # Collect all unique images of product
+        all_images = []
+        for variant in sd_all_product_variants:
+            for i in range(10):
+                i += 1
+                if variant.get(f'media{i}'):
+                    all_images.append(variant[f'media{i}'])
+            if variant.get('mediax'):
+                all_images += variant['mediax'].split('*')
+        all_images = list(set(all_images))
+        product_data_dict['images'] = [{'id': index, 'src': value} for index, value in enumerate(all_images)]
+
+        product_url = reverse('ebay:product_detail',
+                              kwargs={'pk': self.object.guid, 'store_index': self.object.store.pk})
+        context = {
+            'store': self.object.store,
+            'product_id': self.object.id,
+            'product': product_data_dict,
+            'is_connected': self.object.is_connected,
+            'api_url': self.object.store.get_store_url(),
+            'product_url': self.object.ebay_url,
+            'page': 'product',
+            'breadcrumbs': [
+                {'title': 'Products', 'url': reverse('ebay:products_list')},
+                {'title': 'Product Details', 'url': product_url},
+                'Edit Variants'
+            ]
+        }
+
+        return context
 
 
 class OrdersList(ListView):

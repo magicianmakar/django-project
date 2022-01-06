@@ -24,7 +24,7 @@ from suredone_core.models import SureDoneAccount
 from . import tasks
 from .api_helper import EbayApiHelper
 from .models import EbayBoard, EbayOrderTrack, EbayProduct, EbayStore, EbaySupplier
-from .utils import EbayOrderUpdater, EbayUtils, get_fulfillment_meta
+from .utils import EbayOrderUpdater, EbayUtils, get_ebay_store_specific_currency_options, get_fulfillment_meta
 
 
 class EbayStoreApi(ApiBase):
@@ -960,3 +960,87 @@ class EbayStoreApi(ApiBase):
                     return self.api_error(f'{self.store_label} API Error', status=422)
             except HTTPError:
                 return self.api_error(f'{self.store_label} API Error', status=422)
+
+    def post_variant_image(self, request, user, data):
+        skip_publishing = data.get('skip_publishing', True)
+        parent_guid = data.get('parent_guid')
+
+        try:
+            store = EbayStore.objects.get(id=data.get('store'))
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+        try:
+            product = EbayProduct.objects.get(guid=parent_guid)
+        except EbayProduct.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+
+        permissions.user_can_view(user, store)
+        permissions.user_can_edit(user, product)
+
+        product_data = {
+            'guid': data.get('variant_guid'),
+            'media1': data.get('image_src')
+        }
+
+        tasks.product_update.apply_async(kwargs={
+            'user_id': user.id,
+            'parent_guid': parent_guid,
+            'product_data': product_data,
+            'store_id': store.id,
+            'skip_publishing': skip_publishing
+        }, countdown=0, expires=120)
+
+        pusher = {'key': settings.PUSHER_KEY, 'channel': store.pusher_channel()}
+        return self.api_success({'pusher': pusher})
+
+    def get_currency(self, request, user, data):
+        currencies = get_ebay_store_specific_currency_options()
+
+        try:
+            store = self.store_model.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+            store_currency = store.currency_format.replace('{{ amount }}', '') if store.currency_format else '$'
+
+        except ObjectDoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        return self.api_success({
+            'currency': store.currency_format or '',
+            'store': store.id,
+            'currencies': currencies,
+            'store_currency': store_currency,
+        })
+
+    def post_currency(self, request, user, data):
+        currencies = get_ebay_store_specific_currency_options()
+        try:
+            store = self.store_model.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except ObjectDoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        if not user.can('edit_settings.sub'):
+            raise PermissionDenied()
+
+        # Update the ebay store settings in Dropified DB
+        if data.get('currency'):
+            for currency in currencies:
+                if currency[0] == data.get('currency'):
+                    store.currency_format = f'{currency[2]}{{{{ amount }}}}'
+                    break
+        else:
+            store.currency_format = ''
+        store.save()
+
+        # Update the ebay store settings in SureDone
+        ebay_utils = EbayUtils(user)
+        ebay_prefix = ebay_utils.get_ebay_prefix(store.store_instance_id)
+        ebay_settings_config = {f'{ebay_prefix}_currency': data.get('currency', '')}
+
+        result = ebay_utils.update_user_business_settings(ebay_settings_config)
+
+        if result.get('error'):
+            return self.api_error(f'Failed to update eBay currency settings. {result.get("error_message", "")}')
+
+        return self.api_success()

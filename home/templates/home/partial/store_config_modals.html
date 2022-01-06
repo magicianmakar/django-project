@@ -62,12 +62,19 @@
                 <div class="row">
                     <div class="col-sm-12">
                         <form role="form">
-                            <div class="form-group">
+                            <div class="form-group" id="ebay_site_currency">
+                                <label for="shop-url">Choose currency:</label>
+                                <select class="form-control" id="ebay_currency"></select>
+                                <div id="ebay_currency_invalid" class="has-error" style="display:none">
+                                    <span class="help-block">Invalid currency</span>
+                                </div>
+                            </div>
+                            <div class="form-group" id="currency-format-input">
                                 <label for="shop-url">Enter this store currency format:</label>
                                 <input type="text" id="currency-input" class="form-control" autocorrect="off" spellcheck="false">
                             </div>
 
-                            <p>
+                            <p id="examples-currency-format-input">
                                 <em>Examples:</em>
                                 {% verbatim %}
                                 <em><a href="#" class="currency-example" data-amt="${{ amount }}">USD</a>,</em>

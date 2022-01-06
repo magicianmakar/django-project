@@ -490,9 +490,40 @@
                 storeType: storeType
             },
             success: function(data) {
+                $('#ebay_site_currency').hide();
+                $('#currency-format-input label').text('Enter this store currency format:');
+                $('#currency-format-input').show();
+                $('#currency-input').show();
+                $('#examples-currency-format-input').show();
                 $('#currency-input').val(data.currency);
                 $('#currency-input').attr('store', data.store);
                 $('#currency-input').attr('store-type', storeType);
+                if (storeType === 'ebay') {
+                    $('#ebay_site_currency').show();
+                    var format_currency_store = 'Store currency format: ' + data.store_currency + '{{ amount }}';
+                    $('#currency-format-input label').text(format_currency_store);
+                    $('#currency-input').hide();
+                    $('#examples-currency-format-input').hide();
+                    $('#ebay_currency').empty();
+                    var currencies = data.currencies;
+                    $.each(currencies, function(index, currency) {
+                        $('#ebay_currency').append($('<option></option>').attr('value', currency[0]).text(currency[1]));
+                        if (currency[2] === data.store_currency) {
+                             $('#ebay_currency option').prop('selected', 'true');
+                        }
+                    });
+                    $('#ebay_currency').on('change', function() {
+                        var new_currency = $(this).find(':selected').text();
+                        $.each(currencies, function(index, currency) {
+                            if (new_currency === currency[1] && new_currency !== 'Select Currency...'){
+                                format_currency_store = 'Store currency format: ' + currency[2] + '{{ amount }}';
+                            } else if (new_currency === 'Select Currency...') {
+                                format_currency_store = 'Store currency format: ' + data.store_currency + '{{ amount }}';
+                            }
+                        });
+                        $('#currency-format-input label').text(format_currency_store);
+                    });
+                }
             },
             error: function(data) {
                 displayAjaxError('Store Currency', data);
@@ -577,6 +608,9 @@
         var currency = $('#currency-input').val().trim();
         var store = $('#currency-input').attr('store');
         var storeType = $('#currency-input').attr('store-type');
+        if (storeType === 'ebay') {
+            currency = $('#ebay_currency').val().trim();
+        }
 
         $.ajax({
             url: api_url('currency', storeType),

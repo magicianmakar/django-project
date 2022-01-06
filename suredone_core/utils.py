@@ -1,4 +1,5 @@
 import arrow
+import itertools
 import json
 import re
 import uuid
@@ -600,6 +601,14 @@ class SureDoneUtils:
             # Generate parent GUID and SKU
             computed_product_data['sku'] = main_sku
 
+            # If variants_info wasn't provided in the product data, generate it manually
+            if not req_variants_info:
+                all_var_values = [v['values'] for v in req_variants if len(v.get('values', [])) > 0]
+                if len(all_var_values):
+                    for variant_comb in itertools.product(*all_var_values):
+                        req_variants_info[' / '.join(variant_comb)] = {}
+
+            # Parse each variant combination to create a separate product for it
             for var_info_i, variant_title in enumerate(req_variants_info.keys()):
                 current_variant_data = deepcopy(computed_product_data)
                 current_variant_data['varianttitle'] = variant_title
@@ -849,6 +858,22 @@ class SureDoneUtils:
                 failed_set_indices[i] = api_resp
 
         return failed_set_indices
+
+    def update_product_variant(self, updated_product_data: dict, skip_all_channels=True):
+        """
+        Updates the variant of product on SureDone.
+
+        :param updated_product_data: product data for update
+        :type updated_product_data: dict
+        :param skip_all_channels:
+        :type skip_all_channels: bool
+        :return: SureDone's API response
+        :rtype: JsonResponse
+        """
+        # Transform data into array-based data
+        api_request_data = self.transform_variant_data_into_sd_list_format([updated_product_data])
+
+        return self.api.edit_product_details_bulk(api_request_data, skip_all_channels)
 
 
 class SureDoneAdminUtils:

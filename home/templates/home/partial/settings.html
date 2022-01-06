@@ -1019,6 +1019,30 @@
                             <span class="help-block">Invalid business country</span>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-sm-offset-1 col-sm-11">
+                            <div class="form-group">
+                                <label for="ebay_site_currency" class="col-sm-4 col-xs-8 control-label">
+                                    Default Currency
+                                    {% include 'partial/help_tooltip.html' with help="The default currency for all products exported to eBay stores." qtipstyle="color:#BBB" %}
+                                </label>
+                                <div class="col-sm-4 col-xs-8">
+                                    <select class="form-control col-sm-2" id="ebay_site_currency" name="ebay_site_currency"
+                                            data-placeholder="Default Currency">
+                                        <option value="">Business country default</option>
+                                        {% for item in currencies %}
+                                        <option value="{{item.0}}" {% if ebay_settings.site_currency == item.0 %} selected="selected" {% endif %}>
+                                            {{item.1}}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div id="ebay_site_currency_invalid" class="pull-left col-sm-offset-2 col-sm-6 has-error" style="clear:left;padding-bottom:15px;display:none">
+                                    <span class="help-block m-b-none">Invalid currency</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
