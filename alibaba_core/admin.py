@@ -7,7 +7,7 @@ from .models import AlibabaAccount, AlibabaOrder, AlibabaOrderItem
 
 @admin.register(AlibabaAccount)
 class AlibabaAccountAdmin(admin.ModelAdmin):
-    list_display = ('get_user_email', 'alibaba_user_id', 'access_token', 'expired_at')
+    list_display = ('get_user_email', 'alibaba_user_id', 'access_token', 'expired_at', 'created_at', 'updated_at')
     search_fields = ('user__id', 'user__email', 'alibaba_user_id', 'access_token', 'ecology_token')
     raw_id_fields = ('user',)
 

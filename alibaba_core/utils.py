@@ -803,7 +803,7 @@ class OrderProcess:
                         )
 
                         if self.verbose > 0:
-                            new_order['shipping_options'][product['e_supplier_id']] = source_shippings
+                            new_order['shipping_options'][product['e_suzpplier_id']] = source_shippings
 
                     elif i == len(new_orders) - 1:  # Make sure its the end of iteration or it will split all orders
                         # Add product to a new copied order
