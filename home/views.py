@@ -7,7 +7,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import TemplateView, View
 
 from alibaba_core.utils import get_access_token_url as get_alibaba_access_token_url
-from ebay_core.utils import EbayUtils
+from ebay_core.utils import EbayUtils, get_ebay_currencies_list
 from goals.utils import get_dashboard_user_goals
 from leadgalaxy.models import DashboardVideo, DescriptionTemplate, GroupPlan, PriceMarkupRule
 from leadgalaxy.shopify import ShopifyAPI
@@ -150,7 +150,7 @@ class SettingsPageView(HomePageMixing):
         # eBay Settings
         ctx['ebay_settings'] = EbayUtils(self.request.user).get_ebay_user_settings_config()
         ctx['countries'] = get_counrties_list()
-
+        ctx['currencies'] = get_ebay_currencies_list()
         return ctx
 
 

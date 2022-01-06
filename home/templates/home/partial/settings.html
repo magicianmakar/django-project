@@ -1039,6 +1039,29 @@
             </div>
 
             <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="ebay_site_currency" class="control-label">
+                            Default Currency
+                            {% include 'partial/help_tooltip.html' with help="The default currency for all eBay stores." qtipstyle="color:#BBB" %}
+                        </label>
+                        <select class="form-control" id="ebay_site_currency" name="ebay_site_currency"
+                                data-placeholder="Default Currency">
+                            <option value="">Select Currency...</option>
+                            {% for item in currencies %}
+                            <option value="{{item.0}}" {% if ebay_settings.site_currency == item.0 %} selected="selected" {% endif %}>
+                                {{item.1}}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div id="ebay_site_currency_invalid" class="has-error" style="display:none">
+                            <span class="help-block">Invalid currency</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
                 <div class="col-md-12"><hr /></div>
                 <div class="col-md-6">
                     <div class="form-group">
