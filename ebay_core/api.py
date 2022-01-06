@@ -1008,4 +1008,3 @@ class EbayStoreApi(ApiBase):
             return self.api_error(f'Failed to update eBay currency settings. {result.get("error_message", "")}')
 
         return self.api_success()
-
