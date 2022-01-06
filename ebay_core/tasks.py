@@ -753,3 +753,56 @@ def order_save_changes(self, data):
         if not self.request.called_directly:
             countdown = retry_countdown(f'retry_ordered_tags_{order_id}', self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
+
+
+@celery_app.task(base=CaptureFailure)
+def variant_image(user_id, parent_guid, guid, product_data, store_id, skip_publishing=True):
+    store = EbayStore.objects.get(id=store_id)
+    default_error_message = 'Something went wrong, please try again.'
+    pusher_event = 'variant-image'
+    try:
+        user = User.objects.get(id=user_id)
+        product = EbayProduct.objects.get(guid=parent_guid)
+
+        permissions.user_can_view(user, store)
+        permissions.user_can_edit(user, product)
+        ebay_utils = EbayUtils(user)
+
+        sd_api_response = ebay_utils.update_product_variant(product_data, skip_all_channels=skip_publishing)
+
+        # If the product was not successfully posted
+        error_msg = ebay_utils.format_error_messages('actions', sd_api_response)
+        if error_msg:
+            store.pusher_trigger(pusher_event, {
+                'success': False,
+                'error': error_msg,
+                'product': product.guid
+            })
+            return
+
+        # Fetch SureDone updates and update the DB
+        updated_product = ebay_utils.get_ebay_product_details(parent_guid, smart_board_sync=True)
+
+        # If the SureDone returns no data, then the product did not get imported
+        if not updated_product or not isinstance(updated_product, EbayProduct):
+            store.pusher_trigger(pusher_event, {
+                'success': False,
+                'error': default_error_message,
+                'product': product.guid
+            })
+            return
+
+        store.pusher_trigger(pusher_event, {
+            'success': True,
+            'product': product.guid
+        })
+
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'error': http_exception_response(e, json=True).get('message', 'Server Error'),
+            'product': product.guid
+        })

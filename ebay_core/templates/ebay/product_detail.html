@@ -376,16 +376,15 @@
                                                         <li><a href="{{ product.ebay_url }}" target="_blank">
                                                             <i class="fa fa-file-o"></i> View in eBay</a>
                                                         </li>
-                                                        {% if request.user|can:'product_variant_setup.view' %}
-                                                            {% comment %}<li><a href="{{ product.variant_edit }}" target="_blank">
-                                                                <i class="fa fa-file-image-o"></i> Set up Variants
-                                                                Images</a>
-                                                            </li>{% endcomment %}
-                                                        {% endif %}
                                                     {% else %}
                                                         <li><a id="view-btn" type="button" style="display:none">View in
                                                             eBay</a></li>
                                                     {% endif %}
+                                                    {% if request.user|can:'product_variant_setup.view' %}
+                                                        <li><a href="{{ product.variant_edit }}" target="_blank">
+                                                            <i class="fa fa-file-image-o"></i> Set up Variant Images</a>
+                                                        </li>
+                                                        {% endif %}
                                                     {% if product.some_variants_are_connected %}
                                                         <li><a href="{% url 'ebay:product_mapping' product.store.id product.guid %}"
                                                                target="_blank">

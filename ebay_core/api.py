@@ -925,6 +925,38 @@ class EbayStoreApi(ApiBase):
             except HTTPError:
                 return self.api_error(f'{self.store_label} API Error', status=422)
 
+    def post_variant_image(self, request, user, data):
+        skip_publishing = data.get('skip_publishing', True)
+        parent_guid = data.get('parent_guid')
+
+        try:
+            store = EbayStore.objects.get(id=data.get('store'))
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+        try:
+            product = EbayProduct.objects.get(guid=parent_guid)
+        except EbayProduct.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+
+        permissions.user_can_view(user, store)
+        permissions.user_can_edit(user, product)
+
+        product_data = {
+            'guid': data.get('variant_guid'),
+            'media1': data.get('image_src')
+        }
+
+        tasks.product_update.apply_async(kwargs={
+            'user_id': user.id,
+            'parent_guid': parent_guid,
+            'product_data': product_data,
+            'store_id': store.id,
+            'skip_publishing': skip_publishing
+        }, countdown=0, expires=120)
+
+        pusher = {'key': settings.PUSHER_KEY, 'channel': store.pusher_channel()}
+        return self.api_success({'pusher': pusher})
+
     def get_currency(self, request, user, data):
         currencies = get_ebay_store_specific_currency_options()
 
@@ -976,3 +1008,4 @@ class EbayStoreApi(ApiBase):
             return self.api_error(f'Failed to update eBay currency settings. {result.get("error_message", "")}')
 
         return self.api_success()
+

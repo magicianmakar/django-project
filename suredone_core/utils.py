@@ -823,6 +823,22 @@ class SureDoneUtils:
 
         return failed_set_indices
 
+    def update_product_variant(self, updated_product_data: dict, skip_all_channels=True):
+        """
+        Updates the variant of product on SureDone.
+
+        :param updated_product_data: product data for update
+        :type updated_product_data: dict
+        :param skip_all_channels:
+        :type skip_all_channels: bool
+        :return: SureDone's API response
+        :rtype: JsonResponse
+        """
+        # Transform data into array-based data
+        api_request_data = self.transform_variant_data_into_sd_list_format([updated_product_data])
+
+        return self.api.edit_product_details_bulk(api_request_data, skip_all_channels)
+
 
 class SureDoneAdminUtils:
     def generate_sd_username(self, user, test=False):
