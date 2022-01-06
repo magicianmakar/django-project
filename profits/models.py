@@ -2,7 +2,6 @@ import arrow
 import json
 import requests
 from collections import defaultdict
-from datetime import date
 from time import sleep
 
 from django.contrib.auth.models import User
@@ -152,9 +151,11 @@ class FacebookAccount(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def _get_last_sync_params(self):
+        since = arrow.get(self.last_sync).replace(days=-1)
+        until = arrow.get() if since.shift(months=36) > arrow.get() else since.shift(months=36)
         return {
-            'since': arrow.get(self.last_sync).replace(days=-1).format('YYYY-MM-DD'),
-            'until': date.today().strftime('%Y-%m-%d')
+            'since': since.format('YYYY-MM-DD'),
+            'until': until.format('YYYY-MM-DD'),
         }
 
     @property
@@ -259,6 +260,7 @@ class FacebookAccount(models.Model):
             for campaign_id, insights_length in list(campaign_insights_length.items()):
                 print('\t\tCampaigns {} have {} Insights'.format(campaign_id, insights_length))
 
+        self.last_sync = arrow.get(params['until']).date()
         return list(campaign_insights.values())
 
 

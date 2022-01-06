@@ -554,5 +554,4 @@ def get_facebook_ads(facebook_access_id, verbosity=1):
         for insight in account.get_api_insights(verbosity=verbosity):
             create_facebook_ads(account, insight)
 
-        account.last_sync = arrow.get().date()
         account.save()
