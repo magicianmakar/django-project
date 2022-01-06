@@ -1,4 +1,5 @@
 import arrow
+import itertools
 import json
 import re
 import uuid
@@ -600,6 +601,14 @@ class SureDoneUtils:
             # Generate parent GUID and SKU
             computed_product_data['sku'] = main_sku
 
+            # If variants_info wasn't provided in the product data, generate it manually
+            if not req_variants_info:
+                all_var_values = [v['values'] for v in req_variants if len(v.get('values', [])) > 0]
+                if len(all_var_values):
+                    for variant_comb in itertools.product(*all_var_values):
+                        req_variants_info[' / '.join(variant_comb)] = {}
+
+            # Parse each variant combination to create a separate product for it
             for var_info_i, variant_title in enumerate(req_variants_info.keys()):
                 current_variant_data = deepcopy(computed_product_data)
                 current_variant_data['varianttitle'] = variant_title
