@@ -4,8 +4,8 @@
 (function(boardsMenu) {
 'use strict';
 
-$('#apply-btn').click(function(e) {
-    var action = $('#selected-actions').val();
+$('.bulk-action').on('click', function(e) {
+    var action = $(this).attr('data-bulk-action');
 
 
     if (action.length === 0) {
