@@ -126,6 +126,7 @@ class EbayUtils(SureDoneUtils):
             'business_phone': all_options_data.get('business_phone', ''),
             'business_country': all_options_data.get('business_country', ''),
             'business_zip': all_options_data.get('business_zip', ''),
+            'site_currency': all_options_data.get('site_currency', '')
         }
         return config
 
@@ -1448,3 +1449,14 @@ def smart_board_by_product(user, product):
 
         if product_added:
             board.save()
+
+
+def get_currency_options():
+    return [
+        ('USD', 'US Dollar'),
+        ('GBP', 'British Pound'),
+        ('AUD', 'Australian Dollar'),
+        ('CAD', 'Canadian Dollar'),
+        ('CNY', 'Chinese Renminbi'),
+        ('MXN', 'Mexican Peso'),
+    ]

@@ -1327,6 +1327,9 @@ class ShopifyStoreApi(ApiBase):
             elif key == 'ebay_business_country_zipcode':
                 ebay_settings_config['business_zip'] = data[key]
 
+            elif key == 'ebay_site_currency':
+                ebay_settings_config['site_currency'] = data[key]
+
             else:
                 if key != 'access_token':
                     config[key] = data[key]
