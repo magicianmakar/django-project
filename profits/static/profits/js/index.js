@@ -198,6 +198,7 @@ var Utils = {
                     if (start.isValid() && end.isValid()) {
                         $(elment_id).find('span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
                         $(input_id).val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
+                        $(elment_id).parents('form').trigger('submit');
                     }
                 });
 
@@ -925,11 +926,11 @@ var Utils = {
             }
         },
         activateDataView: function(btn) {
-            $('#data-view .btn.btn-success').removeClass('active btn-success').addClass('btn-default');
-            btn.removeClass('btn-default').addClass('active btn-success');
+            $('#data-view .active').removeClass('active');
+            btn.addClass('active');
         },
         onDataViewClick: function() {
-            $('#data-view').on('click', '.btn:not(.active)', function(e) {
+            $('#data-view').on('click', 'a:not(.active)', function(e) {
                 e.preventDefault();
 
                 var timeType = $(this).attr('data-time');

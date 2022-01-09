@@ -1,12 +1,10 @@
-{% load template_helper %}
+{% load static template_helper %}
 
 <div class="col-lg-4 expandable">
   <div class="well">
-    <h3><span>Profit</span></h3>
-    <div class="totals-detail">
-      <span class="totals-profit main-value">
-        {% money_format totals.profit store True %}
-      </span>
+    <img src="{% static 'img/thumbs-up.png' %}">
+    <h4 class="dropdown-toggle" data-toggle-id="profit-briefing">Profit<i class="dropified-icons di-arrow-up pull-right"></i></h4>
+    <div class="totals-detail dropdown-menu not-floating">
       <dl class="dl-horizontal">
         <dt>Revenue</dt>
         <dd id="total-revenue">{% money_format totals.revenue store True %}</dd>
@@ -19,22 +17,23 @@
         <dt>Other Costs</dt>
         <dd id="totals-other-costs">{% money_format totals.other_costs store True %}</dd>
       </dl>
-      <hr>
-      <dl class="dl-horizontal">
-        <dt>Profit</dt>
-        <dd class="totals-profit">{% money_format totals.profit store True %}</dd>
-        <dt>Profit Margin</dt>
-        <dd id="totals-profit-margin">{{ totals.profit_margin }}</dd>
-      </dl>
     </div>
-    <canvas id="amounts-chart-mini" height="100"></canvas>
+    <span class="totals-profit main-value">
+      <span class="pull-left">
+        <span class="totals-profit">{% money_format totals.profit store True %}</span>
+        <span class="margin-span">
+          (Margin <span id="totals-profit-margin">{{ totals.profit_margin }}</span>)
+        </span>
+      </span>
+      <canvas id="amounts-chart-mini"></canvas>
+    </span>
   </div>
 </div>
 <div class="col-lg-4 expandable">
   <div class="well">
-    <h3><span>Orders</span></h3>
-    <div class="totals-detail">
-      <span class="main-value">{{ totals.orders_count }}</span>
+    <img src="{% static 'img/globe.png' %}">
+    <h4 class="dropdown-toggle" data-toggle-id="profit-orders">Orders<i class="dropified-icons di-arrow-up pull-right"></i></h4>
+    <div class="totals-detail dropdown-menu not-floating">
       <dl class="dl-horizontal">
         <dt>Orders per day</dt>
         <dd>{{ totals.orders_per_day|floatformat:"-2" }}</dd>
@@ -44,13 +43,17 @@
         <dd>{{ totals.fulfillments_per_day }}</dd>
       </dl>
     </div>
-    <canvas id="counts-chart-mini" height="100"></canvas>
+    <span class="main-value">
+      {{ totals.orders_count }}
+      <canvas id="counts-chart-mini"></canvas>
+    </span>
   </div>
 </div>
 <div class="col-lg-4 expandable">
   <div class="well">
-    <h3><span>Average Order</span></h3>
-    <div class="totals-detail">
+    <img src="{% static 'img/notepad.png' %}">
+    <h4 class="dropdown-toggle" data-toggle-id="profit-averages">Average Order<i class="dropified-icons di-arrow-up pull-right"></i></h4>
+    <div class="totals-detail dropdown-menu not-floating">
       <dl class="dl-horizontal">
         <dt>Revenue</dt>
         <dd id="average-total-revenue">{% money_format totals.average_revenue store True %}</dd>
@@ -60,6 +63,8 @@
         </dd>
       </dl>
     </div>
-    <canvas id="averages-chart-mini" height="100"></canvas>
+    <span class="main-value">
+      <canvas id="averages-chart-mini"></canvas>
+    </span>
   </div>
 </div>

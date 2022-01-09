@@ -16,7 +16,7 @@ p {
 h4 {
     color: #1d262f;
     font-size: 20px;
-    font-weight: 600;
+    /*font-weight: 600;*/
 }
 
 h3 {
@@ -280,7 +280,6 @@ tbody#stores-table-body > tr > td {
     color: #2c5dE5;
 }
 
-
 .ibox-content h1,
 .ibox-content h2,
 .ibox-content h3,
@@ -351,7 +350,11 @@ fieldset[disabled] .btn {
     margin-right: 10px;
 }
 
-.btn-group.open .dropified-icons.di-arrow-up:before {
+.dropdown-toggle {
+    cursor: pointer;
+}
+
+.open .dropdown-toggle .dropified-icons.di-arrow-up:before {
     content: "\e900";
 }
 .btn-group .caret {
@@ -820,9 +823,31 @@ a.text-default:focus > .dropified-icons:before {
     padding-top: 10px;
 }
 
-.nav-tabs > li.active > a,
-.nav-tabs > li.active > a:hover,
-.nav-tabs > li.active > a:focus {
+.nav.nav-pills {
+    padding: 0;
+}
+
+.nav.nav-pills:after {
+    border-bottom: 0 none;
+}
+
+.tabs-container .nav-pills > li > a {
+    padding: 10px 12px 10px;
+    transition: background-color .2s;
+    border: 0 none;
+}
+
+.tabs-container .nav-pills > li > a:hover,
+.tabs-container .nav-pills > li > a:focus,
+.tabs-container .nav-pills > li > a.active,
+.tabs-container .nav-pills > li.active > a,
+.tabs-container .nav-pills > li.active > a:hover,
+.tabs-container .nav-pills > li.active > a:focus {
+    background-color: #EAF3E7;
+    border-radius: 8px;
+    color: #6BAA55;
+    border-bottom: 0 none;
+    padding: 10px 12px 10px;
 }
 
 .caret.rounded {
@@ -2094,4 +2119,12 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
 .switchery-small>small {
   height: 14.3px !important;
   width: 14px !important;
+}
+
+.dropdown-menu.not-floating {
+    border: 0 none;
+    box-shadow: none;
+    float: none;
+    background-color: transparent;
+    position: static;
 }

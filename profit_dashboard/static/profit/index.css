@@ -32,6 +32,21 @@
   display: inline;
 }
 
+.table > tbody > tr .other-costs-form .input-group-addon {
+  padding: 3px 3px 0 12px;
+}
+
+.table > tbody > tr .other-costs-form .input-group-addon span {
+  border-radius: 50%;
+  background-color: #969696;
+  padding: 5px;
+  color: #ffffff;
+}
+
+.table > tbody > tr .other-costs-form .profit-other-costs {
+  border-left: 0 none;
+}
+
 #details .profit-detail {
   transition: background-color 0.2s;
 }
@@ -236,7 +251,12 @@
 
 .expandable .well {
   /*padding-bottom: 0;*/
-  background-color: #fbfbfb;
+  background-color: #F6F8F9;
+  border: 0 none;
+  box-shadow: none;
+  border-radius: 6px;
+  display: inline-block;
+  width: 100%;
 }
 
 .expandable .well hr {
@@ -244,8 +264,8 @@
   margin: 3px 0 10px;
 }
 
-.expandable .well h3 span {
-  color: #000;
+.expandable .well img + h4 {
+  margin-top: 16px;
 }
 
 .expandable .well .main-value {
@@ -253,24 +273,49 @@
   font-size: 30px;
   margin-bottom: 15px;
   display: inline-block;
+  min-height: 42px;
+  padding-top: 20px;
+  width: 100%;
+  border-top: 1px solid #C9D4DE;
 }
 
 .expandable .well dl {
   margin: 0;
+  border-top: 1px solid #C9D4DE;
+  padding: 10px 0 0;
 }
 
+.margin-span,
 .expandable .well dl dt {
   text-align: left !important;
-  font-size: 14px;
+  font-weight: 400;
+  font-size: 13px;
+  color: #56708A;
 }
 
 .expandable .well dl dd {
   text-align: right !important;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1D262F;
+}
+
+.margin-span {
+  float: left;
+  clear: left;
+}
+
+.totals-profit {
+  float: left;
 }
 
 .expandable .well .totals-detail {
-  min-height: 215px;
+  min-height: 112px;
+}
+
+.expandable .well canvas {
+  max-width: 8vw;
+  float: right;
 }
 
 .fb-login-button {

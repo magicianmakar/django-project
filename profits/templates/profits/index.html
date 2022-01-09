@@ -28,48 +28,56 @@
         {% include 'profits/partial/facebook.html' %}
         <br>
 
-        <form class="form-inline" method="get">
-          <input type="hidden" name="store" value="{{ store.id }}">
-          <div class="form-group" id="profit-range">
-
-            <div id="date" class="form-control">
-                <i class="fa fa-calendar m-r-xs"></i>
-                <span></span>
-                <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
-            </div>
-            <input type="hidden" type="text" name="date_range" value="{{ start }}-{{ end }}" />
-          </div>
-          <button type="submit" class="btn btn-success">Filter</button>
-
-          <div class="form-group pull-right">
-            <ul id="data-view" class="top-controls pull-right data-view">
-              <li><a href="javascript:;" class="btn active btn-success daily" data-time="daily">Daily</a></li>
-              <li><a href="javascript:;" class="btn btn-default weekly" data-time="weekly">Weekly</a></li>
-              <!-- <li><a href="#" class="btn btn-default monthly" data-time="monthly">Monthly</a></li> -->
+        <div class="row">
+          <div id="top-controls-menu" class="col-lg-12">
+            <ul class="nav nav-tabs nav-pills pull-left">
+                <li class="active"><a data-toggle="tab" href="#tab-data-table" data-top-controls="#data-view"><i class="fa fa-table"></i> Table</a></li>
+                <li class=""><a data-toggle="tab" href="#tab-charts" data-top-controls="#data-view"><i class="fa fa-line-chart"></i> Charts</a></li>
+                <li class=""><a data-toggle="tab" href="#tab-details" data-top-controls="#details-view"><i class="fa fa-line-chart"></i> Details</a></li>
             </ul>
-          </div>
-        </form>
 
-        <div id="top-controls-menu">
-          <ul class="nav nav-tabs clients-list">
-              <li class="active"><a data-toggle="tab" href="#tab-data-table" data-top-controls="#data-view"><i class="fa fa-table"></i> Table</a></li>
-              <li class=""><a data-toggle="tab" href="#tab-charts" data-top-controls="#data-view"><i class="fa fa-line-chart"></i> Charts</a></li>
-              <li class=""><a data-toggle="tab" href="#tab-details" data-top-controls="#details-view"><i class="fa fa-line-chart"></i> Details</a></li>
-          </ul>
-          <div class="tab-content">
-              <div id="tab-data-table" class="tab-pane active clients-list">
+            <form class="form-inline pull-right" method="get">
+              <input type="hidden" name="store" value="{{ store.id }}">
+
+              <div class="form-group">
+                <ul id="data-view" class="top-controls pull-right data-view">
+                  <li><a href="javascript:;" class="btn active daily" data-time="daily">Daily</a></li>
+                  <li><a href="javascript:;" class="btn weekly" data-time="weekly">Weekly</a></li>
+                  <!-- <li><a href="#" class="btn btn-default monthly" data-time="monthly">Monthly</a></li> -->
+                </ul>
+              </div>
+
+              <div class="form-group" id="profit-range">
+                <div id="date" class="form-control">
+                    <i class="fa fa-calendar m-r-xs"></i>
+                    <span></span>
+                    <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+                </div>
+                <input type="hidden" type="text" name="date_range" value="{{ start }}-{{ end }}" />
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="tab-content">
+            <div id="tab-data-table" class="tab-pane active clients-list">
+              <div class="row">
                 {% include 'profits/partial/totals.html' %}
+              </div>
+              <div class="row">
                 {% include 'profits/partial/table.html' %}
               </div>
-              <div id="tab-charts" class="tab-pane">
-                <br>
+            </div>
+            <div id="tab-charts" class="tab-pane">
+              <div class="row">
                 {% include 'profits/partial/chart.html' %}
               </div>
-              <div id="tab-details" class="tab-pane">
-                <br>
+            </div>
+            <div id="tab-details" class="tab-pane">
+              <div class="row">
                 {% include 'profits/partial/details.html' %}
               </div>
-          </div>
+            </div>
         </div>
         {% endif %}
       </div>

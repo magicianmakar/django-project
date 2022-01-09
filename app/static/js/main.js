@@ -1051,6 +1051,21 @@ $('a[data-auto-click]').each(function (i, el) {
     }
 });
 
+$('.dropdown-toggle:not([data-toggle="dropdown"])').on('click', function(e) {
+    var dropdownParent = $(this).parent();
+    dropdownParent.toggleClass('open');
+    if ($(this).data('toggle-id')) {
+        var dropdownConfig = sessionStorage.getItem('dropdownConfig') ? JSON.parse(sessionStorage.getItem('dropdownConfig')) : {};
+        dropdownConfig[$(this).data('toggle-id')] = dropdownParent.hasClass('open');
+        sessionStorage.setItem('dropdownConfig', JSON.stringify(dropdownConfig));
+    }
+});
+
+var dropdownConfig = sessionStorage.getItem('dropdownConfig') ? JSON.parse(sessionStorage.getItem('dropdownConfig')) : {};
+for (var dropdownId in dropdownConfig) {
+    $('[data-toggle-id="' + dropdownId + '"]').parent().toggleClass('open', dropdownConfig[dropdownId]);
+}
+
 $('img.no-img').on('error', function(e) {
     if($(this).prop('no-img-error') && $(this).prop('no-img-error') > 3) {
         return;
