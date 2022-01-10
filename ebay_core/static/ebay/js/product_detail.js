@@ -9,9 +9,7 @@ var image_cache = {};
 function showProductInfo(rproduct) {
     product = rproduct;
     if (product) {
-        var product_price = product.price;
         $('#product-title').val(product.title);
-        $('#product-price').val(product_price);
         $('#product-type').val(product.product_type);
         $('#product-tag').val(product.tags);
         $('#product-vendor').val(product.vendor);
@@ -35,8 +33,6 @@ function showProductInfo(rproduct) {
             });
         }
 
-        $('#product-weight').val(productDetails.weight ? productDetails.weight : 0.0);
-
         if (product.product_description) {
             document.editor.setData(product.product_description);
         }
@@ -55,12 +51,8 @@ function prepareApiData(productData, variants) {
         tags: $('#product-tag').val(),
         longdescription: document.editor.getData(),
         ebay_category_id: productData.ebay_category_id,
-        price: parseFloat($('#product-price').val()),
         vendor: $('#product-vendor').val(),
         published: $('#product-visible').prop('checked'),
-        compare_at_price: parseFloat($('#product-compare-at').val()),
-        weight: parseFloat($('#product-weight').val()),
-        weightunit: $('#product-weight-unit').val(),
         // images: productData.images,
         variants: []
     };
@@ -234,25 +226,7 @@ $('#product-export-btn').click(function (e) {
 function validatePriceValue() {
     var priceError = 0;
     var comparePriceError = 0;
-
-    var productPrice = $('#product-price');
-    var productPriceVal = parseFloat(productPrice.val());
-    var compareAtPrice = $('#product-compare-at');
-    var compareAtPriceVal = parseFloat(compareAtPrice.val());
-
-    if (isNaN(productPriceVal) || productPriceVal < 0.99) {
-        productPrice.parent().addClass('has-error');
-        priceError++;
-    } else {
-        productPrice.parent().removeClass('has-error');
-    }
-
-    if (!isNaN(compareAtPriceVal) && compareAtPriceVal !== 0 && productPriceVal > compareAtPriceVal) {
-        compareAtPrice.parent().addClass('has-error');
-        comparePriceError++;
-    } else {
-        compareAtPrice.parent().removeClass('has-error');
-    }
+    var productPrice, productPriceVal, compareAtPrice, compareAtPriceVal;
 
     $('#ebay-variants').find('.ebay-variant').each(function() {
         productPrice = $(this).find('input[name="price"]');
@@ -346,15 +320,8 @@ function productExport(btn) {
 
 $('#product-update-btn').click(function (e) {
     e.preventDefault();
-
-    var productPrice = parseFloat($('#product-price').val());
-    var productComparePrice = parseFloat($('#product-compare-at').val());
     var store_id = $('#store-select').val();
 
-    if(productComparePrice != '' && productComparePrice != 0 && productComparePrice < productPrice) {
-        toastr.warning('Compare at price should be greater than Product Price');
-        return;
-    }
     if (!verifyPusherIsDefined()) {
         return;
     }
