@@ -157,21 +157,24 @@ class EbayStoreApi(ApiBase):
         pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
         return self.api_success({'pusher': pusher})
 
-    def get_advanced_settings(self, request, user, data):
+    def get_business_policies_sync(self, request, user, data):
         """
-        Get ebay advanced settings contents. The settings include store's default shipping, return policies, etc.
+        Sync ebay business policies for the user's account.
         """
         store_id = request.GET.get('store')
 
         if not store_id:
             return self.api_error('Missing a required store parameter.')
 
-        store = get_object_or_404(EbayStore, id=store_id)
-        permissions.user_can_view(user, store)
+        try:
+            store = EbayStore.objects.get(id=store_id)
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found.')
 
+        permissions.user_can_view(user, store)
         pusher_channel = f'user_{user.id}'
 
-        tasks.get_advanced_options.apply_async(kwargs={
+        tasks.sync_advanced_options.apply_async(kwargs={
             'user_id': user.id,
             'store_id': store_id,
             'pusher_channel': pusher_channel,
@@ -179,6 +182,31 @@ class EbayStoreApi(ApiBase):
 
         pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
         return self.api_success({'pusher': pusher})
+
+    def get_advanced_settings(self, request, user, data):
+        """
+        Get ebay advanced settings contents. The settings include store's default shipping, return policies, etc.
+        """
+        store_id = request.GET.get('store')
+
+        if not store_id:
+            return self.api_error('Missing a required parameter: store.')
+
+        try:
+            store = EbayStore.objects.get(id=store_id)
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found.')
+
+        permissions.user_can_view(user, store)
+        settings_data = EbayUtils(user).get_ebay_advanced_settings(store)
+
+        try:
+            if not settings_data.get('success'):
+                return self.api_error(settings_data.get('message', ''))
+        except AttributeError:
+            return self.api_error('Something went wrong. Please try again.')
+
+        return self.api_success(settings_data)
 
     def post_advanced_settings(self, request, user, data):
         """

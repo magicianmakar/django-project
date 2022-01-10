@@ -1713,6 +1713,54 @@
         });
     });
 
+    function handleEbayAdvancedSettingsLoad(data) {
+        var generateOptionHtml = function(option, currentSelection) {
+            var selectedOption = currentSelection === option.profileId ? ' selected="selected"' : '';
+            return '<option value="' + option.profileId + '"' + selectedOption + '>' + option.profileName + '</option>';
+        };
+
+        // Payment Profile Option selection
+        var allPaymentOptions = data.options.payment_profile_options.map(function(option) {
+            return generateOptionHtml(option, data.settings.payment_profile_id);
+        });
+        allPaymentOptions.unshift(generateOptionHtml({
+            profileId: '',
+            profileName: 'Select Payment Policy...'
+        }, data.settings.payment_profile_id));
+        $('#ebay_payment_profile_default').html(allPaymentOptions);
+
+        // Return Profile Option selection
+        var allReturnOptions = data.options.return_profile_options.map(function(option) {
+            return generateOptionHtml(option, data.settings.return_profile_id);
+        });
+        allReturnOptions.unshift(generateOptionHtml({
+            profileId: '',
+            profileName: 'Select Return Policy...'
+        }, data.settings.return_profile_id));
+        $('#ebay_return_profile_default').html(allReturnOptions);
+
+        // Shipping Profile Option selection
+        var allShippingOptions = data.options.shippping_profile_options.map(function(option) {
+            return generateOptionHtml(option, data.settings.shipping_profile_id);
+        });
+        allShippingOptions.unshift(generateOptionHtml({
+            profileId: '',
+            profileName: 'Select Shipping Policy...'
+        }, data.settings.shipping_profile_id));
+        $('#ebay_shipment_profile_default').html(allShippingOptions);
+
+        // Site ID selection
+        var ebaySiteIdField = $('#ebay_site_id');
+        ebaySiteIdField.empty();
+        ebaySiteIdField.append($("<option></option>").attr("value", '').text('Select eBay Site ID...'));
+        $.each(data.options.site_id_options, function(index, site_id) {
+            $('#ebay_site_id').append($("<option></option>").attr("value", site_id[0]).text(site_id[1]));
+            if (site_id[0] == data.settings.ebay_siteid) {
+                 $('#ebay_site_id option').prop("selected", "true");
+            }
+        });
+    }
+
     $('.ebay-store-settings-btn').click(function(e) {
         e.preventDefault();
 
@@ -1726,94 +1774,69 @@
         var pusher = new Pusher(sub_conf.key);
         var channel = pusher.subscribe(sub_conf.channel);
 
+        var modalTitleEl = $('#ebay-store-update-modal .modal-title');
         var buttonEl = $(this);
         var formContainerEl = $('#ebay-store-settings-main-container');
         var loadingContainerEl = $('#ebay-loading-container');
         var updateSettingsButtonEl = $('#ebay-update-settings-modal-btn');
         var storeId = buttonEl.attr('data-store-id');
+        var storeName = buttonEl.attr('data-store-username');
 
+        modalTitleEl.text(storeName ? storeName + ' eBay Advanced Settings' : 'eBay Store Advanced Settings');
         buttonEl.bootstrapBtn('loading');
         updateSettingsButtonEl.prop('disabled', true);
         loadingContainerEl.show();
         formContainerEl.hide();
 
-
-        $('#ebay_payment_profile_default').html('<option>No policies found.</option>');
-        $('#ebay_return_profile_default').html('<option>No policies found.</option>');
-        $('#ebay_shipment_profile_default').html('<option>No policies found.</option>');
+        $('#ebay_site_id').html('<option value="">No site IDs found.</option>');
+        $('#ebay_payment_profile_default').html('<option value="">No policies found.</option>');
+        $('#ebay_return_profile_default').html('<option value="">No policies found.</option>');
+        $('#ebay_shipment_profile_default').html('<option value="">No policies found.</option>');
         $('#ebay_settings_store_id').val(storeId);
 
-        channel.bind('ebay-advanced-settings-load', function(data) {
+
+        function handleError(data) {
+            buttonEl.bootstrapBtn('reset');
+            loadingContainerEl.hide();
+            formContainerEl.show();
+            displayAjaxError('Advanced eBay Settings', data);
+        }
+
+        channel.bind('ebay-business-policies-sync', function(data) {
             if (data.store_id == storeId) {
-                buttonEl.bootstrapBtn('reset');
-                updateSettingsButtonEl.prop('disabled', false);
                 pusher.unsubscribe(channel);
 
                 if (data.success) {
-                    var generateOptionHtml = function(option, currentSelection) {
-                        var selectedOption = currentSelection === option.profileId ? ' selected="selected"' : '';
-                        return '<option value="' + option.profileId + '"' + selectedOption + '>' + option.profileName + '</option>';
-                    };
-
-                    // Payment Profile Option selection
-                    var allPaymentOptions = data.options.payment_profile_options.map(function(option) {
-                        return generateOptionHtml(option, data.settings.payment_profile_id);
-                    });
-                    allPaymentOptions.unshift(generateOptionHtml({
-                        profileId: '',
-                        profileName: 'Select Payment Policy...'
-                    }, data.settings.payment_profile_id));
-                    $('#ebay_payment_profile_default').html(allPaymentOptions);
-
-                    // Return Profile Option selection
-                    var allReturnOptions = data.options.return_profile_options.map(function(option) {
-                        return generateOptionHtml(option, data.settings.return_profile_id);
-                    });
-                    allReturnOptions.unshift(generateOptionHtml({
-                        profileId: '',
-                        profileName: 'Select Return Policy...'
-                    }, data.settings.return_profile_id));
-                    $('#ebay_return_profile_default').html(allReturnOptions);
-
-                    // Shipping Profile Option selection
-                    var allShippingOptions = data.options.shippping_profile_options.map(function(option) {
-                        return generateOptionHtml(option, data.settings.shipping_profile_id);
-                    });
-                    allShippingOptions.unshift(generateOptionHtml({
-                        profileId: '',
-                        profileName: 'Select Shipping Policy...'
-                    }, data.settings.shipping_profile_id));
-                    $('#ebay_shipment_profile_default').html(allShippingOptions);
-
-                    // Site ID selection
-                    $('#ebay_site_id').empty();
-                    $.each(data.options.site_id_options, function(index, site_id) {
-                        $('#ebay_site_id').append($("<option></option>").attr("value", site_id[0]).text(site_id[1]));
-                        if (site_id[0] == data.settings.ebay_siteid) {
-                             $('#ebay_site_id option').prop("selected", "true");
-                        }
+                    $.ajax({
+                        url: api_url('advanced-settings', 'ebay') + '?' + $.param({store: storeId}),
+                        type: 'GET',
+                        success: function(data) {
+                            buttonEl.bootstrapBtn('reset');
+                            updateSettingsButtonEl.prop('disabled', false);
+                            handleEbayAdvancedSettingsLoad(data);
+                            loadingContainerEl.hide();
+                            formContainerEl.show();
+                        },
+                        error: function(data, status) {
+                            handleError(data);
+                        },
                     });
                 } else {
-                    displayAjaxError('Advanced eBay Settings', data);
+                    handleError(data);
                 }
 
-                loadingContainerEl.hide();
-                formContainerEl.show();
+
             }
         });
 
         channel.bind('pusher:subscription_succeeded', function() {
             $.ajax({
-                url: api_url('advanced-settings', 'ebay') + '?' + $.param({store: storeId}),
+                url: api_url('business-policies-sync', 'ebay') + '?' + $.param({store: storeId}),
                 type: 'GET',
                 success: function(data) {},
                 error: function(data, status) {
-                    buttonEl.bootstrapBtn('reset');
-                    updateSettingsButtonEl.prop('disabled', false);
-                    loadingContainerEl.hide();
-                    formContainerEl.show();
+                    handleError(data);
                     pusher.unsubscribe(channel);
-                    displayAjaxError('Advanced eBay Settings', data);
                 },
             });
         });
