@@ -642,9 +642,11 @@ class EbayUtils(SureDoneUtils):
         }
 
         for variant in variants_config:
-            key = variant.get('title')
+            key = variant.get('title', '').replace(' ', '')
             if key:
-                extra_variant_params[key] = product_variant_data.get(key, '')
+                minified_key = self.sd_account.format_custom_field(variant.get('title', ''))
+                extra_variant_params[minified_key] = product_variant_data.get(minified_key, '')
+                extra_variant_params[key] = product_variant_data.get(key, extra_variant_params[minified_key])
 
         current_variant_params = {
             'parent_product': parent_product,

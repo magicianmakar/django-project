@@ -21,7 +21,7 @@
                 categorySearchTerm,
                 categoryOptions: [],
                 categorySpecifics: null,
-                fieldsToHide: variantsConfig?.map(el => el?.title),
+                fieldsToHide: variantsConfig?.map(el => el?.title?.replace(' ', '')?.toLowerCase()),
             };
             this.handleCatIdChange = this.handleCatIdChange.bind(this);
             this.handleCatSearchTermChange = this.handleCatSearchTermChange.bind(this);
