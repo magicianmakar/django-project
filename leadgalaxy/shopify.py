@@ -122,4 +122,7 @@ class ShopifyAPI:
         if raise_for_status:
             rep.raise_for_status()
 
-        return rep.links, rep.json()
+        try:
+            return rep.links, rep.json()
+        except:
+            return rep.links, {resource: []}

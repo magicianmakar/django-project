@@ -14,6 +14,7 @@ from django.db.models import Q
 from django.utils.crypto import get_random_string
 from django.utils.functional import cached_property
 
+from lib.exceptions import capture_exception
 from data_store.models import DataStore
 from leadgalaxy.graphql import ShopifyGraphQL
 from product_alerts.utils import monitor_product
@@ -1084,10 +1085,14 @@ class ShopifyStore(StoreBase):
         if days:
             params['created_at_min'] = arrow.utcnow().replace(days=-abs(days)).isoformat()
 
-        return requests.get(
-            url=self.api('orders/count'),
-            params=params
-        ).json().get('count', 0)
+        try:
+            return requests.get(
+                url=self.api('orders/count'),
+                params=params
+            ).json().get('count', 0)
+        except:
+            capture_exception()
+            return 0
 
     @property
     def shopify(self):
