@@ -642,7 +642,7 @@ class EbayUtils(SureDoneUtils):
         }
 
         for variant in variants_config:
-            key = variant.get('title', '').replace(' ', '')
+            key = variant.get('title', '').replace(' ', '').lower()
             if key:
                 minified_key = self.sd_account.format_custom_field(variant.get('title', ''))
                 extra_variant_params[minified_key] = product_variant_data.get(minified_key, '')

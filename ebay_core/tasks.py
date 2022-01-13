@@ -510,8 +510,18 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
                 if 'ebayitemspecifics' in key:
                     new_key = key.replace('ebayitemspecifics', f'{ebay_prefix}itemspecifics')
                     new_values[new_key] = product_data.get(key)
-                    product_data[key] = ''
+                    new_values[key] = ''
             product_data.update(new_values)
+
+            # Update variant-specific fields as well
+            for variant in product_data.get('variants', []):
+                new_values = {}
+                for key in variant.keys():
+                    if 'ebayitemspecifics' in key:
+                        new_key = key.replace('ebayitemspecifics', f'{ebay_prefix}itemspecifics')
+                        new_values[new_key] = variant.get(key)
+                        new_values[key] = ''
+                variant.update(new_values)
 
         # Get the old data to verify that no variations got deleted
         # TODO: handle variations modifications
