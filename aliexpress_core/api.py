@@ -6,7 +6,7 @@ from django.http import HttpResponse, JsonResponse
 
 from aliexpress_core.models import AliexpressAccount
 from aliexpress_core.settings import API_KEY, API_SECRET
-from aliexpress_core.utils import MaillingAddress, PlaceOrder, PlaceOrderRequest, ProductBaseItem
+from aliexpress_core.utils import FindProduct, MaillingAddress, PlaceOrder, PlaceOrderRequest, ProductBaseItem
 from leadgalaxy.models import ShopifyOrderTrack, ShopifyProduct, ShopifyStore
 from woocommerce_core.models import WooOrderTrack, WooProduct, WooStore
 from commercehq_core.models import CommerceHQProduct, CommerceHQOrderTrack, CommerceHQStore
@@ -250,6 +250,8 @@ class AliexpressFulfillHelper():
         if not aliexpress_account:
             return self.order_error("No AliExpress account found")
 
+        aliexpress_variant_sku_dict = ''
+        variant_mapping_error_count = 0
         for line_id, line_item in self.items.items():
             req.product_items = []
             if line_item['is_bundle']:
@@ -270,8 +272,21 @@ class AliexpressFulfillHelper():
                 try:
                     item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
                 except:
-                    self.order_item_error(line_id, 'Variant mapping is not set for this item')
-
+                    if aliexpress_variant_sku_dict == '':
+                        product_data = AliexpressProduct(line_item['source_id'], aliexpress_account)
+                        aliexpress_product_result = product_data.get_product_data()
+                        aliexpress_product_result = aliexpress_product_result.get('result')
+                        if aliexpress_product_result is not None and aliexpress_product_result.get('error_code'):
+                            self.order_item_error(line_id, 'Variant mapping is not set for this item. Please map it manually.')
+                            variant_mapping_error_count += 1
+                        else:
+                            aliexpress_variant_sku_dict = product_data.get_product_sku_data(aliexpress_product_result)
+                    product_variant_title = '/'.join([v['title'] for v in line_item['variant']])
+                    if product_variant_title in aliexpress_variant_sku_dict:
+                        item.sku_attr = aliexpress_variant_sku_dict[product_variant_title]
+                    else:
+                        if not variant_mapping_error_count:
+                            self.order_item_error(line_id, 'Variant mapping is not set for this item')
                 # item.logistics_service_name = "DHL"  # TODO: handle shipping method
                 item.order_memo = 'No Invoice'  # TODO: Memo
                 req.add_item(item)
@@ -305,6 +320,30 @@ class AliexpressFulfillHelper():
                 return self.order_error(error_message)
 
         return HttpResponse(status=200)
+
+
+class AliexpressProduct():
+    def __init__(self, product_id, aliexpress_account):
+        self.product_id = product_id
+        self.aliexpress_account = aliexpress_account
+
+    def get_product_data(self):
+        aliexpress_product_obj = FindProduct()
+        aliexpress_product_obj.set_app_info(API_KEY, API_SECRET)
+        aliexpress_product_obj.product_id = self.product_id
+        result = aliexpress_product_obj.getResponse(authrize=self.aliexpress_account.access_token)
+        result = result.get('aliexpress_postproduct_redefining_findaeproductbyidfordropshipper_response')
+        return result
+
+    def get_product_sku_data(self, aliexpress_product_data):
+        final_skus = {}
+        variant_sku_data = aliexpress_product_data.get('ae_item_sku_info_dtos').get('ae_item_sku_info_d_t_o')
+        if variant_sku_data is not None and len(variant_sku_data) > 0:
+            for data in variant_sku_data:
+                sku_list = data.get("ae_sku_property_dtos").get("ae_sku_property_d_t_o")
+                ali_variant_title = '/'.join([i.get('property_value_definition_name') or i.get('sku_property_value') for i in sku_list])
+                final_skus[ali_variant_title] = data.get('id')
+        return final_skus
 
 
 class AliexpressApi(ApiResponseMixin):
