@@ -745,6 +745,9 @@ class OrdersList(ListView):
 
         if params.get('query_customer'):
             filters['customer'] = get_customer_id(self.get_store(), params['query_customer'])
+            if filters['customer'] is None:
+                filters['customer'] = -9999999999  # A hack to show no orders if a customer is not found.
+                # TO DO Show registered customers as a dropdown list to choose from
 
         return filters
 
