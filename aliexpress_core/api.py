@@ -250,8 +250,6 @@ class AliexpressFulfillHelper():
         if not aliexpress_account:
             return self.order_error("No AliExpress account found")
 
-        aliexpress_variant_sku_dict = ''
-        variant_mapping_error_count = 0
         for line_id, line_item in self.items.items():
             req.product_items = []
             if line_item['is_bundle']:
@@ -272,21 +270,8 @@ class AliexpressFulfillHelper():
                 try:
                     item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
                 except:
-                    if aliexpress_variant_sku_dict == '':
-                        product_data = AliexpressProduct(line_item['source_id'], aliexpress_account)
-                        aliexpress_product_result = product_data.get_product_data()
-                        aliexpress_product_result = aliexpress_product_result.get('result')
-                        if aliexpress_product_result is not None and aliexpress_product_result.get('error_code'):
-                            self.order_item_error(line_id, 'Variant mapping is not set for this item. Please map it manually.')
-                            variant_mapping_error_count += 1
-                        else:
-                            aliexpress_variant_sku_dict = product_data.get_product_sku_data(aliexpress_product_result)
-                    product_variant_title = '/'.join([v['title'] for v in line_item['variant']])
-                    if product_variant_title in aliexpress_variant_sku_dict:
-                        item.sku_attr = aliexpress_variant_sku_dict[product_variant_title]
-                    else:
-                        if not variant_mapping_error_count:
-                            self.order_item_error(line_id, 'Variant mapping is not set for this item')
+                    self.order_item_error(line_id, 'Variant mapping is not set for this item')
+
                 # item.logistics_service_name = "DHL"  # TODO: handle shipping method
                 item.order_memo = 'No Invoice'  # TODO: Memo
                 req.add_item(item)
