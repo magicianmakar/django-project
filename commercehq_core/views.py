@@ -785,6 +785,7 @@ class OrdersList(ListView):
             messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
 
         context['created_at_daterange'] = self.request.GET.get('created_at_daterange', 'all')
+        context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
         context['api_error'] = api_error
 
         return context

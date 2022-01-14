@@ -835,6 +835,16 @@ def bigcommerce_customer_address(order, aliexpress_fix=False, german_umlauts=Fal
         return order, customer_address
 
 
+def get_bigcommerce_order_data(store, order_id):
+    r = store.request.get(
+        url=store.get_api_url('v2/orders', order_id),
+    )
+    if r.ok:
+        data = r.json()
+        return data
+    return ''
+
+
 def get_latest_order_note(store, order_id):
     r = store.request.get(
         url=store.get_api_url('v2/orders', order_id),

@@ -811,6 +811,7 @@ class OrdersList(ListView):
 
         context['store'] = store = self.get_store()
         context['status'] = self.request.GET.get('status', 'any')
+        context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
         context['shipping_carriers'] = store_shipping_carriers(store)
 
         context['breadcrumbs'] = [

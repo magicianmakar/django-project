@@ -9,8 +9,12 @@ from aliexpress_core.settings import API_KEY, API_SECRET
 from aliexpress_core.utils import MaillingAddress, PlaceOrder, PlaceOrderRequest, ProductBaseItem
 from leadgalaxy.models import ShopifyOrderTrack, ShopifyProduct, ShopifyStore
 from woocommerce_core.models import WooOrderTrack, WooProduct, WooStore
+from commercehq_core.models import CommerceHQProduct, CommerceHQOrderTrack, CommerceHQStore
+from bigcommerce_core.models import BigCommerceProduct, BigCommerceOrderTrack, BigCommerceStore
 from leadgalaxy.utils import get_shopify_order
 from woocommerce_core.utils import get_woo_order
+from commercehq_core.utils import get_chq_order
+from bigcommerce_core.utils import get_bigcommerce_order_data, get_order_product_data
 from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.exceptions import AliexpressFulfillException
@@ -89,6 +93,87 @@ class AliexpressFulfillHelper():
         self.items = need_fulfill_items
         self.fulfill_aliexpress_order('woo')
 
+    def fulfill_chq_order(self):
+        self.order = get_chq_order(self.store, self.order_id)
+        order_tracks = {}
+        for i in CommerceHQOrderTrack.objects.filter(store=self.store, order_id=self.order['id']).defer('data'):
+            order_tracks[f'{i.order_id}-{i.line_id}'] = i
+
+        need_fulfill_items = {}
+        for el in self.order['items']:
+            if str(el['data']['id']) not in self.items:
+                continue
+            item = self.items[str(el['data']['id'])]
+            variant_id = el['data']['variant']['id']
+            if not el['data']['product_id']:
+                if variant_id:
+                    product = CommerceHQProduct.objects.filter(store=self.store, title=el['data']['title'], source_id__gt=0).first()
+                else:
+                    product = None
+            else:
+                product = CommerceHQProduct.objects.filter(store=self.store, source_id=el['data']['product_id']).first()
+            chq_order = order_tracks.get(f"{self.order['id']}-{el['data']['id']}")
+            if not product or chq_order:
+                continue
+            variant_id = product.get_real_variant_id(variant_id)
+            supplier = product.get_supplier_for_variant(variant_id)
+
+            if product.have_supplier() and supplier and supplier.is_aliexpress:
+                item.update({
+                    'line': el,
+                    'supplier': supplier,
+                    'product': product
+                })
+
+                need_fulfill_items[str(el['data']['id'])] = item
+
+        if not need_fulfill_items:
+            return self.order_error('Order have no items that need fulfillements')
+
+        self.items = need_fulfill_items
+        self.fulfill_aliexpress_order('chq')
+
+    def fulfill_bigcommerce_order(self):
+        self.order = get_bigcommerce_order_data(self.store, self.order_id)
+        self.order_items = get_order_product_data(self.store, self.order)
+        order_tracks = {}
+        for i in BigCommerceOrderTrack.objects.filter(store=self.store, order_id=self.order['id']).defer('data'):
+            order_tracks[f'{i.order_id}-{i.line_id}'] = i
+
+        need_fulfill_items = {}
+        for el in self.order_items:
+            if str(el['id']) not in self.items:
+                continue
+            item = self.items[str(el['id'])]
+            variant_id = el['variant_id']
+            if not el['product_id']:
+                if variant_id:
+                    product = BigCommerceProduct.objects.filter(store=self.store, title=el['name'], source_id__gt=0).first()
+                else:
+                    product = None
+            else:
+                product = BigCommerceProduct.objects.filter(store=self.store, source_id=el['product_id']).first()
+            bigcommerce_order = order_tracks.get(f"{el['order_id']}-{el['id']}")
+            if not product or bigcommerce_order:
+                continue
+            variant_id = product.get_real_variant_id(variant_id)
+            supplier = product.get_supplier_for_variant(variant_id)
+
+            if product.have_supplier() and supplier and supplier.is_aliexpress:
+                item.update({
+                    'line': el,
+                    'supplier': supplier,
+                    'product': product
+                })
+
+                need_fulfill_items[str(el['id'])] = item
+
+        if not need_fulfill_items:
+            return self.order_error('Order have no items that need fulfillements')
+
+        self.items = need_fulfill_items
+        self.fulfill_aliexpress_order('bigcommerce')
+
     def fulfill_shopify_order(self):
         self.order = get_shopify_order(self.store, self.order_id)
 
@@ -138,6 +223,10 @@ class AliexpressFulfillHelper():
         order_fulfill_url = app_link('api/order-fulfill')
         if store_type == 'woo':
             order_fulfill_url = app_link('api/woo/order-fulfill')
+        elif store_type == 'chq':
+            order_fulfill_url = app_link('api/chq/order-fulfill')
+        elif store_type == 'bigcommerce':
+            order_fulfill_url = app_link('api/bigcommerce/order-fulfill')
 
         aliexpress_order = PlaceOrder()
         aliexpress_order.set_app_info(API_KEY, API_SECRET)
@@ -221,12 +310,16 @@ class AliexpressFulfillHelper():
 class AliexpressApi(ApiResponseMixin):
 
     def post_order(self, request, user, data):
-
         storeType = data.get('store_type', 'shopify')
         if storeType == 'shopify':
             store = ShopifyStore.objects.get(id=data['store'])
         elif storeType == 'woo':
             store = WooStore.objects.get(id=data['store'])
+        elif storeType == 'chq':
+            store = CommerceHQStore.objects.get(id=data['store'])
+        elif storeType == 'bigcommerce':
+            store = BigCommerceStore.objects.get(id=data['store'])
+
         permissions.user_can_view(user, store)
 
         try:
@@ -235,6 +328,10 @@ class AliexpressApi(ApiResponseMixin):
                 helper.fulfill_shopify_order()
             elif storeType == 'woo':
                 helper.fulfill_woo_order()
+            elif storeType == 'chq':
+                helper.fulfill_chq_order()
+            elif storeType == 'bigcommerce':
+                helper.fulfill_bigcommerce_order()
 
         except AliexpressFulfillException:
             pass

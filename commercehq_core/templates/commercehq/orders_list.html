@@ -235,10 +235,16 @@
 
                                     <div class="btn-group">
                                         {% if not order.mixed_supplier_types %}
-                                        <button class="btn btn-primary small order-items" order-id="{{order.id}}"
-                                                type="button">
-                                            Order Items
-                                        </button>
+                                        {% if use_aliexpress_api %}
+                                            <button class="btn btn-primary small quick-order-btn" href="#" data-target="all" store="{{store.id}}" order-id="{{order.id}}" order-name="{{order.name}}"><i class="fa fa-bolt"></i>
+                                                Quick Order items
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-primary small order-items" order-id="{{order.id}}"
+                                                    type="button">
+                                                Order Items
+                                            </button>
+                                        {% endif %}
                                         <button type="button" class="btn btn-primary small dropdown-toggle"
                                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             <span class="caret"></span>
@@ -257,6 +263,18 @@
                                                     <li><a class="order-seleted-suppliers" supplier-type="{{type}}" href="#">{{type|supplier_type}} Suppliers</a></li>
                                                 {% endfor %}
                                             {% else %}
+                                            {% if use_aliexpress_api %}
+                                                <li>
+                                                    <a class="quick-order-btn" href="#" data-target="selected" store="{{store.id}}" order-id="{{order.id}}" order-name="{{order.name}}">
+                                                        <i class="fa fa-bolt"></i> Quick Order selected items
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="order-items" order-id="{{order.id}}" href="javascript:void(0)">
+                                                Order Items
+                                                    </a>
+                                                </li>
+                                            {% endif %}
                                                 <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
                                             {% endif %}
                                         </ul>
