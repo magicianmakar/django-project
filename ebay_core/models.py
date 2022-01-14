@@ -482,8 +482,17 @@ class EbayProductVariant(models.Model):
                 'suppliersku': self.supplier_sku,
                 'is_connected': self.is_connected,
                 **self.parsed_variant_data,
+                **self.map_variant_fields_to_ebay_specifics()
             }
         return self._details_for_view
+
+    def map_variant_fields_to_ebay_specifics(self):
+        variants_config = self.parent_product.variants_config_parsed
+        variant_field_keys = [i.get('title') for i in variants_config if i.get('title')]
+        mapped_data = {}
+        for key in variant_field_keys:
+            mapped_data[f'ebayitemspecifics{key}'] = self.parsed_variant_data[key.replace(' ', '').lower()]
+        return mapped_data
 
     @property
     def parsed_variant_data(self):
