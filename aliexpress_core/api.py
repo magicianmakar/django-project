@@ -23,11 +23,12 @@ from shopified_core.utils import app_link
 
 
 class AliexpressFulfillHelper():
-    def __init__(self, store, order_id, items, shipping_address):
+    def __init__(self, store, order_id, items, shipping_address, order_notes):
         self.store = store
         self.order_id = order_id
         self.items = items
         self.shipping_address = shipping_address
+        self.order_notes = order_notes
 
         self.reset_errors()
 
@@ -260,7 +261,7 @@ class AliexpressFulfillHelper():
                     temp_variants = i.get('variants') or i.get('variant')
                     item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in temp_variants])
                     # item.logistics_service_name = "DHL"  # TODO: handle shipping method
-                    # item.order_memo = i['order']['note'] or order_data['order']['note']
+                    item.order_memo = self.order_notes
                     req.add_item(item)
             else:
                 item = ProductBaseItem()
@@ -273,7 +274,7 @@ class AliexpressFulfillHelper():
                     self.order_item_error(line_id, 'Variant mapping is not set for this item')
 
                 # item.logistics_service_name = "DHL"  # TODO: handle shipping method
-                item.order_memo = 'No Invoice'  # TODO: Memo
+                item.order_memo = self.order_notes
                 req.add_item(item)
 
             aliexpress_order.set_info(req)
@@ -346,8 +347,10 @@ class AliexpressApi(ApiResponseMixin):
 
         permissions.user_can_view(user, store)
 
+        order_notes = user.get_config('aliexpress_api_order_notes')
+
         try:
-            helper = AliexpressFulfillHelper(store, data['order_id'], data['items'], data['shipping_address'])
+            helper = AliexpressFulfillHelper(store, data['order_id'], data['items'], data['shipping_address'], order_notes)
             if storeType == 'shopify':
                 helper.fulfill_shopify_order()
             elif storeType == 'woo':

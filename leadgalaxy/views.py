@@ -1887,6 +1887,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
             aliexpress_mobile_order=self.models_user.can('aliexpress_mobile_order.use'),
             ebay_manual_affiliate_link=self.models_user.can('ebay_manual_affiliate_link.use'),
             use_aliexpress_api=self.models_user.can('aliexpress_api_integration.use'),
+            aliexpress_order_notes=self.models_user.get_config('aliexpress_order_notes'),
         )
 
         self.config['admitad_site_id'], self.config['user_admitad_credentials'] = utils.get_admitad_credentials(self.models_user)
