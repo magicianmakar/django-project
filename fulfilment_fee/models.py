@@ -12,6 +12,15 @@ class SalesFeeConfig(models.Model):
     fee_flat = models.DecimalField(decimal_places=2, max_digits=9, default=0, verbose_name="Flat Sales per item (PLS orders only)")
     description = models.TextField(blank=True, null=True)
 
+    process_fees_trigger = models.CharField(blank=False, default='always', choices=[('always', 'Always'),
+                                                                                    ('count', 'When orders count reached'),
+                                                                                    ('amount', 'When orders amount reached')],
+                                            verbose_name="When to process fees", max_length=20)
+    monthly_free_limit = models.IntegerField(blank=True, default='0',
+                                             verbose_name="Apply fees after this count of orders (monthly)")
+    monthly_free_amount = models.IntegerField(blank=True, default='0',
+                                              verbose_name="Apply fees when this total USD amount reached (monthly)")
+
     def __str__(self):
         return f'<SalesFeeConfig: {self.id} {self.title} >'
 

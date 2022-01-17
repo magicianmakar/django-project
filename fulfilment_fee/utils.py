@@ -10,6 +10,27 @@ from leadgalaxy.utils import safe_float
 from lib.exceptions import capture_exception
 from profit_dashboard.utils import get_costs_from_track
 from supplements.models import PLSOrderLine
+from django.utils import timezone
+import datetime
+import calendar
+from django.db.models import Q
+from bigcommerce_core.models import BigCommerceOrderTrack
+from commercehq_core.models import CommerceHQOrderTrack
+from ebay_core.models import EbayOrderTrack
+from groovekart_core.models import GrooveKartOrderTrack
+from leadgalaxy.models import ShopifyOrderTrack
+from my_basket.models import BasketOrderTrack
+from woocommerce_core.models import WooOrderTrack
+
+track_types = [
+    {'model': ShopifyOrderTrack, 'status_column': 'shopify_status'},
+    {'model': BigCommerceOrderTrack, 'status_column': 'bigcommerce_status'},
+    {'model': GrooveKartOrderTrack, 'status_column': 'groovekart_status'},
+    {'model': WooOrderTrack, 'status_column': 'woocommerce_status'},
+    {'model': EbayOrderTrack, 'status_column': 'ebay_status'},
+    {'model': CommerceHQOrderTrack, 'status_column': 'commercehq_status'},
+    {'model': BasketOrderTrack, 'status_column': 'basket_order_status'},
+]
 
 
 def generate_sale_transaction_fee(source_type, source, amount, currency_data):
@@ -46,26 +67,34 @@ def generate_sale_transaction_fee(source_type, source, amount, currency_data):
 
 def process_sale_transaction_fee(instance):
     try:
+
+        # check total order limit if set (OR logic)
+        process_fees_trigger = instance.user.profile.plan.sales_fee_config.process_fees_trigger
+        monthly_free_limit = instance.user.profile.plan.sales_fee_config.monthly_free_limit
+        monthly_free_amount = instance.user.profile.plan.sales_fee_config.monthly_free_amount
+
+        if process_fees_trigger == 'count' and monthly_free_limit > 0 and get_total_orders(instance.user) < monthly_free_limit:
+            # skip if order limit is reached and amount limit is not set
+            return False
+
+        if process_fees_trigger == 'amount' and monthly_free_amount > 0 and get_total_amount(instance.user) < monthly_free_amount:
+            # skip this fee, limit amount is not reached
+            return False
+
         costs = get_costs_from_track(instance, commit=False)
         instance_type = type(instance).__name__
-        instance_status_column = {
-            'ShopifyOrderTrack': 'shopify_status',
-            'BigCommerceOrderTrack': 'bigcommerce_status',
-            'GrooveKartOrderTrack': 'groovekart_status',
-            'WooOrderTrack': 'woocommerce_status',
-            'EbayOrderTrack': 'ebay_status',
-            'CommerceHQOrderTrack': 'commercehq_status',
-            'BasketOrderTrack': 'basket_order_status'
-        }
+
+        for track_type in track_types:
+            if track_type['model'] == type(instance):
+                status_column = track_type['status_column']
 
         if instance.user.can('sales_fee.use') \
                 and (instance.user.is_superuser or not instance.user.can('disabled_sales_fee.use')) \
                 and costs and (instance.auto_fulfilled or instance.source_type == 'supplements') \
-                and getattr(instance, instance_status_column[instance_type]) == 'fulfilled':
+                and getattr(instance, status_column) == 'fulfilled':
 
             # getting sales fee config
             normalized_cost = normalize_currency(costs['products_cost'], costs['currency'])
-
             currency_data = {
                 'original_amount': costs['products_cost'],
                 'original_currency': costs['currency']}
@@ -75,6 +104,57 @@ def process_sale_transaction_fee(instance):
     except:
         capture_exception()
         pass
+
+
+def get_total_orders(user, date_from=False, date_to=False):
+    total = 0
+    date = timezone.now()
+    if not date_from:
+        date_from = date.replace(day=1, hour=0, minute=0, second=0)
+        date_to = date_from.replace(day=1) + datetime.timedelta(days=calendar.monthrange(date.year, date.month)[1] - 1)
+
+    for track_type in track_types:
+        status_filter_dict = {track_type['status_column']: 'fulfilled'}
+        total = total + track_type['model'].objects.filter(created_at__gte=date_from, created_at__lte=date_to, user=user).\
+            filter(**status_filter_dict).filter(Q(auto_fulfilled=True) | Q(source_type='supplements')).count()
+
+    return total
+
+
+def get_total_amount(user, date_from=False, date_to=False):
+    total = 0
+    date = timezone.now()
+    if not date_from:
+        date_from = date.replace(day=1, hour=0, minute=0, second=0)
+        date_to = date_from.replace(day=1) + datetime.timedelta(days=calendar.monthrange(date.year, date.month)[1] - 1)
+
+    for track_type in track_types:
+        status_filter_dict = {track_type['status_column']: 'fulfilled'}
+        tracks = track_type['model'].objects.filter(created_at__gte=date_from, created_at__lte=date_to, user=user).\
+            filter(**status_filter_dict).filter(Q(auto_fulfilled=True) | Q(source_type='supplements')).iterator()
+        for track in tracks:
+            try:
+                costs = get_costs_from_track(track, commit=False)
+                if costs:
+                    normalized_cost = normalize_currency(costs['products_cost'], costs['currency'])
+                    total = total + safe_float(normalized_cost)
+            except:
+                capture_exception()
+                pass
+
+    return total
+
+
+def get_total_fees(user, date_from=False, date_to=False):
+    total = 0
+    date = timezone.now()
+    if not date_from:
+        date_from = date.replace(day=1, hour=0, minute=0, second=0)
+        date_to = date_from.replace(day=1) + datetime.timedelta(days=calendar.monthrange(date.year, date.month)[1] - 1)
+
+    total = total + user.saletransactionfee_set.filter(created_at__gte=date_from, created_at__lte=date_to).count()
+
+    return total
 
 
 def normalize_currency(amount, currency):

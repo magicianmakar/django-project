@@ -31,8 +31,8 @@ class ExportCsvMixin:
 
 @admin.register(SalesFeeConfig)
 class SalesFeeConfigAdmin(admin.ModelAdmin):
-    list_display = ('title', 'fee_percent', 'fee_flat')
-    list_filter = ('title', 'fee_percent', 'fee_flat')
+    list_display = ('title', 'fee_percent', 'fee_flat', 'process_fees_trigger')
+    list_filter = ('title', 'fee_percent', 'fee_flat', 'process_fees_trigger')
 
 
 @admin.register(SaleTransactionFee)

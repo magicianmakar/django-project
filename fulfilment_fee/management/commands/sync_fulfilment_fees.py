@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
-
+import dateutil.parser
+from django.utils.timezone import make_aware
 from bigcommerce_core.models import BigCommerceOrderTrack
 from commercehq_core.models import CommerceHQOrderTrack
 from ebay_core.models import EbayOrderTrack
@@ -26,14 +27,14 @@ class Command(DropifiedBaseCommand):
             '-from',
             '--from',
             default=False,
-            help='From date'
+            help='From date (%Y-%m-%d)'
         )
 
         parser.add_argument(
             '-to',
             '--to',
             default=False,
-            help='To date'
+            help='To date (%Y-%m-%d)'
         )
 
     def start_command(self, *args, **options):
@@ -52,7 +53,8 @@ class Command(DropifiedBaseCommand):
                            CommerceHQOrderTrack,
                            BasketOrderTrack]
             for track_type in track_types:
-                tracks = track_type.objects.filter(created_at__gte=options['from'], created_at__lte=options['to'],
+                tracks = track_type.objects.filter(created_at__gte=make_aware(dateutil.parser.parse(options['from'])),
+                                                   created_at__lte=make_aware(dateutil.parser.parse(options['to'])),
                                                    user_id=user.id)
                 if options['user_id']:
                     tracks = tracks.filter(user_id=options['user_id'])

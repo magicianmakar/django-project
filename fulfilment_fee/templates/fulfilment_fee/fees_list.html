@@ -1,4 +1,29 @@
+        <div class="col-md-12">
+            <div class="panel" id="panel-current-plan">
+                <div class="panel-body">
+                    <p class="title">Total stats for this calendar month ( {{ date_from }} - {{ date_to }} )</p>
+                    <ul class="list-unstyled">
+                        <li class="list-group-item" style="border:0 none">
+                            <span>
+                                Monthly free limit:
+                                <span class="badge badge-primary">{{ monthly_free_limit }}</span> <br>
+
+                                Total auto-fulfilled orders:
+                                <span class="badge badge-primary">{{ total_orders_this_month }}</span> <br>
+
+                                Total fees:
+                                <span class="badge badge-primary">{{ total_fees_this_month }}</span> <br>
+
+
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
 {% if fees %}
+    <p>Fees from last 90 days:</p>
     <table class="table">
         <thead>
             <tr>
@@ -9,6 +34,8 @@
             </tr>
         </thead>
         <tbody id="salesfees-table-body">
+
+
         {% for fee in fees %}
             {% if fee.fee_value %}
                 <tr>
