@@ -65,6 +65,24 @@
                            target="_blank">
                             {{ object.action_name }}
                         </a>
+                        {% elif object.limit_addon and not billing.cancel_at_period_end %}
+                        <button class="btn-xs addon-install add-on-color"
+                                {% if billing.cancel_at_period_end %}
+                                id="addon-reinstall"
+                                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Re-Activating"
+                                {% else %}
+                                id="addon-install"
+                                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Installing"
+                                {% endif %}
+                                data-title="{{ object.title }}"
+                                data-endpoint='{"name": "Install Addon", "target": "install"}'>
+                                <i class="fa fa-plus"></i>
+                                {% if billing.cancel_at_period_end %}
+                                Re-activate
+                                {% else %}
+                                {{ object.action_name }}
+                                {% endif %}
+                        </button>
                         {% elif permission_count == object.permissions.count and not billing.cancel_at_period_end %}
                         <div class="addon-free-trial" style="color: #94c77f">This Addon is already included in your plan</div>
                         {% elif not user.is_authenticated %}
