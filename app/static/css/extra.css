@@ -611,12 +611,29 @@ fieldset[disabled] .btn-primary.active {
 div#bulk-ordering-app-launcher {
     position: fixed;
     z-index: 2147483003;
-    bottom: 40px;
-    right: 60px;
+    bottom: 15px;
+    right: 290px;
     width: 60px;
-    height: 60px;
+    /* height: 60px; */
     border-radius: 50%;
     cursor: pointer;
+}
+
+.cart-items-icon, .quick-pending-orders, .quick-view-orders {
+    padding-left: 5px;
+}
+
+.r-13awgt0 {
+    -ms-flex-negative: 1;
+    -ms-flex-positive: 1;
+    -ms-flex-preferred-size: 0%;
+    -webkit-box-flex: 1;
+    -webkit-flex-basis: 0%;
+    -webkit-flex-grow: 1;
+    -webkit-flex-shrink: 1;
+    flex-basis: 0%;
+    flex-grow: 1;
+    flex-shrink: 1;
 }
 
 button#bulk-order-close svg {
@@ -682,4 +699,31 @@ button#bulk-order-close {
 
 .bulk-order-header {
     margin: 15px;
+}
+
+div.quick-order-div-launcher {
+    background: #2C5DE5;
+    width: 350px;
+    height: 50px;
+    border-radius: 8px;
+    display: flex;
+}
+
+div.launcher-container {
+    color: #ffffff;
+    display: flex;
+    flex-direction: row;
+    font-size: 18px;
+    align-items: center;
+    padding-left: 5px;
+}
+
+.quick-view-orders {
+    margin-left: 83px;
+}
+
+.quick-pending-orders {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }

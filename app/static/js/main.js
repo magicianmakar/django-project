@@ -1348,6 +1348,21 @@ $('.quick-bundle-order').on("click", function(e) {
     toastr.success("Items added to Queue");
 });
 
+window.onmessage = function (e) {
+    var message;
+
+    try {
+        message = JSON.parse(e.data);
+    } catch (e) {
+        return;
+    }
+
+    if (message && message.subject && message.subject == "show-me") {
+        var ordersCount = parseInt(message.orders);
+        $("#pending-orders-count").text(ordersCount);
+    }
+};
+
 $.merge(
     $('.hidden-form[data-hidden-link]').map(function() {return $($(this).data('hidden-link'));}),
     $('.hidden-form > a')

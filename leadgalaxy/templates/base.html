@@ -330,27 +330,26 @@
 
 {% if '/orders' in request.path  %}
 <!-- Bulk Order Place holder div-->
-<div id="bulk-ordering-app-launcher" role="button" tabindex="0" aria-label="Open Intercom Messenger" aria-live="polite">
+<div id="bulk-ordering-app-launcher">
     <div class="bulk-ordering-app-launcher-icon">
-        <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g filter="url(#filter0_d_2871_176689)">
-            <path d="M28 64C28 44.1178 44.1178 28 64 28C83.8823 28 100 44.1178 100 64C100 83.8823 83.8823 100 64 100C44.1178 100 28 83.8823 28 64Z" fill="#2C5DE5"/>
-            <path d="M73.6534 55.4407H73.1201L68.6134 50.9341C68.2534 50.5741 67.6667 50.5741 67.2934 50.9341C66.9334 51.2941 66.9334 51.8807 67.2934 52.2541L70.4801 55.4407H57.5201L60.7067 52.2541C61.0667 51.8941 61.0667 51.3074 60.7067 50.9341C60.3467 50.5741 59.7601 50.5741 59.3867 50.9341L54.8934 55.4407H54.3601C53.1601 55.4407 50.6667 55.4407 50.6667 58.8541C50.6667 60.1474 50.9334 61.0007 51.4934 61.5607C51.8134 61.8941 52.2001 62.0674 52.6134 62.1607C53.0001 62.2541 53.4134 62.2674 53.8134 62.2674H74.1867C74.6001 62.2674 74.9867 62.2407 75.3601 62.1607C76.4801 61.8941 77.3334 61.0941 77.3334 58.8541C77.3334 55.4407 74.8401 55.4407 73.6534 55.4407Z" fill="white"/>
-            <path d="M73.3999 64H54.4932C53.6665 64 53.0399 64.7333 53.1732 65.5467L54.2932 72.4C54.6665 74.6933 55.6665 77.3333 60.1065 77.3333H67.5865C72.0799 77.3333 72.8799 75.08 73.3599 72.56L74.7065 65.5867C74.8665 64.76 74.2399 64 73.3999 64ZM62.1465 72.6C62.1465 73.12 61.7332 73.5333 61.2265 73.5333C60.7065 73.5333 60.2932 73.12 60.2932 72.6V68.2C60.2932 67.6933 60.7065 67.2667 61.2265 67.2667C61.7332 67.2667 62.1465 67.6933 62.1465 68.2V72.6ZM67.8532 72.6C67.8532 73.12 67.4399 73.5333 66.9199 73.5333C66.4132 73.5333 65.9865 73.12 65.9865 72.6V68.2C65.9865 67.6933 66.4132 67.2667 66.9199 67.2667C67.4399 67.2667 67.8532 67.6933 67.8532 68.2V72.6Z" fill="white"/></g>
-            <defs>
-            <filter id="filter0_d_2871_176689" x="0" y="0" width="128" height="128" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-            <feMorphology radius="4" operator="dilate" in="SourceAlpha" result="effect1_dropShadow_2871_176689"/>
-            <feOffset/>
-            <feGaussianBlur stdDeviation="12"/>
-            <feComposite in2="hardAlpha" operator="out"/>
-            <feColorMatrix type="matrix" values="0 0 0 0 0.113725 0 0 0 0 0.14902 0 0 0 0 0.184314 0 0 0 0.2 0"/>
-            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2871_176689"/>
-            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2871_176689" result="shape"/>
-            </filter>
-            </defs>
-        </svg>
+        <div class="quick-order-div-launcher">
+            <div class="launcher-container">
+                <div class="cart-items-icon">
+                    <i class="fa fa-bolt" aria-hidden="true"></i>
+                </div>
+                <div class="quick-pending-orders">
+                   <span>Quick Queue</span>
+                </div>
+                <div class="quick-view-orders">
+                    <span id="pending-orders-count">
+                    0
+                </span>
+                <span id="pending-orders-text">
+                    Order(s) | <i class="fa fa-caret-down" aria-hidden="true"></i>
+                </span></div>
+            </div>
+        </div>
+        
     </div>
 </div>
 <!-- END --> 
