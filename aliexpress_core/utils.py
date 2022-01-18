@@ -78,6 +78,14 @@ class FindProduct(RestApi):
         return 'aliexpress.postproduct.redefining.findaeproductbyidfordropshipper'
 
 
+class FindProductViaApi(RestApi):
+    def __init__(self, domain='gw.api.taobao.com', port=80):
+        RestApi.__init__(self, domain, port)
+
+    def getapiname(self):
+        return 'aliexpress.ds.product.get'
+
+
 class OrderInfo(RestApi):
     def __init__(self, domain='gw.api.taobao.com', port=80):
         RestApi.__init__(self, domain, port)
