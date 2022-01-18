@@ -92,7 +92,7 @@ ordereddict==1.1
 packaging==21.0
 pdfrw==0.4
 phonenumbers==8.9.10
-Pillow==8.3.2
+Pillow==9.0.0
 pipdeptree==2.1.0
 ply==3.11
 premailer==3.7.0
