@@ -9,7 +9,8 @@ from shopified_core.models_utils import get_track_model
 class SalesFeeConfig(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Title")
     fee_percent = models.DecimalField(decimal_places=2, max_digits=9, default=0, verbose_name="Sales fee percent")
-    fee_flat = models.DecimalField(decimal_places=2, max_digits=9, default=0, verbose_name="Flat Sales per item (PLS orders only)")
+    fee_flat = models.DecimalField(decimal_places=2, max_digits=9, default=0,
+                                   verbose_name="Flat Sales Fee(per item for PLS, but per order for non-PLS)")
     description = models.TextField(blank=True, null=True)
 
     process_fees_trigger = models.CharField(blank=False, default='always', choices=[('always', 'Always'),

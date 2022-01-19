@@ -37,6 +37,7 @@ def generate_sale_transaction_fee(source_type, source, amount, currency_data):
     try:
         fee_percent = safe_float(source.user.profile.plan.sales_fee_config.fee_percent)
         fee_flat = safe_float(source.user.profile.plan.sales_fee_config.fee_flat)
+
         # searching transaction fee
         try:
             SaleTransactionFee.objects.get(
@@ -46,10 +47,15 @@ def generate_sale_transaction_fee(source_type, source, amount, currency_data):
             )
         except SaleTransactionFee.DoesNotExist:
             sales_fee_value = safe_float(amount) * safe_float(fee_percent) / 100
+
             if source.source_type == 'supplements' and fee_flat > 0:
+                # per-item flat price for PLS orders
                 total_items = PLSOrderLine.objects.filter(store_order_id=source.order_id).\
                     aggregate(Sum('quantity'))['quantity__sum']
                 sales_fee_value += fee_flat * total_items
+            elif source.source_type != 'supplements' and fee_flat > 0:
+                # per-order flat price for non-PLS orders
+                sales_fee_value += fee_flat
 
             # generating full fee when any of order items is fulfilled
             sale_transaction_fee = SaleTransactionFee.objects.create(
