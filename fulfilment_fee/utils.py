@@ -73,13 +73,18 @@ def generate_sale_transaction_fee(source_type, source, amount, currency_data):
 
 def process_sale_transaction_fee(instance):
     try:
-
         # check total order limit if set (OR logic)
         process_fees_trigger = instance.user.profile.plan.sales_fee_config.process_fees_trigger
         monthly_free_limit = instance.user.profile.plan.sales_fee_config.monthly_free_limit
         monthly_free_amount = instance.user.profile.plan.sales_fee_config.monthly_free_amount
 
-        if process_fees_trigger == 'count' and monthly_free_limit > 0 and get_total_orders(instance.user) < monthly_free_limit:
+        # check limit adjusts in addons
+        for addon in instance.user.profile.addons.all():
+            monthly_free_limit += addon.sales_fees_adjust_free_limit
+            monthly_free_amount += addon.sales_fees_adjust_free_amount
+
+        if process_fees_trigger == 'count' and monthly_free_limit > 0 \
+                and get_total_orders(instance.user) < monthly_free_limit:
             # skip if order limit is reached and amount limit is not set
             return False
 

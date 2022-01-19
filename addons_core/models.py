@@ -67,6 +67,11 @@ class Addon(models.Model):
     is_active = models.BooleanField(default=True)
     limit_addon = models.BooleanField(default=False, verbose_name="This addon enhances limit & doesn't require permission")
 
+    sales_fees_adjust_free_limit = models.PositiveIntegerField(default=0,
+                                                               verbose_name='Increase Fulfilment Fees free Limit (count of orders)')
+    sales_fees_adjust_free_amount = models.PositiveIntegerField(default=0,
+                                                                verbose_name='Increase Fulfilment Fees free Limit (amount in USD)')
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     stripe_product_id = models.CharField(max_length=255, blank=True, default='')
