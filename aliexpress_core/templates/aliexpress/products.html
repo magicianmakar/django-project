@@ -4,7 +4,7 @@
 {% load url_tools %}
 
 {% block title %}
-    Find Products &middot; Alibaba | Dropified
+    Find Products &middot; AliExpress | Dropified
 
 {% endblock %}
 
@@ -27,7 +27,7 @@
           </a>
         </li>
       </form>
-      <li class="pull-right group">
+      <li class="pull-right group border-left">
         <form method="get">
           <input type="text" class="form-control m-l-sm" value="{{search_query}}"
               name="q" placeholder="Search by name">
@@ -36,19 +36,39 @@
           </button>
         </form>
       </li>
+      <li class="pull-right">
+        <button type="button" class="btn btn-default"
+          data-toggle="modal" data-target="#modal-aliexpress-import-by-url">Import from URL or ID</button>
+      </li>
     </ul>
 
     <div class="row m-none">
-        {% for category in categories.results %}
-        <a class="col-lg-2 col-md-4 col-sm-6 col-xs-12 alibaba-category-menu
+        {% for category in categories %}
+        {% if forloop.counter < 18 %}
+        <a class="col-lg-2 col-md-4 col-sm-6 col-xs-12 aliexpress-category-menu
             {% if forloop.counter == 1 %}top-left-border{% endif %}
             {% if forloop.counter == 6 %}top-right-border{% endif %}
-            {% if forloop.counter == 7 %}bottom-left-border{% endif %}
-            {% if forloop.last %}bottom-right-border{% endif %}"
-            href="{% url 'alibaba:category_products' category.id %}"
+            {% if forloop.counter == 13 %}bottom-left-border{% endif %}"
+            href="{% url 'aliexpress:category_products' category.id %}"
         >
-          <span>{{category.title}}</span>
+          <span>{{category.name}}</span>
         </a>
+        {% elif forloop.counter == 18 %}
+        <div class="aliexpress-category-dropdown">
+            <a class="col-lg-2 col-md-4 col-sm-6 col-xs-12 aliexpress-category-menu bottom-right-border"
+                href="#" data-toggle="dropdown" aria-expanded="false">
+                <span>More Categories</span>
+            </a>
+            <ul class="dropdown-menu">
+        {% else %}
+            <li>
+                <a href="{% url 'aliexpress:category_products' category.id %}">{{category.name}}</a>
+            </li>
+        {% endif %}
+        {% if forloop.last %}
+            </ul>
+        </div>
+        {% endif %}
         {% endfor %}
     </div>
 
@@ -62,39 +82,44 @@
         <div class="tab-pane active">
             <div class="panel-body no-background p-none m-t">
                 <div class="find-products-container">
-                  <input type="hidden" id="alibaba_product_id" name="alibaba_product_id" value="">
-                  {% for item in products.results %}
+                  <input type="hidden" id="aliexpress_product_id" name="aliexpress_product_id" value="">
+                  {% for item in products %}
                   <div class="card" product-id="{{item.id}}">
 
                     <div class="card-image">
-                      <input class="alibaba-product-select new-layout-hidden" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox"/>
-                      <a href="{{ item.url }}" target="_blank">
-                        <img class="no-img unveil" src="{% static 'img/blank.gif' %}" data-src="{{item.image}}">
+                      <input class="aliexpress-product-select new-layout-hidden" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox"/>
+                      <a href="{{ item.original_url }}" target="_blank">
+                        <img class="no-img unveil" src="{% static 'img/blank.gif' %}" data-src="{{item.images|force_https}}">
                       </a>
                     </div>
+                    <div class="image-overlay">
+                      {% if not item.compare_at_price == item.price %}
+                      <div class="product-price-compare-at">
+                        <span>{% money_format item.compare_at_price %}</span>
+                      </div>
+                      <div class="product-price-discount">
+                        <span>{{ item.discount }} off</span>
+                      </div>
+                      {% endif %}
+                    </div>
                     <div class="card-content">
-                      <a href="{{ item.url }}" class="card-title" target="_blank"> {{item.title}}</a>
-                      <span class="card-price">{{ item.price_range }}</span>
+                      <a href="{{ item.original_url }}" class="card-title" target="_blank"> {{item.title}}</a>
+                      <span class="card-price">{% money_format item.price %}</span> </br>
                       <span class="card-reviews" data-rating="{{ item.rating }}"></span>
                       <div class="card-orders m-t-xs">
                         <span>Orders</span>
-                        <div class="orders-count"> {{item.total_quantities}}</div>
-                      </div>
-                      <div class="row m-t-sm">
-                        <div class="col-xs-12">
-                          <span title="Shipping time (days)" ><i class="fa fa-truck"></i> {{ item.shipping_time }} </span> &nbsp;&nbsp;
-                          <span title="Total Transactions" ><i class="fa fa-credit-card"></i> {{item.total_transactions}} </span>&nbsp;&nbsp;
-                          <span title="Total Buyers" ><i class="fa fa-shopping-cart"></i> {{item.total_buyers}} </span>&nbsp;&nbsp;
-                        </div>
+                        <div class="orders-count"> {{item.orders_placed}}</div>
                       </div>
                       <div class="row m-t">
                         <div class="col-md-4">
-                          <button class="btn btn-xs btn-primary alibaba-import-btn"
-                          data-product-id="{{item.alibaba_product_id}}" data-category-id="{{item.category.id}}"
-                          data-toggle="modal" data-target="#modal-alibaba-import-products"> Import </button>
+                          <button class="btn btn-xs btn-primary aliexpress-import-btn"
+                          data-product-id="{{item.id}}" data-category-id="{{item.aliexpress_category_id}}"
+                          data-title="{{item.title}}" data-original-url={{item.original_url}}
+                          data-price="{{item.price}}" data-compare-at={{item.compare_at_price}}
+                          data-toggle="modal" data-target="#modal-aliexpress-import-products"> Import </button>
                         </div>
                         <div class="col-md-8 text-right">
-                          <a href="{{ item.url }}" class="btn btn-xs" target="_blank">
+                          <a href="{{ item.details_url }}" class="btn btn-xs" target="_blank">
                             Details <i class="fa fa-external-link"></i>
                           </a>
                         </div>
@@ -133,10 +158,11 @@
     </div>
 </div>
 
-{% include "alibaba/partials/import_products_modal.html" %}
+{% include "aliexpress/partials/import_products_modal.html" %}
+{% include "aliexpress/partials/import_by_url_modal.html" %}
 {% endblock %}
 
 
 {% block extrajs %}
-<script type="text/javascript" src="{% static 'alibaba/js/alibaba_products.js' %}"></script>
+<script type="text/javascript" src="{% static 'aliexpress/js/aliexpress_products.js' %}"></script>
 {% endblock %}

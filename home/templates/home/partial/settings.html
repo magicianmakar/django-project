@@ -410,7 +410,7 @@
 {% endif %}
 
 {% if user|can:'aliexpress_settings.use' %}
-<div id="tab-aliexpress" class="tab-pane">
+<div id="aliexpress-settings" class="tab-pane">
     <div class="panel-body">
         <form class="config-form" action="" method="post">
             {% if user|can:'aliexpress_captcha.use' %}
@@ -501,7 +501,7 @@
                 <div class="col-md-12"><hr /></div>
                 <div class="col-md-12">
                     <h3 class="pull-left">AliExpress Accounts</h3>
-                    <a href="{% url 'aliexpress.oauth' %}" class="btn btn-success btn-small pull-right">Link Aliexpress Account <i class="fa fa-plus"></i></a>
+                    <a href="{% url 'aliexpress:aliexpress.oauth' %}" class="btn btn-success btn-small pull-right">Link AliExpress Account <i class="fa fa-plus"></i></a>
                 </div>
             </div>
             <table class="table">

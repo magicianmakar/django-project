@@ -7,18 +7,20 @@ from copy import deepcopy
 from decimal import Decimal
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.db.models import Q
 from django.db.transaction import atomic
+from django.shortcuts import get_object_or_404
 
 from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import format_shopify_send_to_store
 from lib.aliexpress_api import RestApi, TopException
-from lib.exceptions import capture_exception, capture_message
+from lib.exceptions import capture_exception
 from metrics.tasks import add_number_metric
 from prints.utils import get_price_markup
+from shopified_core.models_utils import get_product_model, get_store_model
 from shopified_core.utils import dict_val, float_to_str, get_cached_order, get_store_api, safe_int
-from shopified_core.models_utils import get_store_model, get_product_model
 
 from .models import AlibabaOrder, AlibabaOrderItem
 
@@ -219,31 +221,33 @@ def apply_user_config(user, product):
     return product
 
 
-def save_alibaba_products(request, products_data):
-    from alibaba_core.models import AlibabaAccount
+def save_alibaba_products(request, products_data, import_to=None, publish=True):
 
     ''' Format
     {
-        alibaba_user_id: [
+        user_id: [
             products,
             list,
         ]
     }
     '''
-    for alibaba_user_id, product_ids in products_data.items():
-        account = AlibabaAccount.objects.filter(alibaba_user_id=alibaba_user_id).first()
-        if not account:
-            capture_message(
-                'Alibaba Account does not exist.',
-                extra={'alibaba_user_id': alibaba_user_id}
-            )
+    for user_id, product_ids in products_data.items():
+        try:
+            user = get_object_or_404(User, id=user_id)
+        except:
+            capture_exception()
             return
 
-        user = account.user
+        account = user.alibaba.first()
+        if not account:
+            default_user = User.objects.get(username=settings.ALIBABA_DEFAULT_USER)
+            account = default_user.alibaba.first()
+
         products = account.get_products(product_ids)
         for api_product in products:
-            # can be {store_type} or {store_type}_{store_id}
-            import_to = user.get_config('alibaba_default_import', 'shopify')
+            if import_to is None:
+                # Default - can be {store_type} or {store_type}_{store_id}
+                import_to = user.get_config('alibaba_default_import', 'shopify')
             try:
                 store_type, store_id = import_to.split('_')
             except ValueError:
@@ -281,7 +285,7 @@ def save_alibaba_products(request, products_data):
             result = json.loads(response.content.decode("utf-8"))
             product = result['product']
 
-            if store_id:  # Send to Store
+            if store_id and publish:  # Send to Store
                 get_product_model(store_type).objects.filter(id=product['id']).update(title='Importing...')
 
                 if store_type == 'shopify':

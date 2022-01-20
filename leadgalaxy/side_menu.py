@@ -8,6 +8,7 @@ from lib.exceptions import capture_exception
 def get_menu_structure(namespace, request):
     body = [
         ('products', [
+            'find-products',
             'all-products',
             'prints',
             'boards',
@@ -142,6 +143,14 @@ def get_menu_item_data(request):
             'is_ns_aware': False,
             'new_tab': True,
             'icon': 'img/import-product.svg',
+        },
+        'find-products': {
+            'title': 'Find Products',
+            'url_name': 'aliexpress:products',
+            'permissions': ['find_products.use', 'aliexpress_settings.use', 'alibaba_integration.use'],
+            'match': r'(/\w+)?/aliexpress/products',
+            'is_ns_aware': False,
+            'icon': 'img/find-products.svg',
         },
         'boards': {
             'title': 'Boards',

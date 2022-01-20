@@ -1,8 +1,8 @@
 from django.db.models import ObjectDoesNotExist
 from django.http import JsonResponse
 
-from shopified_core.permissions import user_can_view
 from shopified_core.models_utils import get_store_model
+from shopified_core.permissions import user_can_view
 
 
 def can_access_store(store=False):

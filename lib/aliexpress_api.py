@@ -273,10 +273,10 @@ class AliexpressFindProduct(RestApi):
 
 def find_aliexpress_product(product_id):
     p = AliexpressFindProduct()
-    p.set_app_info(settings.ALIEXPRESS_API_KEY, settings.ALIEXPRESS_API_SECRET)
+    p.set_app_info(settings.ALIEXPRESS_DROPSHIP_API_KEY, settings.ALIEXPRESS_DROPSHIP_API_SECRET)
 
     p.product_id = product_id
 
-    result = p.getResponse(authrize=settings.ALIEXPRESS_TOKEN)
+    result = p.getResponse(authrize=settings.ALIEXPRESS_DROPSHIP_API_TOKEN)
     result = result['aliexpress_postproduct_redefining_findaeproductbyidfordropshipper_response']['result']
     return result

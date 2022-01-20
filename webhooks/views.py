@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.views import View
 
 from alibaba_core import utils as alibaba_utils
+from alibaba_core.models import AlibabaAccount
 from leadgalaxy import utils, tasks
 from commercehq_core.utils import get_chq_products
 from leadgalaxy.models import (
@@ -1395,8 +1396,15 @@ def intercom_activecampaign(request):
 def alibaba_webhook(request):
     alibaba_user_id = request.GET['user_id']
     product_id = request.GET['id']
+    account = AlibabaAccount.objects.filter(alibaba_user_id=alibaba_user_id).first()
+    if not account:
+        capture_message(
+            'Alibaba Account does not exist.',
+            extra={'alibaba_user_id': alibaba_user_id}
+        )
+        return HttpResponse('Alibaba account is missing')
     products_data = {
-        alibaba_user_id: [product_id],
+        account.user.id: [int(product_id)],
     }
 
     alibaba_utils.save_alibaba_products(request, products_data)

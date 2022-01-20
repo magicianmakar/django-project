@@ -1,4 +1,5 @@
 import arrow
+
 from django.conf import settings
 from django.core.cache import cache
 
@@ -113,12 +114,8 @@ class AlibabaApi(ApiResponseMixin):
         return self.api_success(details)
 
     def get_import(self, request, user, data):
-        alibaba_account = user.alibaba.first()
-        if not alibaba_account:
-            return self.api_error('Missing connection with Alibaba.')
-
         save_alibaba_products(request, {
-            alibaba_account.alibaba_user_id: [int(data.get('pid'))]
+            user.id: [int(data.get('pid'))]
         })
 
         return self.api_success()
@@ -133,3 +130,11 @@ class AlibabaApi(ApiResponseMixin):
 
         result = alibaba_account.pay_orders(request.META, data['order_data_ids'])
         return self.api_success(result)
+
+    def post_import_alibaba_product(self, request, user, data):
+        for import_to in data['store_ids']:
+            save_alibaba_products(request, {
+                user.id: [int(data.get('pid'))]
+            }, import_to=import_to, publish=data['publish'])
+
+        return self.api_success()

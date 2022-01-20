@@ -1,254 +1,144 @@
-import hashlib
-import http.client
-import itertools
-import json
-import mimetypes
-import time
-import urllib.error
-import urllib.parse
-import urllib.request
+import re
+import socket
 
-SYSTEM_GENERATE_VERSION = "taobao-sdk-python-20181105"
+from lib.aliexpress_api import RestApi, TopException
+from lib.exceptions import capture_exception
 
-P_APPKEY = "app_key"
-P_API = "method"
-P_SESSION = "session"
-P_ACCESS_TOKEN = "access_token"
-P_VERSION = "v"
-P_FORMAT = "format"
-P_TIMESTAMP = "timestamp"
-P_SIGN = "sign"
-P_SIGN_METHOD = "sign_method"
-P_PARTNER_ID = "partner_id"
-
-P_CODE = 'code'
-P_SUB_CODE = 'sub_code'
-P_MSG = 'msg'
-P_SUB_MSG = 'sub_msg'
+from .settings import AFFILIATE_API_KEY, AFFILIATE_API_SECRET, API_KEY, API_SECRET, API_TOKEN
 
 
-N_REST = '/router/rest'
-
-
-def sign(secret, parameters):
-    if hasattr(parameters, "items"):
-        keys = list(parameters.keys())
-        keys.sort()
-
-        parameters = "%s%s%s" % (secret,
-                                 str().join('%s%s' % (key, parameters[key]) for key in keys),
-                                 secret)
-    sign = hashlib.md5(parameters.encode()).hexdigest().upper()
-
-    return sign
-
-
-def mixStr(pstr):
-    if(isinstance(pstr, str)):
-        return pstr
-    elif(isinstance(pstr, str)):
-        return pstr.encode('utf-8')
-    else:
-        return str(pstr)
-
-
-class FileItem(object):
-    def __init__(self, filename=None, content=None):
-        self.filename = filename
-        self.content = content
-
-
-class MultiPartForm(object):
-    """Accumulate the data to be used when posting a form."""
-
-    def __init__(self):
-        self.form_fields = []
-        self.files = []
-        self.boundary = "PYTHON_SDK_BOUNDARY"
-        return
-
-    def get_content_type(self):
-        return f'multipart/form-data; boundary={self.boundary}'
-
-    def add_field(self, name, value):
-        """Add a simple field to the form data."""
-        self.form_fields.append((name, str(value)))
-        return
-
-    def add_file(self, fieldname, filename, fileHandle, mimetype=None):
-        """Add a file to be uploaded."""
-        body = fileHandle.read()
-        if mimetype is None:
-            mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-        self.files.append((mixStr(fieldname), mixStr(filename), mixStr(mimetype), mixStr(body)))
-        return
-
-    def __str__(self):
-        """Return a string representing the form data, including attached files."""
-        # Build a list of lists, each containing "lines" of the
-        # request.  Each part is separated by a boundary string.
-        # Once the list is built, return a string where each
-        # line is separated by '\r\n'.
-        parts = []
-        part_boundary = '--' + self.boundary
-
-        # Add the form fields
-        parts.extend(
-            [part_boundary,
-             f'Content-Disposition: form-data; name="{name}"',
-             'Content-Type: text/plain; charset=UTF-8',
-             '',
-             value,
-             ]
-            for name, value in self.form_fields
-        )
-
-        # Add the files to upload
-        parts.extend(
-            [part_boundary,
-             f'Content-Disposition: file; name="{field_name}"; filename="{filename}"',
-             f'Content-Type: {content_type}',
-             'Content-Transfer-Encoding: binary',
-             '',
-             body,
-             ]
-            for field_name, filename, content_type, body in self.files
-        )
-
-        # Flatten the list and add closing boundary marker,
-        # then return CR+LF separated data
-        flattened = list(itertools.chain(*parts))
-        flattened.append('--' + self.boundary + '--')
-        flattened.append('')
-        return '\r\n'.join(flattened)
-
-
-class TopException(Exception):
-    def __init__(self):
-        self.errorcode = None
-        self.message = None
-        self.subcode = None
-        self.submsg = None
-        self.application_host = None
-        self.service_host = None
-
-    def __str__(self, *args, **kwargs):
-        sb = "errorcode=" + mixStr(self.errorcode) +\
-            " message=" + mixStr(self.message) +\
-            " subcode=" + mixStr(self.subcode) +\
-            " submsg=" + mixStr(self.submsg) +\
-            " application_host=" + mixStr(self.application_host) +\
-            " service_host=" + mixStr(self.service_host)
-        return sb
-
-
-class RequestException(Exception):
-    pass
-
-
-class RestApi(object):
-
-    def __init__(self, domain='gw.api.taobao.com', port=80):
-        self.__domain = domain
-        self.__port = port
-        self.__httpmethod = "POST"
-
-    def get_request_header(self):
-        return {
-            'Content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
-            "Cache-Control": "no-cache",
-            "Connection": "Keep-Alive",
-        }
-
-    def set_app_info(self, appkey, secret):
-        self.__app_key = appkey
-        self.__secret = secret
+class AliexpressAffiliateApi(RestApi):
+    def __init__(self, domain='gw.api.taobao.com', port=80, method='POST', resource=''):
+        super().__init__(domain, port)
+        self.set_app_info(AFFILIATE_API_KEY, AFFILIATE_API_SECRET)
+        self.__apiname = resource
+        self.__httpmethod = method
 
     def getapiname(self):
-        return ""
+        return self.__apiname
 
-    def getMultipartParas(self):
-        return []
 
-    def getTranslateParas(self):
-        return {}
+class AliexpressCategories(AliexpressAffiliateApi):
+    def getapiname(self):
+        return 'aliexpress.affiliate.category.get'
 
-    def _check_requst(self):
-        pass
 
-    def getResponse(self, authrize=None, timeout=30):
-        if(self.__port == 443):
-            connection = http.client.HTTPSConnection(self.__domain, self.__port, None, None, False, timeout)
-        else:
-            connection = http.client.HTTPConnection(self.__domain, self.__port)
+class AliexpressAffiliateProducts(AliexpressAffiliateApi):
+    def getapiname(self):
+        return 'aliexpress.affiliate.product.query'
 
-        sys_parameters = {
-            P_FORMAT: 'json',
-            P_APPKEY: self.__app_key,
-            P_SIGN_METHOD: "md5",
-            P_VERSION: '2.0',
-            P_TIMESTAMP: str(int(time.time() * 1000)),
-            P_PARTNER_ID: SYSTEM_GENERATE_VERSION,
-            P_API: self.getapiname(),
-        }
 
-        if authrize is not None:
-            sys_parameters[P_SESSION] = authrize
-        application_parameter = self.getApplicationParameters()
-        sign_parameter = sys_parameters.copy()
-        sign_parameter.update(application_parameter)
-        sys_parameters[P_SIGN] = sign(self.__secret, sign_parameter)
-        connection.connect()
-        header = self.get_request_header()
-        if(self.getMultipartParas()):
-            form = MultiPartForm()
-            for key, value in list(application_parameter.items()):
-                form.add_field(key, value)
-            for key in self.getMultipartParas():
-                fileitem = getattr(self, key)
-                if(fileitem and isinstance(fileitem, FileItem)):
-                    form.add_file(key, fileitem.filename, fileitem.content)
-            body = str(form)
-            header['Content-type'] = form.get_content_type()
-        else:
-            body = urllib.parse.urlencode(application_parameter)
+class AliexpressFindAffiliateProduct(AliexpressAffiliateApi):
+    def getapiname(self):
+        return 'aliexpress.affiliate.productdetail.get'
 
-        url = N_REST + "?" + urllib.parse.urlencode(sys_parameters)
 
-        connection.request(self.__httpmethod, url, body=body, headers=header)
-        response = connection.getresponse()
-        if response.status != 200:
-            raise RequestException('invalid http status ' + str(response.status) + ',detail body:' + response.read())
-        result = response.read()
-        jsonobj = json.loads(result)
-        if 'error_response' in jsonobj:
-            error = TopException()
-            if P_CODE in jsonobj["error_response"]:
-                error.errorcode = jsonobj["error_response"][P_CODE]
-            if P_MSG in jsonobj["error_response"]:
-                error.message = jsonobj["error_response"][P_MSG]
-            if P_SUB_CODE in jsonobj["error_response"]:
-                error.subcode = jsonobj["error_response"][P_SUB_CODE]
-            if P_SUB_MSG in jsonobj["error_response"]:
-                error.submsg = jsonobj["error_response"][P_SUB_MSG]
-            error.application_host = response.getheader("Application-Host", "")
-            error.service_host = response.getheader("Location-Host", "")
-            raise error
-        return jsonobj
+class AliexpressDropshipApi(RestApi):
+    def __init__(self, domain='gw.api.taobao.com', port=80, method='POST', resource=''):
+        super().__init__(domain, port)
+        self.set_app_info(API_KEY, API_SECRET)
+        self.__apiname = resource
+        self.__httpmethod = method
 
-    def getApplicationParameters(self):
-        application_parameter = {}
-        for key, value in self.__dict__.items():
-            if not key.startswith("__") and key not in self.getMultipartParas() \
-                    and not key.startswith("_RestApi__") and value is not None:
-                if(key.startswith("_")):
-                    application_parameter[key[1:]] = value
-                else:
-                    application_parameter[key] = value
+    def getapiname(self):
+        return self.__apiname
 
-        translate_parameter = self.getTranslateParas()
-        for key, value in application_parameter.items():
-            if key in translate_parameter:
-                application_parameter[translate_parameter[key]] = application_parameter[key]
-                del application_parameter[key]
-        return application_parameter
+
+class AliexpressDSRecommendedProducts(AliexpressDropshipApi):
+    def getapiname(self):
+        return 'aliexpress.ds.recommend.feed.get'
+
+
+class AliexpressFindDSProduct(AliexpressDropshipApi):
+    def getapiname(self):
+        return 'aliexpress.ds.product.get'
+
+
+class APIRequest():
+    def __init__(self, access_token=None):
+        self.access_token = access_token
+        if self.access_token is None:
+            self.access_token = API_TOKEN
+
+    def _request(self, api, params=None, remaining_tries=3):
+        if remaining_tries < 1:
+            return {'error': "AliExpress server is unreachable. Try again later"}
+
+        if params is None:
+            params = {}
+
+        for key, value in params.items():
+            setattr(api, key, value)
+
+        try:
+            return api.getResponse()
+
+        except socket.timeout:
+            capture_exception()
+            return self._request(api, params=params, remaining_tries=remaining_tries - 1)
+
+        except ConnectionResetError:
+            capture_exception()
+            return self._request(api, params=params, remaining_tries=remaining_tries - 1)
+
+        except TopException as e:
+            capture_exception(extra={
+                'errorcode': getattr(e, 'errorcode', None),
+                'subcode': getattr(e, 'subcode', None),
+                'message': getattr(e, 'message', None),
+            })
+
+            if e.errorcode == 7 and 'call limited' in e.message.lower():
+                seconds = re.findall(r'(\d+).+?(?=seconds)', e.submsg)
+                if seconds:
+                    return {'error': f'AliExpress calls limit reached, {seconds[0]} seconds to reset limits'}
+
+            if e.errorcode == 15 and e.subcode == 'isp.top-remote-connection-timeout':
+                return self._request(api, params=params, remaining_tries=remaining_tries - 1)
+
+    def get_aliexpress_categories(self, params=None):
+        api = AliexpressCategories()
+
+        response = self._request(api, params=params)
+        if response.get('error', None):
+            return response
+
+        return response['aliexpress_affiliate_category_get_response']['resp_result']
+
+    def affiliate_products(self, params=None):
+        api = AliexpressAffiliateProducts()
+
+        response = self._request(api, params=params)
+        if response.get('error', None):
+            return response
+
+        return response['aliexpress_affiliate_product_query_response']['resp_result']
+
+    def find_ds_product(self, params=None):
+        api = AliexpressFindDSProduct()
+        api.session = self.access_token
+
+        response = self._request(api, params=params)
+        if response.get('error', None):
+            return response
+
+        return response['aliexpress_ds_product_get_response']['result']
+
+    def find_affiliate_product(self, params=None):
+        api = AliexpressFindAffiliateProduct()
+
+        response = self._request(api, params=params)
+        if response.get('error', None):
+            return response
+
+        return response['aliexpress_affiliate_productdetail_get_response']['resp_result']
+
+    def ds_recommended_products(self, params=None):
+        api = AliexpressDSRecommendedProducts()
+        api.session = self.access_token
+
+        response = self._request(api, params=params)
+        if response.get('error', None):
+            return response
+
+        return response['aliexpress_ds_recommend_feed_get_response']['result']

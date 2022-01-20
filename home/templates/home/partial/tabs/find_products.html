@@ -1,0 +1,26 @@
+{% load static %}
+{% load perms_helper %}
+
+{% url 'aliexpress:products' as aliexpress_path %}
+{% url 'aliexpress:category_products' category_id as aliexpress_cat_path %}
+{% url 'alibaba:products' as alibaba_path %}
+{% url 'alibaba:category_products' category_id as alibaba_cat_path %}
+
+<ul class="nav nav-tabs">
+    {% if request.user|can:'aliexpress_settings.use' %}
+    <li {% if request.path == aliexpress_path or request.path == aliexpress_cat_path %} class="active" {% endif %}>
+        <a href="{% url 'aliexpress:products' %}" style="padding: 12px;">
+            <img src="{% static 'img/aliexpress-tab.svg' %}" alt="">
+        </a>
+    </li>
+    {% endif %}
+
+    {% if request.user|can:'alibaba_integration.use' %}
+    <li {% if request.path == alibaba_path or request.path == alibaba_cat_path %} class="active" {% endif %} style="margin-left: 30px;">
+        <a href="{% url 'alibaba:products' %}" style="padding: 4px;">
+            <img src="{% static 'img/alibaba-tab.svg' %}" alt="" style="width: 85px;">
+        </a>
+    </li>
+    {% endif %}
+
+</ul>

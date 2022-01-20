@@ -1320,6 +1320,8 @@ class ShopifyStoreApi(ApiBase):
                     config[key] = remove_link_query(data[key]).strip('/ ').split('/').pop()
                 elif not data[key]:
                     config[key] = ''
+                else:
+                    config[key] = data[key]
 
             elif key == 'ebay_business_country':
                 ebay_settings_config['business_country'] = data[key]

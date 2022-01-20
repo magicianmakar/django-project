@@ -1,16 +1,12 @@
 {% extends "base.html" %}
 {% load static %}
 {% load template_helper %}
+{% load compress %}
 {% load url_tools %}
-
-{% block title %}
-    Find Products &middot; Alibaba | Dropified
-
-{% endblock %}
 
 {% block main-container %}
 <div class="tab-container separated-tabs">
-    {% include "home/partial/tabs/find_products.html" %}
+    {% include "home/partial/tabs/find_products.html" with category_id=category.id %}
 
     <ul class="actions">
       <form method="get">
@@ -30,7 +26,7 @@
       <li class="pull-right group">
         <form method="get">
           <input type="text" class="form-control m-l-sm" value="{{search_query}}"
-              name="q" placeholder="Search by name">
+              name="q" placeholder="Search by name" required>
           <button type="submit" class="btn btn-primary btn-icon">
             <i class="fa fa-search"></i>
           </button>
@@ -38,29 +34,14 @@
       </li>
     </ul>
 
-    <div class="row m-none">
-        {% for category in categories.results %}
-        <a class="col-lg-2 col-md-4 col-sm-6 col-xs-12 alibaba-category-menu
-            {% if forloop.counter == 1 %}top-left-border{% endif %}
-            {% if forloop.counter == 6 %}top-right-border{% endif %}
-            {% if forloop.counter == 7 %}bottom-left-border{% endif %}
-            {% if forloop.last %}bottom-right-border{% endif %}"
-            href="{% url 'alibaba:category_products' category.id %}"
-        >
-          <span>{{category.title}}</span>
-        </a>
-        {% endfor %}
-    </div>
-
-    <div class="row m-t">
-      <div class="col-md-6">
-        <h3 class="aliexpress-category-header">{{total_results}} items</h3>
-      </div>
-    </div>
-
     <div class="tab-content">
         <div class="tab-pane active">
             <div class="panel-body no-background p-none m-t">
+                <div class="row">
+                  <div class="col-md-6">
+                    <h3 class="alibaba-category-header">{{category.title}} ({{total_results}} items)</h3>
+                  </div>
+                </div>
                 <div class="find-products-container">
                   <input type="hidden" id="alibaba_product_id" name="alibaba_product_id" value="">
                   {% for item in products.results %}
@@ -90,7 +71,7 @@
                       <div class="row m-t">
                         <div class="col-md-4">
                           <button class="btn btn-xs btn-primary alibaba-import-btn"
-                          data-product-id="{{item.alibaba_product_id}}" data-category-id="{{item.category.id}}"
+                          data-product-id="{{item.alibaba_product_id}}" data-category-id="{{category.id}}"
                           data-toggle="modal" data-target="#modal-alibaba-import-products"> Import </button>
                         </div>
                         <div class="col-md-8 text-right">

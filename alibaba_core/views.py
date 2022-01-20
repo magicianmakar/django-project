@@ -1,16 +1,22 @@
 import arrow
-from urllib.parse import urlencode
+import requests
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.core.cache import cache
+from django.http import Http404
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 
-from alibaba_core.utils import TopAuthTokenCreateRequest
+from aliexpress_core.utils import get_store_data
+from shopified_core import permissions
+from shopified_core.utils import safe_int
 
 from .models import AlibabaAccount
+from .utils import TopAuthTokenCreateRequest
 
 
 @method_decorator(login_required, name='dispatch')
@@ -45,29 +51,135 @@ class AccessTokenRedirectView(RedirectView):
         return f"{super().get_redirect_url(*args, **kwargs)}#alibaba-settings"
 
 
-@method_decorator(login_required, name='dispatch')
-class ProductsRedirectView(RedirectView):
-    permanent = False
+class Products(TemplateView):
+    template_name = 'alibaba/products.html'
 
-    def get_redirect_url(self, *args, **kwargs):
-        try:
-            token = self.request.user.models_user.alibaba.first().get_ecology_token()
-        except:
-            messages.error(self.request, "Your Dropified account is not connected to Alibaba")
-            return f"{reverse('settings')}#alibaba-settings"
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('alibaba_integration.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
 
-        params = (
-            # ('wx_screen_direc', 'portrait'),
-            # ('wx_navbar_transparent', 'true'),
-            # ('path', '/p/dt0c706ur/index.html'),
-            ('ecology_token', token),
-        )
-        return f"https://dropshipping.alibaba.com?{urlencode(params)}"
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        search_query = self.request.GET.get('q', '')
+        page = safe_int(self.request.GET.get('page', 1))
+
+        ranked_categories = cache.get('alibaba_ranked_categories', {})
+        if not ranked_categories:
+            ranked_categories = requests.get(
+                settings.INSIDER_REPORT_HOST + 'dropshipping-api/ranked-categories/',
+                verify=False
+            ).json()
+            cache.set('alibaba_ranked_categories', ranked_categories, timeout=600)
+
+        api_url = f'dropshipping-api/ranked-products?include_nontop=true&page={page}'
+        cache_key = f'alibaba_ranked_products_{page}'
+        if search_query:
+            api_url = f'{api_url}&keyword={search_query}'
+            cache_key = f'{cache_key}_{search_query}'
+
+        ranked_products = cache.get(cache_key, {})
+        if not ranked_products:
+            ranked_products = requests.get(
+                settings.INSIDER_REPORT_HOST + api_url,
+                verify=False
+            ).json()
+            cache.set(cache_key, ranked_products, timeout=600)
+
+        store_data = get_store_data(self.request.user)
+
+        paginator = {
+            'show': True if len(ranked_products['results']) >= 20 else False,
+            'current_page': page,
+            'next_page': page + 1,
+            'previous_page': page - 1,
+        }
+
+        context.update({
+            'categories': ranked_categories,
+            'products': ranked_products,
+            'total_results': ranked_products['count'],
+            'store_data': store_data,
+            'paginator': paginator,
+            'search_query': search_query,
+        })
+
+        return context
 
 
-@login_required
-def products(request):
+class CategoryProducts(TemplateView):
+    template_name = 'alibaba/category_products.html'
 
-    return render(request, 'alibaba/products.html', {
-        'alibaba': request.user.alibaba.first()
-    })
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('alibaba_integration.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def get_breadcrumbs(self, category):
+        return [
+            {'title': 'Find Products', 'url': reverse('alibaba:products')},
+            f'{category["title"]}',
+        ]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        search_query = self.request.GET.get('q', '')
+        page = safe_int(self.request.GET.get('page', 1))
+
+        category_id = kwargs.get('category_id')
+        category = ''
+
+        ranked_categories = cache.get('alibaba_ranked_categories', {})
+        if not ranked_categories:
+            ranked_categories = requests.get(
+                settings.INSIDER_REPORT_HOST + 'dropshipping-api/ranked-categories/',
+                verify=False
+            ).json()
+            cache.set('alibaba_ranked_categories', ranked_categories, timeout=600)
+
+        for entry in ranked_categories['results']:
+            if str(entry['id']) == category_id:
+                category = entry
+                break
+
+        if not category:
+            raise Http404('Category does not exist')
+
+        api_url = f'dropshipping-api/ranked-products?include_nontop=true&category_ids[]={category_id}&page={page}'
+        cache_key = f'alibaba_ranked_products_{category_id}_{page}'
+        if search_query:
+            api_url = f'{api_url}&keyword={search_query}'
+            cache_key = f'{cache_key}_{search_query}'
+
+        ranked_products = cache.get(cache_key, {})
+        if not ranked_products:
+            ranked_products = requests.get(
+                settings.INSIDER_REPORT_HOST + api_url,
+                verify=False
+            ).json()
+            cache.set(cache_key, ranked_products, timeout=600)
+
+        store_data = get_store_data(self.request.user)
+
+        paginator = {
+            'show': True if len(ranked_products['results']) >= 20 else False,
+            'current_page': page,
+            'next_page': page + 1,
+            'previous_page': page - 1,
+        }
+
+        context.update({
+            'breadcrumbs': self.get_breadcrumbs(category),
+            'category': category,
+            'products': ranked_products,
+            'total_results': ranked_products['count'],
+            'store_data': store_data,
+            'paginator': paginator,
+            'search_query': search_query,
+        })
+
+        return context

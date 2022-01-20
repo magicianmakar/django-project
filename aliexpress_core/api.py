@@ -7,19 +7,21 @@ from django.http import HttpResponse, JsonResponse
 from aliexpress_core.models import AliexpressAccount
 from aliexpress_core.settings import API_KEY, API_SECRET
 from aliexpress_core.utils import FindProductViaApi, MaillingAddress, PlaceOrder, PlaceOrderRequest, ProductBaseItem
-from leadgalaxy.models import ShopifyOrderTrack, ShopifyProduct, ShopifyStore
-from woocommerce_core.models import WooOrderTrack, WooProduct, WooStore
-from commercehq_core.models import CommerceHQProduct, CommerceHQOrderTrack, CommerceHQStore
-from bigcommerce_core.models import BigCommerceProduct, BigCommerceOrderTrack, BigCommerceStore
-from leadgalaxy.utils import get_shopify_order
-from woocommerce_core.utils import get_woo_order
-from commercehq_core.utils import get_chq_order
+from bigcommerce_core.models import BigCommerceOrderTrack, BigCommerceProduct, BigCommerceStore
 from bigcommerce_core.utils import get_bigcommerce_order_data, get_order_product_data
+from commercehq_core.models import CommerceHQOrderTrack, CommerceHQProduct, CommerceHQStore
+from commercehq_core.utils import get_chq_order
+from leadgalaxy.models import ShopifyOrderTrack, ShopifyProduct, ShopifyStore
+from leadgalaxy.utils import get_shopify_order
 from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.exceptions import AliexpressFulfillException
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import app_link
+from woocommerce_core.models import WooOrderTrack, WooProduct, WooStore
+from woocommerce_core.utils import get_woo_order
+
+from .utils import save_aliexpress_products
 
 
 class AliexpressFulfillHelper():
@@ -396,5 +398,18 @@ class AliexpressApi(ApiResponseMixin):
         permissions.user_can_delete(user, account)
 
         account.delete()
+
+        return self.api_success()
+
+    def post_import_aliexpress_product(self, request, user, data):
+        products = save_aliexpress_products(request, {
+            user.id: {
+                'product_id': data['product_id'],
+                'store_ids': data['store_ids'],
+                'publish': data['publish'],
+            }
+        })
+        if products.get('errored', []):
+            return self.api_error(products['errored'])
 
         return self.api_success()

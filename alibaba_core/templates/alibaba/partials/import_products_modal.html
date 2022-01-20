@@ -1,0 +1,53 @@
+<div id="modal-alibaba-import-products" class="modal" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Import Products</h4>
+      </div>
+      <div class="modal-body">
+
+        <div class="row">
+          <label class="col-sm-12 control-label">
+            You can add this product to the “Non Connected” list and then import it to any of your stores
+            Or you can add the product directly to any of your stores
+          </label>
+        </div>
+
+        <div class="row m-t">
+          {% for type, data in store_data.items %}
+            {% for store in data %}
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <input id="alibaba_import_to_{{type}}_{{store.id}}" class="alibaba-store-select"
+                        name="alibaba_import_to_{{type}}_{{store.id}}" type="checkbox" value="{{type}}_{{store.id}}"/>
+                    <label for="alibaba_import_to_{{type}}_{{store.id}}" class="control-label">
+                        {{ store.value }}
+                    </label>
+                </div>
+            </div>
+            {% endfor %}
+          {% endfor %}
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <div class="row">
+          <div class="col-sm-6 text-left">
+            <button class="btn btn-primary alibaba-save-btn" data-publish="true"
+                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Importing...">
+              Import to Store
+            </button>
+          </div>
+
+          <div class="col-sm-6">
+            <button class="btn btn-primary alibaba-save-btn" data-publish="false"
+                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Importing...">
+              Import to Non Connected
+            </button>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>

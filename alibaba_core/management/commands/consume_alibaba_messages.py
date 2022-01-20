@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from django.test import RequestFactory
 
-from alibaba_core.models import AlibabaOrder
+from alibaba_core.models import AlibabaAccount, AlibabaOrder
 from alibaba_core.utils import APIRequest, save_alibaba_products
 from lib.exceptions import capture_exception, capture_message
 from shopified_core.commands import DropifiedBaseCommand
@@ -40,7 +40,14 @@ class Command(DropifiedBaseCommand):
                 if message['topic'] == 'icbu_trade_ProductNotify':
                     alibaba_user_id = message['user_id']
                     content = json.loads(message['content'])
-                    products_data[alibaba_user_id].append(content['product_id'])
+                    account = AlibabaAccount.objects.filter(alibaba_user_id=alibaba_user_id).first()
+                    if not account:
+                        capture_message(
+                            'Alibaba Account does not exist.',
+                            extra={'alibaba_user_id': alibaba_user_id}
+                        )
+                        continue
+                    products_data[account.user.id].append(content['product_id'])
 
                 if message['topic'] == 'icbu_trade_OrderNotify':
                     content = json.loads(message['content'])
