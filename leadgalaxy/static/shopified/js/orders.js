@@ -469,24 +469,6 @@ function addOrderSourceRequest(data_api, callback) {
 
 $('.mark-as-ordered').click(addOrderSourceID);
 
-function showOrderIframe() {
-    // $('.order-content-list').removeClass('col-md-12').addClass('col-md-9');
-    ///$('.order-content-list-iframe').removeClass('hidden');
-}
-
-window.onmessage = function (e) {
-    var message;
-
-    try {
-        message = JSON.parse(e.data);
-    } catch (e) {
-        return;
-    }
-
-    if (message && message.subject && message.subject == "show-me") {
-        showOrderIframe();
-    }
-};
 
 $('.add-order-note').click(function (e) {
     e.preventDefault();

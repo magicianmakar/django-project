@@ -1397,12 +1397,12 @@ function copyLink(e) {
 
 $("#bulk-order-close").on("click", function() {
     $(".main-ordering-div").hide("slow");
-    $("div#bulk-ordering-app-launcher").show("slow");
+    $("div#bulk-ordering-app-launcher").show();
 });
 
 $("div#bulk-ordering-app-launcher").on("click", function() {
-    $(".main-ordering-div").show("slow");
-    $(this).hide("slow");
+    $(".main-ordering-div").show();
+    $(this).hide();
 });
 
 $(function() {
