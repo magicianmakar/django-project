@@ -4,6 +4,7 @@ from shopify_orders.models import (
     ShopifyOrder,
     ShopifyOrderLine,
     ShopifyOrderLog,
+    ShopifyOrderRevenue,
     ShopifyOrderRisk,
     ShopifyOrderShippingLine,
     ShopifyOrderVariant,
@@ -59,4 +60,24 @@ class ShopifyOrderVariantAdmin(admin.ModelAdmin):
     list_display = ('id', 'store', 'changed_by', 'order_id', 'line_id', 'variant_id', 'variant_title', 'created_at', 'updated_at')
     list_filter = ('created_at', 'updated_at')
     raw_id_fields = ('store', 'changed_by')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(ShopifyOrderRevenue)
+class ShopifyOrderRevenueAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'user',
+        'store',
+        'order_id',
+        'currency',
+        'items_count',
+        'line_items_price',
+        'shipping_price',
+        'total_price',
+        'total_price_usd',
+        'created_at',
+    )
+    list_filter = ('created_at',)
+    raw_id_fields = ('user', 'store')
     date_hierarchy = 'created_at'
