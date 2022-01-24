@@ -1100,6 +1100,7 @@ class EbayOrderListQuery(object):
 class EbayOrderItem:
     def __init__(self, user, store: EbayStore, sd_order_data: dict):
         self.user = user
+        utils = EbayUtils(user)
         self.store = store
         self.suredone_data = sd_order_data
 
@@ -1186,9 +1187,10 @@ class EbayOrderItem:
 
             if product_variant:
                 var_attributes_keys = self.get_attribute_keys_from_var_config(product_variant)
+                var_attributes_keys = utils.convert_to_default_and_custom_fields(var_attributes_keys)
                 if var_attributes_keys:
                     var_data = product_variant.parsed_variant_data
-                    attributes = [var_data.get(key) for key in var_attributes_keys]
+                    attributes = [var_data.get(key) for key in var_attributes_keys if var_data.get(key)]
                     attributes = ', '.join(attributes)
                 supplier = self.get_product_supplier(product_variant)
                 if supplier:
