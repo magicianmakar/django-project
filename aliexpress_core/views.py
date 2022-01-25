@@ -29,7 +29,7 @@ class AuthorizeView(RedirectView):
             url='https://oauth.aliexpress.com/authorize',
             response_type='code',
             client_id=API_KEY,
-            redirect_uri='http://dev.dropified.com:8000/aliexpress/token',
+            redirect_uri=redirect_url,
             state=get_random_string(32),
             view='web',
             sp='ae'
