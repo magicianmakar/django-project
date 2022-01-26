@@ -2179,9 +2179,12 @@ class GroupPlan(models.Model):
 
     def import_stores(self):
         ''' Return Stores this allow importing products from '''
-
+        if self.parent_plan:
+            permissions = self.parent_plan.permissions
+        else:
+            permissions = self.permissions
         stores = []
-        for i in self.permissions.all():
+        for i in permissions.all():
             if i.name.endswith('_import.use') and 'pinterest' not in i.name:
                 name = i.name.split('_')[0]
                 stores.append(name.title())
