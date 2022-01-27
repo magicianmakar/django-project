@@ -1046,10 +1046,10 @@ def slack_webhook(request):
                 return HttpResponse(':x: Permission {} already exists'.format(name))
 
             perm = AppPermission.objects.create(name=name, description=description)
-            bundle = FeatureBundle.objects.create(name=f'{name} Bundle', slug=slugify(name), hidden_from_user=True)
+            bundle = FeatureBundle.objects.create(title=f'{name} Bundle', slug=slugify(name), hidden_from_user=True)
             bundle.permissions.add(perm)
 
-            return HttpResponse(f'Permission {perm.name} and bundle ({bundle.name}) successfully created')
+            return HttpResponse(f'Permission {perm.name} and bundle ({bundle.title}) successfully created')
 
         elif command == 'list':
             table = texttable.Texttable(max_width=0)
