@@ -336,11 +336,22 @@ PLAN_REVISION = os.environ.get('PLAN_REVISION')
 # Shopify App
 SHOPIFY_API_KEY = os.environ['SHOPIFY_API_KEY']
 SHOPIFY_API_SECRET = os.environ['SHOPIFY_API_SECRET']
-SHOPIFY_API_SCOPE = ','.join([
-    'write_content', 'write_products', 'write_customers',
-    'write_orders', 'write_fulfillments', 'write_shipping', 'read_analytics',
-    'write_inventory', 'read_locations', 'read_all_orders'
-])
+SHOPIFY_API_SCOPE_BASE = [
+    'write_products',
+    'write_orders',
+    'write_fulfillments',
+    'write_inventory',
+    'read_locations',
+]
+
+SHOPIFY_API_SCOPE = [
+    *SHOPIFY_API_SCOPE_BASE,
+    'write_content',
+    'write_customers',
+    'write_shipping',
+    'read_analytics',
+    'read_all_orders',
+]
 
 SHOPIFY_PRIVATE_LABEL_KEY = os.environ.get('SHOPIFY_PRIVATE_LABEL_KEY')
 SHOPIFY_PRIVATE_LABEL_SECRET = os.environ.get('SHOPIFY_PRIVATE_LABEL_SECRET')

@@ -47,14 +47,8 @@ def get_shopify_secret(request):
 
 
 def get_shopify_scope(request):
-    scopes = settings.SHOPIFY_API_SCOPE
-    if is_private_label_app(request):
-        if 'read_all_orders' in scopes:
-            scopes = scopes.split(',')
-            scopes.remove('read_all_orders')
-            return ','.join(scopes)
-
-    return scopes
+    scopes = settings.SHOPIFY_API_SCOPE_BASE if is_private_label_app(request) else settings.SHOPIFY_API_SCOPE
+    return ','.join(scopes)
 
 
 def shopify_session(request, state=None, client_id=None):
