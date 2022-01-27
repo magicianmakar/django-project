@@ -198,10 +198,10 @@
             keyboard: false
         });
         var target_id = e.target.id;
-        if (target_id === "sync-selected-orders") {
-            $('.start-update-btn').trigger('click');
+        if(target_id === "quick-sync-selected-orders")  {
+            $('#quick-api-update').trigger('click');
         }
-        else if(target_id === "quick-sync-selected-orders")  {
+        else {
             $('#quick-api-update').trigger('click');
         }
     });

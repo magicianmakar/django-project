@@ -4,11 +4,10 @@ import json
 import arrow
 
 from shopified_core.commands import DropifiedBaseCommand
-from leadgalaxy.models import ShopifyOrderTrack
-from shopify_orders.models import ShopifyOrderLog
-from leadgalaxy import utils
+from bigcommerce_core.models import BigCommerceOrderTrack
+from bigcommerce_core import utils
 
-from shopify_orders import tasks as shopify_orders_tasks
+from shopify_orders import tasks as orders_tasks
 from lib.exceptions import capture_exception
 
 
@@ -31,7 +30,7 @@ class Command(DropifiedBaseCommand):
         # uptime = options.get('uptime')
         days = options.get('days')
 
-        orders = ShopifyOrderTrack.objects.filter(shopify_status='') \
+        orders = BigCommerceOrderTrack.objects.filter(bigcommerce_status='') \
             .filter(source_tracking='') \
             .filter(hidden=False) \
             .filter(created_at__gte=arrow.now().replace(days=-days).datetime) \
@@ -71,7 +70,7 @@ class Command(DropifiedBaseCommand):
             try:
                 counter['need_tracking'] += 1
                 user = order.store.user
-                data = shopify_orders_tasks.get_order_info_via_api(order, order.source_id, order.store.id, 'shopify', user)
+                data = orders_tasks.get_order_info_via_api(order, order.source_id, order.store.id, 'bigcommerce', user)
                 if data and not data.get('error_msg'):
                     new_tracking_number = (data.get('tracking_number') and data.get('tracking_number') not in order.source_tracking)
                     if data.get('tracking_number') != '' and new_tracking_number:
@@ -79,11 +78,10 @@ class Command(DropifiedBaseCommand):
                         counter['tracked'] += 1
                     else:
                         counter['skipped'] += 1
-                        self.write(f"Skipping tracking order id {order.order_id} for store {order.store} as there is no new tracking number or data")
+                        self.write(f"Skipping tracking order with Id {order.order_id} for store {order.store} because there is no new data")
                         if data.get('status') != order.source_status:  # Save the new Aliexpress Order status
                             order.source_status = data.get('status')
                             order.save()
-                            self.addShopifyOrderLogs(order, user, ' New Order Status saved')
                 else:  # No data would mean error querying Aliexpress API
                     self.write(f"Skipping tracking order with Id {order.order_id} for store {order.store} due to an error")
                     counter['skipped'] += 1
@@ -125,22 +123,6 @@ class Command(DropifiedBaseCommand):
 
         tracking_number_tags = models_user.get_config('tracking_number_tags')
         if tracking_number_tags:
-            order_updater = utils.ShopifyOrderUpdater(order.store, order.order_id)
+            order_updater = utils.BigCommerceOrderUpdater(order.store, order.order_id)
             order_updater.add_tag(tracking_number_tags)
             order_updater.delay_save()
-
-        self.addShopifyOrderLogs(order, user, 'Tracking Number Added')
-
-        if order.data and order.errors != -1:
-            shopify_orders_tasks.check_track_errors.delay(order.id)
-
-    def addShopifyOrderLogs(self, order, user, log_message):
-        ShopifyOrderLog.objects.update_order_log(
-            store=order.store,
-            user=user,
-            log=log_message,
-            level='info',
-            icon='truck',
-            order_id=order.order_id,
-            line_id=order.line_id
-        )

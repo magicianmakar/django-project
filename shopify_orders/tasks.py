@@ -13,6 +13,8 @@ from aliexpress_core.utils import MaillingAddress, PlaceOrder, OrderInfo, PlaceO
 from leadgalaxy.models import ShopifyStore, ShopifyProduct, ShopifyOrderTrack
 from shopify_orders.utils import OrderErrorsCheck, update_elasticsearch_shopify_order
 from shopify_orders.models import ShopifyOrder
+from woocommerce_core.models import WooStore
+from bigcommerce_core.models import BigCommerceStore
 import json
 
 
@@ -204,7 +206,7 @@ def index_shopify_order(self, order_pk):
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def get_order_info_via_api(self, order, source_id, store_id):
+def get_order_info_via_api(self, order, source_id, store_id, store_type=None, user=None):
 
     STATUS_MAP = {
         "PLACE_ORDER_SUCCESS": "Awaiting Payment",
@@ -246,10 +248,20 @@ def get_order_info_via_api(self, order, source_id, store_id):
         "D_PENDING_SHIPMENT": "Pending Shipment",
         "D_SHIPPED": "Shipped"
     }
-    store = ShopifyStore.objects.get(id=store_id)
+    if store_type is not None:
+        if store_type == 'shopify':
+            store = ShopifyStore.objects.get(id=store_id)
+        elif store_type == 'woo':
+            store = WooStore.objects.get(id=store_id)
+        elif store_type == 'bigcommerce':
+            store = BigCommerceStore.objects.get(id=store_id)
+
+    if user is None:
+        user = store.user
+
     if not API_SECRET:
         return 'Service API is not set'
-    if not store.user.aliexpress_account.count():
+    if not user.aliexpress_account.count():
         return 'Aliexpress Account is not connected'
 
     aliexpress_order_details = OrderInfo()
@@ -257,7 +269,7 @@ def get_order_info_via_api(self, order, source_id, store_id):
 
     aliexpress_order_details.single_order_query = json.dumps({"order_id": source_id})
 
-    aliexpress_account = AliexpressAccount.objects.filter(user=store.user).first()
+    aliexpress_account = AliexpressAccount.objects.filter(user=user).first()
 
     try:
         result = aliexpress_order_details.getResponse(authrize=aliexpress_account.access_token)
@@ -296,5 +308,9 @@ def get_order_info_via_api(self, order, source_id, store_id):
         fulfillment_data['order_details'] = order_details
         return fulfillment_data
     except Exception as e:
-        print(e)
         capture_exception()
+        return {
+            'error_msg': f'AliExpress: {e.message}',
+            'error_code': e.errorcode,
+            'sub_code': e.subcode,
+        }

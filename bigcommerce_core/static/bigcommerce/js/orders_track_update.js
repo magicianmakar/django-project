@@ -5,6 +5,7 @@
     var updatePromise;
     var order_update_tpl = Handlebars.compile($("#order-update-template").html());
     var disable_config_sync = false;
+    var eventObject = '';
 
     var status_map = {
         "PLACE_ORDER_SUCCESS": "Awaiting Payment",
@@ -142,9 +143,10 @@
         });
     }
 
-    $('.start-update-btn').click(function(e) {
+    $('.start-update-btn, #quick-api-update').click(function(e) {
         var btn = $(this);
         var modal = $('#modal-tracking-update');
+        eventObject = e;
 
         // If orders object isn't filled inside count
         if (!orders.pending) {
@@ -347,6 +349,36 @@
                 updateProgress();
             });
         }
+
+        if (order.source_type === "aliexpress" && eventObject.target.id === "quick-api-update") {
+            return $.ajax({
+                url: '/api/ali-order-info',
+                type: 'GET',
+                data: {
+                    'store_id': window.store.id,
+                    'store_type': window.store.type,
+                    'source_id': order.source_id,
+                    'order': order,
+                }
+                }).then(function(data) {
+                    orders.success += 1;
+                    if (order.source_status == data.orderStatus &&
+                        order.source_tracking == data.tracking_number &&
+                        $('#update-unfulfilled-only').is(':checked') &&
+                        !order.bundle) {
+                        // Order info hasn't changed
+                        addOrderUpdateItem(order, data);
+                    } else {
+                        return updateOrderStatus(order, data);
+                    }
+                }).fail(function(data) {
+                    // Couldn't get Supplier order info
+                    orders.error += 1;
+                    addOrderUpdateItem(order, {'error': getAjaxError(data)});
+                }).always(function() {
+                    updateProgress();
+                });
+            }
 
         return new P(function(resolve, reject) {
             window.extensionSendMessage({

@@ -1311,6 +1311,7 @@ class OrdersTrackList(ListView):
         }]
 
         context['rejected_status'] = ALIEXPRESS_REJECTED_STATUS
+        context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
 
         return context
 

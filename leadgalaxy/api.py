@@ -193,8 +193,13 @@ class ShopifyStoreApi(ApiBase):
         source_id = data.get('source_id')
         order = data.get('order')
         store_id = data.get('store_id')
+        store_type = data.get('store_type')
 
-        result = shopify_orders_tasks.get_order_info_via_api(order, source_id, store_id)
+        result = shopify_orders_tasks.get_order_info_via_api(order, source_id, store_id, store_type)
+        if result.get('error_code'):
+            if result.get('sub_code') == 'isv.target-not-found':
+                return self.api_error('Orders Sync: Not Authorized to view order.', status=500)
+
         return JsonResponse(result, status=200, safe=True)
 
     def get_order_tracking_info(self, request, user, data):
