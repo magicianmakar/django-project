@@ -230,13 +230,13 @@ Vue.component('shopify-products-table', {
                                     radioClass: 'iradio_square-blue',
                                 });
 
-                                $('.product-connection-disconnect').click(function (e) {
+                                $(document).on('click', '.product-connection-disconnect', function (e) {
                                     e.preventDefault();
                                     var product_id = $(this).data('product');
                                     disconnect(product_id);
                                 });
 
-                                $(document).on('click', '.product-connection-connect').click(function (e) {
+                                $(document).on('click', '.product-connection-connect', function (e) {
                                     e.preventDefault();
                                     connect(sub_conf.store, $(this).data('shopify'));
                                 });
