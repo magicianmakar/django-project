@@ -22,7 +22,11 @@ def can(user, perm_name):
 
 @register.filter
 def plan_have_feature(plan, perm_name):
-    return plan.permissions.filter(name__iexact=perm_name).exists()
+    if plan.parent_plan:
+        permissions = plan.parent_plan.permissions
+    else:
+        permissions = plan.permissions
+    return permissions.filter(name__iexact=perm_name).exists()
 
 
 @register.filter

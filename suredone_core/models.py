@@ -110,9 +110,11 @@ class SureDoneAccount(StoreBase):
         minified_key = ''.join(c for c in field_name if c.isalnum()).lower()
         return f'ucf{minified_key}'
 
+    def is_default_field(self, field_name: str) -> bool:
+        return field_name.lower() in load_sd_default_fields()
+
     def has_field_defined(self, field_name: str, options=None):
-        default_fields = load_sd_default_fields()
-        if field_name.lower() in default_fields:
+        if self.is_default_field(field_name):
             return True
 
         if not options:
@@ -123,10 +125,9 @@ class SureDoneAccount(StoreBase):
     def has_fields_defined(self, field_names: list, options=None):
         if not options:
             options = self.parsed_options_config
-        default_fields = load_sd_default_fields()
         custom_fields = options.get('user_field_names', '').split('*')
 
-        return all([(x.lower() in default_fields or x in custom_fields or self.format_custom_field(x) in custom_fields)
+        return all([(self.is_default_field(x) or x in custom_fields or self.format_custom_field(x) in custom_fields)
                     for x in field_names])
 
     def has_variation_field(self, variation_field: str, options=None):

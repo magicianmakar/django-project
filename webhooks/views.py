@@ -16,7 +16,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
-
+from django.utils.text import slugify
 from django.utils import timezone
 from django.views import View
 
@@ -491,6 +491,7 @@ class ShopifyOrderCreateWebhook(ShopifyWebhookMixing):
 
         tasks.update_shopify_order.apply_async(
             args=[store.id, shopify_data['id']],
+            kwargs={'is_new': True},
             queue=queue,
             countdown=countdown)
 
@@ -1046,9 +1047,11 @@ def slack_webhook(request):
             if AppPermission.objects.filter(name=name).exists():
                 return HttpResponse(':x: Permission {} already exists'.format(name))
 
-            AppPermission.objects.create(name=name, description=description)
+            perm = AppPermission.objects.create(name=name, description=description)
+            bundle = FeatureBundle.objects.create(title=f'{name} Bundle', slug=slugify(name), hidden_from_user=True)
+            bundle.permissions.add(perm)
 
-            return HttpResponse('Permission {} successfully created'.format(name))
+            return HttpResponse(f'Permission {perm.name} and bundle ({bundle.title}) successfully created')
 
         elif command == 'list':
             table = texttable.Texttable(max_width=0)

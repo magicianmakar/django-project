@@ -302,3 +302,23 @@ class ShopifyOrderLog(models.Model):
                         logs[idx]['line_info'] = line
 
         return logs
+
+
+class ShopifyOrderRevenue(models.Model):
+    class Meta:
+        unique_together = ('store', 'order_id')
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
+
+    order_id = models.BigIntegerField()
+    currency = models.CharField(blank=True, null=True, max_length=256)
+
+    items_count = models.IntegerField()
+    line_items_price = models.FloatField()
+    shipping_price = models.FloatField()
+    total_price = models.FloatField()
+
+    total_price_usd = models.FloatField()
+
+    created_at = models.DateTimeField(auto_now_add=True)

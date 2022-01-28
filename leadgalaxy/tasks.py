@@ -83,7 +83,7 @@ from product_feed.models import (
 from order_exports.models import OrderExport
 from order_exports.utils import ShopifyOrderExport, ShopifyTrackOrderExport
 from metrics.statuspage import record_import_metric
-from shopify_orders.models import ShopifyOrder, ShopifyOrderRisk
+from shopify_orders.models import ShopifyOrder, ShopifyOrderRevenue, ShopifyOrderRisk
 
 
 @celery_app.task(base=CaptureFailure)
@@ -699,7 +699,7 @@ def sync_shopify_orders(self, store_id, elastic=False):
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webhook=True):
+def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webhook=True, is_new=False):
     store = None
 
     try:
@@ -731,6 +731,22 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
                 'note': order_note,
                 'note_snippet': truncatewords(order_note, 10),
             })
+
+        try:
+            if is_new and not shopify_order['test']:
+                ShopifyOrderRevenue.objects.create(
+                    store=store,
+                    user=store.user,
+                    order_id=shopify_order['id'],
+                    currency=shopify_order['currency'],
+                    items_count=len(shopify_order['line_items']),
+                    line_items_price=shopify_order['subtotal_price_set']['shop_money']['amount'],
+                    shipping_price=shopify_order['total_shipping_price_set']['shop_money']['amount'],
+                    total_price=shopify_order['total_price_set']['shop_money']['amount'],
+                    total_price_usd=shopify_order['total_price_usd'],
+                )
+        except:
+            capture_exception(level='warning')
 
     except AssertionError:
         capture_message('Store is being imported', extra={'store': store})

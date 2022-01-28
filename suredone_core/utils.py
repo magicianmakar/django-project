@@ -6,6 +6,7 @@ import uuid
 from copy import deepcopy
 from pusher import Pusher
 from tenacity import RetryError, retry, stop_after_attempt, wait_fixed
+from typing import List
 from unidecode import unidecode
 
 from django.conf import settings
@@ -874,6 +875,10 @@ class SureDoneUtils:
         api_request_data = self.transform_variant_data_into_sd_list_format([updated_product_data])
 
         return self.api.edit_product_details_bulk(api_request_data, skip_all_channels)
+
+    def convert_to_default_and_custom_fields(self, fields: List[str]) -> List[str]:
+        return [field if self.sd_account.is_default_field(field) else self.sd_account.format_custom_field(field)
+                for field in fields]
 
 
 class SureDoneAdminUtils:
