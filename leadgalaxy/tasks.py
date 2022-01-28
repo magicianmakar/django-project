@@ -699,7 +699,7 @@ def sync_shopify_orders(self, store_id, elastic=False):
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webhook=True):
+def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webhook=True, is_new=False):
     store = None
 
     try:
@@ -733,7 +733,7 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
             })
 
         try:
-            if not shopify_order['test']:
+            if is_new and not shopify_order['test']:
                 ShopifyOrderRevenue.objects.create(
                     store=store,
                     user=store.user,

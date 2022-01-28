@@ -490,6 +490,7 @@ class ShopifyOrderCreateWebhook(ShopifyWebhookMixing):
 
         tasks.update_shopify_order.apply_async(
             args=[store.id, shopify_data['id']],
+            kwargs={'is_new': True},
             queue=queue,
             countdown=countdown)
 
