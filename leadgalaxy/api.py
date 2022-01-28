@@ -38,7 +38,6 @@ from shopified_core.utils import (
     base64_encode,
     clean_tracking_number,
     get_domain,
-    hash_list,
     order_data_cache,
     remove_link_query,
     safe_float,
@@ -2755,7 +2754,7 @@ class ShopifyStoreApi(ApiBase):
         if not products:
             return self.api_error('No selected products to sync', status=422)
 
-        user_store_supplier_sync_key = f'user_store_supplier_sync_{user.id}_{store.id}_{hash_list(products)}'
+        user_store_supplier_sync_key = f'user_store_supplier_sync_{user.id}_{store.id}'
         if cache.get(user_store_supplier_sync_key) is not None:
             return self.api_error('Sync in progress for selected products', status=404)
 
