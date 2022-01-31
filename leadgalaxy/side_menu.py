@@ -3,6 +3,7 @@ import re
 from django.urls import resolve, reverse
 
 from lib.exceptions import capture_exception
+from article.utils import get_article_link
 
 
 def get_menu_structure(namespace, request):
@@ -15,9 +16,13 @@ def get_menu_structure(namespace, request):
             'alerts',
             'us-product-database',
             'import-products',
-            'alibaba-products'
+            'alibaba-products',
+            'insiders-report-article',
         ]),
-        ('orders', ['place-orders', 'tracking']),
+        ('orders', [
+            'place-orders',
+            'tracking',
+        ]),
         ('business', [
             'profit-dashboard',
             'marketing-feeds',
@@ -25,7 +30,7 @@ def get_menu_structure(namespace, request):
             'callflex',
             'tubehunt',
             'tools',
-            'insider-reports'
+            'insider-reports',
         ]),
     ]
 
@@ -87,13 +92,17 @@ def get_menu_item_data(request):
     is_black = False
     is_research = False
     is_plod = False
+    hide_profit_dashboard = False
     is_old_layout = request.session.get('old_layout')
+    user = None
 
     try:
         if request.user.is_authenticated:
             is_black = request.user.profile.plan.is_black
             is_research = request.user.profile.plan.is_research
             is_plod = request.user.profile.plan.is_plod
+            hide_profit_dashboard = 'profit_dashboard.view' not in request.user.profile.get_perms
+            user = request.user
     except:
         pass
 
@@ -174,10 +183,10 @@ def get_menu_item_data(request):
         'profit-dashboard': {
             'title': 'Profit Dashboard',
             'url_name': 'profit_dashboard.views.index',
-            'permissions': ['profit_dashboard.view'],
             'match': r'(/\w+)?/profit-dashboard',
             'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq'],
             'icon': 'img/profit-dashboard.svg',
+            'hidden': hide_profit_dashboard,
         },
         'callflex': {
             'title': 'CallFlex',
@@ -289,13 +298,17 @@ def get_menu_item_data(request):
             'permissions': ['dropified_product.use'],
         },
         'insider-reports': {
-            'title': 'Insider Reports',
+            'title': 'Insiders Report',
             'url_name': 'ranked-products',
             'match': r'^/insider-reports',
             'is_ns_aware': False,
             'permissions': ['insider_reports.use'],
             'icon': 'img/insider-report.svg',
         },
+        'insiders-report-article': get_article_link(
+            'insiders-report',
+            hidden=lambda a: not user or (not user.is_staff and user.profile.plan not in a.display_plans.all())
+        ),
     }
 
 
@@ -320,6 +333,8 @@ def create_menu(menu_structure, menu_data, request, namespace):
         items = []
         for item_key in item_keys:
             item = menu_data[item_key]
+            if not item:
+                continue
 
             if type(item.get('permissions')) is not bool:
                 permissions = [p for p in item.get('permissions', []) if p not in upsell_permission_exceptions]

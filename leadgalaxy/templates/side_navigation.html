@@ -71,7 +71,11 @@
       <li class="section-no-icon {{ item.classes }}">
         <a href="{{ item.url }}">
           {% if item.icon %}
-            <img src="{% static item.icon %}" class="item-icon"/>
+            {% if 'https://' in item.icon %}
+              <img src="{{ item.icon }}" class="item-icon"/>
+            {% else %}
+              <img src="{% static item.icon %}" class="item-icon"/>
+            {% endif %}
           {% endif %}
           {{ item.title | safe }}
         </a>
@@ -145,7 +149,11 @@
         <li class="item {{ item.classes }}">
           <a {% if item.new_tab %}target="_blank"{% endif %} href="{{ item.url }}">
             {% if item.icon %}
-            <img src="{% static item.icon %}" class="item-icon"/>
+              {% if 'https://' in item.icon %}
+                <img src="{{ item.icon }}" class="item-icon"/>
+              {% else %}
+                <img src="{% static item.icon %}" class="item-icon"/>
+              {% endif %}
             {% endif %}
             {{ item.title }}
           </a>

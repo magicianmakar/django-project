@@ -1,5 +1,8 @@
-from article.models import Article, ArticleTag, Comment, CommentVote, SidebarLink
 from django.contrib import admin
+
+from addons_core.admin import FormWithRequestMixin
+from .forms import SidebarLinkAdminForm
+from .models import Article, ArticleTag, Comment, CommentVote, SidebarLink
 
 
 class ArticleAdmin(admin.ModelAdmin):
@@ -28,10 +31,11 @@ class ArticleAdmin(admin.ModelAdmin):
         return '/pages/{}'.format(obj.slug)
 
 
-class SidebarLinkAdmin(admin.ModelAdmin):
+class SidebarLinkAdmin(FormWithRequestMixin, admin.ModelAdmin):
     list_display = ('title', 'order', 'link')
     search_fields = ('title', 'link')
     filter_horizontal = ('display_plans',)
+    form = SidebarLinkAdminForm
 
 
 @admin.register(Comment)
