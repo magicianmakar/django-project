@@ -120,7 +120,7 @@ $('#fullfill-order-btn').click(function (e) {
 $('.filter-btn').click(function (e) {
     Cookies.set('orders_filter', !$('#filter-form').hasClass('active'));
 
-    ga('clientTracker.send', 'event', 'Order Filter Toggle', 'Shopify', sub_conf.shop);
+    ga('clientTracker.send', 'event', 'Order Filter Toggle', 'BigCommerce', sub_conf.shop);
 
     $('#filter-form').toggleClass('active');
 });

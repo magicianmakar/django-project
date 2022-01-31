@@ -1050,6 +1050,7 @@ class OrdersList(ListView):
                                 'supplier': b_supplier,
                                 'shipping_method': b_shipping_method,
                                 'quantity': quantity,
+                                'variant': b_variants,
                                 'weight': weight,
                                 'data': b
                             })

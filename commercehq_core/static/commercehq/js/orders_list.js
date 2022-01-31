@@ -91,15 +91,11 @@ $('#fullfill-order-btn').click(function (e) {
 });
 
 $('.filter-btn').click(function (e) {
-    Cookies.set('orders_filter', !$('.filter-form').is(':visible'));
+    Cookies.set('orders_filter', !$('#filter-form').hasClass('active'));
 
     ga('clientTracker.send', 'event', 'Order Filter Toggle', 'CommerceHQ', sub_conf.shop);
 
-    if (!$('.filter-form').is(':visible')) {
-        $('.filter-form').fadeIn('fast');
-    } else {
-        $('.filter-form').fadeOut('fast');
-    }
+    $('#filter-form').toggleClass('active');
 });
 
 $('#query_input').change(function (e) {
@@ -700,7 +696,7 @@ $('.add-supplier-btn').click(function (e) {
     ga('clientTracker.send', 'event', 'Order Add Supplier', 'CommerceHQ', sub_conf.shop);
 
     $('#modal-supplier-link').prop('shopify-store', $(this).attr('store-id'));
-    $('#modal-supplier-link').prop('shopify-product', $(this).attr('shopify-product'));
+    $('#modal-supplier-link').prop('shopify-product', $(this).attr('chq-product'));
 
     $('#modal-supplier-link').modal('show');
 });
@@ -841,7 +837,7 @@ function pusherSub() {
 
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {
-        $('.filter-form').show();
+        $('#filter-form').addClass('active');
     }
 
     pusherSub();
