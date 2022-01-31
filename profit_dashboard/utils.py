@@ -1,6 +1,7 @@
 import arrow
 import re
 import simplejson as json
+from decimal import Decimal
 
 from collections import OrderedDict
 
@@ -243,7 +244,7 @@ def get_profits(store, start, end, store_timezone=''):
     totals['orders_count'] = totals_orders_count
     totals['fulfillments_count'] = total_fulfillments_count
     totals['orders_per_day'] = totals['orders_count'] / len(days)
-    totals['fulfillments_per_day'] = total_fulfillments_count / len(days)
+    totals['fulfillments_per_day'] = Decimal(total_fulfillments_count / len(days)).quantize(Decimal('.01'))
     totals['profit_margin'] = calculate_profit_margin(totals['revenue'], totals['profit'])
     if totals['orders_count'] != 0:
         totals['average_profit'] = totals['profit'] / totals['orders_count']

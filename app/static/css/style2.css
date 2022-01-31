@@ -32,6 +32,14 @@ label,
     border-radius: 8px;
 }
 
+.p-r-m {
+  padding-right: 20px;
+}
+
+.p-r-l {
+  padding-left: 20px;
+}
+
 .form-group .chosen-container {
     width: 100% !important;
     background-color: #fff;
@@ -312,6 +320,10 @@ tbody#stores-table-body > tr > td {
     margin: 2px 0;
 }
 
+.neutral-color {
+    color: #62809d !important;
+}
+
 .btn {
     padding: 8px 12px;
     font-weight: 500;
@@ -447,7 +459,7 @@ fieldset[disabled] .btn {
     border-color: #0b205b;
 }
 .btn-warning:active,
-.btn-warning.active {
+.btn-warning.acive {
     background-color: #5c260a;
     border-color: #5c260a;
 }
@@ -638,6 +650,7 @@ a.text-default:focus > .dropified-icons:before {
 }
 
 .scrtabs-tabs-movable-container {
+
     width: 100% !important;
 }
 
@@ -691,13 +704,15 @@ a.text-default:focus > .dropified-icons:before {
 }
 
 .scrtabs-tab-container ~ .actions li.border-left,
-.nav.nav-tabs ~ .actions li.border-left {
-    border-left: 1px solid #e6ebef
+.nav.nav-tabs ~ .actions li.border-left,
+li.border-left {
+    border-left: 1px solid #e6ebef;
     padding-left: 15px;
 }
 
 .scrtabs-tab-container ~ .actions li.border-right,
-.nav.nav-tabs ~ .actions li.border-right {
+.nav.nav-tabs ~ .actions li.border-right,
+li.border-left {
     border-right: 1px solid #e6ebef;
     padding-right: 15px;
 }
@@ -837,6 +852,11 @@ a.text-default:focus > .dropified-icons:before {
     border: 0 none;
 }
 
+.tabs-container .nav-pills > li.active {
+    background-color: transparent;
+    border: 0 none;
+}
+
 .tabs-container .nav-pills > li > a:hover,
 .tabs-container .nav-pills > li > a:focus,
 .tabs-container .nav-pills > li > a.active,
@@ -880,7 +900,7 @@ a.text-default:focus > .dropified-icons:before {
     border: 0 none;
     border-radius: 0;
 }
-
+.
 .tabs-container .tab-pane .panel-body + .panel-body {
     margin-top: 10px;
 }
@@ -999,7 +1019,7 @@ a.text-default:focus > .dropified-icons:before {
 
 .multi-line-text-overflow {
     overflow: hidden;
-    display: -webkit-box;
+    display: -webkit-box !important;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
 }
@@ -1288,7 +1308,7 @@ a.text-default:focus > .dropified-icons:before {
 
 #top-search-form {
     margin: 15px 8px;
-    float: right;
+    float: left;
     width: auto;
     height: auto;
 }
@@ -2005,7 +2025,7 @@ a span.badge + span:not(.badge) {
     border-color: #6BAA55;
 }
 
-.order .details .line .product-preview .product-img {
+.order .details .line .product-preview .prduct-img {
     max-width: 48px;
     max-height: 48px;
     border-radius: 6px;
@@ -2130,6 +2150,106 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
     position: static;
 }
 
+.lifetime-ui {
+    z-index: 1002;
+}
+
+.lifetime-ui .nav.navbar-top-links li a {
+    font-size: 15px;
+    font-weight: 600;
+    min-height: 30px;
+    padding: 12px 10px;
+    transition: background-color .2s;
+    border-radius: 4px;
+}
+
+.lifetime-ui .nav.navbar-top-links li a:hover,
+.lifetime-ui .nav.navbar-top-links li a.active {
+    background-color: #F6F8F9;
+}
+
+.lifetime-ui .nav.navbar-top-links {
+    padding: 8px 0;
+}
+
+#applications-menu {
+    background-color: #fff;
+    max-height: 0;
+    padding: 0 10px 0 26px;
+    overflow-y: hidden;
+    transition: max-height .3s, padding-top .3s, padding-bottom .3s;
+    margin-left: -15px;
+    margin-right: -15px;
+}
+
+#applications-menu.active {
+    max-height: 1000px;
+    padding-top: 20px;
+}
+
+#applications-menu .tab-content {
+    margin-top: 15px;
+}
+#applications-menu .tab-content .row {
+    display: flex;
+    margin: 0;
+}
+
+#applications-menu .tab-content a.col-md-4 {
+    list-style-type: none;
+    min-height: 71px;
+    margin-bottom: 10px;
+    transition:  background-color .2s;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+#applications-menu .tab-content a.col-md-4:hover {
+    background-color: #F6F8F9;
+}
+
+#applications-menu .tab-content a img {
+    max-width: 25px;
+}
+#applications-menu .tab-content a > div {
+    width: calc(100% - 30px);
+    float: right;
+}
+#applications-menu .tab-content a label {
+    width: 100%;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1D262F;
+    cursor: pointer;
+}
+#applications-menu .tab-content a span {
+    width: 100%;
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 400;
+    color: #56708A;
+}
+
+#accounts-menu {
+    padding: 20px;
+}
+
+#accounts-menu li {
+    color: #62809D;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+#accounts-menu li a {
+    font-size: 15px;
+    color: #1D262F;
+    font-weight: 600;
+}
+
+#accounts-menu li a img {
+    margin: -2px 8px 0 0;
+}
 .separated-tabs .nav.nav-tabs {
   border: none;
   margin: 0 15px;

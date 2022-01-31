@@ -53,7 +53,8 @@ class ProfitDashboardMixin():
 
         return self._store
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, from_dashboard=False, **kwargs):
+        self.from_dashboard = from_dashboard
         if not self.store_type:
             raise NotImplementedError('Store Type')
 
@@ -75,14 +76,21 @@ class ProfitDashboardMixin():
 
         context = {
             'page': 'profit_dashboard',
-            'base_template': self.base_template,
+            'base_template': self.base_template if not self.request.GET.get('iframe') else 'base_empty.html',
             'store': store,
             'store_type': self.store_type,
             'stores': utils.get_stores(self.request.user, self.store_type),
             'user_facebook_permission': settings.FACEBOOK_APP_ID,
             'initial_date': models.INITIAL_DATE.isoformat(),
             'show_facebook_connection': self.request.user.get_config('_show_facebook_connection', 'true') == 'true',
+            'breadcrumbs': ['Profit Dashboard'],
+            'from_dashboard': self.from_dashboard,
         }
+        if self.from_dashboard:
+            context['page'] = 'dashboard'
+            context['breadcrumbs'] = ['Dashboard']
+            context['application_menu'] = 'marketing-suite'
+            context['open_application_menu'] = True
 
         # Get correct timezone to properly sum order amounts
         user_timezone = self.request.session.get('django_timezone', '')

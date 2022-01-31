@@ -6,6 +6,8 @@
 {% load template_helper %}
 {% load url_tools %}
 
+{% block applications-menu-class %}active{% endblock %}
+
 {% block main-container %}
 
 <div class="tabs-container">
@@ -15,12 +17,13 @@
     <div id="tab-1" class="tab-pane active">
       <div class="panel-body">
         {% if upsell %}
-        {% if request.user.profile.plan.support_addons %}
-          {% include "common/partial/upsell.html" with top="200px" addon_id=10 message="Add Profit Dashboard to your Plan" only %}
-        {% else %}
-        {% include "common/partial/upsell.html" with top="200px" addon_id='' message="Please upgrade your Plan to add Profit Dashboard" only %}
+          {% if request.user.profile.plan.support_addons %}
+            {% include "common/partial/upsell.html" with top="200px" addon_id=10 message="Add Profit Dashboard to your Plan" only %}
+          {% else %}
+            {% include "common/partial/upsell.html" with top="200px" addon_id='' message="Please upgrade your Plan to add Profit Dashboard" only %}
+          {% endif %}
         {% endif %}
-        {% endif %}
+
         {% if api_error %}
             <p class="text-center">Error: {{api_error}}</p>
             <p class="text-center">Please Try again in a few seconds by reloading the page.</p>
@@ -40,9 +43,9 @@
               <input type="hidden" name="store" value="{{ store.id }}">
 
               <div class="form-group">
-                <ul id="data-view" class="top-controls pull-right data-view">
-                  <li><a href="javascript:;" class="btn active daily" data-time="daily">Daily</a></li>
-                  <li><a href="javascript:;" class="btn weekly" data-time="weekly">Weekly</a></li>
+                <ul id="data-view" class="top-controls nav nav-pills pull-right data-view">
+                  <li><a href="javascript:;" class="active daily" data-time="daily">Daily</a></li>
+                  <li><a href="javascript:;" class="weekly" data-time="weekly">Weekly</a></li>
                   <!-- <li><a href="#" class="btn btn-default monthly" data-time="monthly">Monthly</a></li> -->
                 </ul>
               </div>

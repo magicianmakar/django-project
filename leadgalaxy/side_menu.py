@@ -93,6 +93,7 @@ def get_menu_item_data(request):
     is_research = False
     is_plod = False
     hide_profit_dashboard = False
+    hide_dashboard = True
     is_old_layout = request.session.get('old_layout')
     user = None
 
@@ -101,6 +102,7 @@ def get_menu_item_data(request):
             is_black = request.user.profile.plan.is_black
             is_research = request.user.profile.plan.is_research
             is_plod = request.user.profile.plan.is_plod
+            hide_dashboard = not is_research and not request.user.can('dashboard.view')
             hide_profit_dashboard = 'profit_dashboard.view' not in request.user.profile.get_perms
             user = request.user
     except:
@@ -279,8 +281,10 @@ def get_menu_item_data(request):
         'dashboard': {
             'title': 'Dashboard',
             'url_name': 'dashboard',
-            'match': r'^/dashboard',
-            'hidden': not is_research,
+            'match': r'(/\w+)?/dashboard',
+            'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq'],
+            'icon': 'img/profit-dashboard.svg',
+            'hidden': hide_dashboard,
             'is_ns_aware': False,
         },
         'prints': {
@@ -324,9 +328,8 @@ def create_menu(menu_structure, menu_data, request, namespace):
         return user.can(perm)
 
     # Know which bypass instead of removing these permissions from menu
-    upsell_permission_exceptions = ['price_changes.use', 'profit_dashboard.view',
-                                    'mapping_bundle.use', 'suppliers_shipping_mapping.use', 'sub_users.use',
-                                    'product_feeds.use', 'google_product_feed.use', 'orders.view']
+    upsell_permission_exceptions = ['price_changes.use', 'mapping_bundle.use', 'suppliers_shipping_mapping.use',
+                                    'sub_users.use', 'product_feeds.use', 'google_product_feed.use', 'orders.view']
     menu = []
     for section_key, item_keys in menu_structure:
         section = menu_data[section_key]

@@ -31,12 +31,12 @@ def get_mocked_profits(store):
             'week_day': day.strftime('%A'),
             'empty': False,
             'css_empty': '',
-            'orders_count': randrange(10, 30),
-            'revenue': Decimal(uniform(350, 500)).quantize(Decimal('.01')),
+            'orders_count': randrange(2, 8),
+            'revenue': Decimal(uniform(100, 200)).quantize(Decimal('.01')),
             'other_costs': Decimal(uniform(1, 20)).quantize(Decimal('.01')),
             # Percentages
             'fulfillment_cost': Decimal(randrange(5, 20)) / 100,
-            'ad_spend': Decimal(randrange(20, 50)) / 100,
+            'ad_spend': Decimal(randrange(10, 25)) / 100,
         }
 
         data['fulfillment_cost'] = data['revenue'] * data['fulfillment_cost']

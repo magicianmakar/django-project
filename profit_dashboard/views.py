@@ -34,7 +34,7 @@ from .tasks import fetch_facebook_insights
 
 
 @login_required
-def index(request):
+def index(request, from_dashboard=False):
     store = utils.get_store_from_request(request)
     if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
         if not request.user.is_subuser:
@@ -43,7 +43,16 @@ def index(request):
             raise PermissionDenied()
 
     if not store:
-        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'profits'}))
+        if not from_dashboard:
+            return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'profits'}))
+
+        context = get_mocked_profits(None)
+        context['from_dashboard'] = from_dashboard
+        context['page'] = 'dashboard'
+        context['breadcrumbs'] = ['Dashboard']
+        context['application_menu'] = 'marketing-suite'
+        context['open_application_menu'] = True
+        return render(request, 'profit_dashboard/index.html', context)
 
     context = {
         'page': 'profit_dashboard',
@@ -51,7 +60,15 @@ def index(request):
         'user_facebook_permission': settings.FACEBOOK_APP_ID,
         'initial_date': INITIAL_DATE.isoformat(),
         'show_facebook_connection': request.user.get_config('_show_facebook_connection', 'true') == 'true',
+        'breadcrumbs': ['Profit Dashboard'],
+        'from_dashboard': from_dashboard,
+        'base_template': 'base.html' if not request.GET.get('iframe') else 'base_empty.html',
     }
+    if from_dashboard:
+        context['page'] = 'dashboard'
+        context['breadcrumbs'] = ['Dashboard']
+        context['application_menu'] = 'marketing-suite'
+        context['open_application_menu'] = True
 
     if not is_store_synced(store):
         context['api_error'] = 'Your orders are not synced yet'
@@ -131,9 +148,6 @@ def index(request):
 @login_required
 def facebook_insights(request):
     """Save campaigns to account(if selected) and fetch insights"""
-    if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        raise PermissionDenied()
-
     if request.method == 'POST':
         facebook_access_id = request.POST.get('facebook_access_id')
         store = utils.get_store_from_request(request)
@@ -175,9 +189,6 @@ def facebook_insights(request):
 @login_required
 def facebook_accounts(request):
     """Save access token and return accounts"""
-    if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        raise PermissionDenied()
-
     store = utils.get_store_from_request(request)
     access_token = request.GET.get('fb_access_token')
     expires_in = safe_int(request.GET.get('fb_expires_in'))
@@ -233,9 +244,6 @@ def facebook_accounts(request):
 @login_required
 def facebook_campaign(request):
     """Save account and return campaigns"""
-    if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        raise PermissionDenied()
-
     store = utils.get_store_from_request(request)
     facebook_access_id = request.GET.get('facebook_access_id')
     try:
@@ -301,9 +309,6 @@ def facebook_campaign(request):
 
 @login_required
 def save_other_costs(request):
-    if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        raise PermissionDenied()
-
     amount = float(request.POST.get('amount', '0'))
     date = arrow.get(request.POST.get('date'), r'MMDDYYYY').date()
 
@@ -333,9 +338,6 @@ def save_other_costs(request):
 
 @login_required
 def facebook_remove_account(request):
-    if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        raise PermissionDenied()
-
     if request.method == 'POST':
         store = utils.get_store_from_request(request)
         access = get_object_or_404(FacebookAccess,
@@ -360,9 +362,6 @@ def facebook_remove_account(request):
 
 @login_required
 def profit_details(request):
-    if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        raise PermissionDenied()
-
     store = utils.get_store_from_request(request)
     if not store:
         return JsonResponse({
@@ -395,9 +394,6 @@ def profit_details(request):
 
 @login_required
 def facebook_remove(request):
-    if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        raise PermissionDenied()
-
     if request.method == 'POST':
         store = utils.get_store_from_request(request)
         access = get_object_or_404(FacebookAccess,

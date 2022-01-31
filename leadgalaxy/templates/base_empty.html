@@ -1,0 +1,71 @@
+{% load static %}
+{% load compress %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>{% block title %}Dropified{% endblock %}</title>
+
+    <style name="FontAwesome">
+        @font-face {
+          font-family: 'FontAwesome';
+          src: url('{% static "font-awesome/fonts/fontawesome-webfont.eot" %}');
+          src: url('{% static "font-awesome/fonts/fontawesome-webfont.eot" %}') format('embedded-opentype'),
+               url('{% static "font-awesome/fonts/fontawesome-webfont.woff2" %}') format('woff2'),
+               url('{% static "font-awesome/fonts/fontawesome-webfont.woff" %}') format('woff'),
+               url('{% static "font-awesome/fonts/fontawesome-webfont.ttf" %}') format('truetype'),
+               url('{% static "font-awesome/fonts/fontawesome-webfont.svg" %}') format('svg');
+          font-weight: normal;
+          font-style: normal;
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700,700i|Roboto+Slab:400,700|Inter:100,200,300,400,500,600,700,800,900" rel="stylesheet">
+    <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+    <link href="//fast.appcues.com/widget.css" rel="stylesheet">
+
+    {% compress css %}
+    <link href="{% static 'dropified-icons/style.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/toastr/toastr.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/chosen/chosen.css' %}" rel="stylesheet">
+    <link href="{% static 'css/animate.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/iCheck/skins/square/blue.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/scrolling-tabs/jquery.scrolling-tabs.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/sweetalert/sweetalert.min.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/jquery-contextmenu/jquery.contextMenu.min.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/qtip2/jquery.qtip.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap-tour.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/extra.css' %}" rel="stylesheet">
+    <link href="{% static 'shopified/css/side_navigation.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style2.css' %}" rel="stylesheet">
+    {% endcompress %}
+    <style type="text/css">
+      body {
+        background-color: #ffffff;
+      }
+      .wrapper-content {
+        padding: 0;
+      }
+    </style>
+
+    {% block extracss %}{% endblock %}
+  </head>
+  <body>
+    {% block main-nav %}{% endblock %}
+
+    <div class="wrapper wrapper-content">
+      {% block main-container %}{% endblock %}
+    </div>
+
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/jquery-ui-1.10.4.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+    {% block extrajs %}{% endblock %}
+
+  </body>
+</html>

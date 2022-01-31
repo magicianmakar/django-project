@@ -17,6 +17,13 @@ from shopified_core.mocks import get_mocked_config_alerts
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import last_executed
 from aliexpress_core.models import AliexpressAccount
+from profit_dashboard.views import index
+from profits.utils import get_store_from_request
+from commercehq_core.views import ProfitDashboardView as CHQProfitDashboardView
+from woocommerce_core.views import ProfitDashboardView as WooProfitDashboardView
+from groovekart_core.views import ProfitDashboardView as GKartProfitDashboardView
+from bigcommerce_core.views import ProfitDashboardView as BigCommerceProfitDashboardView
+from ebay_core.views import ProfitDashboardView as EBayProfitDashboardView
 
 from .context_processors import all_stores
 
@@ -157,13 +164,38 @@ class SettingsPageView(HomePageMixing):
 class DashboardView(HomePageMixing):
     template_name = 'home/dashboard.html'
 
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
+    def dispatch(self, request, *args, store_type='shopify', **kwargs):
+        if request.user.profile.plan.is_research:
+            return super().dispatch(request, *args, **kwargs)
 
-        ctx['page'] = 'dashboard'
-        ctx['breadcrumbs'] = ['Dashboard']
+        store_type = store_type or 'shopify'
+        store = get_store_from_request(request, store_type)
+        if store:
+            store_type = store.store_type
+            if store_type == 'chq':
+                view = CHQProfitDashboardView.as_view()(request, *args, from_dashboard=True, **kwargs)
+            elif store_type == 'woo':
+                view = WooProfitDashboardView.as_view()(request, *args, from_dashboard=True, **kwargs)
+            elif store_type == 'gkart':
+                view = GKartProfitDashboardView.as_view()(request, *args, from_dashboard=True, **kwargs)
+            elif store_type == 'bigcommerce':
+                view = BigCommerceProfitDashboardView.as_view()(request, *args, from_dashboard=True, **kwargs)
+            elif store_type == 'ebay':
+                view = EBayProfitDashboardView.as_view()(request, *args, from_dashboard=True, **kwargs)
+            else:
+                view = index(request, from_dashboard=True)
 
-        return ctx
+            return view
+
+        try:
+            store = all_stores(request)['user_stores']['all'][0]
+        except:
+            store = None
+
+        if store:
+            return redirect('dashboard', store_type=store.store_type)
+
+        return index(request, from_dashboard=True)
 
 
 class GotoPage(View):

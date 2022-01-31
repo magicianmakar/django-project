@@ -9,8 +9,15 @@
                     X
                 </button>
             {% endif %}
+            {% if addon_id %}
             <a href="{{ addon_id|addon_permalink }}" class="btn btn-primary">Upgrade</a>
+            {% else %}
+            <a href="{{ btn_link }}" class="btn btn-primary">{{ btn_text }}</a>
+            {% endif %}
+
+            {% if message %}
             <span>{{ message }}</span>
+            {% endif %}
         </div>
     </div>
 </div>

@@ -1,7 +1,7 @@
 {% load static template_helper %}
 
 <div class="col-lg-4 expandable">
-  <div class="well">
+  <div class="well open">
     <img src="{% static 'img/thumbs-up.png' %}">
     <h4 class="dropdown-toggle" data-toggle-id="profit-briefing">Profit<i class="dropified-icons di-arrow-up pull-right"></i></h4>
     <div class="totals-detail dropdown-menu not-floating">
@@ -30,7 +30,7 @@
   </div>
 </div>
 <div class="col-lg-4 expandable">
-  <div class="well">
+  <div class="well open">
     <img src="{% static 'img/globe.png' %}">
     <h4 class="dropdown-toggle" data-toggle-id="profit-orders">Orders<i class="dropified-icons di-arrow-up pull-right"></i></h4>
     <div class="totals-detail dropdown-menu not-floating">
@@ -50,7 +50,7 @@
   </div>
 </div>
 <div class="col-lg-4 expandable">
-  <div class="well">
+  <div class="well open">
     <img src="{% static 'img/notepad.png' %}">
     <h4 class="dropdown-toggle" data-toggle-id="profit-averages">Average Order<i class="dropified-icons di-arrow-up pull-right"></i></h4>
     <div class="totals-detail dropdown-menu not-floating">
@@ -64,6 +64,7 @@
       </dl>
     </div>
     <span class="main-value">
+      {% money_format totals.average_revenue store True %}
       <canvas id="averages-chart-mini"></canvas>
     </span>
   </div>

@@ -11,7 +11,7 @@
   " role="navigation" >
     <div class="sidebar-collapse">
         <div class="logo">
-            <a href="{% url 'index' %}">
+          <a href="{% if request.user|can:'dashboard.view' %}{% url 'dashboard' %}{% else %}{% url 'index' %}{% endif %}">
                 {% if user|can:'pls.use' or user.profile.private_label %}
                   {% if 'private-label' in user.profile.plan.slug or user.profile.private_label or request.session.shopify_api == 'private-label' %}
                     <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white3.new.png"/>

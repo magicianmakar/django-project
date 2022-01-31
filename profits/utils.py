@@ -3,6 +3,7 @@ import json
 import pytz
 import re
 from collections import OrderedDict
+from decimal import Decimal
 from functools import reduce
 
 from django.contrib.contenttypes.models import ContentType
@@ -18,6 +19,7 @@ from ebay_core.models import EbayOrderTrack
 from gearbubble_core import utils as gear_utils
 from groovekart_core import utils as gkart_utils
 from groovekart_core.models import GrooveKartOrderTrack
+from leadgalaxy import utils as shopify_utils
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import safe_float
 from woocommerce_core import utils as woo_utils
@@ -39,7 +41,9 @@ ALIEXPRESS_CANCELLED_STATUS = [
 
 
 def get_stores(user, store_type):
-    if store_type == 'gkart':
+    if store_type == 'shopify':
+        return user.profile.get_shopify_stores()
+    elif store_type == 'gkart':
         return user.profile.get_gkart_stores()
     elif store_type == 'bigcommerce':
         return user.profile.get_bigcommerce_stores()
@@ -58,13 +62,15 @@ def get_store_from_request(request, store_type=''):
     if store_id:
         return get_stores(request.user, store_type).get(id=store_id)
 
-    if store_type == 'chq':
+    if store_type == 'shopify':
+        return shopify_utils.get_store_from_request(request)
+    elif store_type == 'chq':
         return chq_utils.get_store_from_request(request)
-    if store_type == 'ebay':
+    elif store_type == 'ebay':
         return ebay_utils.get_store_from_request(request)
-    if store_type == 'woo':
+    elif store_type == 'woo':
         return woo_utils.get_store_from_request(request)
-    if store_type == 'gear':
+    elif store_type == 'gear':
         return gear_utils.get_store_from_request(request)
     elif store_type == 'gkart':
         return gkart_utils.get_store_from_request(request)
@@ -509,7 +515,7 @@ def get_profits(store, store_type, start, end, user_timezone):
     totals['orders_count'] = totals_orders_count
     totals['fulfillments_count'] = total_fulfillments_count
     totals['orders_per_day'] = totals['orders_count'] / len(days)
-    totals['fulfillments_per_day'] = total_fulfillments_count / len(days)
+    totals['fulfillments_per_day'] = Decimal(total_fulfillments_count / len(days)).quantize(Decimal('.01'))
     totals['profit_margin'] = calculate_profit_margin(totals['revenue'], totals['profit'])
     if totals['orders_count'] != 0:
         totals['average_profit'] = totals['profit'] / totals['orders_count']

@@ -1175,6 +1175,12 @@ $('.dropified-challenge .close-btn').click(function (e) {
     });
 });
 
+$('#open-applications-menu').on('click', function(e) {
+    e.preventDefault();
+    $('#applications-menu').toggleClass('active');
+    $('#open-applications-menu').toggleClass('active');
+});
+
 $('.dropified-challenge, .dropified-challenge-open').click(function (e) {
     e.preventDefault();
 

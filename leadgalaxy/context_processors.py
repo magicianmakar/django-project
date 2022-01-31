@@ -4,6 +4,7 @@ import hashlib
 from django.core.cache import cache
 from django.conf import settings
 from django.contrib import messages
+from django.db.models import Prefetch
 
 import arrow
 import datetime
@@ -17,6 +18,7 @@ from leadgalaxy.side_menu import (
     create_named_menu,
 )
 from stripe_subscription.stripe_api import stripe
+from home.models import ApplicationMenu, ApplicationMenuItem
 
 
 def extra_bundles(request):
@@ -203,6 +205,28 @@ def add_side_menu(request):
                          'body': body,
                          'footer': footer,
                          'named': named}}
+
+
+def add_lifetime_menu(request):
+    if not request.user.is_authenticated:
+        return {}
+
+    if request.user.is_staff:
+        lifetime_menus = ApplicationMenu.objects.prefetch_related(
+            Prefetch('items', ApplicationMenuItem.objects.all(), to_attr='plan_items'),
+        ).distinct()
+    else:
+        lifetime_menus = ApplicationMenu.objects.prefetch_related(
+            Prefetch('items', ApplicationMenuItem.objects.filter(
+                plans=request.user.profile.plan
+            ), to_attr='plan_items'),
+        ).filter(
+            items__plans=request.user.profile.plan
+        ).distinct()
+    return {
+        'lifetime_menus': lifetime_menus,
+        'lifetime_menu_slugs': lifetime_menus.values_list('slug', flat=True),
+    }
 
 
 def check_shopify_pending_subscription(request):

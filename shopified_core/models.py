@@ -33,14 +33,15 @@ class StoreBase(models.Model):
     def store_type_key(self):
         return f"{self.store_type}_{self.id}"
 
-    def get_url(self, name):
+    def get_url(self, name, **kwargs):
         prefix = self.store_type
         if prefix and prefix != 'shopify':
             url = reverse(f'{prefix}:{name}')
         else:
             url = reverse(name)
 
-        return f'{url}?store={self.id}'
+        params = f"&{'&'.join(kwargs)}" if kwargs else ''
+        return f'{url}?store={self.id}{params}'
 
     def get_page_url(self, url_name):
         return self.get_url(url_name)

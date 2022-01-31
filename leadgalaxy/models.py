@@ -2044,6 +2044,7 @@ class ClippingMagicPlan(models.Model):
     amount = models.IntegerField(default=0, verbose_name='In USD')
 
     def __str__(self):
+
         return f'<ClippingMagicPlan: {self.id} | {self.allowed_credits} / {self.amount}>'
 
 
@@ -2225,6 +2226,10 @@ class GroupPlan(models.Model):
             'build-lifetime-free-shopify',
             'build-lifetime-free',
         ]
+
+    @property
+    def is_lifetime(self):
+        return 'lifetime' in self.slug
 
     @property
     def is_active_free(self):

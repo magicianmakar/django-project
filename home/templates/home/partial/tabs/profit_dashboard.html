@@ -5,6 +5,8 @@
     {% if item|model_name == 'shopifystore' %}
         {% if store == item %}
             <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% elif from_dashboard %}
+            <li><a href="{% url 'dashboard' %}?store={{item.id}}">{{item.title}}</a></li>
         {% else %}
             <li><a href="{% url 'profit_dashboard.views.index' %}?store={{item.id}}">{{item.title}}</a></li>
         {% endif %}
@@ -12,18 +14,24 @@
     {% elif item|model_name == 'commercehqstore' %}
         {% if store == item %}
             <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% elif from_dashboard %}
+            <li><a href="{% url 'dashboard' store_type='chq' %}?store={{item.id}}">{{item.title}}</a></li>
         {% else %}
             <li><a href="{% url 'chq:profits' %}?store={{item.id}}">{{item.title}}</a></li>
         {% endif %}
     {% elif item|model_name == 'woostore' %}
         {% if store == item %}
             <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% elif from_dashboard %}
+            <li><a href="{% url 'dashboard' store_type='woo' %}?store={{item.id}}">{{item.title}}</a></li>
         {% else %}
             <li><a href="{% url 'woo:profits' %}?store={{item.id}}">{{item.title}}</a></li>
         {% endif %}
     {% elif item|model_name == 'bigcommercestore' %}
         {% if store == item %}
             <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% elif from_dashboard %}
+            <li><a href="{% url 'dashboard' store_type='bigcommerce' %}?store={{item.id}}">{{item.title}}</a></li>
         {% else %}
             <li><a href="{% url 'bigcommerce:profits' %}?store={{item.id}}">{{item.title}}</a></li>
         {% endif %}
@@ -32,8 +40,18 @@
     {% elif item|model_name == 'groovekartstore' %}
         {% if store == item %}
             <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% elif from_dashboard %}
+            <li><a href="{% url 'dashboard' store_type='gkart' %}?store={{item.id}}">{{item.title}}</a></li>
         {% else %}
             <li><a href="{% url 'gkart:profits' %}?store={{item.id}}">{{item.title}}</a></li>
+        {% endif %}
+    {% elif item|model_name == 'ebay' %}
+        {% if store == item %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% elif from_dashboard %}
+            <li><a href="{% url 'dashboard' store_type='ebay' %}?store={{item.id}}">{{item.title}}</a></li>
+        {% else %}
+            <li><a href="{% url 'ebay:profits' %}?store={{item.id}}">{{item.title}}</a></li>
         {% endif %}
     {% endif %}
 {% endfor %}
