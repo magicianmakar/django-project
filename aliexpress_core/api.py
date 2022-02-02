@@ -3,6 +3,7 @@ import requests
 from collections import defaultdict
 
 from django.http import HttpResponse, JsonResponse
+from django.core.cache import cache
 
 from aliexpress_core.models import AliexpressAccount
 from aliexpress_core.settings import API_KEY, API_SECRET
@@ -31,6 +32,7 @@ class AliexpressFulfillHelper():
         self.items = items
         self.shipping_address = shipping_address
         self.order_notes = order_notes
+        self.order_success_msg = ''
 
         self.reset_errors()
 
@@ -55,6 +57,59 @@ class AliexpressFulfillHelper():
                 'items': self.order_item_errors,
             }
         }
+
+    def ds_product_data(self, product_id, aliexpress_account):
+        cache_key = f"aliexpress_drop_ship_product_details_{product_id}"
+        aliexpress_product_result = cache.get(cache_key, {})
+        product_data = AliexpressProduct(product_id, aliexpress_account)
+        if not aliexpress_product_result:
+            aliexpress_product_result = product_data.get_product_data()
+            if aliexpress_product_result.get('error_code'):
+                return None
+            else:
+                cache.set(cache_key, aliexpress_product_result, timeout=300)
+        sku_data = product_data.get_product_sku_data(aliexpress_product_result)
+        return sku_data
+
+    def find_ds_product_sku(self, product_dict, aliexpress_account):
+        sku_attr = ''
+        variant_mapping_error_count = 0
+        temp_variants = product_dict.get('variants') or product_dict.get('variant')
+
+        try:
+            if len(temp_variants) == 1:
+                if isinstance(temp_variants[0], dict):
+                    if temp_variants[0]['title'] == 'Default Title':
+                        sku_attr = ''
+                    else:
+                        sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in temp_variants])
+                elif temp_variants[0] == 'Default Title':
+                    sku_attr = ''
+            elif len(temp_variants) == 0:
+                sku_attr = ''
+            else:
+                sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in temp_variants])
+        except:
+            aliexpress_variant_sku_dict = self.ds_product_data(product_dict['source_id'], aliexpress_account)
+            if aliexpress_variant_sku_dict is None:
+                return None
+
+            try:
+                product_variant_title_list = [v['title'] for v in temp_variants]
+            except:
+                variant_title_list = map(lambda title: title.strip(), temp_variants)  # if item variant list contain spaces
+                product_variant_title_list = list(variant_title_list)
+
+            product_variant_title_list = sorted(product_variant_title_list)
+            product_variant_title = '/'.join(product_variant_title_list)
+            if product_variant_title in aliexpress_variant_sku_dict:
+                sku_attr = aliexpress_variant_sku_dict[product_variant_title]
+            elif variant_mapping_error_count == 0:
+                return None
+        return sku_attr
+
+    def set_order_success_msg(self, msg):
+        self.order_success_msg = msg
 
     def fulfill_woo_order(self):
         self.order = get_woo_order(self.store, self.order_id)
@@ -91,7 +146,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['id'])] = item
 
         if not need_fulfill_items:
-            return self.order_error('Order have no items that need fulfillements')
+            return self.set_order_success_msg('Order have no items that need ordering')
 
         self.items = need_fulfill_items
         self.fulfill_aliexpress_order('woo')
@@ -131,7 +186,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['data']['id'])] = item
 
         if not need_fulfill_items:
-            return self.order_error('Order have no items that need fulfillements')
+            return self.set_order_success_msg('Order have no items that need ordering')
 
         self.items = need_fulfill_items
         self.fulfill_aliexpress_order('chq')
@@ -172,7 +227,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['id'])] = item
 
         if not need_fulfill_items:
-            return self.order_error('Order have no items that need fulfillements')
+            return self.set_order_success_msg('Order have no items that need ordering')
 
         self.items = need_fulfill_items
         self.fulfill_aliexpress_order('bigcommerce')
@@ -216,7 +271,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['id'])] = item
 
         if not need_fulfill_items:
-            return self.order_error('Order has no items that need ordering')
+            return self.set_order_success_msg('Order have no items that need ordering')
 
         self.items = need_fulfill_items
 
@@ -244,7 +299,10 @@ class AliexpressFulfillHelper():
         address.zip = self.shipping_address['zip']
         address.country = self.shipping_address['country_code']
 
-        address.phone_country, address.mobile_no = self.shipping_address['phone'].split('-')
+        try:
+            address.phone_country, address.mobile_no = self.shipping_address['phone'].split('-')
+        except:
+            return self.order_error("Invalid Phone number. Please reenter the number with dialing code separated by a '-'.eg: +1-987654321")
 
         req = PlaceOrderRequest()
         req.setAddress(address)
@@ -257,14 +315,20 @@ class AliexpressFulfillHelper():
         variant_mapping_error_count = 0
 
         for line_id, line_item in self.items.items():
+            aliexpress_variant_sku_dict = ''
             req.product_items = []
             if line_item['is_bundle']:
                 for i in line_item['products']:
                     item = ProductBaseItem()
                     item.product_count = i['quantity']
                     item.product_id = i['source_id']
-                    temp_variants = i.get('variants') or i.get('variant')
-                    item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in temp_variants])
+                    # temp_variants = i.get('variants') or i.get('variant')
+                    sku_attr = self.find_ds_product_sku(i, aliexpress_account)
+                    if sku_attr is not None:
+                        item.sku_attr = sku_attr
+                    else:
+                        return self.order_error('Variant mapping is not set')
+
                     # item.logistics_service_name = "DHL"  # TODO: handle shipping method
                     item.order_memo = self.order_notes
                     req.add_item(item)
@@ -274,20 +338,27 @@ class AliexpressFulfillHelper():
                 item.product_id = line_item['source_id']
 
                 try:
-                    item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
-                except:
-                    if aliexpress_variant_sku_dict == '':
-                        product_data = AliexpressProduct(line_item['source_id'], aliexpress_account)
-                        aliexpress_product_result = product_data.get_product_data()
-                        aliexpress_product_result = aliexpress_product_result.get('result')
-                        if aliexpress_product_result is not None and aliexpress_product_result.get('error_code'):
-                            self.order_item_error(line_id, 'Variant mapping is not set for this item. Please map it manually.')
-                            variant_mapping_error_count += 1
+                    if len(line_item['variant']) == 1:
+                        if line_item['variant'][0]['title'] == 'Default Title':
+                            item.sku_attr = ''
                         else:
-                            if aliexpress_product_result is not None:
-                                aliexpress_variant_sku_dict = product_data.get_product_sku_data(aliexpress_product_result)
+                            item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
+                    elif len(line_item['variant']) == 0:
+                        item.sku_attr = ''
+                    else:
+                        item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
+                except:
+                    aliexpress_variant_sku_dict = self.ds_product_data(line_item['source_id'], aliexpress_account)
+                    if aliexpress_variant_sku_dict is None:
+                        self.order_item_error(line_id, 'Variant mapping is not set for this item. Please map it manually.')
+                        variant_mapping_error_count += 1
 
-                    product_variant_title_list = [v['title'] for v in line_item['variant']]
+                    try:
+                        product_variant_title_list = [v['title'] for v in line_item['variant']]
+                    except:
+                        variant_title_list = map(lambda title: title.strip(), line_item['variant'])  # if item variant list contain spaces
+                        product_variant_title_list = list(variant_title_list)
+
                     product_variant_title_list = sorted(product_variant_title_list)
                     product_variant_title = '/'.join(product_variant_title_list)
                     if product_variant_title in aliexpress_variant_sku_dict:
@@ -325,6 +396,18 @@ class AliexpressFulfillHelper():
                     error_code = error_code.get('error_code') if error_code else None
                     if error_code == 'B_DROPSHIPPER_DELIVERY_ADDRESS_VALIDATE_FAIL':
                         error_message = 'Customer Shipping Address or Phone Number is not valid'
+                    elif error_code == 'INVENTORY_HOLD_ERROR':
+                        error_message = 'Could not place order because item is Out of stock'
+                        self.order_item_error(line_id, error_message)
+                        continue
+                    elif error_code == 'BUY_LIMIT_RESOURCE_INSUFFICIENT':
+                        error_message = "Could not place order because the item doesn't have sufficient available quantity."
+                        self.order_item_error(line_id, error_message)
+                        continue
+                    elif error_code == 'DELIVERY_METHOD_NOT_EXIST':
+                        error_message = 'Could not place order. This item does not ship to this area.'
+                        self.order_item_error(line_id, error_message)
+                        continue
 
                 return self.order_error(error_message)
 
@@ -341,8 +424,7 @@ class AliexpressProduct():
         aliexpress_product_obj.set_app_info(API_KEY, API_SECRET)
         aliexpress_product_obj.product_id = self.product_id
         result = aliexpress_product_obj.getResponse(authrize=self.aliexpress_account.access_token)
-        result = result.get('aliexpress_ds_product_get_response')
-        return result
+        return result['aliexpress_ds_product_get_response']['result']
 
     def get_product_sku_data(self, aliexpress_product_data):
         final_skus = {}
@@ -391,7 +473,7 @@ class AliexpressApi(ApiResponseMixin):
         if helper.has_errors():
             return JsonResponse(helper.errors(), status=422)
         else:
-            return self.api_success()
+            return self.api_success({'msg': helper.order_success_msg})
 
     def delete_account(self, request, user, data):
         account = AliexpressAccount.objects.get(id=data['account'])

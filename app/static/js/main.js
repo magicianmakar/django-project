@@ -1356,6 +1356,7 @@ $('.quick-bundle-order').on("click", function(e) {
 
 window.onmessage = function (e) {
     var message;
+    var ordersCount = 0;
 
     try {
         message = JSON.parse(e.data);
@@ -1364,7 +1365,9 @@ window.onmessage = function (e) {
     }
 
     if (message && message.subject && message.subject == "show-me") {
-        var ordersCount = parseInt(message.orders);
+        if (message.orders) {
+            ordersCount = parseInt(message.orders);
+        }
         $("#pending-orders-count").text(ordersCount);
     }
 };
