@@ -9,10 +9,10 @@ class Command(DropifiedBaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--total', type=int, default=8921927, help='Total number of products in the database')
+        parser.add_argument('--steps', type=int, default=5000, help='Number of steps')
         parser.add_argument('--products', type=FileType('r'), help='Product ID CSV file')
 
     def start_command(self, *args, **options):
-        steps = 10000
         start = 0
 
         data_ids = set()
@@ -22,7 +22,9 @@ class Command(DropifiedBaseCommand):
             data_ids.add(line.split(',').pop().strip())
 
         self.progress_total(options['total'])
+
         entries = using_store_db(DataStore).all()
+        steps = options['steps']
         while start <= options['total']:
             to_delete = []
             for data in entries[start:start + steps]:

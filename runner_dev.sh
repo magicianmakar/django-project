@@ -2,6 +2,8 @@
 
 TYPE="$1"
 
+export OAUTHLIB_RELAX_TOKEN_SCOPE='1'
+
 source venv/bin/activate
 
 if [ "$TYPE" == "web" ]; then
