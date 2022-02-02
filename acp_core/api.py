@@ -3,15 +3,17 @@ import json
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
+from django.utils.text import slugify
 
 from addons_core.models import Addon
-from leadgalaxy.models import AdminEvent
+from leadgalaxy.models import AdminEvent, AppPermission, FeatureBundle
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import app_link, jwt_encode
 
 
 class ACPApi(ApiResponseMixin):
     http_method_names = ['post', 'delete']
+    login_non_required = ['add-permission']
 
     def delete_addon(self, request, user, data):
         if not user.is_superuser and not user.is_staff:
@@ -110,3 +112,11 @@ class ACPApi(ApiResponseMixin):
         return self.api_success({
             'url': link
         })
+
+    def post_add_permission(self, request, user, data):
+        perm = AppPermission.objects.create(name=data['name'], description=data['desc'])
+        if data.get('bundle') == 'true':
+            bundle = FeatureBundle.objects.create(title=f"{data['desc']} Bundle", slug=slugify(data['name']), hidden_from_user=True)
+            bundle.permissions.add(perm)
+
+        return self.api_success({'data': data})
