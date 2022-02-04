@@ -322,20 +322,26 @@ class AliexpressFulfillHelper():
                     item = ProductBaseItem()
                     item.product_count = i['quantity']
                     item.product_id = i['source_id']
-                    # temp_variants = i.get('variants') or i.get('variant')
                     sku_attr = self.find_ds_product_sku(i, aliexpress_account)
                     if sku_attr is not None:
                         item.sku_attr = sku_attr
                     else:
                         return self.order_error('Variant mapping is not set')
 
-                    # item.logistics_service_name = "DHL"  # TODO: handle shipping method
+                    if i.get('shipping_method') is not None:
+                        item.logistics_service_name = i['shipping_method']['method']
                     item.order_memo = self.order_notes
                     req.add_item(item)
             else:
                 item = ProductBaseItem()
                 item.product_count = line_item['quantity']
                 item.product_id = line_item['source_id']
+
+                product_obj = line_item['product']
+                country_code = self.shipping_address['country_code']
+                shipping_mapping = product_obj.get_shipping_for_variant(line_item['supplier'].id, line_item['line']['variant_id'], country_code)
+                if shipping_mapping is not None:
+                    item.logistics_service_name = shipping_mapping.get('method')
 
                 try:
                     if len(line_item['variant']) == 1:
@@ -367,7 +373,6 @@ class AliexpressFulfillHelper():
                         if variant_mapping_error_count == 0:
                             self.order_item_error(line_id, 'Variant mapping is not set for this item')
 
-                # item.logistics_service_name = "DHL"  # TODO: handle shipping method
                 item.order_memo = self.order_notes
                 req.add_item(item)
 
