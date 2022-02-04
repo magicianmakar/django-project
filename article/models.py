@@ -108,11 +108,12 @@ class SidebarLink(models.Model):
         ordering = ['-order', 'title']
 
     title = models.CharField(max_length=100)
+    slug = models.CharField(max_length=100, blank=True, null=True)
     link = models.CharField(max_length=512)
     badge = models.CharField(blank=True, default='', max_length=20)
     order = models.IntegerField(default=0)
     new_tab = models.BooleanField(default=False)
-    icon = models.CharField(blank=True, default='', max_length=20)
+    icon = models.CharField(blank=True, default='', max_length=512)
     inherit_plan = models.BooleanField(default=False, verbose_name='Show For Subuser If Parent Can See It')
 
     parent = models.ForeignKey('SidebarLink', on_delete=models.SET_NULL, related_name='childs', blank=True, null=True)

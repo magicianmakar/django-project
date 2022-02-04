@@ -94,19 +94,19 @@
           <a href="{% url 'pls:index' %}">
             Products
           </a>
-      </li>  
+      </li>
       <li class="item">
           <a href="https://www.dropified.com/dropified-black-catalog/" target="_blank">
             Updates
           </a>
-      </li>   
+      </li>
       {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
         <li class="item">
             <a href="{% url 'pls:all_user_supplements' %}">
               Admin
             </a>
         </li>
-      {% endif %}  
+      {% endif %}
     {% endif %}
 
       {# body #}
@@ -127,7 +127,7 @@
         {% endfor %}
       {% endfor %}
     </ul>
-  
+
     {# footer #}
     <ul class="navfooter {% if user.is_staff %}staff{% endif %}">
       <li class="section-no-icon">
