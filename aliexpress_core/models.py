@@ -7,6 +7,21 @@ from lib.exceptions import capture_exception
 from shopified_core.utils import float_to_str, hash_url_filename
 
 
+AFFILIATE_SORT_MAP = {
+    'order_count': 'LAST_VOLUME_ASC',
+    '-order_count': 'LAST_VOLUME_DESC',
+    'price': 'SALE_PRICE_ASC',
+    '-price': 'SALE_PRICE_DESC',
+}
+
+DS_SORT_MAP = {
+    'order_count': 'volumeAsc',
+    '-order_count': 'volumeDesc',
+    'price': 'priceAsc',
+    '-price': 'priceDesc',
+}
+
+
 class AliexpressAccount(models.Model):
     user = models.ForeignKey(User, related_name='aliexpress_account', on_delete=models.CASCADE)
 
@@ -28,24 +43,44 @@ class AliexpressAccount(models.Model):
         return APIRequest(self.access_token)
 
     @classmethod
-    def get_affiliate_products(cls, user, category_ids='', keywords='', page=1, raw=False, use_cache=True):
+    def get_affiliate_products(cls, **kwargs):
         from .aliexpress_api import APIRequest
+
+        user = kwargs.get('user')
+        page = kwargs.get('page')
+        category_id = kwargs.get('category_id')
+        keywords = kwargs.get('keywords')
+        currency = kwargs.get('currency')
+        price_min = kwargs.get('price_min')
+        price_max = kwargs.get('price_max')
+        sort = kwargs.get('sort')
+
+        raw = kwargs.get('raw', False)
+        use_cache = kwargs.get('use_cache', True)
 
         products_data = {
             'total_results': 0,
             'api_products': [],
         }
-        cache_key = f'aliexpress_affiliate_products_{category_ids}_{keywords}_{page}'
+        cache_key = f'aliexpress_affiliate_products_{category_id}_{page}'
         if use_cache:
             products_data = cache.get(cache_key, products_data)
+
         if not len(products_data['api_products']):
             try:
                 params = {
-                    'sort': 'LAST_VOLUME_DESC',
+                    'target_currency': currency,
+                    'sort': AFFILIATE_SORT_MAP[sort],
                     'page_no': page,
                 }
+                if category_id:
+                    params['category_ids'] = str(category_id)
                 if keywords:
                     params['keywords'] = str(keywords)
+                if price_min:
+                    params['min_sale_price'] = price_min
+                if price_max:
+                    params['max_sale_price'] = price_max
 
                 result = APIRequest().affiliate_products(params=params)
                 if result.get('error', None):
@@ -74,8 +109,9 @@ class AliexpressAccount(models.Model):
             save_for_later = {
                 'id': product['product_id'],
                 'title': product['product_title'],
-                'price': product['sale_price'],
-                'compare_at_price': product['original_price'],
+                'price': product['target_sale_price'],
+                'compare_at_price': product['target_original_price'],
+                'currency': product['target_original_price_currency'],
                 'images': [product['product_main_image_url']],
                 'description': '',
                 'original_url': product['product_detail_url'],
@@ -88,7 +124,7 @@ class AliexpressAccount(models.Model):
                 'aliexpress_category_id': product['first_level_category_id'],
                 'aliexpress_category_name': product['first_level_category_name'],
                 'discount': product['discount'],
-                'orders_placed': product['lastest_volume'],
+                'order_count': product['lastest_volume'],
                 'rating': rating,
                 'details_url': details_url,
             }
@@ -101,8 +137,17 @@ class AliexpressAccount(models.Model):
         return products_data['total_results'], formatted_products
 
     @classmethod
-    def get_ds_recommended_products(cls, user, category_id='', page=1, raw=False, use_cache=True):
+    def get_ds_recommended_products(cls, **kwargs):
         from .aliexpress_api import APIRequest
+
+        user = kwargs.get('user')
+        page = kwargs.get('page')
+        category_id = kwargs.get('category_id')
+        currency = kwargs.get('currency')
+        sort = kwargs.get('sort')
+
+        raw = kwargs.get('raw', False)
+        use_cache = kwargs.get('use_cache', True)
 
         products_data = {
             'total_results': 0,
@@ -111,15 +156,18 @@ class AliexpressAccount(models.Model):
         cache_key = f'aliexpress_ds_recommended_products_{category_id}_{page}'
         if use_cache:
             products_data = cache.get(cache_key, products_data)
+
         if not len(products_data['api_products']):
             try:
                 params = {
                     'feed_name': 'DS bestseller',
-                    'sort': 'volumeDesc',
+                    'target_currency': currency,
+                    'sort': DS_SORT_MAP[sort],
                     'page_no': page,
                 }
                 if category_id:
                     params['category_id'] = str(category_id)
+
                 result = APIRequest().ds_recommended_products(params=params)
                 if result.get('error', None):
                     return result
@@ -147,8 +195,9 @@ class AliexpressAccount(models.Model):
             save_for_later = {
                 'id': product['product_id'],
                 'title': product['product_title'],
-                'price': product['sale_price'],
-                'compare_at_price': product['original_price'],
+                'price': product['target_sale_price'],
+                'compare_at_price': product['target_original_price'],
+                'currency': product['target_original_price_currency'],
                 'images': [product['product_main_image_url']],
                 'original_url': product['product_detail_url'],
                 'extra_images': extra_images,
@@ -160,7 +209,7 @@ class AliexpressAccount(models.Model):
                 'aliexpress_category_id': product['first_level_category_id'],
                 'aliexpress_category_name': product['first_level_category_name'],
                 'discount': product['discount'],
-                'orders_placed': product['lastest_volume'],
+                'order_count': product['lastest_volume'],
                 'rating': rating,
                 'details_url': details_url,
             }
@@ -173,19 +222,20 @@ class AliexpressAccount(models.Model):
         return products_data['total_results'], formatted_products
 
     @classmethod
-    def get_ds_product_details(cls, product_id, raw=False, use_cache=True):
+    def get_ds_product_details(cls, product_id, currency='USD', raw=False, use_cache=True):
         from .aliexpress_api import APIRequest
 
         ds_result = {}
-        ds_cache_key = f'aliexpress_ds_product_details_{product_id}'
+        ds_cache_key = f'aliexpress_ds_product_details_{product_id}_{currency}'
         affiliate_result = {}
-        affiliate_cache_key = f'aliexpress_affiliate_product_details_{product_id}'
+        affiliate_cache_key = f'aliexpress_affiliate_product_details_{product_id}_{currency}'
         if use_cache:
             ds_result = cache.get(ds_cache_key, {})
             affiliate_result = cache.get(affiliate_cache_key, {})
         if not ds_result:
             params = {
                 'product_id': product_id,
+                'target_currency': currency,
             }
             ds_result = APIRequest().find_ds_product(params=params)
             if ds_result.get('error', None):
@@ -196,6 +246,7 @@ class AliexpressAccount(models.Model):
         if not affiliate_result:
             params = {
                 'product_ids': product_id,
+                'target_currency': currency,
             }
             affiliate_result = APIRequest().find_affiliate_product(params=params)
             if affiliate_result.get('error', None):
@@ -256,8 +307,8 @@ class AliexpressAccount(models.Model):
         save_for_later = {
             'id': ds_result['ae_item_base_info_dto']['product_id'],
             'title': affiliate_product['product_title'],
-            'price': affiliate_product['sale_price'],
-            'compare_at_price': affiliate_product['original_price'],
+            'price': affiliate_product['target_sale_price'],
+            'compare_at_price': affiliate_product['target_original_price'],
             'description': ds_result['ae_item_base_info_dto']['detail'],
             'original_url': affiliate_product['product_detail_url'],
             'type': '',

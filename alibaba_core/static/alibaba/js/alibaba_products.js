@@ -5,6 +5,19 @@ $(document).ready(function() {
         $('#alibaba_product_id').val($(this).data('product-id'));
     });
 
+    $('.alibaba-import-by-url').on('click', function(e) {
+        var inputData = $('#alibaba_product_url').val();
+        if (!inputData) {
+            toastr.info("Please add an Alibaba product URL or ID.");
+            return;
+        }
+        $('#modal-alibaba-import-by-url').modal('hide');
+        var matches = inputData.match(/.*?(\d+)(?:$|.html)/);
+        $('#alibaba_product_id').val(matches[1]);
+        $('#modal-alibaba-import-products').modal('show');
+        $('#aliexpress_product_url').val('');
+    });
+
     $('.alibaba-save-btn').on('click', function(e) {
         e.preventDefault();
         var btn = $(this);

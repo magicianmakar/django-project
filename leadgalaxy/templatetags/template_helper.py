@@ -22,6 +22,25 @@ import random
 register = template.Library()
 
 
+CURRENCY_MAP = {
+    'USD': '$',
+    'GBP': '£',
+    'CAD': 'C$',
+    'EUR': '€',
+    'UAH': '₴',
+    'MXN': 'Mex$',
+    'TRY': '₺',
+    'RUB': '₽',
+    'BRL': 'R$',
+    'AUD': 'A$',
+    'INR': '₹',
+    'JPY': '¥',
+    'IDR': 'Rp',
+    'SEK': 'kr',
+    'KRW': '₩',
+}
+
+
 @register.simple_tag
 def app_setting(name):
     return getattr(settings, name, None)
@@ -268,8 +287,11 @@ def render_markdown(text, render_help=True):
 
 
 @register.simple_tag
-def money_format(amount=None, store=None, allow_empty=False, just_value=False):
+def money_format(amount=None, store=None, allow_empty=False, just_value=False, currency=None):
     currency_format = '${{amount}}'
+    if currency:
+        symbol = CURRENCY_MAP[currency]
+        currency_format = f'{symbol}{amount}'
 
     if store and getattr(store, 'currency_format', None):
         currency_format = re.sub(r'{{\s*([a-zA-Z_-]+)\s*}}', r'{{\1}}', store.currency_format)

@@ -38,9 +38,10 @@ $(document).ready(function() {
             return;
         }
         $('#modal-aliexpress-import-by-url').modal('hide');
-        var matches = inputData.match(/(\d+)/);
-        $('#aliexpress_product_id').val(matches[0]);
+        var matches = inputData.match(/.*?(\d+)(?:$|.html)/);
+        $('#aliexpress_product_id').val(matches[1]);
         $('#modal-aliexpress-import-products').modal('show');
+        $('#aliexpress_product_url').val('');
     });
 
     $('.aliexpress-import-btn').on('click', function(e) {
@@ -54,6 +55,7 @@ $(document).ready(function() {
 
         var data = {
             'product_id': $('#aliexpress_product_id').val(),
+            'currency': $('#aliexpress_product_currency').val(),
             'publish': $(this).data('publish'),
             'store_ids': [],
         };

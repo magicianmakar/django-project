@@ -77,25 +77,37 @@ class Products(TemplateView):
         error = ''
         search_query = self.request.GET.get('q', '')
         page = safe_int(self.request.GET.get('page', 1))
+        use_filters = self.request.GET.get('f', None)
+        sort = self.request.GET.get('sort', '-order_count')
+        price_min = safe_int(self.request.GET.get('price_min', None))
+        price_max = safe_int(self.request.GET.get('price_max', None))
 
         categories = AliexpressCategory.parent_ctaegories()
         aliexpress_account = self.request.user.aliexpress_account.first()
         if not aliexpress_account:
             aliexpress_account = AliexpressAccount()
 
-        if search_query:
-            total_results, products_list = aliexpress_account.get_affiliate_products(
-                self.request.user,
-                keywords=search_query,
-                page=page,
-            )
-        else:
-            total_results, products_list = aliexpress_account.get_ds_recommended_products(
-                self.request.user,
-                page=page,
-            )
+        params = {
+            'user': self.request.user,
+            'page': page,
+            'currency': self.request.GET.get('currency', 'USD'),
+            'sort': sort,
+            'use_cache': False if use_filters else True,
+        }
 
-        products_list = sorted(products_list, key=lambda x: x['orders_placed'], reverse=True)
+        if search_query:
+            params['keywords'] = search_query
+            params['price_min'] = price_min
+            params['price_max'] = price_max
+            total_results, products_list = aliexpress_account.get_affiliate_products(**params)
+        else:
+            total_results, products_list = aliexpress_account.get_ds_recommended_products(**params)
+
+        if sort.startswith('-'):
+            products_list = sorted(products_list, key=lambda x: x[sort.strip('-')], reverse=True)
+        else:
+            products_list = sorted(products_list, key=lambda x: x[sort])
+
         store_data = get_store_data(self.request.user)
 
         if not isinstance(products_list, list) and products_list.get('error', None):
@@ -143,6 +155,10 @@ class CategoryProducts(TemplateView):
         error = ''
         search_query = self.request.GET.get('q', '')
         page = safe_int(self.request.GET.get('page', 1))
+        use_filters = self.request.GET.get('f', None)
+        sort = self.request.GET.get('sort', '-order_count')
+        price_min = safe_int(self.request.GET.get('price_min', None))
+        price_max = safe_int(self.request.GET.get('price_max', None))
 
         category_id = kwargs.get('category_id')
         category = get_object_or_404(AliexpressCategory, pk=category_id)
@@ -151,21 +167,27 @@ class CategoryProducts(TemplateView):
         if not aliexpress_account:
             aliexpress_account = AliexpressAccount()
 
-        if search_query:
-            total_results, products_list = aliexpress_account.get_affiliate_products(
-                self.request.user,
-                category_ids=category.aliexpress_id,
-                keywords=search_query,
-                page=page,
-            )
-        else:
-            total_results, products_list = aliexpress_account.get_ds_recommended_products(
-                self.request.user,
-                category_id=category.aliexpress_id,
-                page=page,
-            )
+        params = {
+            'user': self.request.user,
+            'page': page,
+            'currency': self.request.GET.get('currency', 'USD'),
+            'sort': sort,
+            'use_cache': False if use_filters else True,
+        }
 
-        products_list = sorted(products_list, key=lambda x: x['orders_placed'], reverse=True)
+        if search_query:
+            params['keywords'] = search_query
+            params['price_min'] = price_min
+            params['price_max'] = price_max
+            total_results, products_list = aliexpress_account.get_affiliate_products(**params)
+        else:
+            total_results, products_list = aliexpress_account.get_ds_recommended_products(**params)
+
+        if sort.startswith('-'):
+            products_list = sorted(products_list, key=lambda x: x[sort.strip('-')], reverse=True)
+        else:
+            products_list = sorted(products_list, key=lambda x: x[sort])
+
         store_data = get_store_data(self.request.user)
 
         if not isinstance(products_list, list) and products_list.get('error', None):

@@ -197,7 +197,7 @@ def save_aliexpress_products(request, products_data):
         if not aliexpress_account:
             aliexpress_account = AliexpressAccount()
 
-        api_product = aliexpress_account.get_ds_product_details(product_data['product_id'])
+        api_product = aliexpress_account.get_ds_product_details(product_data['product_id'], currency=product_data['currency'])
         if api_product.get('error', None):
             result_products['errored'].append(api_product['error'])
             continue

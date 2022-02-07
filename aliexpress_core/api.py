@@ -492,6 +492,7 @@ class AliexpressApi(ApiResponseMixin):
         products = save_aliexpress_products(request, {
             user.id: {
                 'product_id': data['product_id'],
+                'currency': data['currency'],
                 'store_ids': data['store_ids'],
                 'publish': data['publish'],
             }

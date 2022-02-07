@@ -1,12 +1,13 @@
 {% extends "base.html" %}
+
 {% load static %}
 {% load template_helper %}
 {% load url_tools %}
 
 {% block title %}
     Find Products &middot; AliExpress | Dropified
-
 {% endblock %}
+
 
 {% block main-container %}
 <div class="tab-container separated-tabs">
@@ -14,28 +15,71 @@
 
     <ul class="actions">
       <form method="get">
-        <li class="hidden-form new-layout-hidden">
+        <li class="hidden-form">
             <a href="javascript:;" class="text-default">
               Filter by
               <span class="dropified-icons di-arrow-down"></span>
             </a>
+
+            <div class="form" style="width: 300px;">
+              <input type="hidden" name="f" value="1">
+              <div class="form-group">
+                <label>Currency</label>
+                <select name="currency" class="form-control" id="aliexpress_product_currency">
+                  <option {% if request.GET.currency == "USD" or request.GET.currency == "" %} selected {% endif %} value="USD">USD (US Dollar)</option>
+                  <option {% if request.GET.currency == "GBP" %} selected {% endif %} value="GBP">GBP (British Pound)</option>
+                  <option {% if request.GET.currency == "CAD" %} selected {% endif %} value="CAD">CAD (Canadian Dollar)</option>
+                  <option {% if request.GET.currency == "EUR" %} selected {% endif %} value="EUR">EUR (Euro)</option>
+                  <option {% if request.GET.currency == "UAH" %} selected {% endif %} value="UAH">UAH (Ukrainian Hryvnia)</option>
+                  <option {% if request.GET.currency == "MXN" %} selected {% endif %} value="MXN">MXN (Mexican Peso)</option>
+                  <option {% if request.GET.currency == "TRY" %} selected {% endif %} value="TRY">TRY (Turkish Lira)</option>
+                  <option {% if request.GET.currency == "RUB" %} selected {% endif %} value="RUB">RUB (Russian Ruble)</option>
+                  <option {% if request.GET.currency == "BRL" %} selected {% endif %} value="BRL">BRL (Brazilian Real)</option>
+                  <option {% if request.GET.currency == "AUD" %} selected {% endif %} value="AUD">AUD (Australian Dollar)</option>
+                  <option {% if request.GET.currency == "INR" %} selected {% endif %} value="INR">INR (Indian Rupee)</option>
+                  <option {% if request.GET.currency == "JPY" %} selected {% endif %} value="JPY">JPY (Japanese Yen)</option>
+                  <option {% if request.GET.currency == "IDR" %} selected {% endif %} value="IDR">IDR (Indonesian Rupiah)</option>
+                  <option {% if request.GET.currency == "SEK" %} selected {% endif %} value="SEK">SEK (Swedish Krona)</option>
+                  <option {% if request.GET.currency == "KRW" %} selected {% endif %} value="KRW">KRW (South Korean Won)</option>
+                </select>
+              </div>
+              {% if search_query %}
+              <div class="form-group">
+                <label style="width: 100%;">Price (USD cent)</label>
+                <input name="price_min" type="text" class="form-control" value="{{request.GET.price_min}}" placeholder="Min." style="width: 49%;">
+                <input name="price_max" type="text" class="form-control" value="{{request.GET.price_max}}" placeholder="Max." style="width: 49%; margin-left: 2%;">
+              </div>
+              {% endif %}
+
+              <button class="btn btn-primary m-t pull-right">Apply</button>
+            </div>
         </li>
-        <li class="hidden-form new-layout-hidden">
+        <li class="hidden-form">
           <a href="javascript:;" class="text-default">
             Sort by
             <span class="dropified-icons di-arrow-down"></span>
           </a>
+
+          <div class="form" style="width: 300px;">
+            <div class="form-group">
+              <select name="sort" class="form-control">
+                <option {% if request.GET.sort == "-order_count" or request.GET.sort == "" %} selected {% endif %} value="-order_count">Orders</option>
+                <option {% if request.GET.sort == "order_count" %} selected {% endif %} value="order_count">Fewest Orders</option>
+                <option {% if request.GET.sort == "-price" %} selected {% endif %} value="-price">Highest Price</option>
+                <option {% if request.GET.sort == "price" %} selected {% endif %} value="price">Lowest Price</option>
+              </select>
+            </div>
+            <button class="btn btn-primary m-t pull-right">Apply</button>
+          </div>
         </li>
-      </form>
-      <li class="pull-right group border-left">
-        <form method="get">
+        <li class="pull-right group border-left">
           <input type="text" class="form-control m-l-sm" value="{{search_query}}"
               name="q" placeholder="Search by name">
           <button type="submit" class="btn btn-primary btn-icon">
             <i class="fa fa-search"></i>
           </button>
-        </form>
-      </li>
+        </li>
+      </form>
       <li class="pull-right">
         <button type="button" class="btn btn-default"
           data-toggle="modal" data-target="#modal-aliexpress-import-by-url">Import from URL or ID</button>
@@ -95,7 +139,7 @@
                     <div class="image-overlay">
                       {% if not item.compare_at_price == item.price %}
                       <div class="product-price-compare-at">
-                        <span>{% money_format item.compare_at_price %}</span>
+                        <span>{% money_format item.compare_at_price currency=item.currency %}</span>
                       </div>
                       <div class="product-price-discount">
                         <span>{{ item.discount }} off</span>
@@ -104,11 +148,11 @@
                     </div>
                     <div class="card-content">
                       <a href="{{ item.original_url }}" class="card-title" target="_blank"> {{item.title}}</a>
-                      <span class="card-price">{% money_format item.price %}</span> </br>
+                      <span class="card-price">{% money_format item.price currency=item.currency %}</span> </br>
                       <span class="card-reviews" data-rating="{{ item.rating }}"></span>
                       <div class="card-orders m-t-xs">
                         <span>Orders</span>
-                        <div class="orders-count"> {{item.orders_placed}}</div>
+                        <div class="orders-count"> {{item.order_count}}</div>
                       </div>
                       <div class="row m-t">
                         <div class="col-md-4">

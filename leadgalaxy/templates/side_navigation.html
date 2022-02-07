@@ -165,15 +165,15 @@
     </ul>
 
     {# footer #}
-    <ul class="navfooter {% if user.is_staff %}staff{% endif %}">
-      <li class="section-no-icon new-layout-hidden">
+    <ul class="navfooter {% if user.is_staff %}staff{% endif %} new-layout-hidden">
+      <li class="section-no-icon">
         <a href="{{ sidemenu.named.academy.url }}" target="_blank"
             class="itooltip" data-placement="right" title="Step by Step Course">
           {{ sidemenu.named.academy.title | safe }}
         </a>
       </li>
 
-      <li class="section-no-icon new-layout-hidden">
+      <li class="section-no-icon">
         <a href="{{ sidemenu.named.video_training.url }}" target="_blank">
           {{ sidemenu.named.video_training.title }}
         </a>
