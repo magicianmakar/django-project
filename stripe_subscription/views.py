@@ -177,6 +177,9 @@ def subscription_plan(request):
             try:
                 main_plan_item = get_main_subscription_item(sub)
 
+                # save subscription before updating si, to apply trials (if set)
+                sub.save()
+
                 # check if new plan has different interval
                 if main_plan_item['plan']['interval'] != plan.stripe_plan.interval and len(sub['items']['data']) > 1:
                     # move existing custom SI to new subscription
@@ -184,7 +187,6 @@ def subscription_plan(request):
                     move_addons_subscription(sub)
 
                 if do_not_prorate:
-                    print("DO NOT PRORATE")
                     stripe.SubscriptionItem.modify(
                         main_plan_item['id'],
                         plan=plan.stripe_plan.stripe_id, proration_behavior="none"
@@ -198,8 +200,6 @@ def subscription_plan(request):
 
                 if set_research_upgraded:
                     user.set_config('research_upgraded', True)
-
-                sub.save()
 
             except (SubscriptionException, stripe.error.CardError, stripe.error.InvalidRequestError) as e:
                 capture_exception(level='warning')
