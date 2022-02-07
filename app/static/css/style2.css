@@ -2474,3 +2474,7 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
   color: #585757;
   float: right;
 }
+
+.order .product-preview .product-img {
+    max-width:64px;
+}
