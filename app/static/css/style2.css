@@ -2254,7 +2254,8 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
 }
 
 #accounts-menu {
-    padding: 20px;
+    padding: 16px;
+    box-shadow: 0px 0px 24px 4px rgb(29 38 47 / 20%);
 }
 
 #accounts-menu li {
@@ -2267,6 +2268,7 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
     font-size: 15px;
     color: #1D262F;
     font-weight: 600;
+    padding: 4px 8px;
 }
 
 #accounts-menu li a img {

@@ -146,67 +146,68 @@
                         {% if lifetime_menus %}
                         <li class="p-r-m border-right">
                             <a href="#" id="open-applications-menu" class="neutral-color {% if open_application_menu and lifetime_menus %}active{% endif %}">
-                                Applications <img src="{% static 'img/applications.png' %}" style="margin-left:8px; margin-top: -3px;">
+                                Applications <img src="{% static 'img/applications.svg' %}" style="margin-left:8px; margin-top: -3px;">
                             </a>
                         </li>
                         {% endif %}
                         <li class="m-l" style="border-color: #dbdbdb;">
                             <a href="{% url 'settings' %}">
-                                <img src="{% static 'img/gear.png' %}">
+                                <img src="{% static 'img/gear.svg' %}">
                             </a>
                         </li>
                         <li class="pull-right">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="line-height:18px;margin-top:2px;">
                                 <i class="fa fa-user neutral-color" style="font-size:20px;margin-left:6px;"></i>
+                                <span class="dropified-icons di-arrow-down" style="color: #62809D;"></span>
                             </a>
                             <ul id="accounts-menu" class="dropdown-menu pull-right">
                                 <li>Account</li>
                                 <li>
                                     <a href="{% url 'user_profile' %}">
-                                        <img src="{% static 'img/applications_menu/profile-settings.png' %}">
+                                        <img src="{% static 'img/applications_menu/profile-settings.svg' %}">
                                         Profile Settings
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{% url 'user_profile' %}#email">
-                                        <img src="{% static 'img/applications_menu/email-and-password.png' %}">
+                                        <img src="{% static 'img/applications_menu/email-and-password.svg' %}">
                                         E-mail & Password
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{% url 'user_profile' %}#plan">
-                                        <img src="{% static 'img/applications_menu/plan-and-subscription.png' %}">
+                                        <img src="{% static 'img/applications_menu/plan-and-subscription.svg' %}">
                                         Plan & Subscription
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{% url 'user_profile' %}#billing">
-                                        <img src="{% static 'img/applications_menu/billing.png' %}">
+                                        <img src="{% static 'img/applications_menu/billing.svg' %}">
                                         Billing
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{% url 'user_profile' %}#invoices">
-                                        <img src="{% static 'img/applications_menu/invoices.png' %}">
+                                        <img src="{% static 'img/applications_menu/invoices.svg' %}">
                                         Invoices
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{% url 'user_profile' %}#salesfees">
-                                        <img src="{% static 'img/applications_menu/fulfillment-fees.png' %}">
+                                        <img src="{% static 'img/applications_menu/fulfillment-fees.svg' %}">
                                         Fulfillment Fees
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{% url 'subusers' %}">
-                                        <img src="{% static 'img/applications_menu/sub-users.png' %}">
+                                        <img src="{% static 'img/applications_menu/sub-users.svg' %}">
                                         Sub Users
                                     </a>
                                 </li>
-                                <li class="divider"></li>
+                                <li class="divider" style="margin:16px 0;"></li>
                                 <li>
                                     <a href="{% url 'leadgalaxy.views.logout' %}">
-                                        <img src="{% static 'img/applications_menu/logout.png' %}">
+                                        <img src="{% static 'img/applications_menu/logout.svg' %}">
                                         Logout
                                     </a>
                                 </li>
