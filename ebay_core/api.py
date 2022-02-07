@@ -918,7 +918,8 @@ class EbayStoreApi(ApiBase):
                 'store_id': order.store.id,
                 'order_id': order.order_id,
                 'line_id': order.line_id,
-                'product_id': order.product_id}
+                'product_id': getattr(order, 'product_id', None)
+            }
 
             order.store.pusher_trigger('order-source-id-delete', data)
 

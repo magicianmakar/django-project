@@ -869,7 +869,8 @@ class EbayUtils(SureDoneUtils):
             return tracker_orders
 
         filters_str = ' '.join(filters)
-        filters_str = f'({filters_str})'
+        if len(filters) > 1:
+            filters_str = f'({filters_str})'
 
         sd_orders, total_products_count = self.get_all_orders(filters=filters_str)
 
@@ -919,9 +920,7 @@ class EbayUtils(SureDoneUtils):
         return status
 
     def get_tracking_products(self, tracker_orders, per_page=50):
-        ids = set()
-        for i in tracker_orders:
-            ids.add(str(i.line_id))
+        ids = set([str(i.line_id) for i in tracker_orders])
 
         if not len(ids):
             return tracker_orders
