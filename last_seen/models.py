@@ -71,6 +71,26 @@ class LastSeen(models.Model):
         return "%s on %s" % (self.user, self.last_seen)
 
 
+class BrowserUserAgent(models.Model):
+    user_agent = models.TextField(null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self) -> str:
+        return self.user_agent
+
+
+class UserIpRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    browser = models.ForeignKey(BrowserUserAgent, on_delete=models.CASCADE)
+    ip = models.CharField(max_length=512)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_seen_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f'{self.user.email} ({self.ip})'
+
+
 def get_cache_key(module, user):
     """
         Get cache database to cache last database write timestamp

@@ -26,9 +26,11 @@ from django.http import JsonResponse
 from django.template import Context, Template
 from django.template.defaultfilters import pluralize
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.module_loading import import_string
 
+from last_seen.models import BrowserUserAgent, UserIpRecord
 from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
 
 ALIEXPRESS_REJECTED_STATUS = {
@@ -609,11 +611,31 @@ def get_client_ip(request):
     return ip
 
 
+def get_browser_user_agent(request):
+    user_agent = request.META.get('HTTP_USER_AGENT', 'N/A')
+    if user_agent:
+        browser, created = BrowserUserAgent.objects.get_or_create(
+            user_agent=user_agent
+        )
+
+        return browser
+
+
 def save_user_ip(request, user=None):
     if user is None:
         user = request.user
 
     ip = get_client_ip(request)
+    browser = get_browser_user_agent(request)
+    UserIpRecord.objects.update_or_create(
+        user=user,
+        ip=ip,
+        browser=browser,
+        defaults={
+            'created_at': timezone.now(),
+        }
+    )
+
     user.profile.add_ip(ip)
 
 
