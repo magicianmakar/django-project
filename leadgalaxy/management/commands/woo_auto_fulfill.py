@@ -12,6 +12,7 @@ from woocommerce_core import utils
 
 from lib.exceptions import capture_exception, capture_message
 from metrics.tasks import add_number_metric
+from fulfilment_fee.utils import process_sale_transaction_fee
 
 
 class Command(DropifiedBaseCommand):
@@ -75,6 +76,10 @@ class Command(DropifiedBaseCommand):
                     counter['fulfilled'] += 1
                     if counter['fulfilled'] % 50 == 0 or counter['fulfilled'] == 1:
                         self.write('Fulfill Progress: %d' % counter['fulfilled'])
+
+                    # process fulfilment fee
+                    process_sale_transaction_fee(order)
+
                 else:
                     cache_key = 'woo_track_error_{}'.format(order.id)
                     error_count = cache.get(cache_key, 0)

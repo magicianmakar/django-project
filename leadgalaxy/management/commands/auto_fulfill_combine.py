@@ -11,6 +11,7 @@ from shopified_core.commands import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyOrderTrack
 from leadgalaxy import utils
 from leadgalaxy import tasks
+from fulfilment_fee.utils import process_sale_transaction_fee
 
 from lib.exceptions import capture_exception, capture_message
 
@@ -98,6 +99,9 @@ class Command(DropifiedBaseCommand):
                     counter['fulfilled'] += count_orders
                     if counter['fulfilled'] % 50 == 0:
                         self.write('Fulfill Progress: %d' % counter['fulfilled'])
+
+                    # process fulfilment fee
+                    process_sale_transaction_fee(order)
 
                 if (timezone.now() - self.start_at) > timezone.timedelta(seconds=uptime * 60):
                     capture_message(
