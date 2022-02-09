@@ -24,7 +24,7 @@ class AlibabaApi(ApiResponseMixin):
 
         # Check for the store auto fulfill limit
         parent_user = user.models_user
-        auto_fulfill_limit = parent_user.profile.plan.auto_fulfill_limit
+        auto_fulfill_limit = parent_user.profile.get_auto_fulfill_limit()
         limit_check_key = f'order_limit_{store.store_type}_{parent_user.id}'
         if cache.get(limit_check_key) is None and auto_fulfill_limit != -1:
             month_start = arrow.utcnow().floor('month').datetime

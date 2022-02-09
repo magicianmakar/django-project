@@ -3086,7 +3086,7 @@ def orders_place(request):
     parent_user = request.user.models_user
     plan = parent_user.profile.plan
     limit_check_key = 'order_limit_shopify_{}'.format(parent_user.id)
-    if cache.get(limit_check_key) is None and plan.auto_fulfill_limit != -1:
+    if cache.get(limit_check_key) is None and parent_user.profile.get_auto_fulfill_limit() != -1:
         month_start = arrow.utcnow().span('month')[0]
 
         # This is used for Oberlo migration
@@ -3098,7 +3098,7 @@ def orders_place(request):
         orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start.datetime)
         orders_count = orders_count.order_by('order_id').count()
 
-        auto_fulfill_limit = plan.auto_fulfill_limit
+        auto_fulfill_limit = parent_user.profile.get_auto_fulfill_limit()
         if parent_user.get_config('_double_orders_limit'):
             auto_fulfill_limit *= 2
 

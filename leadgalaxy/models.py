@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils.crypto import get_random_string
 from django.utils.functional import cached_property
 
@@ -747,6 +747,21 @@ class UserProfile(models.Model):
 
         if removed_tags:
             self.sync_tags()
+
+    def get_auto_fulfill_limit(self):
+        if self.is_subuser:
+            user = self.subuser_parent
+        else:
+            user = self.user
+        plan = user.profile.get_plan()
+        auto_fulfill_limit = plan.auto_fulfill_limit
+
+        if plan.auto_fulfill_limit != -1:
+            # check addongs
+            addons_auto_fulfill_limit = user.profile.addons.all().aggregate(Sum('auto_fulfill_limit'))['auto_fulfill_limit__sum'] or 0
+            auto_fulfill_limit += addons_auto_fulfill_limit
+
+        return auto_fulfill_limit
 
     @property
     def is_black(self):

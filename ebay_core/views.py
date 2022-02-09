@@ -739,11 +739,12 @@ class OrderPlaceRedirectView(RedirectView):
         parent_user = self.request.user.models_user
         plan = parent_user.profile.plan
         limit_check_key = f'order_limit_ebay_{parent_user.id}'
-        if cache.get(limit_check_key) is None and plan.auto_fulfill_limit != -1:
+        if cache.get(limit_check_key) is None and parent_user.profile.get_auto_fulfill_limit() != -1:
             month_start = [i.datetime for i in arrow.utcnow().span('month')][0]
             orders_count = parent_user.ebayordertrack_set.filter(created_at__gte=month_start).count()
 
-            if not settings.DEBUG and not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
+            if not settings.DEBUG and not parent_user.profile.get_auto_fulfill_limit() \
+                    or orders_count + 1 > parent_user.profile.get_auto_fulfill_limit():
                 messages.error(self.request, 'You have reached your plan auto fulfill limit')
                 return '/'
 
