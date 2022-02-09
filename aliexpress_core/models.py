@@ -1,11 +1,11 @@
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.db import models
+from django.template.defaultfilters import slugify
 
 from leadgalaxy.utils import get_admitad_affiliate_url, get_admitad_credentials
 from lib.exceptions import capture_exception
 from shopified_core.utils import float_to_str, hash_url_filename
-
 
 AFFILIATE_SORT_MAP = {
     'order_count': 'LAST_VOLUME_ASC',
@@ -338,10 +338,19 @@ class AliexpressAccount(models.Model):
 
 
 class AliexpressCategory(models.Model):
+    class Meta:
+        ordering = ['order']
+        verbose_name_plural = 'Aliexpress Categories'
+
+    slug = models.SlugField(max_length=255)
     name = models.CharField(max_length=255)
     aliexpress_id = models.CharField(max_length=255)
     parent = models.ForeignKey("self", null=True, blank=True,
                                related_name="child_categories", on_delete=models.CASCADE)
+
+    description = models.CharField(max_length=512, blank=True, default='', verbose_name='Name visible to users')
+    order = models.IntegerField(blank=True, null=True, verbose_name='Sort Order')
+    is_hidden = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -349,10 +358,16 @@ class AliexpressCategory(models.Model):
     def __str__(self):
         return f'{self.name}'
 
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.slug = slugify(self.name)
+
+        super().save(*args, **kwargs)
+
     @property
     def is_parent(self):
         return self.parent is None
 
     @classmethod
     def parent_ctaegories(cls):
-        return cls.objects.filter(parent=None).order_by('pk')
+        return cls.objects.filter(parent=None).exclude(is_hidden=True)

@@ -144,12 +144,6 @@ class CategoryProducts(TemplateView):
         else:
             raise permissions.PermissionDenied()
 
-    def get_breadcrumbs(self, category):
-        return [
-            {'title': 'Find Products', 'url': reverse('aliexpress:products')},
-            f'{category.name}',
-        ]
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         error = ''
@@ -202,8 +196,8 @@ class CategoryProducts(TemplateView):
         }
 
         context.update({
-            'breadcrumbs': self.get_breadcrumbs(category),
             'category': category,
+            'categories': AliexpressCategory.parent_ctaegories(),
             'products': products_list,
             'total_results': total_results,
             'store_data': store_data,

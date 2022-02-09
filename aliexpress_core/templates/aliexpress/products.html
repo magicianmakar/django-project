@@ -88,6 +88,7 @@
 
     <div class="row m-none">
         {% for category in categories %}
+        {% with 'img/aliexpress/categories/'|add:category.slug|add:'.svg' as icon %}
         {% if forloop.counter < 18 %}
         <a class="col-lg-2 col-md-4 col-sm-6 col-xs-12 aliexpress-category-menu
             {% if forloop.counter == 1 %}top-left-border{% endif %}
@@ -95,24 +96,34 @@
             {% if forloop.counter == 13 %}bottom-left-border{% endif %}"
             href="{% url 'aliexpress:category_products' category.id %}"
         >
-          <span>{{category.name}}</span>
+          <span>
+            <img src="{% static icon %}" alt="">
+            {{category.description}}
+          </span>
         </a>
         {% elif forloop.counter == 18 %}
         <div class="aliexpress-category-dropdown">
             <a class="col-lg-2 col-md-4 col-sm-6 col-xs-12 aliexpress-category-menu bottom-right-border"
                 href="#" data-toggle="dropdown" aria-expanded="false">
-                <span>More Categories</span>
+                <span>
+                  <img src="{% static 'img/aliexpress/categories/more-categories.svg' %}" alt="">
+                  More Categories
+                </span>
             </a>
             <ul class="dropdown-menu">
         {% else %}
             <li>
-                <a href="{% url 'aliexpress:category_products' category.id %}">{{category.name}}</a>
+                <a href="{% url 'aliexpress:category_products' category.id %}">
+                  <img src="{% static icon %}" alt="">
+                  {{category.description}}
+                </a>
             </li>
         {% endif %}
         {% if forloop.last %}
             </ul>
         </div>
         {% endif %}
+        {% endwith %}
         {% endfor %}
     </div>
 
@@ -133,7 +144,7 @@
                     <div class="card-image">
                       <input class="aliexpress-product-select new-layout-hidden" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox"/>
                       <a href="{{ item.original_url }}" target="_blank">
-                        <img class="no-img unveil" src="{% static 'img/blank.gif' %}" data-src="{{item.images|force_https}}">
+                        <img class="no-img" src="{{item.images|force_https}}">
                       </a>
                     </div>
                     <div class="image-overlay">

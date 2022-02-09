@@ -82,15 +82,60 @@
       </li>
     </ul>
 
+    <div class="row m-none">
+        {% for cat in categories %}
+        {% with 'img/aliexpress/categories/'|add:cat.slug|add:'.svg' as icon %}
+        {% if forloop.counter < 18 %}
+        <a class="col-lg-2 col-md-4 col-sm-6 col-xs-12 aliexpress-category-menu
+            {% if forloop.counter == 1 %}top-left-border{% endif %}
+            {% if forloop.counter == 6 %}top-right-border{% endif %}
+            {% if forloop.counter == 13 %}bottom-left-border{% endif %}
+            {% if cat.id == category.id %}category-selected{% endif %}"
+            href="{% if cat.id == category.id %}#{% else %}{% url 'aliexpress:category_products' cat.id %}{% endif %}"
+        >
+          <span>
+            <img src="{% static icon %}" alt="">
+            {{cat.description}}
+          </span>
+        </a>
+        {% elif forloop.counter == 18 %}
+        <div class="aliexpress-category-dropdown">
+            <a class="col-lg-2 col-md-4 col-sm-6 col-xs-12 aliexpress-category-menu bottom-right-border"
+                href="#" data-toggle="dropdown" aria-expanded="false">
+                <span>
+                  <img src="{% static 'img/aliexpress/categories/more-categories.svg' %}" alt="">
+                  More Categories
+                </span>
+            </a>
+            <ul class="dropdown-menu">
+        {% else %}
+            <li>
+                <a href="{% url 'aliexpress:category_products' cat.id %}" class="{% if cat.id == category.id %}category-selected{% endif %}">
+                  <img src="{% static icon %}" alt="">
+                  {{cat.description}}
+                </a>
+            </li>
+        {% endif %}
+        {% if forloop.last %}
+            </ul>
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% endfor %}
+    </div>
+
     <div class="tab-content">
         <div class="tab-pane active">
             <div class="panel-body no-background p-none m-t">
                 <div class="row">
-                  <div class="col-md-6">
-                    <h3 class="aliexpress-category-header">{{category.name}} ({{total_results}} items)</h3>
+                  <div class="col-md-6 breadcrumbs-container">
+                    <ol class="breadcrumb">
+                      <li><a href="{% url 'aliexpress:products' %}">Find Products</a></li>
+                      <li class="active">{{category.name}} ({{total_results}} items)</li>
+                    </ol>
                   </div>
                 </div>
-                <div class="find-products-container">
+                <div class="find-products-container m-t">
                   <input type="hidden" id="aliexpress_product_id" name="aliexpress_product_id" value="">
                   {% for item in products %}
                   <div class="card" product-id="{{item.id}}">
@@ -98,7 +143,7 @@
                     <div class="card-image">
                       <input class="aliexpress-product-select new-layout-hidden" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox"/>
                       <a href="{{ item.original_url }}" target="_blank">
-                        <img class="no-img unveil" src="{% static 'img/blank.gif' %}" data-src="{{item.images|force_https}}">
+                        <img class="no-img" src="{{item.images|force_https}}">
                       </a>
                     </div>
                     <div class="image-overlay">

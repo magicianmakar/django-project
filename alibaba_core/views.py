@@ -6,7 +6,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.http import Http404
-from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
@@ -119,12 +118,6 @@ class CategoryProducts(TemplateView):
         else:
             raise permissions.PermissionDenied()
 
-    def get_breadcrumbs(self, category):
-        return [
-            {'title': 'Find Products', 'url': reverse('alibaba:products')},
-            f'{category["title"]}',
-        ]
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         search_query = self.request.GET.get('q', '')
@@ -173,8 +166,8 @@ class CategoryProducts(TemplateView):
         }
 
         context.update({
-            'breadcrumbs': self.get_breadcrumbs(category),
             'category': category,
+            'categories': ranked_categories,
             'products': ranked_products,
             'total_results': ranked_products['count'],
             'store_data': store_data,

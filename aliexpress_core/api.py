@@ -2,8 +2,8 @@
 import requests
 from collections import defaultdict
 
-from django.http import HttpResponse, JsonResponse
 from django.core.cache import cache
+from django.http import HttpResponse, JsonResponse
 
 from aliexpress_core.models import AliexpressAccount
 from aliexpress_core.settings import API_KEY, API_SECRET

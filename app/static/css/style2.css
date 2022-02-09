@@ -2295,7 +2295,6 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
 .aliexpress-category-menu,
 .alibaba-category-menu {
   display: flex;
-  align-items: center;
   flex-direction: column;
   align-content: flex-start;
   height: 44px;
@@ -2309,11 +2308,18 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
   font-size: 11.5px;
   line-height: 45px;
   color: #485E74;
+  overflow: hidden;
+}
+
+.aliexpress-category-menu span img,
+.alibaba-category-menu span img {
+  margin: 5px;
 }
 
 .aliexpress-category-menu:hover,
 .alibaba-category-menu:hover {
-  background: #e7eaec;
+  background: #E6EBEF;
+  transition: all 0.2s ease-in-out;
   cursor: pointer;
 }
 
@@ -2360,13 +2366,22 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
   padding: 2px 15px;
 }
 
-.aliexpress-category-header,
+.aliexpress-category-dropdown ul li a img,
+.alibaba-category-dropdown ul li a img {
+  margin: 5px;
+}
+
 .alibaba-category-header {
   font-weight: 600;
   font-size: 20px;
   line-height: 26px;
   letter-spacing: -0.2px;
   color: #485E74;
+}
+
+.aliexpress-category-menu.category-selected,
+.alibaba-category-menu.category-selected {
+    background: #E6EBEF;
 }
 
 .find-products-container {

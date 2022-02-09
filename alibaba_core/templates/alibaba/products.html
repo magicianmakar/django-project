@@ -42,6 +42,9 @@
 
     <div class="row m-none">
         {% for category in categories.results %}
+        {% with category.alibaba_category_id|stringformat:"i" as string_id %}
+        {% with category.title|slugify as slug %}
+        {% with 'img/alibaba/categories/'|add:string_id|add:'-'|add:slug|add:'.svg' as icon %}
         <a class="col-lg-2 col-md-4 col-sm-6 col-xs-12 alibaba-category-menu
             {% if forloop.counter == 1 %}top-left-border{% endif %}
             {% if forloop.counter == 6 %}top-right-border{% endif %}
@@ -49,8 +52,14 @@
             {% if forloop.last %}bottom-right-border{% endif %}"
             href="{% url 'alibaba:category_products' category.id %}"
         >
-          <span>{{category.title}}</span>
+          <span>
+            <img src="{% static icon %}" alt="">
+            {{category.title}}
+          </span>
         </a>
+        {% endwith %}
+        {% endwith %}
+        {% endwith %}
         {% endfor %}
     </div>
 
@@ -71,7 +80,7 @@
                     <div class="card-image">
                       <input class="alibaba-product-select new-layout-hidden" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox"/>
                       <a href="{{ item.url }}" target="_blank">
-                        <img class="no-img unveil" src="{% static 'img/blank.gif' %}" data-src="{{item.image}}">
+                        <img class="no-img" src="{{item.image}}">
                       </a>
                     </div>
                     <div class="card-content">
