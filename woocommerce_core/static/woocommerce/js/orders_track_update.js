@@ -57,23 +57,30 @@
     };
 
     $('.aliexpress-sync-btn').click(function(e) {
-        window.extensionSendMessage({
-            subject: 'getVersion',
-        }, function(rep) {
-            if (rep && rep.version) {
-                $('.aliexpress-sync-btn').prop('updated-version', true);
+        try {
+            window.extensionSendMessage({
+                subject: 'getVersion',
+            }, function(rep) {
+                if (rep && rep.version) {
+                    $('.aliexpress-sync-btn').prop('updated-version', true);
 
-                syncTrackedOrders();
-            } else {
-                upgradeWarning();
-            }
-        });
+                    syncTrackedOrders();
+                } else {
+                    upgradeWarning();
+                }
+            });
 
-        setTimeout(function() {
-            if (!$('.aliexpress-sync-btn').prop('updated-version')) {
-                upgradeWarning();
-            }
-        }, 1000);
+            setTimeout(function() {
+                if (!$('.aliexpress-sync-btn').prop('updated-version')) {
+                    upgradeWarning();
+                }
+            }, 1000);
+    }
+    catch(e) {
+        $("#start-update-btn").hide();
+        syncTrackedOrders();
+    }
+
     });
 
     $('#update-unfulfilled-only').on('ifChanged', function (e) {
