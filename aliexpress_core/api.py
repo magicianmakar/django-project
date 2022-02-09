@@ -339,7 +339,15 @@ class AliexpressFulfillHelper():
 
                 product_obj = line_item['product']
                 country_code = self.shipping_address['country_code']
-                shipping_mapping = product_obj.get_shipping_for_variant(line_item['supplier'].id, line_item['line']['variant_id'], country_code)
+
+                if store_type == 'chq':
+                    variant_id = line_item['line']['data']['variant']['id']
+                elif store_type == 'woo':
+                    variant_id = line_item['line']['variation_id']
+                else:
+                    variant_id = line_item['line']['variant_id']
+
+                shipping_mapping = product_obj.get_shipping_for_variant(line_item['supplier'].id, variant_id, country_code)
                 if shipping_mapping is not None:
                     item.logistics_service_name = shipping_mapping.get('method')
 
