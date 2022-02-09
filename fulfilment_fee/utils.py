@@ -73,6 +73,14 @@ def generate_sale_transaction_fee(source_type, source, amount, currency_data):
 
 def process_sale_transaction_fee(instance):
     try:
+        if not instance.user.can('sales_fee.use') \
+            or instance.user.is_superuser \
+            or instance.user.is_staff \
+            or instance.user.can('disabled_sales_fee.use') \
+            or (not instance.auto_fulfilled and instance.source_type != 'supplements') \
+            or getattr(instance, status_column) != 'fulfilled':
+            return
+
         # check total order limit if set (OR logic)
         process_fees_trigger = instance.user.profile.plan.sales_fee_config.process_fees_trigger
         monthly_free_limit = instance.user.profile.plan.sales_fee_config.monthly_free_limit
@@ -99,11 +107,7 @@ def process_sale_transaction_fee(instance):
             if track_type['model'] == type(instance):
                 status_column = track_type['status_column']
 
-        if instance.user.can('sales_fee.use') \
-                and (instance.user.is_superuser or not instance.user.can('disabled_sales_fee.use')) \
-                and costs and (instance.auto_fulfilled or instance.source_type == 'supplements') \
-                and getattr(instance, status_column) == 'fulfilled':
-
+        if costs:
             # getting sales fee config
             normalized_cost = normalize_currency(costs['products_cost'], costs['currency'])
             currency_data = {
