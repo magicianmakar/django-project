@@ -73,12 +73,16 @@ def generate_sale_transaction_fee(source_type, source, amount, currency_data):
 
 def process_sale_transaction_fee(instance):
     try:
+        for track_type in track_types:
+            if track_type['model'] == type(instance):
+                status_column = track_type['status_column']
+
         if not instance.user.can('sales_fee.use') \
             or instance.user.is_superuser \
             or instance.user.is_staff \
             or instance.user.can('disabled_sales_fee.use') \
             or (not instance.auto_fulfilled and instance.source_type != 'supplements') \
-            or getattr(instance, status_column) != 'fulfilled':
+                or getattr(instance, status_column) != 'fulfilled':
             return
 
         # check total order limit if set (OR logic)
@@ -102,10 +106,6 @@ def process_sale_transaction_fee(instance):
 
         costs = get_costs_from_track(instance, commit=False)
         instance_type = type(instance).__name__
-
-        for track_type in track_types:
-            if track_type['model'] == type(instance):
-                status_column = track_type['status_column']
 
         if costs:
             # getting sales fee config
