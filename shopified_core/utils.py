@@ -631,18 +631,33 @@ def get_extension_version(request):
         return ext
 
 
-def save_user_ip(request, user=None):
-    if user is None:
-        user = request.user
-
+def get_user_session(request):
     try:
         session = request.session._get_session_from_db()
     except:
         session = None
 
+    return session
+
+
+def get_current_request_hash(request):
+    ip = get_client_ip(request)
+    user_agent = safe_str(request.META.get('HTTP_USER_AGENT', 'N/A'))
+    version = safe_str(request.META.get('HTTP_X_EXTENSION_VERSION', ''))
+
+    return f'request_hash_{hash_list([ip, user_agent, version])}'
+
+
+def save_user_ip(request):
+    request_hash = get_current_request_hash(request)
+    if cache.get(request_hash):
+        return
+
+    user = request.user
     ip = get_client_ip(request)
     browser = get_browser_user_agent(request)
     extension = get_extension_version(request)
+    session = get_user_session(request)
 
     user_ip, created = UserIpRecord.objects.update_or_create(
         user=user,
@@ -663,6 +678,8 @@ def save_user_ip(request, user=None):
         user_ip.save()
 
     user.profile.add_ip(ip)
+
+    cache.set(request_hash, 1, timeout=500)
 
 
 def unique_username(username='user', fullname=None):
