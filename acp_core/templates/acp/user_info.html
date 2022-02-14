@@ -269,6 +269,7 @@
                                 <li><a class="nav-link" data-toggle="tab" href="#tab-5">Shopify Charges ({{ shopify_application_charges|length }})</a></li>
                                 <li><a class="nav-link" data-toggle="tab" href="#tab-6">Lifetime Purchases ({{ registrations|length }})</a></li>
                                 <li><a class="nav-link" data-toggle="tab" href="#tab-7"> Account Setup Link ({{ account_registration | yesno:'1,0' }})</a></li>
+                                <li><a class="nav-link" data-toggle="tab" href="#tab-8"> Activity </a></li>
                             </ul>
                             <div class="tab-content">
                                 <div role="tabpanel" id="tab-1" class="tab-pane active">
@@ -297,6 +298,10 @@
 
                                 <div role="tabpanel" id="tab-7" class="tab-pane">
                                     <div class="panel-body">{% include 'acp/partial/password_setup.html' %}</div>
+                                </div>
+
+                                <div role="tabpanel" id="tab-8" class="tab-pane">
+                                    <div class="panel-body">{% include 'acp/partial/activity.html' %}</div>
                                 </div>
                             </div>
                         </div>

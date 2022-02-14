@@ -17,7 +17,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 
 from addons_core.models import AddonUsage
-from last_seen.models import LastSeen
+from last_seen.models import LastSeen, UserIpRecord
 from leadgalaxy.models import AccountRegistration, AdminEvent, FeatureBundle, GroupPlan, PlanRegistration
 from leadgalaxy.shopify import ShopifyAPI
 from lib.exceptions import capture_exception
@@ -308,6 +308,8 @@ class ACPUserInfoView(BaseTemplateView):
         else:
             user_plans = GroupPlan.objects.exclude(id=target_user.profile.plan.id).exclude(private_label=True).order_by('-id')
 
+        user_ips = UserIpRecord.objects.filter(user=target_user).order_by('-last_seen_at')[:10]
+
         ctx.update({
             'target_user': target_user,
             'addon_logs': addon_logs,
@@ -326,6 +328,7 @@ class ACPUserInfoView(BaseTemplateView):
             'user_last_seen': user_last_seen,
             'show_products': self.request.GET.get('products'),
             'user_plans': user_plans,
+            'user_ips': user_ips,
         })
 
         return ctx
