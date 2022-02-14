@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 
 from .models import LastSeen, UserIpRecord, BrowserUserAgent
@@ -51,7 +50,7 @@ admin.site.register(LastSeen, LastSeenAdmin)
 
 @admin.register(BrowserUserAgent)
 class BrowserUserAgentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user_agent', 'created_at')
+    list_display = ('id', 'description', 'is_bot', 'created_at')
     list_filter = ('created_at',)
     date_hierarchy = 'created_at'
 
@@ -63,9 +62,11 @@ class UserIpRecordAdmin(admin.ModelAdmin):
         'user',
         'browser',
         'ip',
+        'country',
+        'city',
         'created_at',
         'last_seen_at',
     )
     list_filter = ('created_at', 'last_seen_at')
-    raw_id_fields = ('user', 'browser')
-    date_hierarchy = 'created_at'
+    raw_id_fields = ('user', 'browser', 'session')
+    date_hierarchy = 'last_seen_at'

@@ -625,16 +625,27 @@ def save_user_ip(request, user=None):
     if user is None:
         user = request.user
 
+    try:
+        session = request.session._get_session_from_db()
+    except:
+        session = None
+
     ip = get_client_ip(request)
     browser = get_browser_user_agent(request)
-    UserIpRecord.objects.update_or_create(
+
+    user_ip, created = UserIpRecord.objects.update_or_create(
         user=user,
         ip=ip,
         browser=browser,
+        session=session,
         defaults={
-            'created_at': timezone.now(),
+            'last_seen_at': timezone.now(),
         }
     )
+
+    if created or not user_ip.country:
+        from last_seen.tasks import update_ip_details
+        update_ip_details.apply_async(args=[user_ip.id], expires=600)
 
     user.profile.add_ip(ip)
 

@@ -1,0 +1,30 @@
+{% load template_helper %}
+
+<table class="table table-striped table-hover">
+    <thead>
+    <tr>
+        {% if request.user.is_superuser %}
+        <th>IP</th>
+        {% endif %}
+        <th>City</th>
+        <th>Country</th>
+        <th>Browser</th>
+        <th>Last seen</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for ip in user_ips %}
+    <tr>
+        {% if request.user.is_superuser %}
+        <td>
+            <b class="m-r">{{ ip.ip }}</b>
+        </td>
+        {% endif %}
+        <td>{{ ip.city }}</td>
+        <td>{{ ip.country }}</td>
+        <td><span class="itooltip" title="{{ ip.browser.user_agent }}">{{ ip.browser.description }}</span></td>
+        <td><span class="itooltip">{% date_humanize ip.last_seen_at %}</span></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>

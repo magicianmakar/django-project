@@ -4,6 +4,9 @@ from django.db import models
 from django.utils import timezone
 from django.core.cache import cache
 from django.contrib.auth.models import User
+from django.contrib.sessions.models import Session
+
+import httpagentparser
 
 from . import settings
 
@@ -72,17 +75,32 @@ class LastSeen(models.Model):
 
 
 class BrowserUserAgent(models.Model):
-    user_agent = models.TextField(null=True)
+    user_agent = models.TextField(null=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self) -> str:
-        return self.user_agent
+        return self.description()
+
+    def description(self) -> str:
+        os, browser = httpagentparser.simple_detect(self.user_agent)
+        return f'{browser} ({os})'
+
+    def details(self) -> dict:
+        return httpagentparser.detect(self.user_agent)
+
+    def is_bot(self) -> bool:
+        return self.details().get('bot')
 
 
 class UserIpRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     browser = models.ForeignKey(BrowserUserAgent, on_delete=models.CASCADE)
     ip = models.CharField(max_length=512)
+    session = models.ForeignKey(Session, null=True, on_delete=models.SET_NULL)
+
+    country = models.CharField(max_length=512, blank=True, null=True)
+    city = models.CharField(max_length=512, blank=True, null=True)
+    org = models.TextField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     last_seen_at = models.DateTimeField(auto_now=True)
