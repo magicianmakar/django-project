@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import LastSeen, UserIpRecord, BrowserUserAgent
+from .models import ExtensionVersion, LastSeen, UserIpRecord, BrowserUserAgent
+
+USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
 
 
 class PlanListFilter(admin.SimpleListFilter):
@@ -53,6 +55,15 @@ class BrowserUserAgentAdmin(admin.ModelAdmin):
     list_display = ('id', 'description', 'is_bot', 'created_at')
     list_filter = ('created_at',)
     date_hierarchy = 'created_at'
+    search_fields = ('description',)
+
+
+@admin.register(ExtensionVersion)
+class ExtensionVersionAdmin(admin.ModelAdmin):
+    list_display = ('version', 'created_at')
+    list_filter = ('created_at',)
+    date_hierarchy = 'created_at'
+    search_fields = ('version',)
 
 
 @admin.register(UserIpRecord)
@@ -62,11 +73,13 @@ class UserIpRecordAdmin(admin.ModelAdmin):
         'user',
         'browser',
         'ip',
+        'extension',
         'country',
         'city',
         'created_at',
         'last_seen_at',
     )
     list_filter = ('created_at', 'last_seen_at')
-    raw_id_fields = ('user', 'browser', 'session')
+    raw_id_fields = ('user', 'browser', 'session', 'extension')
     date_hierarchy = 'last_seen_at'
+    search_fields = ('ip', 'country', 'city', 'browser__user_agent') + USER_SEARCH_FIELDS

@@ -92,11 +92,20 @@ class BrowserUserAgent(models.Model):
         return self.details().get('bot')
 
 
+class ExtensionVersion(models.Model):
+    version = models.CharField(max_length=64)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self) -> str:
+        return f'Version {self.version}'
+
+
 class UserIpRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     browser = models.ForeignKey(BrowserUserAgent, on_delete=models.CASCADE)
     ip = models.CharField(max_length=512)
     session = models.ForeignKey(Session, null=True, on_delete=models.SET_NULL)
+    extension = models.ForeignKey(ExtensionVersion, null=True, on_delete=models.SET_NULL)
 
     country = models.CharField(max_length=512, blank=True, null=True)
     city = models.CharField(max_length=512, blank=True, null=True)

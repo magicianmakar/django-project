@@ -1,6 +1,6 @@
 {% load template_helper %}
 
-<table class="table table-striped table-hover">
+<table class="table table-hover">
     <thead>
     <tr>
         {% if request.user.is_superuser %}
@@ -8,6 +8,7 @@
         {% endif %}
         <th>City</th>
         <th>Country</th>
+        <th>Extension</th>
         <th>Browser</th>
         <th>Last seen</th>
     </tr>
@@ -20,8 +21,9 @@
             <b class="m-r">{{ ip.ip }}</b>
         </td>
         {% endif %}
-        <td>{{ ip.city }}</td>
-        <td>{{ ip.country }}</td>
+        <td>{{ ip.city|default:'' }}</td>
+        <td>{{ ip.country|default:'' }}</td>
+        <td>{{ ip.extension.version }}</td>
         <td><span class="itooltip" title="{{ ip.browser.user_agent }}">{{ ip.browser.description }}</span></td>
         <td><span class="itooltip">{% date_humanize ip.last_seen_at %}</span></td>
     </tr>

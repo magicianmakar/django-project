@@ -30,7 +30,7 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.module_loading import import_string
 
-from last_seen.models import BrowserUserAgent, UserIpRecord
+from last_seen.models import BrowserUserAgent, ExtensionVersion, UserIpRecord
 from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
 
 ALIEXPRESS_REJECTED_STATUS = {
@@ -621,6 +621,16 @@ def get_browser_user_agent(request):
         return browser
 
 
+def get_extension_version(request):
+    version = request.META.get('HTTP_X_EXTENSION_VERSION')
+    if version:
+        ext, created = ExtensionVersion.objects.get_or_create(
+            version=version
+        )
+
+        return ext
+
+
 def save_user_ip(request, user=None):
     if user is None:
         user = request.user
@@ -632,6 +642,7 @@ def save_user_ip(request, user=None):
 
     ip = get_client_ip(request)
     browser = get_browser_user_agent(request)
+    extension = get_extension_version(request)
 
     user_ip, created = UserIpRecord.objects.update_or_create(
         user=user,
@@ -646,6 +657,10 @@ def save_user_ip(request, user=None):
     if created or not user_ip.country:
         from last_seen.tasks import update_ip_details
         update_ip_details.apply_async(args=[user_ip.id], expires=600)
+
+    if extension and not user_ip.extension:
+        user_ip.extension = extension
+        user_ip.save()
 
     user.profile.add_ip(ip)
 
