@@ -649,6 +649,9 @@ def get_current_request_hash(request):
 
 
 def save_user_ip(request):
+    if 'api/captcha-credits' in request.path or 'api/can' in request.path:
+        return
+
     request_hash = get_current_request_hash(request)
     if cache.get(request_hash):
         return

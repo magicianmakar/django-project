@@ -22,7 +22,7 @@
         </td>
         {% endif %}
         <td>{{ ip.city|default:'' }}</td>
-        <td>{{ ip.country|default:'' }}</td>
+        <td>{{ ip.get_country|default:'' }}</td>
         <td>{{ ip.extension.version }}</td>
         <td><span class="itooltip" title="{{ ip.browser.user_agent }}">{{ ip.browser.description }}</span></td>
         <td><span class="itooltip">{% date_humanize ip.last_seen_at %}</span></td>

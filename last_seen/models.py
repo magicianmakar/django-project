@@ -8,6 +8,8 @@ from django.contrib.sessions.models import Session
 
 import httpagentparser
 
+from shopified_core.shipping_helper import country_from_code
+
 from . import settings
 
 
@@ -116,6 +118,9 @@ class UserIpRecord(models.Model):
 
     def __str__(self) -> str:
         return f'{self.user.email} ({self.ip})'
+
+    def get_country(self):
+        return country_from_code(self.country, self.country)
 
 
 def get_cache_key(module, user):
