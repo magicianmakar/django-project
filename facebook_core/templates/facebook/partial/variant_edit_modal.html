@@ -1,0 +1,65 @@
+<div id="modal-fb-variants-edit-form" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h3 class="modal-title">Edit selected variants</h3>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <p class="m-t-none m-b">Select fields to update and enter a new value for each.</p>
+                        <form role="form">
+                            <div class="form-inline m-b-sm">
+                                <div class="form-group">
+                                    <input type="checkbox" class="variant-editable-field" name="edit-price-checkbox" id="edit-price-checkbox">
+                                    <input type="number" id="variant-price" placeholder="Price" class="form-control" disabled>
+                                </div>
+                            </div>
+                            <div class="form-inline m-b-sm">
+                                <div class="form-group">
+                                    <input type="checkbox" class="variant-editable-field" name="edit-compare-at-checkbox" id="edit-compare-at-checkbox">
+                                    <input type="number" id="variant-compare-at" placeholder="Compare at price" class="form-control" disabled>
+                                </div>
+                            </div>
+                            <div class="form-inline m-b-sm">
+                                <div class="form-group">
+                                    <input type="checkbox" class="variant-editable-field" name="edit-stock-checkbox" id="edit-stock-checkbox">
+                                    <input type="number" id="variant-stock" placeholder="Stock" class="form-control" min="0" step="1"
+                                        onkeypress="return event.charCode >= 48 && event.charCode <= 57" disabled>
+                                </div>
+                            </div>
+
+                            <div class="form-group m-t-md">
+                                <h4>Weight</h4>
+                                <div class="form-inline">
+                                    <div class="form-group m-r-md">
+                                        <input type="checkbox" class="variant-editable-field" name="edit-weight-checkbox" id="edit-weight-checkbox">
+                                        <input type="number" class="form-control" id="variant-weight" placeholder="Variant Weight" disabled>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <input type="checkbox" class="variant-editable-field" name="edit-weight-unit-checkbox" id="edit-weight-unit-checkbox">
+                                        <select name="variant-weight-unit" id="variant-weight-unit" class="form-control" disabled>
+                                            <option value="g">g</option>
+                                            <option value="kg">kg</option>
+                                            <option value="oz">oz</option>
+                                            <option value="lb">lb</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-outline btn-default pull-left" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cancel</button>
+
+                <button id="save-changes" class="btn btn-sm btn-primary pull-right" type="button"><strong><i class="fa fa-save"></i> Save</strong></button>
+              </div>
+        </div>
+    </div>
+</div>

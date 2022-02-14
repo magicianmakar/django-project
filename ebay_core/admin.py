@@ -15,20 +15,20 @@ class EbayStoreAdmin(admin.ModelAdmin):
         'user',
         'title',
         'is_active',
-        'legacy_auth_token_exp_date',
-        'oauth_token_exp_date',
         'store_hash',
         'auto_fulfill',
         'created_at',
         'updated_at',
         'store_username',
+        'legacy_auth_token_exp_date',
+        'oauth_token_exp_date',
     )
     list_filter = (
         'is_active',
-        'legacy_auth_token_exp_date',
-        'oauth_token_exp_date',
         'created_at',
         'updated_at',
+        'legacy_auth_token_exp_date',
+        'oauth_token_exp_date',
     )
     raw_id_fields = ('sd_account', 'user')
     date_hierarchy = 'created_at'
@@ -59,18 +59,18 @@ class EbayProductAdmin(admin.ModelAdmin):
         'sd_account',
         'guid',
         'sku',
+        'source_id',
         'product_description',
         'condition',
         'thumbnail_image',
         'media_links_data',
+        'variants_config',
         'sd_updated_at',
         'store',
         'default_supplier',
-        'source_id',
         'ebay_store_index',
         'ebay_category_id',
         'ebay_site_id',
-        'variants_config',
     )
     list_filter = ('created_at', 'updated_at', 'sd_updated_at')
     raw_id_fields = (
@@ -87,8 +87,6 @@ class EbayProductAdmin(admin.ModelAdmin):
 class EbayProductVariantAdmin(admin.ModelAdmin):
     list_display = (
         'id',
-        'parent_product',
-        'default_supplier',
         'guid',
         'sku',
         'variant_title',
@@ -99,6 +97,8 @@ class EbayProductVariantAdmin(admin.ModelAdmin):
         'variant_data',
         'created_at',
         'updated_at',
+        'parent_product',
+        'default_supplier',
     )
     list_filter = ('created_at', 'updated_at')
     raw_id_fields = ('parent_product', 'default_supplier')
@@ -109,9 +109,7 @@ class EbayProductVariantAdmin(admin.ModelAdmin):
 class EbaySupplierAdmin(admin.ModelAdmin):
     list_display = (
         'id',
-        'store',
         'product_guid',
-        'product',
         'product_url',
         'supplier_name',
         'supplier_url',
@@ -120,6 +118,8 @@ class EbaySupplierAdmin(admin.ModelAdmin):
         'is_default',
         'created_at',
         'updated_at',
+        'store',
+        'product',
     )
     list_filter = ('is_default', 'created_at', 'updated_at')
     raw_id_fields = ('store', 'product')

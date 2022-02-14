@@ -113,6 +113,7 @@ INSTALLED_APPS = (
     'alibaba_core',
     'aliexpress_core',
     'insider_reports',
+    'facebook_core',
     'suredone_core',
 )
 
@@ -197,6 +198,7 @@ DROPIFIED_API = {
     'gear': 'gearbubble_core.api.GearBubbleApi',
     'woo': 'woocommerce_core.api.WooStoreApi',
     'ebay': 'ebay_core.api.EbayStoreApi',
+    'fb': 'facebook_core.api.FBStoreApi',
     'gkart': 'groovekart_core.api.GrooveKartApi',
     'bigcommerce': 'bigcommerce_core.api.BigCommerceStoreApi',
     'tubehunt': 'youtube_ads.api.TubeHuntApi',
@@ -697,6 +699,13 @@ SUREDONE_CUSTOM_FIELDS_CONFIG = [
                  'ucfquantity'],
         'type': 'varchar',
         'length': 200
+    },
+    # Facebook Product Page URL
+    {
+        'label': ['Product Page Link'],
+        'name': ['dropifiedfbproductlink'],
+        'type': 'varchar',
+        'length': 510,
     }
 ]
 SUREDONE_DEFAULT_VARIANTS_FIELDS_CONFIG = [

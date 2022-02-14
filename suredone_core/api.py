@@ -194,6 +194,19 @@ class SureDoneApiHandler:
         else:
             pass
 
+    def search_fb_categories(self, search_term: str):
+        url = f'{self.API_ENDPOINT}/v1/internal/facebook/categories'
+        params = {'search': search_term}
+
+        response = requests.get(url, params=params, headers=self.HEADERS)
+        if response.ok:
+            try:
+                return response.json()
+            except ValueError:
+                pass
+        else:
+            pass
+
     def get_item_by_guid(self, guid):
         url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}/edit'
         params = {

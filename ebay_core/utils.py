@@ -2,21 +2,18 @@ import arrow
 import json
 import re
 
-from django.contrib.auth.models import User
-from django.core.cache import cache, caches
+from django.core.cache import caches
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 from ebay_core.models import EbayBoard, EbayOrderTrack, EbayProduct, EbayProductVariant, EbayStore, EbaySupplier
 from leadgalaxy.models import UserProfile
-from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
-from shopified_core.utils import fix_order_data, safe_float, safe_int, safe_json, safe_str
-from suredone_core.models import InvalidSureDoneStoreInstanceId
-from suredone_core.utils import SureDoneUtils, get_or_create_suredone_account, parse_suredone_date, sd_customer_address
+from shopified_core.utils import fix_order_data, products_filter, safe_float, safe_int, safe_json, safe_str
+from suredone_core.utils import SureDoneOrderUpdater, SureDoneUtils, get_or_create_suredone_account, parse_suredone_date, sd_customer_address
 
 
 class EbayUtils(SureDoneUtils):
@@ -333,10 +330,9 @@ class EbayUtils(SureDoneUtils):
 
         return all_products
 
-    def get_ebay_products(self, store_id: str, in_store: str, post_per_page=25, sort=None, board=None, product_board=None):
+    def get_ebay_products(self, store_id: str, in_store: str, post_per_page=25, sort=None, board=None, product_board=None, request=None):
         """
         Get all eBay products.
-        TODO: add functionality for sorting, filtering and board selection
 
         :param product_board:
         :type product_board:
@@ -350,6 +346,8 @@ class EbayUtils(SureDoneUtils):
         :type sort:
         :param board: Board name to filter the products by
         :type board:
+        :param request: get filters from request to filter the products by
+        :type request:
         :return:
         :rtype:
         """
@@ -387,20 +385,21 @@ class EbayUtils(SureDoneUtils):
             res = res.filter(ebayboard=board)
             permissions.user_can_view(self.user, get_object_or_404(EbayBoard, id=board))
 
-        # res = products_filter(res, request.GET)
+        if request:
+            res = products_filter(res, request.GET)
 
         if sort:
             if re.match(r'^-?(title|price)$', sort):
                 res = res.order_by(sort)
+            elif re.match(r'^-?(date)$', sort):
+                date_sort = re.sub(r'date', r'created_at', sort)
+                res = res.order_by(date_sort)
 
         return res
 
     def filter_by_connected(self, product):
         is_connected = product.is_connected
         return is_connected
-
-    def format_error_messages_by_variant(self, errors: dict) -> str:
-        return '\n\n'.join([f'<b>Variant #{i}</b>: {m}' for i, m in errors.items()])
 
     def combine_products_variants(self, products: list):
         """
@@ -708,21 +707,6 @@ class EbayUtils(SureDoneUtils):
         """
         return self.api.get_ebay_specifics(site_id, cat_id)
 
-    def store_shipping_carriers(self):
-        carriers = [
-            {1: 'USPS'}, {2: 'UPS'}, {3: 'FedEx'}, {4: 'LaserShip'},
-            {5: 'DHL US'}, {6: 'DHL Global'}, {7: 'Canada Post'},
-            {8: 'Custom Provider'},
-        ]
-
-        return [{'id': list(c.keys()).pop(), 'title': list(c.values()).pop()} for c in carriers]
-
-    def get_shipping_carrier_name(self, carrier_id):
-        shipping_carriers = self.store_shipping_carriers()
-        for carrier in shipping_carriers:
-            if carrier['id'] == carrier_id:
-                return carrier['title']
-
     def get_ebay_orders(self, store: EbayStore, page=None, per_page=None, filters: dict = None):
         """
         Get all eBay orders.
@@ -738,109 +722,11 @@ class EbayUtils(SureDoneUtils):
         :return:
         :rtype:
         """
-        if not page:
-            page = 1
-        if not per_page:
-            per_page = 25
+        if filters is None:
+            filters = {}
+        filters['platform_type'] = 'ebay'
+        sd_orders, total_products_count = self.get_orders_by_platform_type(store, filters, page=page, per_page=per_page)
 
-        # SD assigns instance IDs in the following order: 0, 2, 3, 4, etc., so if the instance ID is 1, set it to 0
-        try:
-            instance_id_filter = store.filter_instance_id
-        except InvalidSureDoneStoreInstanceId:
-            capture_exception()
-            instance_id_filter = store.store_instance_id
-
-        search_filters = {
-            'channel': {
-                'value': 'ebay',
-                'relation': ':='
-            },
-            'instance': {
-                'value': instance_id_filter,
-                'relation': ':='
-            },
-            'archived': {
-                'value': '0',
-                'relation': ':='
-            }
-        }
-
-        sort_by = None
-        sort_order = None
-
-        # Parse and format filters
-        if filters:
-            order_by = filters.get('orderby')
-            if order_by:
-                sort_by = order_by
-
-            order = filters.get('order')
-            if order:
-                sort_order = order
-
-            customer_filter = filters.get('customer')
-            if customer_filter:
-                first_name = customer_filter.get('first_name')
-                if first_name:
-                    search_filters['sfirstname'] = {
-                        'value': first_name,
-                        'relation': ':'
-                    }
-
-                last_name = customer_filter.get('last_name')
-                if last_name:
-                    search_filters['slastname'] = {
-                        'value': last_name,
-                        'relation': ':'
-                    }
-
-                email = customer_filter.get('email')
-                if email:
-                    search_filters['email'] = {
-                        'value': email,
-                        'relation': ':='
-                    }
-
-            order_id = filters.get('order_id')
-            if order_id:
-                search_filters['ordernumber'] = {
-                    'value': order_id,
-                    'relation': ':'
-                }
-
-            country = filters.get('country')
-            if country:
-                search_filters['scountry'] = {
-                    'value': country,
-                    'relation': ':='
-                }
-
-            status = filters.get('status')
-            if status:
-                search_filters['status'] = {
-                    'value': status,
-                    'relation': ':='
-                }
-
-        search_filters = self.format_filters(search_filters)
-
-        # Format time filters
-        if filters and ('after' in filters or 'before' in filters):
-            time_filters = []
-            before_filter = filters.get('before', '')
-            after_filter = filters.get('after', '')
-
-            if before_filter:
-                time_filters.append(self.format_filters({'date': {'value': before_filter, 'relation': ':<='}}))
-            if after_filter:
-                time_filters.append(self.format_filters({'date': {'value': after_filter, 'relation': ':>='}}))
-
-            search_filters = f"{search_filters} {' '.join(time_filters)}"
-
-        sd_orders, total_products_count = self.get_all_orders(search_filters,
-                                                              page=page,
-                                                              sort_by=sort_by,
-                                                              sort_order=sort_order)
         normalized_orders = []
         orders_cache = {}
         if isinstance(sd_orders, list):
@@ -900,25 +786,6 @@ class EbayUtils(SureDoneUtils):
 
         return new_tracker_orders
 
-    def get_item_fulfillment_status(self, order: dict, item_id):
-        shipments = order.get('shipments', [])
-        status = 'Unfulfilled'
-        for shipment_info in shipments:
-            try:
-                shipment_items = shipment_info.get('shipdetails', {}).get('items')
-            except AttributeError:
-                continue
-            if not isinstance(shipment_items, list):
-                continue
-
-            skus = [x.get('sku') for x in shipment_items if 'sku' in x]
-            for sku in skus:
-                if sku == item_id:
-                    status = 'Fulfilled'
-                    return status
-
-        return status
-
     def get_tracking_products(self, tracker_orders, per_page=50):
         ids = set([str(i.line_id) for i in tracker_orders])
 
@@ -941,18 +808,6 @@ class EbayUtils(SureDoneUtils):
             new_tracker_orders.append(tracked)
 
         return new_tracker_orders
-
-    def order_id_from_name(self, store, order_name, default=None):
-        order_name = order_name.replace('#', '')
-        if not order_name:
-            return default
-
-        sd_orders, sd_orders_count = self.get_all_orders(filters=f'{order_name}')
-
-        if sd_orders_count and len(sd_orders):
-            return [i.get('oid') for i in sd_orders]
-
-        return default
 
     def duplicate_product(self, product_data: dict, store: EbayStore):
         """
@@ -1003,44 +858,9 @@ class EbayUtils(SureDoneUtils):
         return sd_api_result
 
 
-class EbayOrderUpdater:
-    def __init__(self, user=None, store: EbayStore = None, order_id: int = None):
-        self.utils = None
-        if user:
-            self.utils = EbayUtils(user)
-        self.user = user
-        self.store = store
-        self.order_id = order_id
-        self.notes = []
-
-    def add_note(self, n):
-        self.notes.append(n)
-
-    def mark_as_ordered_note(self, line_id: str, source_id: int, track: EbayOrderTrack):
-        source = 'Aliexpress'
-
-        if track:
-            url = track.get_source_url()
-            source = track.get_source_name()
-
-        else:
-            url = f'https://trade.aliexpress.com/order_detail.htm?orderId={source_id}'
-
-        note = f'{source} Order ID: {source_id}\n{url}'
-
-        if line_id:
-            note = f'{note}\nOrder Line: #{line_id}'
-
-        self.add_note(note)
-
-    def save_changes(self):
-        with cache.lock(f'updater_lock_{self.store.id}_{self.order_id}', timeout=15):
-            self._do_save_changes()
-
-    def _do_save_changes(self):
-        if self.notes:
-            new_note = '\n'.join(self.notes)
-            self.add_ebay_order_note(self.order_id, new_note)
+class EbayOrderUpdater(SureDoneOrderUpdater):
+    store_model = EbayStore
+    utils_class = EbayUtils
 
     def delay_save(self, countdown=None):
         from ebay_core.tasks import order_save_changes
@@ -1049,46 +869,6 @@ class EbayOrderUpdater:
             args=[self.toJSON()],
             countdown=countdown
         )
-
-    def toJSON(self):
-        return json.dumps({
-            "notes": self.notes,
-            "order": self.order_id,
-            "store": self.store.id,
-            "user": self.user.models_user.id,
-        }, sort_keys=True, indent=4)
-
-    def fromJSON(self, data):
-        if type(data) is not dict:
-            data = json.loads(data)
-
-        self.store = EbayStore.objects.get(id=data.get('store'))
-        self.order_id = data.get('order')
-        self.user = User.objects.get(id=data.get('user'))
-        if self.user:
-            self.utils = EbayUtils(self.user)
-        self.notes = data.get('notes')
-
-    def add_ebay_order_note(self, order_id: int, note: str):
-        if not self.utils:
-            raise AttributeError('Error saving eBay order note: No user was provided.')
-
-        request_body = {
-            'internalnotes': note,
-            'oid': order_id,
-        }
-
-        r = self.utils.api.update_order_details(order_id, request_body)
-        r.raise_for_status()
-
-        return r.json()
-
-    def update_order_status(self, status, tries=3):
-        while tries > 0:
-            tries -= 1
-            r = self.utils.api.update_order_details(self.order_id, {'status': status})
-            if r.ok:
-                break
 
 
 class EbayListPaginator(SimplePaginator):

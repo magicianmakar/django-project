@@ -415,7 +415,7 @@ def product_export(user_id, parent_guid, store_id):
         permissions.user_can_edit(user, product)
         ebay_utils = EbayUtils(user)
 
-        api_response = ebay_utils.relist_product(parent_guid, 'ebay', store.store_instance_id)
+        api_response = ebay_utils.relist_product([parent_guid], 'ebay', store.store_instance_id)
         api_error_message = api_response.get('1', {}).get('errors')
 
         # Verify that the product got listed by fetching the product from SureDone

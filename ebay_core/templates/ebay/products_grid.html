@@ -113,13 +113,13 @@
                         <button class="btn btn-primary">Apply</button>
                     </div>
                 </li>
+                <li class="pull-right border-left group">
+                    <input type="text" class="form-control m-l-sm" name="title" value="{{request.GET.title}}" placeholder="Search by name">
+                    <button type="submit" class="btn btn-primary btn-icon">
+                      <i class="fa fa-search"></i>
+                    </button>
+                </li>
             </form>
-            <li class="pull-right border-left group">
-                <input type="text" class="form-control m-l-sm" name="search-name" placeholder="Search by name">
-                <a href="javascript:;" class="btn btn-primary btn-icon">
-                    <i class="fa fa-search"></i>
-                </a>
-            </li>
             <li class="pull-right">
                 {% include 'home/partial/platform_selection_dropdown.html' with section='eBay' %}
             </li>

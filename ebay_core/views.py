@@ -67,10 +67,11 @@ class ProductsList(ListView):
     def get_queryset(self):
         store_id = self.request.GET.get('store', 'n')
         in_store = safe_int(self.request.GET.get('in'))
+        sort = self.request.GET.get('sort')
         user = self.request.user
 
         try:
-            return EbayUtils(user).get_ebay_products(store_id, in_store)
+            return EbayUtils(user).get_ebay_products(store_id, in_store, sort=sort, request=self.request)
         except AttributeError:
             return []
 

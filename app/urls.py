@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^chq/', include(('commercehq_core.urls', 'commercehq_core'), 'chq')),
     url(r'^woo/', include(('woocommerce_core.urls', 'woocommerce_core'), 'woo')),
     url(r'^ebay/', include(('ebay_core.urls', 'ebay_core'), 'ebay')),
+    url(r'^fb/', include(('facebook_core.urls', 'facebook_core'), 'fb')),
     url(r'^gear/', include(('gearbubble_core.urls', 'gearbubble_core'), 'gear')),
     url(r'^gkart/', include(('groovekart_core.urls', 'groovekart_core'), 'gkart')),
     url(r'^bigcommerce/', include(('bigcommerce_core.urls', 'bigcommerce_core'), 'bigcommerce')),

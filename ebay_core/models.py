@@ -1,6 +1,5 @@
 import arrow
 import json
-import re
 from pusher import Pusher
 from urllib.parse import urlparse
 
@@ -10,9 +9,9 @@ from django.db import models
 from django.urls import reverse
 
 from shopified_core.decorators import add_to_class
-from shopified_core.models import BoardBase, OrderTrackBase, SupplierBase, UserUploadBase
-from shopified_core.utils import get_domain, safe_json
-from suredone_core.models import SureDoneProductBase, SureDoneStoreBase
+from shopified_core.models import BoardBase, OrderTrackBase, UserUploadBase
+from shopified_core.utils import safe_json
+from suredone_core.models import SureDoneProductBase, SureDoneProductVariantBase, SureDoneStoreBase, SureDoneSupplierBase
 
 
 @add_to_class(User, 'get_ebay_boards')
@@ -29,6 +28,9 @@ class EbayStore(SureDoneStoreBase):
 
     store_username = models.CharField(default='', null=True, blank=True, max_length=100,
                                       verbose_name='eBay store username')
+    legacy_auth_token_exp_date = models.DateTimeField(null=True,
+                                                      verbose_name='Store legacy authorization token expiration date')
+    oauth_token_exp_date = models.DateTimeField(null=True, verbose_name='Store oauth token expiration date')
 
     def sync(self, instance_title: str, options_data: dict):
         store_index_str = '' if self.store_instance_id == 1 else f'{self.store_instance_id}'
@@ -119,34 +121,14 @@ class EbayProduct(SureDoneProductBase):
     store = models.ForeignKey('EbayStore', related_name='products', null=True, on_delete=models.CASCADE)
     default_supplier = models.ForeignKey('EbaySupplier', on_delete=models.SET_NULL, null=True)
 
-    source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True,
-                                       verbose_name='eBay Product ID')
     ebay_store_index = models.BigIntegerField(default=1, null=False, blank=False,
                                               verbose_name='eBay Store Instance Index')
     ebay_category_id = models.BigIntegerField(default=0, null=True, blank=True,
                                               verbose_name='eBay Category ID')
     ebay_site_id = models.IntegerField(default=0, null=True, blank=True, verbose_name='eBay Site ID')
 
-    variants_config = models.TextField(null=True)
-
-    _variants_for_details_view = []
-
     def __str__(self):
         return f'<EbayProduct: {self.id}>'
-
-    @property
-    def parsed(self):
-        try:
-            return json.loads(self.data)
-        except:
-            return {}
-
-    @property
-    def variants_config_parsed(self):
-        try:
-            return json.loads(self.variants_config)
-        except:
-            return []
 
     @property
     def ebay_url(self):
@@ -169,18 +151,6 @@ class EbayProduct(SureDoneProductBase):
         return reverse('ebay:variants_edit', args=(self.store.id, self.pk))
 
     @property
-    def is_connected(self):
-        return bool(self.source_id)
-
-    @property
-    def all_children_variants_are_connected(self):
-        return self.is_connected and all([i.is_connected for i in self.product_variants.all()])
-
-    @property
-    def some_variants_are_connected(self):
-        return self.is_connected or any([i.is_connected for i in self.product_variants.all()])
-
-    @property
     def variants_for_details_view(self):
         all_variants_data = self.product_variants.exclude(guid=self.guid)
         try:
@@ -190,12 +160,6 @@ class EbayProduct(SureDoneProductBase):
             pass
 
         return [i.details_for_view for i in all_variants_data]
-
-    def retrieve(self):
-        return self
-
-    def retrieve_variants(self):
-        return []
 
     def get_suppliers(self):
         return self.ebaysupplier_set.all().order_by('-is_default')
@@ -266,12 +230,6 @@ class EbayProduct(SureDoneProductBase):
             self.variants_map = mapping
             if commit:
                 self.save()
-
-    def get_mapping_config(self):
-        try:
-            return json.loads(self.mapping_config)
-        except:
-            return {}
 
     def get_suppliers_mapping(self, name=None, default=None):
         mapping = {}
@@ -360,50 +318,6 @@ class EbayProduct(SureDoneProductBase):
 
         return mapping
 
-    def get_shipping_mapping(self, supplier=None, variant=None, default=None):
-        mapping = {}
-        try:
-            if self.shipping_map:
-                mapping = json.loads(self.shipping_map)
-            else:
-                mapping = {}
-        except:
-            mapping = {}
-
-        if supplier and variant:
-            mapping = mapping.get(f'{supplier}_{variant}', default)
-
-        try:
-            mapping = json.loads(mapping)
-        except:
-            pass
-
-        if type(mapping) is int:
-            mapping = str(mapping)
-
-        return mapping
-
-    def get_shipping_for_variant(self, supplier_id, variant_id, country_code):
-        """ Return Shipping Method for the given variant_id and country_code """
-        variant_id = -1 if variant_id == 0 else variant_id
-        mapping = self.get_shipping_mapping(supplier=supplier_id, variant=variant_id)
-
-        if variant_id and country_code and mapping and type(mapping) is list:
-            for method in mapping:
-                if country_code == method.get('country'):
-                    short_name = method.get('method_name').split(' ')
-                    if len(short_name) > 1 and short_name[1].lower() in ['post', 'seller\'s', 'aliexpress']:
-                        method['method_short'] = ' '.join(short_name[:2])
-                    else:
-                        method['method_short'] = short_name[0]
-
-                    if method['country'] == 'GB':
-                        method['country'] = 'UK'
-
-                    return method
-
-        return None
-
     def save(self, *args, smart_board_sync=True, **kwargs):
         # Perform smart board sync
         if smart_board_sync:
@@ -416,8 +330,8 @@ class EbayProduct(SureDoneProductBase):
         super().save(*args, **kwargs)
 
 
-class EbayProductVariant(models.Model):
-    class Meta:
+class EbayProductVariant(SureDoneProductVariantBase):
+    class Meta(SureDoneProductVariantBase.Meta):
         verbose_name = 'eBay Product Variant'
         ordering = ['created_at']
 
@@ -426,65 +340,15 @@ class EbayProductVariant(models.Model):
     default_supplier = models.ForeignKey('EbaySupplier', on_delete=models.SET_NULL, null=True,
                                          verbose_name='Variant-specific Supplier')
 
-    # GUID is unique to each product variant
-    # i.e. in SureDone each product (including product variants) has a unique GUID
-    guid = models.CharField(max_length=100, blank=False, db_index=True, unique=True, verbose_name='SureDone GUID')
-
-    # SKU is unique to each product but is common to the product's variants,
-    # i.e. in SureDone each product has a unique SKU, but the product's variants all have the same SKU
-    sku = models.CharField(max_length=100, blank=False, db_index=True, verbose_name='SureDone SKU')
-
-    variant_title = models.CharField(max_length=512, blank=True, null=True)
-    price = models.FloatField(default=0.0)
-    image = models.TextField(blank=True, null=True)
-    supplier_sku = models.CharField(max_length=512, blank=True, null=True)
-    source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True,
-                                       verbose_name='eBay Product ID')
-    variant_data = models.TextField(blank=True, null=True)
-
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    _parsed_variant_data = {}
-    _details_for_view = {}
-
     def __str__(self):
         return f'<EbayProductVariant: id={self.id}, guid={self.guid}>'
 
-    def __setattr__(self, attrname, val):
-        super(EbayProductVariant, self).__setattr__(attrname, val)
-
-        if attrname == 'variant_data' and attrname != '_parsed_variant_data':
-            self._parsed_variant_data = {}
-
-        # Reset stored details data
-        if attrname != '_details_for_view':
-            self._details_for_view = {}
-
-    @property
-    def is_connected(self):
-        return bool(self.source_id)
-
-    @property
-    def is_main_variant(self):
-        return self.guid == self.sku
-
     @property
     def details_for_view(self):
-        # Map Model's fields to SureDone's field names
-        if not self._details_for_view:
-            self._details_for_view = {
-                'guid': self.guid,
-                'sku': self.sku,
-                'varianttitle': self.variant_title,
-                'price': self.price,
-                'image': self.image,
-                'suppliersku': self.supplier_sku,
-                'is_connected': self.is_connected,
-                **self.parsed_variant_data,
-                **self.map_variant_fields_to_ebay_specifics()
-            }
-        return self._details_for_view
+        return {
+            **super(EbayProductVariant, self).details_for_view,
+            **self.map_variant_fields_to_ebay_specifics(),
+        }
 
     def map_variant_fields_to_ebay_specifics(self):
         variants_config = self.parent_product.variants_config_parsed
@@ -493,16 +357,6 @@ class EbayProductVariant(models.Model):
         for key in variant_field_keys:
             mapped_data[f'ebayitemspecifics{key}'] = self.parsed_variant_data[key.replace(' ', '').lower()]
         return mapped_data
-
-    @property
-    def parsed_variant_data(self):
-        try:
-            if not self._parsed_variant_data:
-                self._parsed_variant_data = json.loads(self.variant_data)
-        except:
-            self._parsed_variant_data = {}
-
-        return self._parsed_variant_data
 
     def get_suppliers(self):
         return EbaySupplier.objects.filter(product_guid=self.guid).order_by('-is_default')
@@ -559,28 +413,10 @@ class EbayProductVariant(models.Model):
                 'url': url
             }
 
-    def save(self, *args, **kwargs):
-        # Reset stored values in case data was updated
-        self._parsed_variant_data = {}
-        self._details_for_view = {}
 
-        super(EbayProductVariant, self).save(*args, **kwargs)
-
-
-class EbaySupplier(SupplierBase):
+class EbaySupplier(SureDoneSupplierBase):
     store = models.ForeignKey('EbayStore', null=True, related_name='suppliers', on_delete=models.CASCADE)
-    product_guid = models.CharField(max_length=100, blank=False, db_index=True, default=None, verbose_name='SureDone GUID')
     product = models.ForeignKey(EbayProduct, to_field='guid', on_delete=models.CASCADE)
-
-    product_url = models.CharField(max_length=512, null=True, blank=True)
-    supplier_name = models.CharField(max_length=512, null=True, blank=True, db_index=True)
-    supplier_url = models.CharField(max_length=512, null=True, blank=True)
-    shipping_method = models.CharField(max_length=512, null=True, blank=True)
-    variants_map = models.TextField(null=True, blank=True)
-    is_default = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         if self.supplier_name:
@@ -589,44 +425,6 @@ class EbaySupplier(SupplierBase):
             return self.supplier_url
         else:
             return f'<EbaySupplier: {self.id}>'
-
-    def get_source_id(self):
-        try:
-            if self.is_aliexpress or self.is_alibaba:
-                return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
-            elif self.is_ebay:
-                return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])
-            elif self.is_dropified_print:
-                return int(re.findall(r'print-on-demand.+?([0-9]+)', self.product_url)[0])
-            elif self.is_pls:
-                return self.get_user_supplement_id()
-        except:
-            return None
-
-    def get_store_id(self):
-        try:
-            if self.is_aliexpress:
-                return int(re.findall('/([0-9]+)', self.supplier_url).pop())
-        except:
-            return None
-
-    def short_product_url(self):
-        source_id = self.get_source_id()
-        if source_id:
-            if self.is_aliexpress:
-                return f'https://www.aliexpress.com/item/{source_id}.html'
-            if self.is_ebay:
-                return f'https://www.ebay.com/itm/{source_id}'
-
-        return self.product_url
-
-    def support_auto_fulfill(self):
-        """
-        Return True if this supplier support auto fulfill using the extension
-        Currently Aliexpress and eBay (US) support that
-        """
-
-        return self.is_aliexpress or self.is_ebay_us
 
     def get_name(self):
         if self.supplier_name and self.supplier_name.strip():
@@ -642,34 +440,6 @@ class EbaySupplier(SupplierBase):
             name = f'Supplier {self.supplier_type()}#{supplier_idx}'
 
         return name
-
-    @property
-    def is_aliexpress(self):
-        return self.supplier_type() == 'aliexpress'
-
-    @property
-    def is_ebay(self):
-        return self.supplier_type() == 'ebay'
-
-    @property
-    def is_ebay_us(self):
-        try:
-            return 'ebay.com' in get_domain(self.product_url, full=True)
-        except:
-            return False
-
-
-ORDER_STATUS_CHOICES = (
-    # SureDone's valid values:
-    # “INCOMPLETE”, “READY”, “PENDING”, “ORDERED”, “DROPSHIPPED”, “COMPLETE” or “ARCHIVED”
-    ('INCOMPLETE', 'INCOMPLETE'),
-    ('READY', 'READY'),
-    ('PENDING', 'PENDING'),
-    ('ORDERED', 'ORDERED'),
-    ('DROPSHIPPED', 'DROPSHIPPED'),
-    ('COMPLETE', 'COMPLETE'),
-    ('ARCHIVED', 'ARCHIVED'),
-)
 
 
 class EbayOrderTrack(OrderTrackBase):

@@ -28,6 +28,9 @@
 
                 {% elif item|model_name == 'ebaystore' %}
                     <li><a href="{% url 'ebay:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+
+                {% elif item|model_name == 'fbstore' %}
+                    <li><a href="{% url 'fb:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
                 {% endif %}
             {% endfor %}
 
@@ -93,6 +96,13 @@
                         <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
                     {% else %}
                         <li><a href="{% url 'ebay:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+                    {% endif %}
+
+                 {% elif item|model_name == 'fbstore' %}
+                    {% if item == store %}
+                        <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+                    {% else %}
+                        <li><a href="{% url 'fb:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
                     {% endif %}
 
                 {% endif %}
