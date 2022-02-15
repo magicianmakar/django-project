@@ -827,6 +827,13 @@ class EbayUtils(SureDoneUtils):
                     'relation': ':='
                 }
 
+            oid = filters.get('oid')
+            if oid:
+                search_filters['oid'] = {
+                    'value': oid,
+                    'relation': ':='
+                }
+
         search_filters = self.format_filters(search_filters)
 
         # Format time filters
