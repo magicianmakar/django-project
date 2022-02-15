@@ -16,7 +16,12 @@ from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import fix_order_data, safe_float, safe_int, safe_json, safe_str
 from suredone_core.models import InvalidSureDoneStoreInstanceId
-from suredone_core.utils import SureDoneUtils, get_or_create_suredone_account, parse_suredone_date, sd_customer_address
+from suredone_core.utils import (
+    SureDoneUtils,
+    get_or_create_suredone_account,
+    parse_suredone_date,
+    sd_customer_address
+)
 
 
 class EbayUtils(SureDoneUtils):
