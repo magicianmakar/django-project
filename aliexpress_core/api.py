@@ -14,6 +14,8 @@ from commercehq_core.models import CommerceHQOrderTrack, CommerceHQProduct, Comm
 from commercehq_core.utils import get_chq_order
 from leadgalaxy.models import ShopifyOrderTrack, ShopifyProduct, ShopifyStore
 from leadgalaxy.utils import get_shopify_order
+from groovekart_core.models import GrooveKartOrderTrack, GrooveKartProduct, GrooveKartStore
+from groovekart_core.utils import get_gkart_order
 from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.exceptions import AliexpressFulfillException
@@ -232,6 +234,50 @@ class AliexpressFulfillHelper():
         self.items = need_fulfill_items
         self.fulfill_aliexpress_order('bigcommerce')
 
+    def fulfill_gkart_order(self):
+        self.order = get_gkart_order(self.store, self.order_id)
+        order_tracks = {}
+        for i in GrooveKartOrderTrack.objects.filter(store=self.store, order_id=self.order['id']).defer('data'):
+            order_tracks[f'{i.order_id}-{i.line_id}'] = i
+
+        need_fulfill_items = {}
+        for el in self.order['line_items']:
+            if str(el['id']) not in self.items:
+                continue
+
+            item = self.items[str(el['id'])]
+            variant_id = el['variants']['variant_id']
+            if not el['product_id']:
+                if variant_id:
+                    product = GrooveKartProduct.objects.filter(store=self.store, title=el['title'], source_id__gt=0).first()
+                else:
+                    product = None
+            else:
+                product = GrooveKartProduct.objects.filter(store=self.store, source_id=el['product_id']).first()
+
+            gkart_order = order_tracks.get(f"{self.order['id']}-{el['id']}")
+
+            if not product or gkart_order:
+                continue
+
+            variant_id = product.get_real_variant_id(variant_id)
+            supplier = product.get_supplier_for_variant(variant_id)
+            if product.have_supplier() and supplier and supplier.is_aliexpress:
+                item.update({
+                    'line': el,
+                    'supplier': supplier,
+                    'product': product
+                })
+
+                need_fulfill_items[str(el['id'])] = item
+
+        if not need_fulfill_items:
+            return self.set_order_success_msg('Order have no items that need ordering')
+
+        self.items = need_fulfill_items
+
+        self.fulfill_aliexpress_order('gkart')
+
     def fulfill_shopify_order(self):
         self.order = get_shopify_order(self.store, self.order_id)
 
@@ -285,6 +331,8 @@ class AliexpressFulfillHelper():
             order_fulfill_url = app_link('api/chq/order-fulfill')
         elif store_type == 'bigcommerce':
             order_fulfill_url = app_link('api/bigcommerce/order-fulfill')
+        elif store_type == 'gkart':
+            order_fulfill_url = app_link('api/gkart/order-fulfill')
 
         aliexpress_order = PlaceOrder()
         aliexpress_order.set_app_info(API_KEY, API_SECRET)
@@ -344,6 +392,8 @@ class AliexpressFulfillHelper():
                     variant_id = line_item['line']['data']['variant']['id']
                 elif store_type == 'woo':
                     variant_id = line_item['line']['variation_id']
+                elif store_type == 'gkart':
+                    variant_id = line_item['line']['variants']['variant_id']
                 else:
                     variant_id = line_item['line']['variant_id']
 
@@ -464,6 +514,8 @@ class AliexpressApi(ApiResponseMixin):
             store = CommerceHQStore.objects.get(id=data['store'])
         elif storeType == 'bigcommerce':
             store = BigCommerceStore.objects.get(id=data['store'])
+        elif storeType == 'gkart':
+            store = GrooveKartStore.objects.get(id=data['store'])
 
         permissions.user_can_view(user, store)
 
@@ -479,6 +531,8 @@ class AliexpressApi(ApiResponseMixin):
                 helper.fulfill_chq_order()
             elif storeType == 'bigcommerce':
                 helper.fulfill_bigcommerce_order()
+            elif storeType == 'gkart':
+                helper.fulfill_gkart_order()
 
         except AliexpressFulfillException:
             pass
