@@ -663,6 +663,10 @@ $('.add-supplier-btn').click(function (e) {
 
     modalSupplierLinkEl.prop('ebay-store', $(this).attr('store-id'));
     modalSupplierLinkEl.prop('ebay-product', $(this).attr('ebay-product'));
+    modalSupplierLinkEl.prop('ebay-product-title', $(this).attr('ebay-product-title'));
+    modalSupplierLinkEl.prop('ebay-product-price', $(this).attr('ebay-product-price'));
+    modalSupplierLinkEl.prop('ebay-product-image', $(this).attr('ebay-product-image'));
+    modalSupplierLinkEl.prop('ebay-product-attributes', $(this).attr('ebay-product-attributes'));
 
     modalSupplierLinkEl.modal('show');
 });
@@ -695,6 +699,11 @@ $('.add-supplier-info-btn').click(function (e) {
             'supplier-name': supplierNameEl.val(),
             'supplier-link': supplierLinkEl.val(),
             'product': $('#modal-supplier-link').prop('ebay-product'),
+            'product-title': $('#modal-supplier-link').prop('ebay-product-title'),
+            'product-price': $('#modal-supplier-link').prop('ebay-product-price'),
+            'product-image': $('#modal-supplier-link').prop('ebay-product-image'),
+            'product-attributes': $('#modal-supplier-link').prop('ebay-product-attributes'),
+            'ebay-store': $('#modal-supplier-link').prop('ebay-store'),
         },
         success: function(data) {
             toastr.success('Supplier is connected!','Add Supplier');

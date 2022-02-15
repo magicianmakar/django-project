@@ -520,12 +520,12 @@
                                             {% endif %} />
 
                                         {% if item.product %}
-                                        <a href="{% url 'ebay:product_detail' store_index=store.id pk=item.product.sku %}" class="multi-line-text-overflow" target="_blank" title="{{item.name}}">
-                                            {{item.name}}
+                                        <a href="{% url 'ebay:product_detail' store_index=store.id pk=item.product.sku %}" class="multi-line-text-overflow" target="_blank" title="{{item.title}}">
+                                            {{item.title|truncatewords:7}}
                                         </a>
                                         {% else %}
-                                        <span class="multi-line-text-overflow" title="{{item.name}}">
-                                            {{item.name}}
+                                        <span class="multi-line-text-overflow" title="{{item.title}}">
+                                            {{item.title|truncatewords:7}}
                                         </span>
                                         {% endif %}
                                     </div>
@@ -661,7 +661,14 @@
                                                             {% endif %}
                                                             >{{item.supplier.supplier_name|truncatechars:25}}</a>
                                                         {% elif user|can:'product_supplier.use' %}
-                                                        <a class="add-supplier-btn" store-id="{{store.id}}" woo-product="{{item.product_id}}">
+                                                        <a class="add-supplier-btn"
+                                                           store-id="{{store.id}}"
+                                                           ebay-product="{{item.id}}"
+                                                           ebay-product-title="{{item.title}}"
+                                                           ebay-product-price="{{item.price}}"
+                                                           ebay-product-image="{{item.image}}"
+                                                           ebay-product-attributes="{{item.attributes}}"
+                                                        >
                                                             Connect Supplier
                                                         </a>
                                                         {% endif %}

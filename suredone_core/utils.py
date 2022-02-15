@@ -699,6 +699,34 @@ class SureDoneUtils:
             'api_response': api_response
         }
 
+    def add_product(self, product_data: dict, store_instance_id: int, store_type: str):
+        """
+        Add a new product without listing it on eBay.
+
+        :param product_data:
+        :type product_data: dict
+        :param store_instance_id:
+        :type store_instance_id:
+        :param store_type:
+        :type store_type:
+        :return: SureDone's API response
+        :rtype: JsonResponse
+        """
+        # Add Dropified data about connected store
+        product_data.update({
+            'dropifiedconnectedstoretype': store_type,
+            'dropifiedconnectedstoreid': store_instance_id,
+        })
+
+        # Transform the SureDone data from a dictionary format into an array-based bulk edit format
+        api_request_data = self.transform_variant_data_into_sd_list_format([product_data])
+        api_response = self.api.add_products_bulk(api_request_data, skip_all_channels=True)
+
+        return {
+            'parent_guid': product_data.get('guid', ''),
+            'api_response': api_response
+        }
+
     def sd_duplicate_product(self, product_data: list):
         """
         Add a new (duplicated) product without listing it on eBay.

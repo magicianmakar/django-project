@@ -561,18 +561,59 @@ class EbayStoreApi(ApiBase):
         return self.api_success()
 
     def post_supplier(self, request, user, data):
-        product_guid = data.get('product')
-        supplier_id = data.get('export')
-
-        product = get_object_or_404(EbayProduct, guid=product_guid)
-        permissions.user_can_edit(user, product)
-        store = product.store
-
-        if not store:
-            return self.api_error('eBay store not found', status=500)
-
         original_link = remove_link_query(data.get('original-link'))
+        if not original_link:
+            return self.api_error('Original Link is not set', status=500)
+
         supplier_url = remove_link_query(data.get('supplier-link'))
+        if not supplier_url:
+            return self.api_error('Supplier URL is missing', status=422)
+
+        product_guid = data.get('product')
+        supplier_id = data.get('export', None)
+        if supplier_id:
+            product = get_object_or_404(EbayProduct, guid=product_guid)
+            permissions.user_can_edit(user, product)
+            store = product.store
+
+            if not store:
+                return self.api_error('eBay store not found', status=500)
+        else:
+            product_title = data.get('product-title')
+            product_image = data.get('product-image')
+            product_price = data.get('product-price')
+            product_attributes = data.get('product-attributes')
+            store_id = data.get('ebay-store')
+            try:
+                store = EbayStore.objects.get(pk=store_id)
+                permissions.user_can_view(user, store)
+            except EbayStore.DoesNotExist:
+                return self.api_error('Store not found', status=404)
+            can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
+            if not can_add:
+                return self.api_error(
+                    'Your current plan allows up to %d saved product(s). Currently you have %d saved products.'
+                    % (total_allowed, user_count), status=401)
+
+            # Create the product from orders' data
+            product_data = {
+                "guid": product_guid,
+                "title": product_title,
+                "price": product_price,
+                "media1": product_image,
+                "varianttitle": product_attributes,
+                "store": store,
+                "originalurl": original_link,
+            }
+            notes = ''
+            ebay_utils = EbayUtils(user)
+            sd_product_save_result = ebay_utils.new_product_save(product_data, store, notes)
+
+            if not isinstance(sd_product_save_result, dict) or sd_product_save_result.get('api_response', {}).get('result') != 'success':
+                return
+
+            product = EbayProduct.objects.get(guid=product_guid)
+            supplier_id = product.default_supplier_id
 
         if get_domain(original_link) == 'dropified':
             try:
@@ -584,9 +625,6 @@ class EbayStoreApi(ApiBase):
 
         elif 'click.aliexpress.com' in original_link.lower():
             return self.api_error('The submitted Aliexpress link will not work properly with order fulfillment')
-
-        if not original_link:
-            return self.api_error('Original Link is not set', status=500)
 
         reload = False
         try:
