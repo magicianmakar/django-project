@@ -66,7 +66,7 @@ class AliexpressFulfillHelper():
         product_data = AliexpressProduct(product_id, aliexpress_account)
         if not aliexpress_product_result:
             aliexpress_product_result = product_data.get_product_data()
-            if aliexpress_product_result.get('error_code'):
+            if aliexpress_product_result is None:
                 return None
             else:
                 cache.set(cache_key, aliexpress_product_result, timeout=300)
@@ -360,7 +360,6 @@ class AliexpressFulfillHelper():
             return self.order_error("No AliExpress account found")
 
         aliexpress_variant_sku_dict = ''
-        variant_mapping_error_count = 0
 
         for line_id, line_item in self.items.items():
             aliexpress_variant_sku_dict = ''
@@ -414,8 +413,8 @@ class AliexpressFulfillHelper():
                 except:
                     aliexpress_variant_sku_dict = self.ds_product_data(line_item['source_id'], aliexpress_account)
                     if aliexpress_variant_sku_dict is None:
-                        self.order_item_error(line_id, 'Variant mapping is not set for this item. Please map it manually.')
-                        variant_mapping_error_count += 1
+                        self.order_item_error(line_id, 'This item is discontinued in Aliexpress.')
+                        continue
 
                     try:
                         product_variant_title_list = [v['title'] for v in line_item['variant']]
@@ -428,8 +427,8 @@ class AliexpressFulfillHelper():
                     if product_variant_title in aliexpress_variant_sku_dict:
                         item.sku_attr = aliexpress_variant_sku_dict[product_variant_title]
                     else:
-                        if variant_mapping_error_count == 0:
-                            self.order_item_error(line_id, 'Variant mapping is not set for this item')
+                        self.order_item_error(line_id, 'Variant mapping is not set for this item')
+                        continue
 
                 item.order_memo = self.order_notes
                 req.add_item(item)
@@ -486,8 +485,9 @@ class AliexpressProduct():
         aliexpress_product_obj = FindProductViaApi()
         aliexpress_product_obj.set_app_info(API_KEY, API_SECRET)
         aliexpress_product_obj.product_id = self.product_id
-        result = aliexpress_product_obj.getResponse(authrize=self.aliexpress_account.access_token)
-        return result['aliexpress_ds_product_get_response']['result']
+        response = aliexpress_product_obj.getResponse(authrize=self.aliexpress_account.access_token)
+        response = response['aliexpress_ds_product_get_response']
+        return response.get('result')
 
     def get_product_sku_data(self, aliexpress_product_data):
         final_skus = {}
