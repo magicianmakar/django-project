@@ -15,6 +15,7 @@ from shopify_orders.utils import OrderErrorsCheck, update_elasticsearch_shopify_
 from shopify_orders.models import ShopifyOrder
 from woocommerce_core.models import WooStore
 from bigcommerce_core.models import BigCommerceStore
+from commercehq_core.models import CommerceHQStore
 import json
 
 
@@ -255,6 +256,8 @@ def get_order_info_via_api(self, order, source_id, store_id, store_type=None, us
             store = WooStore.objects.get(id=store_id)
         elif store_type == 'bigcommerce':
             store = BigCommerceStore.objects.get(id=store_id)
+        elif store_type == 'chq':
+            store = CommerceHQStore.objects.get(id=store_id)
 
     if user is None:
         user = store.user

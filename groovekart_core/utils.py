@@ -288,6 +288,17 @@ def set_gkart_order_note(store, order_id, note):
     return r.ok
 
 
+def get_gkart_order(store, order_id):
+    api_url = store.get_api_url('orders.json')
+    r = store.request.post(api_url, json={
+        'order_id': safe_int(order_id)
+    })
+    r.raise_for_status()
+    if r.ok:
+        return r.json()
+    return ''
+
+
 def order_id_from_name(store, order_reference, default=None):
     ''' Get Order ID from Order Name '''
 

@@ -13,7 +13,13 @@ from shopified_core import permissions
 from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import fix_order_data, products_filter, safe_float, safe_int, safe_json, safe_str
-from suredone_core.utils import SureDoneOrderUpdater, SureDoneUtils, get_or_create_suredone_account, parse_suredone_date, sd_customer_address
+from suredone_core.utils import (
+    get_or_create_suredone_account,
+    parse_suredone_date,
+    sd_customer_address,
+    SureDoneOrderUpdater,
+    SureDoneUtils,
+)
 
 
 class EbayUtils(SureDoneUtils):
@@ -259,6 +265,54 @@ class EbayUtils(SureDoneUtils):
             product_url=safe_str(original_url)[:512],
             supplier_name=store_info.get('name') if store_info else '',
             supplier_url=store_info.get('url') if store_info else '',
+            is_default=True
+        )
+        created_product.set_default_supplier(supplier, commit=True)
+
+        return sd_api_result
+
+    def new_product_save(self, product_data: dict, store: EbayStore, notes: str):
+        """
+        Save a new product to SureDone
+
+        :param product_data: data API param
+        :type product_data: dict
+        :param store:
+        :type store:
+        :param notes:
+        :type notes:
+        :return:
+        :rtype:
+        """
+        if not self.api:
+            return
+
+        sd_api_result = self.add_product(
+            product_data,
+            store_instance_id=store.store_instance_id,
+            store_type='ebay'
+        )
+
+        # If the product was not successfully posted
+        if not isinstance(sd_api_result, dict) or sd_api_result.get('api_response', {}).get('result') != 'success':
+            return
+
+        parent_guid = sd_api_result.get('parent_guid')
+
+        # Fetch the product from SureDone and save the product if the product was successfully imported
+        created_product = self.get_ebay_product_details(parent_guid, add_model_fields={'notes': notes})
+
+        # If the SureDone returns no data, then the product did not get imported
+        if not created_product or not isinstance(created_product, EbayProduct):
+            return
+
+        # Init the default supplier
+        original_url = product_data.get('originalurl', '')
+        supplier = EbaySupplier.objects.create(
+            store=store,
+            product=created_product,
+            product_guid=parent_guid,
+            product_url=safe_str(original_url)[:512],
             is_default=True
         )
         created_product.set_default_supplier(supplier, commit=True)

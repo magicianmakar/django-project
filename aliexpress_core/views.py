@@ -1,9 +1,12 @@
+import json
+import os
+import random
 import requests
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils.decorators import method_decorator
@@ -67,7 +70,7 @@ class Products(TemplateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('aliexpress_settings.use'):
+        if request.user.can('find_products.view'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -81,8 +84,25 @@ class Products(TemplateView):
         sort = self.request.GET.get('sort', '-order_count')
         price_min = safe_int(self.request.GET.get('price_min', None))
         price_max = safe_int(self.request.GET.get('price_max', None))
+        upsell = not self.request.user.can('find_products.use')
 
         categories = AliexpressCategory.parent_ctaegories()
+        if upsell:
+            dest_file = os.path.join('aliexpress_core/tests/mock_products.json')
+            with open(dest_file, 'r') as read_file:
+                products_list = json.load(read_file)
+                random.shuffle(products_list),
+
+            context.update({
+                'upsell': upsell,
+                'categories': categories,
+                'products': products_list,
+                'total_results': f'{random.randint(65000, 75000)}',
+                'paginator': {'show': False},
+            })
+
+            return context
+
         aliexpress_account = self.request.user.aliexpress_account.first()
         if not aliexpress_account:
             aliexpress_account = AliexpressAccount()
@@ -139,7 +159,9 @@ class CategoryProducts(TemplateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('aliexpress_settings.use'):
+        if request.user.can('find_products.view'):
+            if not request.user.can('find_products.use'):
+                return redirect('aliexpress:products')
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -164,6 +186,7 @@ class CategoryProducts(TemplateView):
         params = {
             'user': self.request.user,
             'page': page,
+            'category_id': category.aliexpress_id,
             'currency': self.request.GET.get('currency', 'USD'),
             'sort': sort,
             'use_cache': False if use_filters else True,

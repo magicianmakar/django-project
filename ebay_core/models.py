@@ -161,6 +161,9 @@ class EbayProduct(SureDoneProductBase):
 
         return [i.details_for_view for i in all_variants_data]
 
+    def retrieve_variants(self):
+        return self.product_variants.all()
+
     def get_suppliers(self):
         return self.ebaysupplier_set.all().order_by('-is_default')
 

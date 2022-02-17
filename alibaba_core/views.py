@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.http import Http404
+from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
@@ -55,7 +56,9 @@ class Products(TemplateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('alibaba_integration.use'):
+        if request.user.can('find_products.view'):
+            if not request.user.can('find_products.use'):
+                return redirect('aliexpress:products')
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -113,7 +116,9 @@ class CategoryProducts(TemplateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('alibaba_integration.use'):
+        if request.user.can('find_products.view'):
+            if not request.user.can('find_products.use'):
+                return redirect('aliexpress:products')
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()

@@ -82,7 +82,7 @@
       </form>
       <li class="pull-right">
         <button type="button" class="btn btn-default"
-          data-toggle="modal" data-target="#modal-aliexpress-import-by-url">Import from URL or ID</button>
+          {% if not upsell %}data-toggle="modal" data-target="#modal-aliexpress-import-by-url"{% endif %}>Import from URL or ID</button>
       </li>
     </ul>
 
@@ -129,13 +129,18 @@
 
     <div class="row m-t">
       <div class="col-md-6">
+        {% if not error %}
         <h3 class="aliexpress-category-header">{{total_results}} items</h3>
+        {% endif %}
       </div>
     </div>
 
     <div class="tab-content">
         <div class="tab-pane active">
             <div class="panel-body no-background p-none m-t">
+                {% if upsell %}
+                {% include "common/partial/upsell.html" with top="366px" addon_id='' btn_link="/user/profile#plan" btn_text="Upgrade" message="Please upgrade your plan to view AliExpress Products" %}
+                {% endif %}
                 <div class="find-products-container">
                   <input type="hidden" id="aliexpress_product_id" name="aliexpress_product_id" value="">
                   {% for item in products %}
@@ -143,7 +148,7 @@
 
                     <div class="card-image">
                       <input class="aliexpress-product-select new-layout-hidden" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox"/>
-                      <a href="{{ item.original_url }}" target="_blank">
+                      <a href="{% if upsell %}#{% else %}{{ item.original_url }}{% endif %}" target="_blank">
                         <img class="no-img" src="{{item.images|force_https}}">
                       </a>
                     </div>
@@ -158,7 +163,7 @@
                       {% endif %}
                     </div>
                     <div class="card-content">
-                      <a href="{{ item.original_url }}" class="card-title" target="_blank"> {{item.title}}</a>
+                      <a href="{% if upsell %}#{% else %}{{ item.original_url }}{% endif %}" class="card-title" target="_blank"> {{item.title}}</a>
                       <span class="card-price">{% money_format item.price currency=item.currency %}</span> </br>
                       <span class="card-reviews" data-rating="{{ item.rating }}"></span>
                       <div class="card-orders m-t-xs">
@@ -167,14 +172,11 @@
                       </div>
                       <div class="row m-t">
                         <div class="col-md-4">
-                          <button class="btn btn-xs btn-primary aliexpress-import-btn"
-                          data-product-id="{{item.id}}" data-category-id="{{item.aliexpress_category_id}}"
-                          data-title="{{item.title}}" data-original-url={{item.original_url}}
-                          data-price="{{item.price}}" data-compare-at={{item.compare_at_price}}
-                          data-toggle="modal" data-target="#modal-aliexpress-import-products"> Import </button>
+                          <button class="btn btn-xs btn-primary aliexpress-import-btn" data-product-id="{{item.id}}"
+                            {% if not upsell %}data-toggle="modal" data-target="#modal-aliexpress-import-products"{% endif %}> Import </button>
                         </div>
                         <div class="col-md-8 text-right">
-                          <a href="{{ item.details_url }}" class="btn btn-xs" target="_blank">
+                          <a href="{% if upsell %}#{% else %}{{ item.details_url }}{% endif %}" class="btn btn-xs" target="_blank">
                             Details <i class="fa fa-external-link"></i>
                           </a>
                         </div>

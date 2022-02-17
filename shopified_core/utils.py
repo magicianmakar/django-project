@@ -26,9 +26,11 @@ from django.http import JsonResponse
 from django.template import Context, Template
 from django.template.defaultfilters import pluralize
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.module_loading import import_string
 
+from last_seen.models import BrowserUserAgent, ExtensionVersion, UserIpRecord
 from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
 
 ALIEXPRESS_REJECTED_STATUS = {
@@ -609,12 +611,78 @@ def get_client_ip(request):
     return ip
 
 
-def save_user_ip(request, user=None):
-    if user is None:
-        user = request.user
+def get_browser_user_agent(request):
+    user_agent = request.META.get('HTTP_USER_AGENT', 'N/A')
+    if user_agent:
+        browser, created = BrowserUserAgent.objects.get_or_create(
+            user_agent=user_agent
+        )
 
+        return browser
+
+
+def get_extension_version(request):
+    version = request.META.get('HTTP_X_EXTENSION_VERSION')
+    if version:
+        ext, created = ExtensionVersion.objects.get_or_create(
+            version=version
+        )
+
+        return ext
+
+
+def get_user_session(request):
+    try:
+        session = request.session._get_session_from_db()
+    except:
+        session = None
+
+    return session
+
+
+def get_current_request_hash(request):
     ip = get_client_ip(request)
+    user_agent = safe_str(request.META.get('HTTP_USER_AGENT', 'N/A'))
+    version = safe_str(request.META.get('HTTP_X_EXTENSION_VERSION', ''))
+
+    return f'request_hash_{hash_list([ip, user_agent, version])}'
+
+
+def save_user_ip(request):
+    if 'api/captcha-credits' in request.path or 'api/can' in request.path:
+        return
+
+    request_hash = get_current_request_hash(request)
+    if cache.get(request_hash):
+        return
+
+    user = request.user
+    ip = get_client_ip(request)
+    browser = get_browser_user_agent(request)
+    extension = get_extension_version(request)
+    session = get_user_session(request)
+
+    user_ip, created = UserIpRecord.objects.update_or_create(
+        user=user,
+        ip=ip,
+        browser=browser,
+        session=session,
+        defaults={
+            'last_seen_at': timezone.now(),
+        }
+    )
+
+    if created or not user_ip.country:
+        from last_seen.tasks import update_ip_details
+        update_ip_details.apply_async(args=[user_ip.id], expires=600)
+
+    if extension and not user_ip.extension:
+        user_ip.extension = extension
+        user_ip.save()
+
     user.profile.add_ip(ip)
+
+    cache.set(request_hash, 1, timeout=500)
 
 
 def unique_username(username='user', fullname=None):

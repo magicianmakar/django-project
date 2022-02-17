@@ -64,6 +64,7 @@ googleapis-common-protos==1.53.0
 greenlet==1.1.1
 gunicorn==20.1.0
 html5lib==1.0.1
+httpagentparser==1.9.2
 httplib2==0.19.1
 hyperlink==18.0.0
 idna==2.8

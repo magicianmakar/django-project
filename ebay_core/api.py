@@ -4,6 +4,8 @@ from celery import chain
 from requests.exceptions import HTTPError
 
 from django.conf import settings
+from django.core.cache import cache
+from app.celery_base import celery_app
 from django.core.exceptions import PermissionDenied
 from django.db.models import ObjectDoesNotExist
 from django.http import JsonResponse
@@ -18,13 +20,21 @@ from lib.exceptions import capture_exception, capture_message
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.decorators import HasSubuserPermission
-from shopified_core.utils import CancelledOrderAlert, clean_tracking_number, dict_val, get_domain, remove_link_query, safe_int
+from shopified_core.utils import (
+    CancelledOrderAlert,
+    clean_tracking_number,
+    dict_val,
+    get_domain,
+    remove_link_query,
+    safe_int,
+    safe_float
+)
 from suredone_core.models import SureDoneAccount
 
 from . import tasks
 from .api_helper import EbayApiHelper
-from .models import EbayBoard, EbayOrderTrack, EbayProduct, EbayStore, EbaySupplier
-from .utils import EbayOrderUpdater, EbayUtils, get_ebay_store_specific_currency_options, get_fulfillment_meta
+from .models import EbayBoard, EbayOrderTrack, EbayProduct, EbayStore, EbaySupplier, EbayProductVariant
+from .utils import EbayOrderUpdater, EbayUtils, get_ebay_store_specific_currency_options, get_fulfillment_meta, EbayOrderListQuery
 
 
 class EbayStoreApi(ApiBase):
@@ -551,18 +561,59 @@ class EbayStoreApi(ApiBase):
         return self.api_success()
 
     def post_supplier(self, request, user, data):
-        product_guid = data.get('product')
-        supplier_id = data.get('export')
-
-        product = get_object_or_404(EbayProduct, guid=product_guid)
-        permissions.user_can_edit(user, product)
-        store = product.store
-
-        if not store:
-            return self.api_error('eBay store not found', status=500)
-
         original_link = remove_link_query(data.get('original-link'))
+        if not original_link:
+            return self.api_error('Original Link is not set', status=500)
+
         supplier_url = remove_link_query(data.get('supplier-link'))
+        if not supplier_url:
+            return self.api_error('Supplier URL is missing', status=422)
+
+        product_guid = data.get('product')
+        supplier_id = data.get('export', None)
+        if supplier_id:
+            product = get_object_or_404(EbayProduct, guid=product_guid)
+            permissions.user_can_edit(user, product)
+            store = product.store
+
+            if not store:
+                return self.api_error('eBay store not found', status=500)
+        else:
+            product_title = data.get('product-title')
+            product_image = data.get('product-image')
+            product_price = data.get('product-price')
+            product_attributes = data.get('product-attributes')
+            store_id = data.get('ebay-store')
+            try:
+                store = EbayStore.objects.get(pk=store_id)
+                permissions.user_can_view(user, store)
+            except EbayStore.DoesNotExist:
+                return self.api_error('Store not found', status=404)
+            can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
+            if not can_add:
+                return self.api_error(
+                    'Your current plan allows up to %d saved product(s). Currently you have %d saved products.'
+                    % (total_allowed, user_count), status=401)
+
+            # Create the product from orders' data
+            product_data = {
+                "guid": product_guid,
+                "title": product_title,
+                "price": product_price,
+                "media1": product_image,
+                "varianttitle": product_attributes,
+                "store": store,
+                "originalurl": original_link,
+            }
+            notes = ''
+            ebay_utils = EbayUtils(user)
+            sd_product_save_result = ebay_utils.new_product_save(product_data, store, notes)
+
+            if not isinstance(sd_product_save_result, dict) or sd_product_save_result.get('api_response', {}).get('result') != 'success':
+                return
+
+            product = EbayProduct.objects.get(guid=product_guid)
+            supplier_id = product.default_supplier_id
 
         if get_domain(original_link) == 'dropified':
             try:
@@ -574,9 +625,6 @@ class EbayStoreApi(ApiBase):
 
         elif 'click.aliexpress.com' in original_link.lower():
             return self.api_error('The submitted Aliexpress link will not work properly with order fulfillment')
-
-        if not original_link:
-            return self.api_error('Original Link is not set', status=500)
 
         reload = False
         try:
@@ -809,10 +857,10 @@ class EbayStoreApi(ApiBase):
     def post_order_fulfill(self, request, user, data):
         store_id = data.get('store')
         order_id = safe_int(data.get('order_id'))
-        item_sku = data.get('line_id')
+        item_sku = data.get('line_id').split(',') if data.get('line_id') else []
         source_id = data.get('aliexpress_order_id')
 
-        if not (order_id and item_sku) or not store_id:
+        if not order_id or not store_id:
             return self.api_error('Required input is missing')
 
         try:
@@ -835,52 +883,62 @@ class EbayStoreApi(ApiBase):
 
         permissions.user_can_view(user, store)
 
+        if not item_sku:
+            filters = {
+                'oid': order_id
+            }
+            order = EbayOrderListQuery(user, store, params=filters).items()[0]
+            for item in order.items:
+                if EbayProductVariant.objects.filter(guid=item.get('id')):
+                    item_sku.append(item.get('id'))
+
         order_updater = EbayOrderUpdater(user, store, order_id)
 
-        tracks = EbayOrderTrack.objects.filter(store=store,
-                                               order_id=order_id,
-                                               line_id=item_sku)
-        tracks_count = tracks.count()
+        for line_id in item_sku:
+            tracks = EbayOrderTrack.objects.filter(store=store,
+                                                   order_id=order_id,
+                                                   line_id=line_id)
+            tracks_count = tracks.count()
 
-        if tracks_count > 1:
-            tracks.delete()
+            if tracks_count > 1:
+                tracks.delete()
 
-        if tracks_count == 1:
-            saved_track = tracks.first()
+            if tracks_count == 1:
+                saved_track = tracks.first()
 
-            if saved_track.source_id and source_id != saved_track.source_id:
-                return self.api_error('This order already has a supplier order ID', status=422)
+                if saved_track.source_id and source_id != saved_track.source_id:
+                    return self.api_error('This order already has a supplier order ID', status=422)
 
-        seen_source_orders = EbayOrderTrack.objects.filter(store=store, source_id=source_id)
-        seen_source_orders = seen_source_orders.values_list('order_id', flat=True)
+            seen_source_orders = EbayOrderTrack.objects.filter(store=store, source_id=source_id)
+            seen_source_orders = seen_source_orders.values_list('order_id', flat=True)
 
-        if len(seen_source_orders) and int(order_id) not in seen_source_orders and not data.get('forced'):
-            return self.api_error('Supplier order ID is linked to another order', status=409)
+            if len(seen_source_orders) and int(order_id) not in seen_source_orders and not data.get('forced'):
+                return self.api_error('Supplier order ID is linked to another order', status=409)
 
-        track, created = EbayOrderTrack.objects.update_or_create(
-            store=store,
-            order_id=order_id,
-            line_id=item_sku,
-            defaults={
-                'user': user.models_user,
+            track, created = EbayOrderTrack.objects.update_or_create(
+                store=store,
+                order_id=order_id,
+                line_id=line_id,
+                defaults={
+                    'user': user.models_user,
+                    'source_id': source_id,
+                    'source_type': data.get('source_type'),
+                    'created_at': timezone.now(),
+                    'updated_at': timezone.now(),
+                    'status_updated_at': timezone.now()})
+
+            if user.profile.get_config_value('aliexpress_as_notes', True):
+                order_updater.mark_as_ordered_note(line_id, source_id, track)
+
+            store.pusher_trigger('order-source-id-add', {
+                'track': track.id,
+                'order_id': order_id,
+                'line_id': line_id,
                 'source_id': source_id,
-                'source_type': data.get('source_type'),
-                'created_at': timezone.now(),
-                'updated_at': timezone.now(),
-                'status_updated_at': timezone.now()})
+                'source_url': track.get_source_url(),
+            })
 
-        if user.profile.get_config_value('aliexpress_as_notes', True):
-            order_updater.mark_as_ordered_note(item_sku, source_id, track)
-
-        store.pusher_trigger('order-source-id-add', {
-            'track': track.id,
-            'order_id': order_id,
-            'line_id': item_sku,
-            'source_id': source_id,
-            'source_url': track.get_source_url(),
-        })
-
-        order_updater.update_order_status('ORDERED')
+            order_updater.update_order_status('ORDERED')
 
         if not settings.DEBUG and 'oberlo.com' not in request.META.get('HTTP_REFERER', ''):
             order_updater.delay_save()
@@ -1072,3 +1130,42 @@ class EbayStoreApi(ApiBase):
             return self.api_error(f'Failed to update eBay currency settings. {result.get("error_message", "")}')
 
         return self.api_success()
+
+    def post_products_supplier_sync(self, request, user, data):
+        try:
+            store = EbayStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        products = [product for product in data.get('products').split(',') if product]
+        if not products:
+            return self.api_error('No selected products to sync', status=422)
+
+        user_store_supplier_sync_key = 'user_store_supplier_sync_{}_{}'.format(user.id, store.id)
+        if cache.get(user_store_supplier_sync_key) is not None:
+            cache.delete(user_store_supplier_sync_key)
+            return self.api_error('Sync in progress', status=404)
+        sync_price = data.get('sync_price', False)
+        price_markup = safe_float(data['price_markup'])
+        compare_markup = safe_float(data['compare_markup'])
+        sync_inventory = data.get('sync_inventory', False)
+        task = tasks.products_supplier_sync.apply_async(
+            args=[store.id, user.id, products, sync_price, price_markup, compare_markup, sync_inventory, user_store_supplier_sync_key], expires=180)
+        cache.set(user_store_supplier_sync_key, task.id, timeout=3600)
+        return self.api_success({'task': task.id})
+
+    def post_products_supplier_sync_stop(self, request, user, data):
+        try:
+            store = EbayStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        user_store_supplier_sync_key = 'user_store_supplier_sync_{}_{}'.format(user.id, store.id)
+        task_id = cache.get(user_store_supplier_sync_key)
+        if task_id is not None:
+            celery_app.control.revoke(task_id, terminate=True)
+            cache.delete(user_store_supplier_sync_key)
+            return self.api_success()
+        return self.api_error('No Sync in progress', status=404)

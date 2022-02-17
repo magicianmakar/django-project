@@ -158,7 +158,7 @@ def get_menu_item_data(request):
         'find-products': {
             'title': 'Find Products',
             'url_name': 'aliexpress:products',
-            'permissions': ['find_products.use', 'aliexpress_settings.use', 'alibaba_integration.use'],
+            'permissions': ['find_products.view', 'find_products.use'],
             'match': r'(/\w+)?/aliexpress/products',
             'is_ns_aware': False,
             'icon': 'img/find-products.svg',
