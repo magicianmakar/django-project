@@ -47,7 +47,7 @@ class SendToStoreMixin:
         woo_stores = user.profile.get_woo_stores()
         big_stores = user.profile.get_bigcommerce_stores()
         ebay_stores = user.profile.get_ebay_stores(do_sync=True)
-        fb_stores =  user.profile.get_fb_stores()
+        fb_stores = user.profile.get_fb_stores()
 
         store_data = dict(
             shopify=[{'id': s.id, 'value': s.title} for s in shopify_stores],

@@ -28,7 +28,7 @@ from leadgalaxy.utils import (
     get_ebay_affiliate_url,
     set_url_query
 )
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_exception, capture_message
 from profits.mixins import ProfitDashboardMixin
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired
@@ -46,7 +46,6 @@ from shopified_core.utils import (
 )
 from suredone_core.utils import get_daterange_filters
 
-from lib.exceptions import capture_message
 from .models import FBBoard, FBOrderTrack, FBProduct, FBStore, FBSupplier
 from .utils import FBListPaginator, FBOrderListQuery, FBUtils, get_store_from_request
 
