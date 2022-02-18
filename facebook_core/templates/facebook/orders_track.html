@@ -1,4 +1,4 @@
-{% extends "base_ebay_core.html" %}
+{% extends "base_fb_core.html" %}
 
 {% load static %}
 {% load template_helper %}
@@ -16,7 +16,7 @@
         {% include 'home/partial/tabs/orders_track.html' %}
 
         <ul class="actions">
-            {% include 'common/partial/order_track_filters.html' with platform='eBay' %}
+            {% include 'common/partial/order_track_filters.html' with platform='Facebook' %}
 
             {% if not paginator.is_infinte %}
             <li class="pull-right border-right">
@@ -39,7 +39,7 @@
                               </div>
                           </th>
                           <th style="width:26%">
-                              <a href="{% url_toggle 'sort' '-order,order' %}">eBay Order {% sort_icon 'sort' 'order' %}</a></th>
+                              <a href="{% url_toggle 'sort' '-order,order' %}">Facebook Order {% sort_icon 'sort' 'order' %}</a></th>
                           <th><a href="{% url_toggle 'sort' '-source,source' %}">Supplier Order {% sort_icon 'sort' 'source' %}</a></th>
                           <th><a href="{% url_toggle 'sort' '-status,status' %}">Supplier Status {% sort_icon 'sort' 'status' %}</a></th>
                           <th><a href="{% url_toggle 'sort' '-tracking,tracking' %}">Tracking Number {% sort_icon 'sort' 'tracking' %}</a></th>
@@ -67,8 +67,8 @@
                                 </div>
                             </td>
                             <td>
-                                <a class="itooltip font-common" href="{{item.get_ebay_link}}" target="_blank" title="{{item.line.title}}">
-                                    <span class="badge badge-primary">#{{item.order.details.ExtendedOrderID}}</span>
+                                <a class="itooltip font-common" href="{{item.get_fb_link}}" target="_blank" title="{{item.line.title}}">
+                                    <span class="badge badge-primary">#{{item.order.ordernumber}}</span>
                                     {{item.line.title|truncatewords:10}}
                                 </a>
                             </td>
@@ -85,7 +85,7 @@
                             <td class="no-wrap">{% date_humanize item.created_at %}</td>
                             <td class="no-wrap">{% date_humanize item.updated_at %}</td>
                             <td class="no-wrap">
-                                {% include 'common/partial/order_track_item_actions.html' with platform="eBay" %}
+                                {% include 'common/partial/order_track_item_actions.html' with platform="Facebook" %}
                             </td>
                         </tr>
                         {% empty %}
@@ -108,8 +108,8 @@
         </div>
     </div>
 
-{% cache 600 ebay_shipping_carriers2 store.id %}
-{% include 'ebay/partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
+{% cache 600 fb_shipping_carriers2 store.id %}
+{% include 'facebook/partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
 {% endcache %}
 
 {% include 'partial/tracking_update_modal.html' with store=store only %}
@@ -144,7 +144,7 @@
 {% block extrajs %}
 <script type="text/javascript">
     window.store = {
-        type: 'ebay',
+        type: 'fb',
         id: '{{ store.id }}',
     }
 </script>
@@ -155,8 +155,8 @@
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
     <script src="{% static 'js/daterangepicker.js' %}" type="text/javascript"></script>
     <script src="{% static 'prints/js/track_orders.js' %}" type="text/javascript"></script>
-    <script src="{% static 'ebay/js/orders_track.js' %}" type="text/javascript"></script>
-    <script src="{% static 'ebay/js/orders_track_update.js' %}" type="text/javascript"></script>
+    <script src="{% static 'facebook/js/orders_track.js' %}" type="text/javascript"></script>
+    <script src="{% static 'facebook/js/orders_track_update.js' %}" type="text/javascript"></script>
 {% endcompress %}
 
 {% endblock %}

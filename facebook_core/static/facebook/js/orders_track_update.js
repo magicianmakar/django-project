@@ -98,7 +98,7 @@
         }
 
         $.ajax({
-            url: api_url('order-fulfill', 'ebay'),
+            url: api_url('order-fulfill', 'fb'),
             data: {
                 store: btn.data('store'),
                 all: true,
@@ -169,7 +169,7 @@
         }
 
         $.ajax({
-            url: api_url('order-fulfill', 'ebay'),
+            url: api_url('order-fulfill', 'fb'),
             data: {
                 store: btn.data('store'),
                 all: true,
@@ -392,7 +392,7 @@
 
     function updateOrderStatus(order, source) {
         return $.ajax({
-            url: api_url('order-fulfill-update', 'ebay'),
+            url: api_url('order-fulfill-update', 'fb'),
             type: 'POST',
             data: {
                 'order': order.id,

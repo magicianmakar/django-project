@@ -7,6 +7,7 @@ import subusers.views
 
 urlpatterns = [
     url(r'^$', home.views.HomePageView.as_view(), name='index'),
+    url(r'^accept-auth/(?P<store_index>[0-9]+)$', fb_views.AuthAcceptRedirectView.as_view(), name='auth'),
     url(r'^products/?(?P<tpl>(grid|table))?$', fb_views.ProductsList.as_view(), name='products_list'),
     url(r'^product/(?P<store_index>[0-9]+)/(?P<pk>(.*?))$', fb_views.ProductDetailView.as_view(), name='product_detail'),
     url(r'^product/mapping/(?P<store>[0-9]+)/(?P<pk>(.*?))$', fb_views.ProductMappingView.as_view(), name='product_mapping'),

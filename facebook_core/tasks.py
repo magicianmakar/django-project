@@ -7,9 +7,9 @@ from django.template.defaultfilters import truncatewords
 from django.urls import reverse
 
 from app.celery_base import CaptureFailure, celery_app, retry_countdown
-from lib.exceptions import capture_exception, capture_message
+from lib.exceptions import capture_exception
 from shopified_core import permissions
-from shopified_core.utils import get_domain, http_exception_response, http_excption_status_code, safe_int, safe_json
+from shopified_core.utils import get_domain, http_exception_response, http_excption_status_code, safe_json
 from suredone_core.models import SureDoneAccount
 from suredone_core.utils import SureDonePusher
 
@@ -25,280 +25,35 @@ def add_new_fb_store(sd_account_id, pusher_channel, user_id, instance_id=None, e
     if error_message is not None:
         default_error_message = error_message
     else:
-        default_error_message = 'Failed to add a new eBay channel. Please try again or contact support@dropified.com'
+        default_error_message = 'Failed to add a new Facebook channel. ' \
+                                'Please try again or contact support@dropified.com'
 
     try:
-        try:
-            sd_account = SureDoneAccount.objects.get(id=sd_account_id)
-        except SureDoneAccount.DoesNotExist:
-            sd_pusher.trigger(default_event, {
-                'success': False,
-                'error': 'Something went wrong. Please try again.'
-            })
-            return
+        sd_account = SureDoneAccount.objects.get(id=sd_account_id)
 
-        # Step 1: Get all user options config
+        # Step 1: Find a channel to authorize
         fb_utils = FBUtils(user, account_id=sd_account.id)
-        sd_config = fb_utils.get_all_user_options()
-        fb_plugin_settings = safe_json(sd_config.get('plugin_settings', '{}')).get('channel', {}).get('fb', {})
+        next_instance_id = fb_utils.find_next_instance_to_authorize()
 
-        # Step 2: Find an instance to authorize
-        if instance_id is not None:
-            channel_inst_to_use = instance_id
-        else:
-            # Check if the default fb instance has already been authorized
-            channel_inst_to_use = 1
-            default_fb_token = sd_config.get('fb_token') or sd_config.get('fb_token_oauth')
+        # Step 2: Create a new instance
+        created_instance_id = fb_utils.create_new_fb_store_instance(next_instance_id)
 
-            # If the user's default fb is already authorized, try finding an unauthorized channel from plugins list
-            if default_fb_token:
-                channel_inst_to_use = None
+        # Step 3: Get Auth URL
+        auth_url = fb_utils.get_auth_url(created_instance_id)
 
-                # Parse plugin settings
-                for inst_config in fb_plugin_settings.values():
-                    inst_id = safe_int(inst_config.get('instanceId'), inst_config.get('instanceId'))
-                    inst_prefix = fb_utils.get_fb_prefix(inst_id)
-                    inst_token = sd_config.get(f'{inst_prefix}_token') or sd_config.get(f'{inst_prefix}_token_oauth')
-
-                    # Found an unauthorized instance
-                    if isinstance(inst_token, str) and len(inst_token) == 0:
-                        channel_inst_to_use = inst_id
-                        break
-
-        # If the default and all additional fb plugins are already authorized, create a new fb instance
-        if channel_inst_to_use is None:
-            sd_add_inst_resp = fb_utils.api.add_new_fb_instance()
-
-            # If failed to add a new fb instance
-            try:
-                sd_add_inst_resp.raise_for_status()
-                resp_data = sd_add_inst_resp.json()
-
-                if resp_data.get('result') != 'success':
-                    capture_message('Request to add a new eBay store instance failed.', extra={
-                        'suredone_account_id': sd_account_id,
-                        'response_code': sd_add_inst_resp.status_code,
-                        'response_reason': sd_add_inst_resp.reason,
-                        'response_data': resp_data
-                    })
-                    sd_pusher.trigger(default_event, {
-                        'success': False,
-                        'error': default_error_message
-                    })
-                    return
-            except Exception:
-                capture_exception(extra={
-                    'description': 'Error when trying to add a new fb instance to a SureDone account',
-                    'suredone_account_id': sd_account_id,
-                    'response_code': sd_add_inst_resp.status_code,
-                    'response_reason': sd_add_inst_resp.reason,
-                })
-                sd_pusher.trigger(default_event, {
-                    'success': False,
-                    'error': default_error_message
-                })
-                return
-
-            # Calculate the new fb instance ID without calling the SD API again
-            # Each new channel ID is incremented by 1, therefore, the new ID is the largest ID + 1
-            all_fb_ids = [safe_int(x.get('instanceId')) for x in fb_plugin_settings.values()]
-            channel_inst_to_use = max(all_fb_ids) + 1 if all_fb_ids else 2
-            channel_prefix = fb_utils.get_fb_prefix(channel_inst_to_use)
-            instance_enabled = True
-        else:
-            channel_prefix = fb_utils.get_fb_prefix(channel_inst_to_use)
-            instance_enabled = sd_config.get(f'site_{channel_prefix}connect', 'off') == 'on'
-
-        # Step 3: Enable the channel instance if not enabled yet
-        if not instance_enabled:
-            sd_enable_channel_resp = fb_utils.api.update_user_settings({f'site_{channel_prefix}connect': 'on'})
-
-            # If failed to enable the fb channel instance
-            try:
-                sd_enable_channel_resp.raise_for_status()
-                resp_data = sd_enable_channel_resp.json()
-
-                if resp_data.get('result') != 'success':
-                    capture_message('Request to enable an eBay store instance failed.', extra={
-                        'suredone_account_id': sd_account_id,
-                        'store_instance_id': channel_inst_to_use,
-                        'response_code': sd_enable_channel_resp.status_code,
-                        'response_reason': sd_enable_channel_resp.reason,
-                        'response_data': resp_data
-                    })
-                    sd_pusher.trigger(default_event, {
-                        'success': False,
-                        'error': default_error_message
-                    })
-                    return
-            except Exception:
-                capture_exception(extra={
-                    'description': 'Error when trying to enable an Facebook instance on a SureDone account',
-                    'suredone_account_id': sd_account_id,
-                    'store_instance_id': channel_inst_to_use,
-                    'response_code': sd_enable_channel_resp.status_code,
-                    'response_reason': sd_enable_channel_resp.reason,
-                })
-                sd_pusher.trigger(default_event, {
-                    'success': False,
-                    'error': default_error_message
-                })
-                return
-
-        # Step 4: Get an fb authorization url
-        sd_api_request_data = {'instance': channel_inst_to_use}
-        sd_auth_channel_resp = fb_utils.api.authorize_fb_channel(sd_api_request_data, legacy=True)
-        try:
-            sd_auth_channel_resp.raise_for_status()
-            resp_data = sd_auth_channel_resp.json()
-
-            sd_resp_results = resp_data.get('results', {})
-            sd_auth_url = sd_resp_results.get('successful', {}).get('auth_url')
-
-            # If failed to get an fb channel authorization url
-            if not sd_auth_url:
-                capture_message('Received errors when requesting a SureDone eBay authorization url.', extra={
-                    'suredone_account_id': sd_account_id,
-                    'store_instance_id': channel_inst_to_use,
-                    'response_code': sd_auth_channel_resp.status_code,
-                    'response_reason': sd_auth_channel_resp.reason,
-                    'response_data': resp_data
-                })
-                sd_pusher.trigger(default_event, {
-                    'success': False,
-                    'error': default_error_message
-                })
-                return
-        except Exception:
-            capture_exception(extra={
-                'description': 'Error when trying to parse a SureDone eBay authorization response.',
-                'suredone_account_id': sd_account_id,
-                'store_instance_id': channel_inst_to_use,
-                'response_code': sd_auth_channel_resp.status_code,
-                'response_reason': sd_auth_channel_resp.reason,
-            })
-            sd_pusher.trigger(default_event, {
-                'success': False,
-                'error': default_error_message
-            })
-            return
+        if not auth_url:
+            raise HTTPError('Invalid auth_url returned from SureDone')
 
         sd_pusher.trigger(default_event, {
             'success': True,
-            'auth_url': sd_auth_url
+            'auth_url': auth_url,
         })
+
         return sd_account_id
-    except:
+    except Exception:
         sd_pusher.trigger(default_event, {
             'success': False,
-            'error': 'Something went wrong. Please contact Dropifed support.'
-        })
-
-
-@celery_app.task(base=CaptureFailure)
-def get_advanced_options(user_id, store_id, pusher_channel, event_name=None):
-    pusher_event = event_name if event_name else 'fb-advanced-settings-load'
-    sd_pusher = SureDonePusher(pusher_channel)
-    try:
-        store = FBStore.objects.get(id=store_id)
-        user = User.objects.get(id=user_id)
-
-        permissions.user_can_view(user, store)
-        fb_utils = FBUtils(user)
-
-        # refresh fb profiles before getting all options
-        resp = None
-        try:
-            resp = fb_utils.api.refresh_fb_profiles(instance_id=store.filter_instance_id)
-            resp.raise_for_status()
-        except HTTPError:
-            try:
-                resp_body = resp.json()
-                error_message = resp_body.get('message')
-                if 'Token does not match' in error_message:
-                    error_message = 'Please reauthorize the store'
-            except JSONDecodeError:
-                error_message = None
-            error_message = error_message if error_message else 'Unknown Issue'
-            sd_pusher.trigger(pusher_event, {
-                'success': False,
-                'store_id': store_id,
-                'error': f'API credentials are not correct\nError: {error_message}.'
-            })
-            return
-
-        all_options = fb_utils.get_all_user_options()
-        if not isinstance(all_options, dict):
-            sd_pusher.trigger(pusher_event, {
-                'success': False,
-                'store_id': store_id,
-                'error': 'Failed to get eBay options. Please try again.'
-            })
-            return
-
-        fb_prefix = fb_utils.get_fb_prefix(store.store_instance_id)
-        fb_config = safe_json(all_options.get(f'{fb_prefix}_attribute_mapping'))
-        fb_site_id = all_options.get(f'{fb_prefix}_siteid')
-        fb_site_id_options = [
-            (1, 'US'),
-            (2, 'Canada'),
-            (3, 'UK'),
-            (15, 'Australia'),
-            (16, 'Austria'),
-            (23, 'Belgium (French)'),
-            (71, 'France'),
-            (77, 'Germany'),
-            (100, 'eBay Motors'),
-            (101, 'Italy'),
-            (123, 'Belgium (Dutch)'),
-            (146, 'Netherlands'),
-            (186, 'Spain'),
-            (193, 'Switzerland'),
-            (201, 'Hong Kong'),
-            (203, 'India'),
-            (205, 'Ireland'),
-            (207, 'Malaysia'),
-            (210, 'Canada (French)'),
-            (211, 'Philippines'),
-            (212, 'Poland'),
-            (216, 'Singapore'),
-            (218, 'Sweden'),
-        ]
-        if not fb_config:
-            sd_pusher.trigger(pusher_event, {
-                'success': False,
-                'store_id': store_id,
-                'error': 'No eBay options found. Please try again.'
-            })
-            return
-
-        profile_options = fb_config.get('profile', {})
-
-        sd_pusher.trigger(pusher_event, {
-            'success': True,
-            'store_id': store_id,
-            'options': {
-                'payment_profile_options': list(profile_options.get('payment', {}).values()),
-                'return_profile_options': list(profile_options.get('return', {}).values()),
-                'shippping_profile_options': list(profile_options.get('shipping', {}).values()),
-                'site_id_options': fb_site_id_options,
-            },
-            'settings': {
-                'payment_profile_id': fb_config.get('paymentprofileid', ''),
-                'return_profile_id': fb_config.get('returnprofileid', ''),
-                'shipping_profile_id': fb_config.get('shippingprofileid', ''),
-                'fb_siteid': fb_site_id,
-            },
-        })
-
-    except Exception as e:
-        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
-            capture_exception(extra=http_exception_response(e))
-
-        sd_pusher.trigger(pusher_event, {
-            'success': False,
-            'error': http_exception_response(e, json=True).get('message', 'Server Error'),
-            'store_id': store_id,
+            'error': default_error_message,
         })
 
 

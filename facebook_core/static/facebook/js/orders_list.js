@@ -67,10 +67,10 @@ $('#fullfill-order-btn').click(function (e) {
     var orderId = $('#modal-fulfillment #fulfill-order-id').val();
     var lineId = $('#modal-fulfillment #fulfill-line-id').val();
 
-    ga('clientTracker.send', 'event', 'Order Manual Fulfillment', 'eBay', sub_conf.shop);
+    ga('clientTracker.send', 'event', 'Order Manual Fulfillment', 'Facebook', sub_conf.shop);
 
     $.ajax({
-        url: api_url('fulfill-order', 'ebay'),
+        url: api_url('fulfill-order', 'fb'),
         type: 'POST',
         data:  $('#modal-fulfillment form').serialize(),
         context: {btn: $(this), orderId: orderId, lineId: lineId},
@@ -119,7 +119,7 @@ $('#fullfill-order-btn').click(function (e) {
 $('.filter-btn').click(function (e) {
     Cookies.set('orders_filter', !$('#filter-form').hasClass('active'));
 
-    ga('clientTracker.send', 'event', 'Order Filter Toggle', 'eBay', sub_conf.shop);
+    ga('clientTracker.send', 'event', 'Order Filter Toggle', 'Facebook', sub_conf.shop);
 
     $('#filter-form').toggleClass('active');
 });
@@ -152,10 +152,10 @@ $('.save-filter-btn').click(function (e) {
         }
     });
 
-    ga('clientTracker.send', 'event', 'Order Save Filter', 'eBay', sub_conf.shop);
+    ga('clientTracker.send', 'event', 'Order Save Filter', 'Facebook', sub_conf.shop);
 
     $.ajax({
-        url: api_url('save-orders-filter', 'ebay'),
+        url: api_url('save-orders-filter', 'fb'),
         type: 'POST',
         data: filterFormEl.serialize(),
         success: function (data) {
@@ -206,7 +206,7 @@ function confirmDeleteOrderID(e) {
         if (isConfirm) {
             deleteOrderID(tr_parent, order_id, line_id);
 
-            ga('clientTracker.send', 'event', 'Delete Order ID', 'eBay', sub_conf.shop);
+            ga('clientTracker.send', 'event', 'Delete Order ID', 'Facebook', sub_conf.shop);
         }
     });
 }
@@ -229,7 +229,7 @@ function deleteOrderID(tr_parent, order_id, line_id) {
     function(isConfirm) {
         if (isConfirm) {
             $.ajax({
-                url: api_url('order-fulfill', 'ebay') + '?' + $.param({'order_id': order_id, 'line_id': line_id, }),
+                url: api_url('order-fulfill', 'fb') + '?' + $.param({'order_id': order_id, 'line_id': line_id, }),
                 type: 'DELETE',
                 context: {tr: tr_parent},
                 success: function (data) {
@@ -388,7 +388,7 @@ function addOrderSourceRequest(data_api, callback) {
     callback = typeof(callback) === 'undefined' ? function() {} : callback;
 
     $.ajax({
-        url: api_url('order-fulfill', 'ebay'),
+        url: api_url('order-fulfill', 'fb'),
         type: 'POST',
         data: data_api,
         context: {
@@ -502,10 +502,10 @@ $('.note-panel .note-edit-save').click(function (e) {
     var order_id = $(this).attr('order-id');
     var store = $(this).attr('store-id');
 
-    ga('clientTracker.send', 'event', 'Edit Order Note', 'eBay', sub_conf.shop);
+    ga('clientTracker.send', 'event', 'Edit Order Note', 'Facebook', sub_conf.shop);
 
     $.ajax({
-        url: api_url('order-note', 'ebay'),
+        url: api_url('order-note', 'fb'),
         type: 'POST',
         data: {
             'order_id': order_id,
@@ -515,7 +515,7 @@ $('.note-panel .note-edit-save').click(function (e) {
         context: {btn: this, parent: parent},
         success: function (data) {
             if (data.status === 'ok') {
-                toastr.success('Order Note', 'Order note saved in eBay store.');
+                toastr.success('Order Note', 'Order note saved in Facebook store.');
                 addOrderNote(order_id, note);
             } else {
                 displayAjaxError('Add Note', data);
@@ -614,7 +614,7 @@ $('.hide-ordered-btn').click(function () {
         });
     }
 
-    ga('clientTracker.send', 'event', 'Hide Ordered Click', 'eBay', sub_conf.shop);
+    ga('clientTracker.send', 'event', 'Hide Ordered Click', 'Facebook', sub_conf.shop);
 });
 
 $('.hide-non-connected-btn').click(function () {
@@ -650,19 +650,23 @@ $('.hide-non-connected-btn').click(function () {
         });
     }
 
-    ga('clientTracker.send', 'event', 'Hide Non-Connected Click', 'eBay', sub_conf.shop);
+    ga('clientTracker.send', 'event', 'Hide Non-Connected Click', 'Facebook', sub_conf.shop);
 });
 
 /* Connect Product */
 $('.add-supplier-btn').click(function (e) {
     e.preventDefault();
 
-    ga('clientTracker.send', 'event', 'Order Add Supplier', 'eBay', sub_conf.shop);
+    ga('clientTracker.send', 'event', 'Order Add Supplier', 'Facebook', sub_conf.shop);
 
     var modalSupplierLinkEl = $('#modal-supplier-link');
 
-    modalSupplierLinkEl.prop('ebay-store', $(this).attr('store-id'));
-    modalSupplierLinkEl.prop('ebay-product', $(this).attr('ebay-product'));
+    modalSupplierLinkEl.prop('fb-store', $(this).attr('store-id'));
+    modalSupplierLinkEl.prop('fb-product', $(this).attr('fb-product'));
+    modalSupplierLinkEl.prop('fb-product-title', $(this).attr('fb-product-title'));
+    modalSupplierLinkEl.prop('fb-product-price', $(this).attr('fb-product-price'));
+    modalSupplierLinkEl.prop('fb-product-image', $(this).attr('fb-product-image'));
+    modalSupplierLinkEl.prop('fb-product-attributes', $(this).attr('fb-product-attributes'));
 
     modalSupplierLinkEl.modal('show');
 });
@@ -686,16 +690,25 @@ $('.add-supplier-info-btn').click(function (e) {
     originalLinkEl.prop('disabled', true);
     supplierNameEl.prop('disabled', true);
     supplierLinkEl.prop('disabled', true);
+
+    var modalSupplierLink = $('#modal-supplier-link');
+    var data = {
+        'original-link': originalLinkEl.val(),
+        'supplier-name': supplierNameEl.val(),
+        'supplier-link': supplierLinkEl.val(),
+        'product': modalSupplierLink.prop('fb-product'),
+        'product-title': modalSupplierLink.prop('fb-product-title'),
+        'product-price': modalSupplierLink.prop('fb-product-price'),
+        'product-image': modalSupplierLink.prop('fb-product-image'),
+        'product-attributes': modalSupplierLink.prop('fb-product-attributes'),
+        'fb-store': modalSupplierLink.prop('fb-store'),
+    };
+
     $.ajax({
         type: 'POST',
-        url: api_url('supplier', 'ebay'),
+        url: api_url('supplier', 'fb'),
         context: $(this),
-        data: {
-            'original-link': originalLinkEl.val(),
-            'supplier-name': supplierNameEl.val(),
-            'supplier-link': supplierLinkEl.val(),
-            'product': $('#modal-supplier-link').prop('ebay-product'),
-        },
+        data: data,
         success: function(data) {
             toastr.success('Supplier is connected!','Add Supplier');
 
@@ -832,7 +845,7 @@ function pusherSub() {
         var param = getOrderNotesParam();
         if (param.order_ids.length > 0) {
             param.order_ids = param.order_ids.join(',');
-            return $.get(api_url('order-notes', 'ebay') + '?' + $.param(param));
+            return $.get(api_url('order-notes', 'fb') + '?' + $.param(param));
         }
     };
 
@@ -966,7 +979,7 @@ $(document).ready(function() {
 $('select#product').select2({
     placeholder: 'Select a Product',
     ajax: {
-        url: "/ebay/autocomplete/title",
+        url: "/fb/autocomplete/title",
         dataType: 'json',
         delay: 250,
         data: function(params) {

@@ -1,6 +1,18 @@
 {% load perms_helper %}
 {% load static %}
 
+{% if request.user|can:'facebook.use' %}
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v12.0&appId=911185429584823&autoLogAppEvents=1"
+        nonce="JLNkdJEJ"></script>
+    <script>
+        console.log('DEBUG: hello');
+        FB.Event.subscribe('auth.login', function () {
+          window.location = "http://example.com";
+      });
+    </script>
+{% endif %}
+
 <div id="modal-add-all-store-form" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -25,6 +37,10 @@
 
                     {% if request.user|can:'bigcommerce.use' %}
                     <li><a href="#bigcommerce-section" data-toggle="tab"></a></li>
+                    {% endif %}
+
+                    {% if request.user|can:'facebook.use' %}
+                    <li><a href="#fb-section" data-toggle="tab"></a></li>
                     {% endif %}
                 </ul>
                 <div class="tab-content">
@@ -70,6 +86,13 @@
                                 <label style="display: block; margin-bottom: 5px;">
                                     <input name="amt" value="#ebay-section" type="radio">
                                     <span class="label-text">eBay</span>
+                                </label>
+                                {% endif %}
+
+                                {% if request.user|can:'facebook.use' %}
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#fb-section" type="radio">
+                                    <span class="label-text">Facebook</span>
                                 </label>
                                 {% endif %}
                             </fieldset>
@@ -276,6 +299,58 @@
                                         {% if not user.profile.get_sd_accounts|length %}data-loading-text="Setting up eBay configurations..."{% endif %}>
                                         Add store
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Facebook -->
+                    <div id="fb-section" class="tab-pane fade">
+                        <div class="row">
+                            <div class="col-sm-12" style="max-height: 500px; overflow-y: scroll;">
+                                <h3 class="m-t-none m-b">Add Facebook Store</h3>
+                                <p class="m-b">
+                                    <strong>Login with Facebook & Verify Business User</strong><br/>
+                                    Click "Authorize Facebook" below to start the authorization process. Verify that the user is connected to
+                                    the Facebook business page or Instagram business account that will be associated with the SureDone product catalog.
+                                </p>
+                                {% if not user.profile.get_sd_accounts|length %}
+                                    <div class="alert alert-info" role="alert">
+                                        <i class="fa fa-info-circle"></i>
+                                        Please note that eBay setup may take longer when adding an eBay store for the first time.
+                                    </div>
+                                {% endif %}
+
+                                <img src="{% static 'img/ebay-auth-grant-access-page.png' %}"
+                                     class="img-responsive center-block"
+                                     style="max-width: 80%;"
+                                     alt="eBay App Authorization page">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <hr style="margin:20px -15px">
+                                <div style="display: flex; align-items: center; justify-content: space-between">
+                                    <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                                    {% comment %}<button type="button" class="btn btn-primary pull-right" id="ebay-store-create-submit-btn"
+                                            {% if not user.profile.get_sd_accounts|length %}data-loading-text="Setting up eBay configurations..."{% endif %}>
+                                            Add store
+                                    </button>{% endcomment %}
+                                    <div id="fb-store-create-submit-btn" style="cursor:pointer;">
+                                        <div class="fb-login-button" data-width="" data-size="medium"
+                                             data-button-type="continue_with" data-layout="default" data-auto-logout-link="false"
+                                             href="https://app.dropified.com"
+                                             style="pointer-events: none !important;"
+                                             data-use-continue-as="true"></div>
+                                    </div>
+                                    {% comment %}<a id="authorize-channel-button" class="facebook-auth btn btn-secondary"
+                                       href="https://www.facebook.com/v12.0/dialog/oauth?client_id=182222541802320&amp;redirect_uri=https://app.suredone.com/auth/facebook/5&amp;scope=email%2Cbusiness_management%2Ccatalog_management%2Cpages_read_engagement&amp;state=5220361864110004691&amp;response_type=code%2Cgranted_scopes">
+                                        <span class="icon-wrapper">
+                                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" size="22" class="facebook-icon m-0" height="22" width="22" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14 0 55.52 4.84 55.52 4.84v61h-31.28c-30.8 0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z">
+                                                </path>
+                                            </svg>
+                                        </span>Sign in with Facebook</a>{% endcomment %}
+                                </div>
                             </div>
                         </div>
                     </div>

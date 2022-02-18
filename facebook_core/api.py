@@ -23,8 +23,8 @@ from suredone_core.models import SureDoneAccount
 
 from . import tasks
 from .api_helper import FBApiHelper
-from .models import FBBoard, FBOrderTrack, FBProduct, FBStore, FBSupplier
-from .utils import FBOrderUpdater, FBUtils, get_fulfillment_meta
+from .models import FBBoard, FBOrderTrack, FBProduct, FBProductVariant, FBStore, FBSupplier
+from .utils import FBOrderListQuery, FBOrderUpdater, FBUtils, get_fulfillment_meta
 
 
 class FBStoreApi(ApiBase):
@@ -157,29 +157,6 @@ class FBStoreApi(ApiBase):
         pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
         return self.api_success({'pusher': pusher})
 
-    def get_advanced_settings(self, request, user, data):
-        """
-        Get fb advanced settings contents. The settings include store's default shipping, return policies, etc.
-        """
-        store_id = request.GET.get('store')
-
-        if not store_id:
-            return self.api_error('Missing a required store parameter.')
-
-        store = get_object_or_404(FBStore, id=store_id)
-        permissions.user_can_view(user, store)
-
-        pusher_channel = f'user_{user.id}'
-
-        tasks.get_advanced_options.apply_async(kwargs={
-            'user_id': user.id,
-            'store_id': store_id,
-            'pusher_channel': pusher_channel,
-        })
-
-        pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
-        return self.api_success({'pusher': pusher})
-
     def post_advanced_settings(self, request, user, data):
         """
         Update store's advanced settings. The settings include store's default shipping, return policies, etc.
@@ -305,30 +282,6 @@ class FBStoreApi(ApiBase):
             self.api_error('Search term cannot be empty', status=404)
         return self.api_success({
             'data': FBUtils(user).search_categories(search_term)
-        })
-
-    def get_category_specifics(self, request, user, data):
-        """
-        Get all required and recommended fields for an FB category provided its ID
-
-        :param request:
-        :param user:
-        :param data: API request params containing values for:
-            fb_category_id (int): fb category ID, use get_search_categories API to get category IDs
-            site_id (int): fb site ID:
-                https://developer.fb.com/Devzone/merchandising/docs/concepts/siteidtoglobalid.html
-        :return: Recommended and required fields for the provided category ID
-        :rtype: JsonResponse
-        """
-        fb_category_id = data.get('category_id')
-        site_id = data.get('site_id')
-        if site_id == '':
-            site_id = 0
-
-        if not fb_category_id:
-            self.api_error('Facebook category ID cannot be empty', status=404)
-        return self.api_success({
-            'data': FBUtils(user).get_category_specifics(site_id, fb_category_id)
         })
 
     def post_product_export(self, request, user, data):
@@ -524,18 +477,74 @@ class FBStoreApi(ApiBase):
         return self.api_success()
 
     def post_supplier(self, request, user, data):
-        product_guid = data.get('product')
-        supplier_id = data.get('export')
-
-        product = get_object_or_404(FBProduct, guid=product_guid)
-        permissions.user_can_edit(user, product)
-        store = product.store
-
-        if not store:
-            return self.api_error('Facebook store not found', status=500)
-
         original_link = remove_link_query(data.get('original-link'))
+        if not original_link:
+            return self.api_error('Original Link is not set', status=500)
+
         supplier_url = remove_link_query(data.get('supplier-link'))
+        if not supplier_url:
+            return self.api_error('Supplier URL is missing', status=422)
+
+        product_guid = data.get('product')
+
+        if not product_guid:
+            return self.api_error('Product ID is missing', status=422)
+
+        supplier_id = data.get('export', None)
+
+        try:
+            product = FBProduct.objects.get(guid=product_guid)
+            permissions.user_can_edit(user, product)
+            store = product.store
+
+            if not store:
+                return self.api_error('Facebook store not found', status=404)
+        except FBProduct.DoesNotExist:
+            product_title = data.get('product-title')
+            product_image = data.get('product-image')
+            product_price = data.get('product-price')
+            product_attributes = data.get('product-attributes')
+            store_id = data.get('fb-store')
+
+            try:
+                store = FBStore.objects.get(pk=store_id)
+                permissions.user_can_view(user, store)
+            except FBStore.DoesNotExist:
+                return self.api_error('Store not found', status=404)
+
+            can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
+            if not can_add:
+                return self.api_error(f'Your current plan allows up to {total_allowed} saved product(s).'
+                                      f' Currently you have {user_count} saved products.', status=401)
+
+            # Create the product from orders' data
+            product_data = {
+                'guid': product_guid,
+                'title': product_title,
+                'price': product_price,
+                'media1': product_image,
+                'varianttitle': product_attributes,
+                'store': store,
+                'originalurl': original_link,
+            }
+            notes = ''
+            fb_utils = FBUtils(user)
+            resp = fb_utils.new_product_save(product_data, store, notes)
+
+            if not isinstance(resp, dict) or resp.get('api_response', {}).get('1', {}).get('result') != 'success':
+                capture_message(
+                    'Error connecting a Facebook supplier.',
+                    extra={
+                        'guid': product_guid,
+                        'sd_api_response': resp,
+                        'user_id': user.id,
+                        'store_id': store.id,
+                    }
+                )
+                return self.api_error('Failed to connect the product. Please try again later.', status=400)
+
+            product = FBProduct.objects.get(guid=product_guid)
+            supplier_id = product.default_supplier_id
 
         if get_domain(original_link) == 'dropified':
             try:
@@ -782,10 +791,10 @@ class FBStoreApi(ApiBase):
     def post_order_fulfill(self, request, user, data):
         store_id = data.get('store')
         order_id = safe_int(data.get('order_id'))
-        item_sku = data.get('line_id')
+        item_sku = data.get('line_id').split(',') if data.get('line_id') else []
         source_id = data.get('aliexpress_order_id')
 
-        if not (order_id and item_sku) or not store_id:
+        if not order_id or not store_id:
             return self.api_error('Required input is missing')
 
         try:
@@ -808,50 +817,62 @@ class FBStoreApi(ApiBase):
 
         permissions.user_can_view(user, store)
 
+        if not item_sku:
+            filters = {
+                'oid': order_id
+            }
+            order = FBOrderListQuery(user, store, params=filters).items()[0]
+            for item in order.items:
+                if FBProductVariant.objects.filter(guid=item.get('id')):
+                    item_sku.append(item.get('id'))
+
         order_updater = FBOrderUpdater(user, store, order_id)
 
-        tracks = FBOrderTrack.objects.filter(store=store, order_id=order_id, line_id=item_sku)
-        tracks_count = tracks.count()
+        for line_id in item_sku:
+            tracks = FBOrderTrack.objects.filter(store=store,
+                                                 order_id=order_id,
+                                                 line_id=line_id)
+            tracks_count = tracks.count()
 
-        if tracks_count > 1:
-            tracks.delete()
+            if tracks_count > 1:
+                tracks.delete()
 
-        if tracks_count == 1:
-            saved_track = tracks.first()
+            if tracks_count == 1:
+                saved_track = tracks.first()
 
-            if saved_track.source_id and source_id != saved_track.source_id:
-                return self.api_error('This order already has a supplier order ID', status=422)
+                if saved_track.source_id and source_id != saved_track.source_id:
+                    return self.api_error('This order already has a supplier order ID', status=422)
 
-        seen_source_orders = FBOrderTrack.objects.filter(store=store, source_id=source_id)
-        seen_source_orders = seen_source_orders.values_list('order_id', flat=True)
+            seen_source_orders = FBOrderTrack.objects.filter(store=store, source_id=source_id)
+            seen_source_orders = seen_source_orders.values_list('order_id', flat=True)
 
-        if len(seen_source_orders) and int(order_id) not in seen_source_orders and not data.get('forced'):
-            return self.api_error('Supplier order ID is linked to another order', status=409)
+            if len(seen_source_orders) and int(order_id) not in seen_source_orders and not data.get('forced'):
+                return self.api_error('Supplier order ID is linked to another order', status=409)
 
-        track, created = FBOrderTrack.objects.update_or_create(
-            store=store,
-            order_id=order_id,
-            line_id=item_sku,
-            defaults={
-                'user': user.models_user,
+            track, created = FBOrderTrack.objects.update_or_create(
+                store=store,
+                order_id=order_id,
+                line_id=line_id,
+                defaults={
+                    'user': user.models_user,
+                    'source_id': source_id,
+                    'source_type': data.get('source_type'),
+                    'created_at': timezone.now(),
+                    'updated_at': timezone.now(),
+                    'status_updated_at': timezone.now()})
+
+            if user.profile.get_config_value('aliexpress_as_notes', True):
+                order_updater.mark_as_ordered_note(line_id, source_id, track)
+
+            store.pusher_trigger('order-source-id-add', {
+                'track': track.id,
+                'order_id': order_id,
+                'line_id': line_id,
                 'source_id': source_id,
-                'source_type': data.get('source_type'),
-                'created_at': timezone.now(),
-                'updated_at': timezone.now(),
-                'status_updated_at': timezone.now()})
+                'source_url': track.get_source_url(),
+            })
 
-        if user.profile.get_config_value('aliexpress_as_notes', True):
-            order_updater.mark_as_ordered_note(item_sku, source_id, track)
-
-        store.pusher_trigger('order-source-id-add', {
-            'track': track.id,
-            'order_id': order_id,
-            'line_id': item_sku,
-            'source_id': source_id,
-            'source_url': track.get_source_url(),
-        })
-
-        order_updater.update_order_status('ORDERED')
+            order_updater.update_order_status('ORDERED')
 
         if not settings.DEBUG and 'oberlo.com' not in request.META.get('HTTP_REFERER', ''):
             order_updater.delay_save()
@@ -950,7 +971,7 @@ class FBStoreApi(ApiBase):
             return self.api_success()
         else:
             try:
-                resp = FBOrderUpdater(user, store, order_id).add_fb_order_note(order_id, note)
+                resp = FBOrderUpdater(user, store, order_id).add_order_note(order_id, note)
                 if resp.get('results', {}).get('successful'):
                     return self.api_success()
                 else:

@@ -2,13 +2,14 @@ from json import JSONDecodeError
 from requests.exceptions import HTTPError
 
 from django.contrib.auth.models import User
-from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
+from django.core.exceptions import PermissionDenied
 from django.template.defaultfilters import truncatewords
 from django.urls import reverse
 
 from app.celery_base import CaptureFailure, celery_app, retry_countdown
 from lib.exceptions import capture_exception, capture_message
+from product_alerts.utils import get_supplier_variants, variant_index_from_supplier_sku
 from shopified_core import permissions
 from shopified_core.utils import get_domain, http_exception_response, http_excption_status_code, safe_int, safe_json
 from suredone_core.models import SureDoneAccount
@@ -16,11 +17,6 @@ from suredone_core.utils import SureDonePusher
 
 from .models import EbayProduct, EbayStore
 from .utils import EbayOrderUpdater, EbayUtils, smart_board_by_product
-
-from product_alerts.utils import (
-    get_supplier_variants,
-    variant_index_from_supplier_sku,
-)
 
 EBAY_API_TIMEOUT = 120
 

@@ -6,7 +6,7 @@ def all_stores(request):
     if not user.is_authenticated:
         return {}
 
-    platforms = ['shopify', 'woo', 'chq', 'bigcommerce', 'gear', 'gkart']
+    platforms = ['shopify', 'woo', 'chq', 'bigcommerce', 'gear', 'gkart', 'fb']
     stores = {
         'shopify': list(user.profile.get_shopify_stores()),
         'chq': list(user.profile.get_chq_stores()),

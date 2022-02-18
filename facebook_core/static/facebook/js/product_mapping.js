@@ -46,7 +46,7 @@
         });
 
         $.ajax({
-            url: api_url('variants-mapping', 'ebay'),
+            url: api_url('variants-mapping', 'fb'),
             type: 'POST',
             data: mapping,
             context: {

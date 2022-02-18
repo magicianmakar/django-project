@@ -1,6 +1,7 @@
 import arrow
 import json
 import re
+from requests.exceptions import HTTPError
 
 from django.core.cache import caches
 from django.core.exceptions import PermissionDenied
@@ -17,6 +18,84 @@ from suredone_core.utils import SureDoneOrderUpdater, SureDoneUtils, parse_sured
 
 
 class FBUtils(SureDoneUtils):
+    def get_active_instances(self):
+        active_instances = []
+        plugin_settings = safe_json(self.api.get_all_account_options().get('plugin_settings', {})).get('register', {})
+
+        if 'facebook' in plugin_settings.get('context', {}):
+            active_instances.append(0)
+
+        additional_fb_channels = plugin_settings.get('instance', {}).get('facebook', {}).values()
+        active_instances.extend([i.get('instance') for i in additional_fb_channels])
+        return active_instances
+
+    def find_next_instance_to_authorize(self):
+        # fb_statuses = self.get_store_statuses_by_platform('facebook')
+        # next_instance_id = max([x.get('instance', -1) for x in fb_statuses]) + 1
+        active_instances = self.get_active_instances()
+        next_instance_id = 0
+
+        if len(active_instances):
+            next_instance_id = max(active_instances) + 1
+
+        # SureDone doesn't have any instances with an id of 1, ids can be either 0 or 2, 3, 4, etc.
+        return 2 if next_instance_id == 1 else next_instance_id
+
+    def create_new_fb_store_instance(self, instance_id: int):
+        resp = self.api.add_new_fb_instance(instance_id)
+        resp.raise_for_status()
+
+        # Example successful response:
+        # {"results":{"successful":{"code":1,"message":"Successfully created facebook5"}}}
+        results = resp.json().get('results', {})
+        message_success = results.get('successful', {}).get('message')
+
+        # Handle errors if not successful
+        if not message_success:
+            # Example failed response:
+            # {"results":{"failed":{"0":{"message":"Failed to create facebook5: facebook5 already exists"}}}}
+            message_error = results.get('failed', {}).get('message', f'SureDone error for instance {instance_id}')
+            raise HTTPError(message_error)
+
+        message_success = message_success.split(' ')
+        instance_created = instance_id
+        if len(message_success) and 'facebook' in message_success[-1]:
+            instance_created = message_success[-1].strip().replace('facebook', '')
+            instance_created = safe_int(instance_created if len(instance_created) else 0)
+
+        return instance_created
+
+    def get_auth_url(self, instance_id: int):
+        resp = self.api.get_fb_channel_auth_url(instance_id)
+        resp.raise_for_status()
+
+        # Example successful response:
+        # {"results":{"successful":{"code":1,"message":"Successfully created facebook5"}}}
+        results = resp.json().get('results', {})
+        successful_results = results.get('successful', {})
+        message_success = successful_results.get('message')
+
+        # Handle errors if not successful
+        if not message_success:
+            # Example failed response:
+            # {"results":{"failed":{"0":{"message":"Failed to create facebook5: facebook5 already exists"}}}}
+            message_error = results.get('failed', {}).get('message', f'SureDone error for instance {instance_id}')
+            raise HTTPError(message_error)
+
+        # Replace instance id uri path to param
+        auth_url = successful_results.get('auth_url')
+
+        if auth_url:
+            pass
+            # subdomain = 'dev' if settings.DEBUG else 'app'
+            # redirect_url = urllib.parse.quote_plus(f'https://{subdomain}.dropified.com/fb/accept-auth')
+            # state = re.search('state=.+&', auth_url).group(0).replace('&', '')
+            # new_state = json.dumps({'code': state.replace('state=', ''), 'instance': instance_id})
+            # auth_url = re.sub(f'https://app\.dropified\.com/fb/accept-auth(/\d+)?', redirect_url, auth_url)
+            # auth_url = auth_url.replace(state, f'state={new_state}')
+
+        return auth_url
+
     def sync_fb_stores(self):
         if not self.api:
             return
@@ -54,18 +133,18 @@ class FBUtils(SureDoneUtils):
             store.sync(instance_title, all_options_data)
         except FBStore.DoesNotExist:
             # Create a new store to reflect the SureDone's data
-            # TODO:FB: where do we get enabled status?
-            # store_enabled = all_options_data.get(f'site_{prefix}connect') == 'on'
-            system_token = fb_store_data.get('creds', {}).get('system_token', {}).get('value')
+
+            # system_token = fb_store_data.get('creds', {}).get('system_token', {}).get('value')
             access_token = fb_store_data.get('creds', {}).get('access_token', {}).get('value')
 
-            is_active = bool(system_token and access_token)
+            is_active = bool(access_token)
 
             FBStore.objects.create(
                 sd_account=self.sd_account,
                 store_instance_id=instance_id,
                 user=self.user.models_user,
                 title=instance_title,
+                commerce_manager_id=fb_store_data.get('sets', {}).get('commerce_manager_id', {}).get('value'),
                 is_active=is_active,
             )
 
@@ -121,10 +200,57 @@ class FBUtils(SureDoneUtils):
 
         return sd_api_result
 
+    def new_product_save(self, product_data: dict, store: FBStore, notes: str):
+        """
+        Save a new product to SureDone
+
+        :param product_data: data API param
+        :type product_data: dict
+        :param store:
+        :type store:
+        :param notes:
+        :type notes:
+        :return:
+        :rtype:
+        """
+        if not self.api:
+            return
+
+        sd_api_result = self.add_product(
+            product_data,
+            store_instance_id=store.store_instance_id,
+            store_type='fb'
+        )
+
+        # If the product was not successfully posted
+        if not isinstance(sd_api_result, dict) or sd_api_result.get('api_response', {}).get('result') != 'success':
+            return
+
+        parent_guid = sd_api_result.get('parent_guid')
+
+        # Fetch the product from SureDone and save the product if the product was successfully imported
+        created_product = self.get_fb_product_details(parent_guid, add_model_fields={'notes': notes})
+
+        # If the SureDone returns no data, then the product did not get imported
+        if not created_product or not isinstance(created_product, FBProduct):
+            return
+
+        # Init the default supplier
+        original_url = product_data.get('originalurl', '')
+        supplier = FBSupplier.objects.create(
+            store=store,
+            product=created_product,
+            product_guid=parent_guid,
+            product_url=safe_str(original_url)[:512],
+            is_default=True
+        )
+        created_product.set_default_supplier(supplier, commit=True)
+
+        return sd_api_result
+
     def get_fb_products(self, store_id: str, in_store: str, post_per_page=25, sort=None, board=None, product_board=None, request=None):
         """
         Get all Facebook products.
-        TODO: add functionality for sorting, filtering and board selection
 
         :param product_board:
         :type product_board:
@@ -674,6 +800,7 @@ class FBOrderItem:
         self.user = user
         self.store = store
         self.suredone_data = sd_order_data
+        fb_utils = FBUtils(user)
 
         self.oid = sd_order_data.get('oid')
         self.id = self.oid
@@ -682,7 +809,7 @@ class FBOrderItem:
         all_shipments = sd_order_data.get('shipments', [])
         product_ids = []
         for item in all_items:
-            converted_fb_id = safe_int(item.get('itemdetails', {}).get('item-id'), default=None)
+            converted_fb_id = safe_int(item.get('itemid'), default=None)
             if converted_fb_id is not None:
                 product_ids.append({'sku': item.get('sku'), 'fb-id': converted_fb_id})
 
@@ -694,12 +821,9 @@ class FBOrderItem:
         self.lines_count = len(all_items)
 
         # Calculate fb order ID, sales record number and order url link
-        order_meta_data = sd_order_data.get('meta', {}).get('raw', {}).get('order')
-        if order_meta_data and isinstance(order_meta_data, dict):
-            self.fb_order_id = order_meta_data.get('OrderID')
-            self.srn = order_meta_data.get('SalesRecord')  # FB sales record number
-            if self.fb_order_id:
-                self.order_url = self.get_fb_order_link(self.fb_order_id, self.srn)
+        self.fb_order_id = sd_order_data.get('ordernumber', '')
+        if self.fb_order_id:
+            self.order_url = self.get_fb_order_link(self.fb_order_id)
 
         self.date = parse_suredone_date(sd_order_data.get('dateutc'))
         self.fulfillment_status = ''
@@ -749,7 +873,7 @@ class FBOrderItem:
         fulfillment_per_sku = self.get_fulfillment_status_per_sku(all_shipments)
 
         for item in all_items:
-            fb_product_id = safe_int(item.get('itemdetails').get('item-id'), default=None)
+            fb_product_id = safe_int(item.get('itemid'), default=None)
             product_variant = product_variants_by_guids.get(item.get('sku'))
             supplier = supplier_type = None
             is_pls = False
@@ -758,9 +882,10 @@ class FBOrderItem:
 
             if product_variant:
                 var_attributes_keys = self.get_attribute_keys_from_var_config(product_variant)
+                var_attributes_keys = fb_utils.convert_to_default_and_custom_fields(var_attributes_keys)
                 if var_attributes_keys:
                     var_data = product_variant.parsed_variant_data
-                    attributes = [var_data.get(key) for key in var_attributes_keys]
+                    attributes = [var_data.get(key) for key in var_attributes_keys if var_data.get(key)]
                     attributes = ', '.join(attributes)
                 supplier = self.get_product_supplier(product_variant)
                 if supplier:
@@ -818,8 +943,7 @@ class FBOrderItem:
 
             self.items.append(current_item)
 
-        if self.tracked_lines != 0 and self.tracked_lines < self.lines_count and \
-                self.placed_orders < self.lines_count:
+        if self.tracked_lines != 0 and self.tracked_lines < self.lines_count and self.placed_orders < self.lines_count:
             self.partially_ordered = True
 
     def __getitem__(self, key):
@@ -979,8 +1103,8 @@ class FBOrderItem:
         else:
             self.fulfillment_status = None
 
-    def get_fb_order_link(self, order_id: str, srn: str):
-        return f'{self.store.get_store_url()}/sh/ord/details?orderid={order_id}&srn={srn}'
+    def get_fb_order_link(self, order_id: str):
+        return f'{self.store.get_store_url()}/orders/{order_id}'
 
     def get_product_supplier(self, product):
         if product.has_supplier:

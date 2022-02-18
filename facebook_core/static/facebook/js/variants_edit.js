@@ -94,7 +94,7 @@ function imageClicked(e) {
             pusher.unsubscribe(channel);
 
             if (eventData.success) {
-                toastr.success('Variant image of product updated.','eBay Update');
+                toastr.success('Variant image of product updated.','Facebook Update');
                 img.parent().loader('hide');
                 product.variants[current].image_id = image_id;
 
@@ -113,7 +113,7 @@ function imageClicked(e) {
 
     channel.bind('pusher:subscription_succeeded', function() {
         $.ajax({
-            url: '/api/ebay/variant-image',
+            url: '/api/fb/variant-image',
             type: 'POST',
             data: {
                 'store': store_id,

@@ -5,6 +5,7 @@ import re
 import uuid
 from copy import deepcopy
 from pusher import Pusher
+from requests.exceptions import HTTPError
 from tenacity import RetryError, retry, stop_after_attempt, wait_fixed
 from typing import List
 from unidecode import unidecode
@@ -116,6 +117,16 @@ class SureDoneUtils:
                     })
 
         return all_options_data
+
+    def get_store_statuses_by_platform(self, platform=None):
+        try:
+            resp = self.api.get_platform_statuses()
+            resp.raise_for_status()
+        except HTTPError:
+            return [] if platform else {}
+
+        statuses = resp.json().get('results', {})
+        return statuses.get(platform, []) if platform else statuses
 
     def get_skip_channels_config(self, channel_type: str, instance_id: int, skip_type: str = 'true',
                                  send_type: str = 'false'):

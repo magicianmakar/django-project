@@ -44,7 +44,7 @@
                     {% if is_connected %}
                     <div class="row">
                         <div class="col-md-4">
-                            <a href="{{ product_url }}" target="_blank" id="view-btn" type="button" class="btn btn-info" style="margin-top:20px">View in eBay</a>
+                            <a href="{{ product_url }}" target="_blank" id="view-btn" type="button" class="btn btn-info" style="margin-top:20px">View in Facebook</a>
                         </div>
                         <!--
                         <div class="col-md-4 col-md-offset-4 text-right">
@@ -135,7 +135,7 @@ let config = {
 </script>
 
 {% compress js %}
-<script type="text/javascript" src="{% static 'ebay/js/variants_edit.js' %}"></script>
+<script type="text/javascript" src="{% static 'facebook/js/variants_edit.js' %}"></script>
 {% endcompress %}
 {% endblock %}
 

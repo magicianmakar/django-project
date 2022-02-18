@@ -1,4 +1,4 @@
-{% extends "base_ebay_core.html" %}
+{% extends "base_fb_core.html" %}
 
 {% load static %}
 {% load template_helper %}
@@ -15,11 +15,11 @@
             </li>
 
             <li>
-                <a href="{% url 'ebay:mapping_supplier' product.store_id product.id %}"><i class="fa fa-sitemap"></i> Advanced Mapping</a>
+                <a href="{% url 'fb:mapping_supplier' product.store_id product.id %}"><i class="fa fa-sitemap"></i> Advanced Mapping</a>
             </li>
 
             <li>
-                <a href="{% url 'ebay:mapping_bundle' product.id %}"><i class="fa fa-database"></i> Bundle Mapping</a>
+                <a href="{% url 'fb:mapping_bundle' product.id %}"><i class="fa fa-database"></i> Bundle Mapping</a>
             </li>
        </ul>
        <div class="tab-content">
@@ -54,7 +54,7 @@
                     <table class="table table-borderd table-compact">
                         <thead>
                             <tr>
-                                <th style="padding-left:60px">eBay</th>
+                                <th style="padding-left:60px">Facebook</th>
                                 <th>{{product.get_original_info.source|default:'Supplier'|title}}</th>
                                 <th style="width:110px;"></th>
                             </tr>
@@ -194,7 +194,7 @@
 {% compress js %}
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'ebay/js/product_mapping.js' %}"></script>
+<script type="text/javascript" src="{% static 'facebook/js/product_mapping.js' %}"></script>
 {% endcompress %}
 
 {% endblock %}

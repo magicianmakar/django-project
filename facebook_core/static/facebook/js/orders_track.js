@@ -23,7 +23,7 @@
         var line_btn = $('.fulfill-btn[line-id="' + $('#modal-fulfillment #fulfill-line-id').val() + '"]');
 
         $.ajax({
-            url: api_url('fulfill-order', 'ebay'),
+            url: api_url('fulfill-order', 'fb'),
             type: 'POST',
             data: $('#modal-fulfillment form').serialize(),
             context: {
@@ -62,7 +62,7 @@
 
     function hideOrder(order_id, hide) {
         $.ajax({
-            url: api_url('order-fullfill-hide', 'ebay'),
+            url: api_url('order-fullfill-hide', 'fb'),
             type: 'POST',
             data: {
                 order: order_id,
@@ -163,7 +163,7 @@
 
             P.map(tracks, function(track) {
                 return $.ajax({
-                    url: api_url('order-fulfill', 'ebay') + '?' + $.param({
+                    url: api_url('order-fulfill', 'fb') + '?' + $.param({
                         'order_id': track.order,
                         'line_id': track.line,
                     }),
@@ -237,7 +237,7 @@
 
             P.map(tracks, function(track) {
                 return $.ajax({
-                    url: api_url('order-fullfill-hide', 'ebay'),
+                    url: api_url('order-fullfill-hide', 'fb'),
                     type: 'POST',
                     data: {
                         order: $('.order-track', track.el).val(),

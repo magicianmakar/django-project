@@ -2,6 +2,7 @@ import arrow
 import json
 import re
 import requests
+from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.contrib import messages
@@ -836,3 +837,59 @@ class ProfitDashboardView(ProfitDashboardMixin, ListView):
     store_type = 'fb'
     store_model = FBStore
     base_template = 'base_fb_core.html'
+
+
+class AuthAcceptRedirectView(RedirectView):
+    permanent = False
+    query_string = False
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('facebook.use'):
+            raise permissions.PermissionDenied()
+
+        return super(AuthAcceptRedirectView, self).dispatch(request, *args, **kwargs)
+
+    def get_redirect_url(self, *args, **kwargs):
+        user = self.request.user
+        instance_id = kwargs.get('store_index')
+
+        fb_code = self.request.GET.get('code')
+        fb_granted_scopes = self.request.GET.get('granted_scopes')
+        fb_denied_scopes = self.request.GET.get('denied_scopes')
+        fb_state = self.request.GET.get('state')
+
+        fb_utils = FBUtils(user)
+        try:
+            sd_api_resp = fb_utils.api.authorize_fb_complete(
+                instance=instance_id,
+                code=fb_code,
+                granted_scopes=fb_granted_scopes,
+                denied_scopes=fb_denied_scopes,
+                state=fb_state
+            )
+            sd_api_resp.raise_for_status()
+        except HTTPError:
+            messages.error(self.request, 'Something went wrong when authorizing a Facebook store. Please try again.')
+            return reverse('fb:index')
+
+        resp_body = sd_api_resp.json()
+
+        results = resp_body.get('results', {})
+        successful_results = results.get('successful')
+
+        if not successful_results:
+            failed_results = results.get('failed')
+            error_messages = []
+
+            if isinstance(failed_results, dict):
+                error_messages = [x.get('message') for x in failed_results.values() if x.get('message')]
+
+            error_message_default = 'Failed to authorize a Facebook store. ' \
+                                    'Please try again or report to support@dropified.com'
+            error = '\n'.join(error_messages) if error_messages else error_message_default
+            messages.error(self.request, error)
+            return reverse('fb:index')
+
+        messages.success(self.request, 'Your Facebook store has been added!')
+        return reverse('fb:index')

@@ -1,4 +1,4 @@
-{% extends "base_ebay_core.html" %}
+{% extends "base_fb_core.html" %}
 
 {% load static %}
 {% load template_helper %}
@@ -194,7 +194,7 @@
 
                         <a href="{% url_replace save 1 %}" class="btn btn-primary btn-outline no-border pull-right save-filter-btn">Save Filters</a>
 
-                        <a href="{% url 'ebay:orders_list'%}?store={{store.id}}&reset=1" class="btn btn-default reset-filter-btn">
+                        <a href="{% url 'fb:orders_list'%}?store={{store.id}}&reset=1" class="btn btn-default reset-filter-btn">
                             <i class="fa fa-eraser"></i> Reset Filter
                         </a>
                     </div>
@@ -224,7 +224,7 @@
 
                                     <div>
                                         <p class="no-text-overflow">
-                                            <a href="{{order.order_url}}" target="_blank">#{{order.ebay_order_id}}</a>
+                                            <a href="{{order.order_url}}" target="_blank">#{{order.fb_order_id}}</a>
                                         </p>
                                         <p class="no-text-overflow">{% date_humanize order.date relative=False %}</p>
                                     </div>
@@ -514,21 +514,24 @@
                                 </div>
                                 <div style="width: 100%;">
                                     <div class="col-md-3 product-preview">
-                                        <img class="product-img cached-img no-img no-img-sm unveil pull-left"
-                                            store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
-                                            src="{% static 'img/blank.gif' %}" no-img-width="32px"
-                                            {% if item.image %}
-                                            data-src="{{item.image}}"
-                                            {% endif %} />
-
                                         {% if item.product %}
-                                        <a href="{% url 'ebay:product_detail' store_index=store.id pk=item.product.sku %}" class="multi-line-text-overflow" target="_blank" title="{{item.name}}">
-                                            {{item.name}}
-                                        </a>
+                                            <a href="{% url 'fb:product_detail' store_index=store.id pk=item.product.sku %}">
+                                                <img class="product-img cached-img no-img no-img-sm unveil pull-left"
+                                                     store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
+                                                     src="{% static 'img/blank.gif' %}" no-img-width="32px"
+                                                     {% if item.image %}data-src="{{item.image}}"{% endif %} />
+                                            </a>
+                                            <a href="{% url 'fb:product_detail' store_index=store.id pk=item.product.sku %}" class="multi-line-text-overflow" target="_blank" title="{{item.title}}">
+                                                {{item.title|truncatewords:7}}
+                                            </a>
                                         {% else %}
-                                        <span class="multi-line-text-overflow" title="{{item.name}}">
-                                            {{item.name}}
-                                        </span>
+                                            <img class="product-img cached-img no-img no-img-sm unveil pull-left"
+                                                 store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
+                                                 src="{% static 'img/blank.gif' %}" no-img-width="32px"
+                                                 {% if item.image %}data-src="{{item.image}}"{% endif %} />
+                                            <span class="multi-line-text-overflow" title="{{item.title}}">
+                                                {{item.title|truncatewords:7}}
+                                            </span>
                                         {% endif %}
                                     </div>
                                     <div class="col-md-3 header-column">
@@ -566,7 +569,7 @@
                                                         {% endif %}
                                                     </span>
                                                 {% elif item.fulfillment_status == 'fulfilled' %}
-                                                    <span class="ordered-status">Fulfilled in eBay</span>
+                                                    <span class="ordered-status">Fulfilled on Facebook</span>
                                                 {% elif excluded_product %}
                                                     <span class="ordered-status">Excluded Product</span>
                                                 {% elif item.is_pls and item.is_paid %}
@@ -600,7 +603,7 @@
                                     </div>
                                     <div class="col-md-3 pull-right text-right no-padding">
                                         {% if not item.is_pls %}
-                                            {% include 'ebay/partial/place_order_btn.html' %}
+                                            {% include 'facebook/partial/place_order_btn.html' %}
                                         {% endif %}
                                     </div>
 
@@ -663,7 +666,14 @@
                                                             {% endif %}
                                                             >{{item.supplier.supplier_name|truncatechars:25}}</a>
                                                         {% elif user|can:'product_supplier.use' %}
-                                                        <a class="add-supplier-btn" store-id="{{store.id}}" woo-product="{{item.product_id}}">
+                                                        <a class="add-supplier-btn"
+                                                           store-id="{{store.id}}"
+                                                           fb-product="{{item.id}}"
+                                                           fb-product-title="{{item.title}}"
+                                                           fb-product-price="{{item.price}}"
+                                                           fb-product-image="{{item.image}}"
+                                                           fb-product-attributes="{{item.attributes}}"
+                                                        >
                                                             Connect Supplier
                                                         </a>
                                                         {% endif %}
@@ -689,9 +699,9 @@
                 {% empty %}
 
                 {% if api_error %}
-                <p class="text-center">eBay Error: {{api_error}}</p>
+                <p class="text-center">Facebook Error: {{api_error}}</p>
                 <p class="text-center">Please Try again in a few seconds by reloading the page.</p>
-                {% elif request.user.profile.plan.auto_fulfill_limit == 0 %}
+                {% elif request.user.models_user.profile.get_auto_fulfill_limit == 0 %}
                 {% include 'common/partial/upsell_order.html' %}
                 {% else %}
                 <h3 class="text-center">
@@ -700,7 +710,7 @@
                 {% endif %}
                 {% endfor %}
 
-                {% if request.user.profile.plan.auto_fulfill_limit == 0 %}
+                {% if request.user.models_user.profile.get_auto_fulfill_limit == 0 %}
                 {% include "common/partial/upsell.html" with top="200px" message="Add Automated Ordering and Fulfillment to your Plan" only %}
                 {% endif %}
                 {% include "partial/paginator.html" %}
@@ -708,8 +718,8 @@
         </div>
     </div>
 
-    {% cache 600 ebay_shipping_carriers2 store.id %}
-    {% include 'ebay/partial/fulfillment_modal.html' with notify=False shipping_carriers=shipping_carriers only %}
+    {% cache 600 fb_shipping_carriers2 store.id %}
+    {% include 'facebook/partial/fulfillment_modal.html' with notify=False shipping_carriers=shipping_carriers only %}
     {% endcache %}
     {% include 'prints/partial/place_orders_modal.html' %}
 
@@ -731,7 +741,7 @@
 
 
 {% include "common/partial/modal_add_order_id.html" with store_title=store.title %}
-{% include "ebay/partial/ebay_product_selector.html" %}
+{% include "facebook/partial/fb_product_selector.html" %}
 {% include "supplements/partials/order_details_modal.html" %}
 {% include 'alibaba/partials/orders.html' %}
 {% endblock %}
@@ -746,7 +756,7 @@
     <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/jquery.steps/demo/css/jquery.steps.css' %}" rel="stylesheet">
     <link href="{% static 'alibaba/css/orders.css' %}" rel="stylesheet">
-    <link href="{% static 'ebay/css/orders_list.css' %}" rel="stylesheet">
+    <link href="{% static 'facebook/css/orders_list.css' %}" rel="stylesheet">
 {% endcompress %}
 
 {% endblock %}
@@ -769,7 +779,7 @@
 
     var STORE_ID = "{{ store.id }}";
 
-    window.storeType = 'ebay';
+    window.storeType = 'fb';
     var config = {
         currencyFormat: "{{ store.currency_format|default:'' }}"
     }
@@ -791,8 +801,8 @@
     <script src="{% static 'pls/js/pls_payment.js' %}" type="text/javascript"></script>
     <script src="{% static 'libs/bower_components/jquery.steps/build/jquery.steps.js' %}" type="text/javascript"></script>
     <script type="text/javascript" src="{% static 'js/bulk_orders.js' %}"></script>
-    <script type="text/javascript" src="{% static 'ebay/js/ebay_product_selector.js' %}"></script>
-    <script type="text/javascript" src="{% static 'ebay/js/orders_list.js' %}"></script>
+    <script type="text/javascript" src="{% static 'facebook/js/fb_product_selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'facebook/js/orders_list.js' %}"></script>
 {% endcompress %}
 
 {% endblock %}

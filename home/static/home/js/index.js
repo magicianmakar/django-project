@@ -1612,6 +1612,57 @@
         });
     });
 
+    $('#fb-store-create-submit-btn').click(function(e) {
+        if (typeof(Pusher) === 'undefined') {
+            toastr.error('This could be due to using Adblocker extensions<br>' +
+                'Please whitelist Dropified website and reload the page<br>' +
+                'Contact us for further assistance',
+                'Pusher service is not loaded', {timeOut: 0});
+            return;
+        }
+
+        var buttonEl = $(this);
+        buttonEl.bootstrapBtn('loading');
+        var pusher = new Pusher(sub_conf.key);
+        var channel = pusher.subscribe(sub_conf.channel);
+
+        channel.bind('fb-store-add', function(data) {
+            buttonEl.bootstrapBtn('reset');
+            pusher.unsubscribe(channel);
+
+            if (data.success) {
+                window.location.href = data.auth_url;
+            } else {
+                displayAjaxError('Add Facebook Store', data);
+            }
+        });
+
+        channel.bind('fb-config-setup', function(data) {
+            if (!data.success) {
+                buttonEl.bootstrapBtn('reset');
+                pusher.unsubscribe(channel);
+                displayAjaxError('Add Facebook Store', data);
+            }
+        });
+
+        channel.bind('pusher:subscription_succeeded', function() {
+            $.ajax({
+                url: api_url('store-add', 'fb'),
+                type: 'GET',
+                success: function(data) {},
+                error: function(data, status) {
+                    buttonEl.bootstrapBtn('reset');
+                    pusher.unsubscribe(channel);
+                    if (status === 'timeout') {
+                        displayAjaxError('Add Facebook Store', 'Request timed out. Please try again');
+                    } else {
+                        displayAjaxError('Add Facebook Store', data);
+                    }
+                },
+            });
+        });
+    });
+
     $('.ebay-delete-store-btn').click(function(e) {
         e.preventDefault();
         var storeId = $(this).data('store-id');

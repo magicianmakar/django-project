@@ -27,17 +27,19 @@ class FBStore(SureDoneStoreBase):
 
     store_name = models.CharField(default='', null=True, blank=True, max_length=100,
                                   verbose_name='Facebook store name')
+    commerce_manager_id = models.CharField(default='', null=True, blank=True, max_length=100,
+                                           verbose_name='Facebook Commerce Manager ID')
 
     def sync(self, instance_title: str, options_data: dict):
         store_prefix = f"facebook{'' if self.store_instance_id == 1 else self.store_instance_id}"
         fb_store_data = safe_json(options_data.get(f'plugin_settings_{store_prefix}'))
-        self.store_name = fb_store_data.get('sets', {}).get('page_shop_name', {}).get('value')
-        # TODO:FB: where do we get enabled status?
-        # channel_is_enabled = options_data.get(f'site_ebay{store_index_str}connect') == 'on'
-        system_token = fb_store_data.get('creds', {}).get('system_token', {}).get('value')
-        access_token = fb_store_data.get('creds', {}).get('access_token', {}).get('value')
+        fb_sets_data = fb_store_data.get('sets', {})
 
-        self.is_active = bool(system_token and access_token)
+        self.store_name = fb_sets_data.get('page_shop_name', {}).get('value')
+        self.commerce_manager_id = fb_sets_data.get('commerce_manager_id', {}).get('value')
+
+        access_token = fb_store_data.get('creds', {}).get('access_token', {}).get('value')
+        self.is_active = bool(access_token)
 
         # Get facebook account title
         self.title = instance_title
@@ -45,15 +47,13 @@ class FBStore(SureDoneStoreBase):
         self.save()
 
     def get_store_url(self):
-        """TODO:FB: how do we construct facebook store URL? """
-        if self.store_name:
-            return f'https://www.facebook.com/usr/{self.store_name}'
+        if self.commerce_manager_id:
+            return f'https://business.facebook.com/commerce/{self.commerce_manager_id}'
         else:
-            return 'https://www.facebook.com'
+            return 'https://business.facebook.com/commerce'
 
     def get_admin_url(self, *args):
-        """TODO:FB: how do we construct facebook store URL? """
-        return 'https://www.facebook.com/mys/overview'
+        return f"https://business.facebook.com/commerce/{self.commerce_manager_id or ''}"
 
     def get_short_hash(self):
         return self.store_hash[:8] if self.store_hash else ''
@@ -415,11 +415,10 @@ class FBOrderTrack(OrderTrackBase):
         return f'<FBOrderTrack: {self.id}>'
 
     def get_fb_link(self):
-        """TODO:FB: how do we construct facebook order URL? """
         if hasattr(self, 'order') and isinstance(self.order, dict):
-            order_id = self.order.get('details', {}).get('ExtendedOrderID')
+            order_id = self.order.get('ordernumber')
             if order_id:
-                return f'{self.store.get_store_url()}/sh/ord/details?orderid={order_id}'
+                return f'{self.store.get_store_url()}/orders/{order_id}'
         return ''
 
 
