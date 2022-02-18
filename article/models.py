@@ -25,6 +25,7 @@ STORE_TYPES = (
     ('gkart', 'GrooveKart'),
     ('bigcommerce', 'BigCommerce'),
     ('ebay', 'eBay'),
+    ('fb', 'Facebook'),
 )
 
 

@@ -7,6 +7,7 @@ from django.utils.html import format_html
 import bigcommerce_core
 import commercehq_core
 import ebay_core
+import facebook_core
 import gearbubble_core
 import leadgalaxy
 import woocommerce_core
@@ -121,6 +122,7 @@ class OrderMixin:
         CommerceHQStore = commercehq_core.models.CommerceHQStore
         WooStore = woocommerce_core.models.WooStore
         EbayStore = ebay_core.models.EbayStore
+        FBStore = facebook_core.models.FBStore
         GearBubbleStore = gearbubble_core.models.GearBubbleStore
         BigCommerceStore = bigcommerce_core.models.BigCommerceStore
 
@@ -136,6 +138,8 @@ class OrderMixin:
             return cls.BIGCOMMERCE
         elif isinstance(store, EbayStore):
             return cls.EBAY
+        elif isinstance(store, FBStore):
+            return cls.FB
 
         raise Exception("Invalid Store")
 

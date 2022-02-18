@@ -1586,7 +1586,7 @@
             }
         });
 
-        channel.bind('ebay-config-setup', function(data) {
+        channel.bind('sd-config-setup', function(data) {
             if (!data.success) {
                 buttonEl.bootstrapBtn('reset');
                 pusher.unsubscribe(channel);
@@ -1637,7 +1637,7 @@
             }
         });
 
-        channel.bind('fb-config-setup', function(data) {
+        channel.bind('sd-config-setup', function(data) {
             if (!data.success) {
                 buttonEl.bootstrapBtn('reset');
                 pusher.unsubscribe(channel);

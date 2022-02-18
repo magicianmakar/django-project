@@ -46,6 +46,7 @@ from shopified_core.utils import (
 )
 from suredone_core.utils import get_daterange_filters
 
+from lib.exceptions import capture_message
 from .models import FBBoard, FBOrderTrack, FBProduct, FBStore, FBSupplier
 from .utils import FBListPaginator, FBOrderListQuery, FBUtils, get_store_from_request
 
@@ -852,7 +853,25 @@ class AuthAcceptRedirectView(RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         user = self.request.user
-        instance_id = kwargs.get('store_index')
+        instance_id = kwargs.get('store_index', 0) or 0
+
+        error = self.request.GET.get('error')
+        if error:
+            error_reason = self.request.GET.get('error_reason')
+            if error_reason == 'user_denied':
+                messages.error(self.request, 'Failed to add a Facebook store. Please grant all required permissions '
+                                             'to manage a store using Dropified.')
+            else:
+                messages.error(self.request, 'Failed to add a Facebook store. Please try again later.')
+
+            capture_message('Error adding a Facebook store.', extra={
+                'error': error,
+                'error_code': self.request.GET.get('error_code'),
+                'error_description': self.request.GET.get('error_description'),
+                'error_reason': error_reason,
+            })
+
+            return reverse('fb:index')
 
         fb_code = self.request.GET.get('code')
         fb_granted_scopes = self.request.GET.get('granted_scopes')

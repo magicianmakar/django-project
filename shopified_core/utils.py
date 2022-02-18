@@ -127,6 +127,8 @@ def prefix_from_model(model):
         return 'bigcommerce'
     elif prefix == 'ebay_core':
         return 'ebay'
+    elif prefix == 'facebook_core':
+        return 'fb'
     else:
         return None
 
@@ -1284,7 +1286,7 @@ def products_filter(res, fdata):
 
 def get_store_api(store_type=''):
     store_type = store_type or 'shopify'
-    if store_type not in ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce', 'mybasket', 'ebay']:
+    if store_type not in ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce', 'mybasket', 'ebay', 'fb']:
         raise NotImplementedError('No such Store API')
 
     return import_string(settings.DROPIFIED_API.get(store_type))()
@@ -1299,6 +1301,10 @@ def get_cached_order(user, store_type, order_data_id):
         key = order_data_cache_key(order_data_id, prefix='gkart_order')
     elif store_type == 'bigcommerce':
         key = order_data_cache_key(order_data_id, prefix='bigcommerce_order')
+    elif store_type == 'ebay':
+        key = order_data_cache_key(order_data_id, prefix='ebay_order')
+    elif store_type == 'fb':
+        key = order_data_cache_key(order_data_id, prefix='fb_order')
     else:
         key = order_data_cache_key(order_data_id, prefix='order')
 
