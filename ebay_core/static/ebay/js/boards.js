@@ -3,39 +3,6 @@
 $(document).ready(function() {
     'use strict';
 
-    $('.add-board-btn').click(function(e) {
-        e.preventDefault();
-        $('#ebay-modal-board-add').modal('show');
-    });
-
-    $("#ebay-new-board-add-form").submit(function(e) {
-        e.preventDefault();
-        var title = $(this).find('input[name="title"]');
-        var boardName = title.val().trim();
-
-        $.ajax({
-            url: api_url('boards-add', 'ebay'),
-            type: 'POST',
-            data: {title: boardName},
-            success: function(data) {
-                if ('status' in data && data.status === 'ok') {
-                    $('#ebay-modal-board-add').modal('hide');
-                    title.val('');
-
-                    if (typeof(window.onBoardAdd) === 'function') {
-                        window.onBoardAdd(data.board);
-                    }
-                    window.location.reload();
-                } else {
-                    displayAjaxError('Create Board', data);
-                }
-            },
-            error: function (data) {
-                displayAjaxError('Create Board', data);
-            }
-        });
-    });
-
      $('.board-edit').on('click', function(e) {
         e.preventDefault();
         var boardId = $(this).attr('board-id');
@@ -64,6 +31,7 @@ $(document).ready(function() {
         $.post(api_url('board-config', 'ebay'), data).done(function() {
             $('#ebay-modal-board-update').modal('hide');
             window.location.href = window.location.href;
+            window.location.reload();
         });
     });
 
@@ -86,9 +54,15 @@ $(document).ready(function() {
                 method: 'DELETE',
                 success: function(data) {
                     if ('status' in data && data.status === 'ok') {
-                        btn.parents('.board-box').remove();
                         swal.close();
                         toastr.success('Board has been deleted.', 'Delete Board');
+
+                        var board = $('.board-delete[board-id="' + boardId + '"]').parents('.board-box');
+                        if (board.length) {
+                            board.remove();
+                        } else {
+                            window.location.href = '/ebay/boards/list';
+                        }
                     } else {
                         displayAjaxError('Delete Board', data);
                     }
@@ -274,6 +248,7 @@ $(document).ready(function() {
             success: function(data) {
                 if ('status' in data && data.status === 'ok') {
                     window.location.href = window.location.href;
+                    window.location.reload();
                 } else {
                     displayAjaxError('Edit Products', data);
                 }

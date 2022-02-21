@@ -177,6 +177,7 @@ $('#modal-products-edit-form #save-changes').click(function(e) {
         success: function(data) {
             if ('status' in data && data.status == 'ok') {
                 window.location.href = window.location.href;
+                window.location.reload();
             } else {
                 displayAjaxError('Edit Products', data);
             }
@@ -244,7 +245,6 @@ $('.board-empty').click(function(e) {
 $('.board-delete').click(function(e) {
     e.preventDefault();
     var board = $(this).attr('board-id');
-    var btn = $(this);
 
     swal({
         title: "Delete Board",
@@ -267,9 +267,15 @@ $('.board-delete').click(function(e) {
                 },
                 success: function(data) {
                     if ('status' in data && data.status == 'ok') {
-                        btn.parents('.board-box').remove();
                         swal.close();
                         toastr.success('Board has been deleted.', 'Delete Board');
+
+                        var board = $('.board-delete[board-id="' + board + '"]').parents('.board-box');
+                        if (board.length) {
+                            board.remove();
+                        } else {
+                            window.location.href = '/boards/list';
+                        }
                     } else {
                         displayAjaxError('Delete Board', data);
                     }
@@ -335,6 +341,7 @@ $('#smartboard-save-changes').click(function(e) {
         success: function(data) {
             $('#smartboard-modal').modal('hide');
             window.location = window.location;
+            window.location.reload();
         },
         error: function(data) {
             displayAjaxError('Edit Board', data);
@@ -401,10 +408,6 @@ $("#product-filter-form").submit(function() {
         return !this.value;
     }).attr("disabled", "disabled");
     return true; // ensure form still submits
-});
-
-$('#modal-board-add').on('shown.bs.modal', function() {
-    $('#add-board-name').trigger('focus');
 });
 
 })();

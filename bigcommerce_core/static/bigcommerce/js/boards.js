@@ -23,40 +23,6 @@ $(document).ready(function() {
         }
     });
 
-    $('.add-board-btn').click(function(e) {
-        e.preventDefault();
-        $('#bigcommerce-modal-board-add').modal('show');
-    });
-
-    $("#bigcommerce-new-board-add-form").submit(function(e) {
-        e.preventDefault();
-        var $title = $(this).find('input[name="title"]');
-        var boardName = $title.val().trim();
-
-        $.ajax({
-            url: api_url('boards-add', 'bigcommerce'),
-            type: 'POST',
-            data: {title: boardName},
-            success: function(data) {
-                if ('status' in data && data.status == 'ok') {
-                    $('#bigcommerce-modal-board-add').modal('hide');
-                    $title.val('');
-
-                    if (typeof(window.onBoardAdd) == 'function') {
-                        window.onBoardAdd(data.board);
-                    } else {
-                        window.location.href = window.location.href;
-                    }
-                } else {
-                    displayAjaxError('Create Board', data);
-                }
-            },
-            error: function (data) {
-                displayAjaxError('Create Board', data);
-            }
-        });
-    });
-
     $('.board-edit').click(function(e) {
         e.preventDefault();
         var boardId = $(this).attr('board-id');
@@ -86,6 +52,7 @@ $(document).ready(function() {
         .done(function() {
             $('#bigcommerce-modal-board-update').modal('hide');
             window.location.href = window.location.href;
+            window.location.reload();
         })
         .fail(function (data) {
             displayAjaxError('Update Board', data);
@@ -112,10 +79,10 @@ $(document).ready(function() {
                     if ('status' in data && data.status == 'ok') {
                         swal.close();
                         toastr.success('Board has been deleted.', 'Delete Board');
-                        var selector = '#board-row-' + boardId;
-                        var $row = $(selector);
-                        if ($row.length) {
-                            table.api().rows(selector).remove().draw();
+
+                        var board = $('.board-delete[board-id="' + boardId + '"]').parents('.board-box');
+                        if (board.length) {
+                            board.remove();
                         } else {
                             window.location.href = '/bigcommerce/boards/list';
                         }
@@ -163,6 +130,7 @@ $(document).ready(function() {
                             $row.find('.product-count').html('0');
                         } else {
                             window.location.href = window.location.href;
+                            window.location.reload();
                         }
                     } else {
                         displayAjaxError('Empty Board', data);
@@ -305,6 +273,7 @@ $(document).ready(function() {
             success: function(data) {
                 if ('status' in data && data.status == 'ok') {
                     window.location.href = window.location.href;
+                    window.location.reload();
                 } else {
                     displayAjaxError('Edit Products', data);
                 }

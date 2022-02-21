@@ -33,7 +33,7 @@
                 <div class="col-md-3 board-box">
                     <div class="ibox">
                         <div class="ibox-title">
-                            <a class="color-info" board-id="{{item.id}}" href="/boards/{{item.id}}">
+                            <a class="color-info single-line-text-overflow" board-id="{{item.id}}" href="{% url 'chq:board_detail' pk=item.id %}">
                                 {{item.title}}
                             </a>
                             <div class="more-actions">
@@ -149,8 +149,9 @@
                                 <input type="text" id="board-title" class="form-control">
                             </div>
 
-                            <h3 class="m-t-none m-b">Smart Board</h3>
-                            <p class="m-t-none m-b" style="padding: 0; margin: 0">Add products to this board if (separate values with comma):</p>
+                            <hr>
+                            <h3 class="m-t-none m-b-xs">Smart Board</h3>
+                            <p class="m-t-none m-b">Add products to this board if (separate values with comma):</p>
                             <input type="hidden" id="smartboard-board">
 
                             <div class="form-group">
@@ -177,6 +178,7 @@
         </div>
     </div>
 </div>
+{% include 'commercehq/modal_board_update.html' %}
 {% endblock %}
 
 {% block extracss %}
@@ -205,8 +207,3 @@
     {% endcompress %}
 
 {% endblock %}
-
-{% block modal-board-add %}
-    {% include 'commercehq/modal_board_add.html' %}
-    {% include 'commercehq/modal_board_update.html' %}
-{% endblock modal-board-add %}

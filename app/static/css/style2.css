@@ -636,7 +636,9 @@ fieldset[disabled] .btn-danger.active {
 .p-r-none {
   padding-right: 0;
 }
-
+.no-border-top {
+    border-top: 0 none !important;
+}
 .text-default,
 .text-default > .dropified-icons:before {
     color: #7b94ad;
@@ -1033,6 +1035,12 @@ li.border-left {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+}
+
+.single-line-text-overflow {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .multi-line-text-overflow {

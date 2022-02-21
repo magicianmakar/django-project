@@ -1833,7 +1833,7 @@ var PusherSubscription = {
     });
 
     $(document).on('click', '.select2-results__option.select2-results__message', function() {
-        $('#modal-board-add #add-board-name').val($('.select2-search__field').val());
+        $('#modal-board-add [name="title"]').val($('.select2-search__field').val());
         $('#modal-board-add').modal('show');
     });
 

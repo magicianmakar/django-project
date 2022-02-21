@@ -340,27 +340,31 @@
   </div>
 
 {% block modal-board-add %}
-<div id="modal-board-add" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
+<div id="modal-board-add" class="modal fade" aria-hidden="true" store-type="{{ store_type|default:'shopify' }}">
+    <div class="modal-dialog modal-sm" style="width: 350px;">
         <div class="modal-content">
             <form id="new-board-add-form" role="form">
-                <div class="m-t-none modal-header">
+                <div class="m-t-none modal-header no-border-bottom">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title">Add New Board</h4>
                 </div>
-                <div class="modal-body">
-                    <div class="row">
+                <div class="modal-body" style="padding-left: 20px;padding-right: 20px;">
+                    <div class="text-center">
+                        <img src="{% static 'img/file.png' %}" style="margin: 0 auto;">
+                        <h4 class="modal-title">Add New Board</h4>
+                        <p style="padding-top: 5px;">Add new board to your account?</p>
+                    </div>
+                    <br>
+                    <div class="row" style="margin-bottom:10px;">
                         <div class="col-sm-12">
                             <div class="form-group m-b-none">
                                 <label for="">Board Title</label>
-                                <input type="text" id="add-board-name" placeholder="New Board Name" class="form-control">
+                                <input type="text" name="title" placeholder="New Board Name" class="form-control">
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
-                    <button id="board-add-send" class="btn btn-primary" type="button"><i class="fa fa-plus"></i> Add</button>
+                <div class="modal-footer no-border-top">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fa fa-plus"></i> Add</button>
                 </div>
             </form>
         </div>
