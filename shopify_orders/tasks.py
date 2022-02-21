@@ -13,6 +13,7 @@ from aliexpress_core.utils import MaillingAddress, PlaceOrder, OrderInfo, PlaceO
 from leadgalaxy.models import ShopifyStore, ShopifyProduct, ShopifyOrderTrack
 from shopify_orders.utils import OrderErrorsCheck, update_elasticsearch_shopify_order
 from shopify_orders.models import ShopifyOrder
+from groovekart_core.models import GrooveKartStore
 from woocommerce_core.models import WooStore
 from bigcommerce_core.models import BigCommerceStore
 from commercehq_core.models import CommerceHQStore
@@ -252,6 +253,8 @@ def get_order_info_via_api(self, order, source_id, store_id, store_type=None, us
     if store_type is not None:
         if store_type == 'shopify':
             store = ShopifyStore.objects.get(id=store_id)
+        if store_type == 'gkart':
+            store = GrooveKartStore.objects.get(id=store_id)
         elif store_type == 'woo':
             store = WooStore.objects.get(id=store_id)
         elif store_type == 'bigcommerce':
