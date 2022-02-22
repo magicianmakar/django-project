@@ -64,7 +64,7 @@
 
                                     {% if user|can:"product_feeds.use" %}
                                     <div class="m-b-sm">
-                                        <a class="copy-feed-url" href="#"
+                                        <a class="copy-feed-url no-wrap" href="#"
                                             data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash %}/2">
                                             <i class="fa fa-files-o itooltip"></i> Facebook Feed
                                         </a>
@@ -73,7 +73,7 @@
 
                                     {% if user|can:"google_product_feed.use" %}
                                     <div>
-                                        <a class="copy-feed-url" href="#"
+                                        <a class="copy-feed-url no-wrap" href="#"
                                             data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash %}/3">
                                             <i class="fa fa-files-o itooltip"></i> Google Product Feed
                                         </a>
@@ -112,7 +112,7 @@
                                         Pending
                                     {% endif %}
                                 </td>
-                                <td>
+                                <td class="no-wrap">
                                     {% if user|can:"google_product_feed.use" %}
                                     <button title="Update this store feed" class="btn btn-outline btn-sm btn-default itooltip google-feed-btn">
                                         <i class="fa fa-cog"></i> Google Feed

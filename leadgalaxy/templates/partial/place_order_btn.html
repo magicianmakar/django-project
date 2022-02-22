@@ -3,7 +3,7 @@
 
 {% if original %}
     {% if not item.supplier.is_dropified_print %}
-    <div class="btn-group order-line-group"
+    <div class="btn-group order-line-group pull-right"
         order-id="{{order.id}}"
         line-id="{{item.id}}"
         order-data-id="{{ item.order_data_id }}"

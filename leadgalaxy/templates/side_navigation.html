@@ -3,7 +3,17 @@
 {% load template_helper %}
 {% load cache %}
 
-<a class="navbar-minimalize minimalize-styl-2 btn btn-primary leftnavbar old-layout-hidden" href="#"></a>
+<a class="
+    navbar-minimalize
+    minimalize-styl-2
+    btn
+    btn-primary
+    leftnavbar
+    old-layout-hidden
+  {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
+  pls
+  {% endif %}
+  " href="#"></a>
 <nav id="side-menu" class="navbar-default sidebar navbar-static-side
   {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
   pls
@@ -182,9 +192,9 @@
       {% for section in sidemenu.footer %}
       {% for item in section.items %}
 
-      <li class="section-no-icon {{ item.classes }}">
+      <li class="item {{ item.classes }}">
         <a href="{{ item.url }}">
-          {% if item.fa_icon %}<i class="fa {{ item.fa_icon }}"></i>{% endif %}
+          {% if item.fa_icon %}<i class="fa {{ item.fa_icon }} item-icon"></i>{% endif %}
           {{ item.title | safe }}
         </a>
       </li>
@@ -205,7 +215,11 @@
     <div class="sidebar-collapse">
         <div class="logo">
             <a href="{% url 'index' %}">
+                {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
+                <img src="{% static 'img/dropified-black-icon-only.svg' %}"/>
+                {% else %}
                 <img src="{% static 'img/dropified-icon-only.svg' %}"/>
+                {% endif %}
             </a>
         </div>
 
@@ -335,10 +349,9 @@
       {% for section in sidemenu.footer %}
       {% for item in section.items %}
 
-      <li class="section-no-icon {{ item.classes }}">
-        <a href="{{ item.url }}">
-          {% if item.fa_icon %}<i class="fa {{ item.fa_icon }}"></i>{% endif %}
-          {{ item.title | safe }}
+      <li class="item {{ item.classes }}">
+        <a href="{{ item.url }}" title="{{ item.title | safe }}">
+          {% if item.fa_icon %}<i class="fa {{ item.fa_icon }} item-icon"></i>{% endif %}
         </a>
       </li>
 

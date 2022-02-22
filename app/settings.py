@@ -160,6 +160,7 @@ TEMPLATES = [
                 'leadgalaxy.context_processors.add_lifetime_menu',
                 'addons_core.context_processors.get_active_categories',
                 'leadgalaxy.context_processors.check_shopify_pending_subscription',
+                'leadgalaxy.context_processors.add_store_type',
             ],
         },
     },

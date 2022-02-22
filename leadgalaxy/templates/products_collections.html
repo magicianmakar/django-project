@@ -15,70 +15,47 @@
     {% include 'home/partial/candu.html' with mount_id='candu-us-products-info-above' %}
 
     <div class="tabs-container">
-        <div class="tab-content">
-            <div id="tab-1" class="tab-pane active">
+        <div class="nav nav-tabs" style="display: none;"></div>
+        <ul class="actions" style="border-radius: 8px; border-top-width: 1px;">
+            <form method="get">
+                <li class="hidden-form">
+                    <a href="javascript:;" class="text-default">
+                        Filter by
+                        <span class="dropified-icons di-arrow-down"></span>
+                    </a>
 
-
-            <div class="panel-heading m-b-none p-none no-border-bottom rounded">
-
-
-                {% if not request.session.old_layout %}
-                <div class="actions row">
-                    <div class="col-md-6">
-                        <span class="form-inline">
-                          Sort by
-                          <select id="product-search-sort" class="form-control update-on-change form-control m-r"
-                                  style="flex-shrink:2" placeholder="Sort By">
-                                    <option value="default">Best Match</option>
-                                    <option value="total_tranpro_desc" selected>Orders</option>
-                                    <option value="create_desc">Newest</option>
-                                    <option value="price_asc">Price - low first</option>
-                                    <option value="price_desc">Price - high first</option>
-                                </select>
-
-                      </span>
-                      <span class="form-inline">
-                          Filter by
-
-
-                                <select id="product-search-shipfrom" class="update-on-change form-control  m-r" style="flex-shrink: 1; " placeholder="Ship From">
-                                    <option value="" selected>Ship From</option>
-                                    <option value="US" >United States</option>
-                                    <option value="ES">Spain</option>
-                                    <option value="FR">France</option>
-                                    <option value="IT">Italy</option>
-                                    <option value="DE">Germany</option>
-                                    <option value="PL">Poland</option>
-                                    <option value="CZ">Czech Republic</option>
-                                    <option value="TR">Turkey</option>
-                                    <option value="CN">China</option>
-                                </select>
-
-
-
-                                <span style="display:inline-block;">
-                                    Price
-                                    <input id="product-search-pricemin" type="text" placeholder="Min" class="update-on-change form-control " style="float:none;max-width:60px;">
-                                    <span class="m-l-xs m-r-xs">-</span>
-                                    <input id="product-search-pricemax" type="text" placeholder="Max" class="update-on-change form-control " style="float:none;max-width:60px;">
-
-
-                                </span>
-
-                                <span style="display:inline-block;">
-                                    &nbsp;&nbsp; &nbsp;
-                                    <label for="product-search-freeship" class="m-r" style="flex-grow: 2;display: inline-flex;white-space: nowrap;vertical-align: middle;">
-                                        <input id="product-search-freeship" type="checkbox" class="form-control update-on-change icheck">
-                                        Free Shipping
-                                    </label>
-                                </span>
-                      </span>
-
-                    </div>
-                    <div class="col-md-6  border-left row">
-                        <div class="col-md-6">
+                    <div class="form" style="width: 300px;">
+                        <h3>Filter</h3>
+                        <div class="form-group">
+                            <label>Ships From</label>
+                            <select id="product-search-shipfrom" class="update-on-change form-control">
+                                <option></option>
+                                <option value="US">United States</option>
+                                <option value="ES">Spain</option>
+                                <option value="FR">France</option>
+                                <option value="IT">Italy</option>
+                                <option value="DE">Germany</option>
+                                <option value="PL">Poland</option>
+                                <option value="CZ">Czech Republic</option>
+                                <option value="TR">Turkey</option>
+                                <option value="CN">China</option>
+                            </select>
+                        </div>
+                        <div class="form-group pull-left">
+                            <label style="width: 100%;">Price</label>
+                            <input id="product-search-pricemin" type="text" placeholder="Min." class="update-on-change form-control" style="width: 49%;">
+                            <input id="product-search-pricemax" type="text" placeholder="Max." class="update-on-change form-control" style="width: 49%; margin-left: 2%;">
+                        </div>
+                        <div class="form-group pull-left" style="position: relative;">
+                            <label for="product-search-freeship" class="control-label">
+                                <input id="product-search-freeship" type="checkbox" class="form-control update-on-change icheck">
+                                Free Shipping
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label style="width: 100%;">Category</label>
                             <select id="product-search-cat" class="update-on-change form-control m-r" style="flex-shrink:2">
-                                <option value="">Any Category</option>
+                                <option></option>
                                 {% for cat in aliexpress_categories %}
                                 <option value="{{cat.url}}">{{cat.name}}</option>
                                     {% for sub in cat.sub %}
@@ -86,36 +63,48 @@
                                     {% endfor %}
                                 {% endfor %}
                             </select>
-
                         </div>
-
-                        <div class="col-md-6 form-inline text-right">
-                            <input id="product-search-input" type="text" placeholder="Search by Name" class="update-on-change form-control  m-l-sm" style="max-width: 200px;">
-                            <a href="javascript:;" id="product-search-btn" class="btn btn-primary btn-icon">
-                              <i class="fa fa-search"></i>
-                            </a>
-                        </div>
-
-
-
-
-
+                        <a href="javascript:;" id="product-search-btn" class="btn btn-primary">Apply</a>
                     </div>
+                </li>
 
+                <li class="hidden-form">
+                    <a href="javascript:;" class="text-default">
+                        Sort By
+                        <span class="dropified-icons di-arrow-down"></span>
+                    </a>
 
-                </div>
-                {% endif %}
-            </div>
+                    <div class="form" style="width: 300px;">
+                        <h3>Sort</h3>
+                        <div class="form-group">
+                            <select id="product-search-sort" class="form-control update-on-change"
+                                    style="flex-shrink:2">
+                                <option value="default">Best Match</option>
+                                <option value="total_tranpro_desc" selected>Orders</option>
+                                <option value="create_desc">Newest</option>
+                                <option value="price_asc">Price - low first</option>
+                                <option value="price_desc">Price - high first</option>
+                            </select>
+                        </div>
+                        <a href="javascript:;" id="product-search-btn" class="btn btn-primary">Apply</a>
+                    </div>
+                </li>
 
+                <li class="pull-right group">
+                    <input id="product-search-input" type="text" placeholder="Search by Name" class="update-on-change form-control">
+                    <a href="javascript:;" id="product-search-btn" class="btn btn-primary btn-icon">
+                      <i class="fa fa-search"></i>
+                    </a>
+                </li>
+            </form>
+        </ul>
+
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
                 <div class="panel-body us-products-panel">
-
-
                     <div class="category-list">
                         {% for cat in aliexpress_categories %}
-
-
                         <div class="row" style="margin-bottom: 50px">
-
                             <div class="col-md-2">
                                 <a class="open-category open-root-category" href="#" data-url="{{cat.url}}">{{cat.name}}</a>
                             </div>
@@ -125,10 +114,7 @@
                                     <a class="sub-cat-title open-category" href="#" data-url="{{sub.url}}">{{sub.name}}</a>
                                 </div>
                                 {% endfor %}
-
                             </div>
-
-
                         </div>
 
                         <div class="row">
@@ -139,8 +125,7 @@
                         {% endfor %}
                     </div>
 
-                    <div class="products-list row">
-                    </div>
+                    <div class="products-list row"></div>
             </div>
         </div>
     </div>
@@ -199,7 +184,7 @@
                     <!-- <input type="checkbox" class="import-alibaba-products" name="import-us-products" value="{{item.id}}"> -->
                 </div>
                 <div class="product-imitation" style="padding: 0;">
-                    <a href="{{ item.productDetailUrl }}" >
+                    <a href="{{ item.productDetailUrl }}" target="_blank">
                         <img class="unveil" src="{{item.lowImageUrl}}" data-src="{{item.imageUrl}}" style="width: 100%">
                     </a>
                 </div>
@@ -216,7 +201,7 @@
                  </div>
 
                 <div class="product-desc">
-                    <a href="{{ item.productDetailUrl }}" class="hidden-xs product-name" style="" > {{ item.title }}</a>
+                    <a href="{{ item.productDetailUrl }}" class="hidden-xs product-name" target="_blank"> {{ item.title }}</a>
 
                     <div class=" row ranks">
                         <div class="col-xs-10" style="padding-right:0">
@@ -225,12 +210,7 @@
                         <div class="col-xs-2 text-right" style="overflow:hidden;padding-left:5px">
                             <i class="fa fa-star"></i> {{item.starRating}}
                         </div>
-
                     </div>
-
-
-
-
                 </div>
             </div>
         </div>

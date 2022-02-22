@@ -854,11 +854,6 @@ $(function() {
         radioClass: 'iradio_square-blue',
     });
 
-    $(".add-board-btn").click(function(e) {
-        e.preventDefault();
-        $('#modal-board-add').modal('show');
-    });
-
     var tout = null;
     var showOnMouseEnter = ['#hijacked-warning', '.tos-update'];
 
@@ -884,29 +879,27 @@ $(function() {
     function createBoard(e) {
         e.preventDefault();
 
-        var board_name = $('#add-board-name').val().trim();
-        if (board_name.length === 0) {
+        var boardName = $('#new-board-add-form [name="title"]').val().trim();
+        if (boardName.length === 0) {
             swal('Add Board', 'Board name is required.', 'error');
             return;
         }
 
         $.ajax({
-            url: api_url('boards-add', $('#modal-board-add').prop('store-type')),
+            url: api_url('boards-add', $('#modal-board-add').attr('store-type')),
             type: 'POST',
-            data: {
-                title: board_name
-            },
+            data: {title: boardName},
             success: function(data) {
                 if ('status' in data && data.status == 'ok') {
-
                     $('#modal-board-add').modal('hide');
                     if (typeof(window.onBoardAdd) == 'function') {
                         window.onBoardAdd(data.board);
                     } else {
-                        window.location.href = window.location.href;
+                        window.location.href = window.location.href.split('#')[0];
+                        window.location.reload();
                     }
 
-                    $('#add-board-name').val('');
+                    $('#new-board-add-form [name="title"]').val('');
                 } else {
                     displayAjaxError('Create Board', data);
                 }
@@ -916,14 +909,20 @@ $(function() {
             }
         });
     }
-
-    $("#new-board-add-form").submit(createBoard);
-    $("#board-add-send").click(createBoard);
-    $("#board-add-send").keypress(function (e) {
+    $("#new-board-add-form").on('submit', createBoard);
+    $('#new-board-add-form [name="title"]').keypress(function (e) {
           if (e.which == 13) {
             createBoard(e);
             return false;
           }
+    });
+    $('#modal-board-add').on('shown.bs.modal', function() {
+        $('#new-board-add-form [name="title"]').trigger('focus');
+    });
+
+    $('.add-board-btn').click(function(e) {
+        e.preventDefault();
+        $('#modal-board-add').modal('show');
     });
 
     $('.select-all-btn').click(function (e) {

@@ -199,7 +199,7 @@
                                             </td>
                                             {% comment %}
                                             <td>
-                                                <input class="var-input" type="text" name="sku"
+                                                <input class="var-input form-control" type="text" name="sku"
                                                        value="{{item.sku|default:''}}"
                                                        style="border-right:1px solid #ddd;width:120px"/>
                                             </td>
@@ -522,7 +522,7 @@
             </div>
             {% else %}
             <div class="panel-body" style="min-height:300px">
-               
+
                 {% if request.user.profile.plan.support_addons %}
                     {% include "common/partial/upsell.html" with addon_id=11 message="Add Reviews to your Plan" only %}
                 {% else %}
@@ -744,7 +744,7 @@
     <div class="row well export" style="padding: 10px 0">
         <form class="product-export-form" method="post" data-export-id="{{id}}" data-product-id="{{product}}">
             <div class="form-group col-xs-12">
-                <label>Supplier Product link: <i class="fa fa-fw fa-question-circle"
+                <label>Supplier Product Link: <i class="fa fa-fw fa-question-circle"
                     qtip-tooltip="Enter a link to the product that you want to use for auto ordering"
                     style="font-size:16px;color:#BBB"
                 ></i></label>

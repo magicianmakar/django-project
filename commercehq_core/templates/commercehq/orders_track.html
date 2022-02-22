@@ -16,16 +16,7 @@
     <div class="tabs-container">
         {% include 'home/partial/tabs/orders_track.html' %}
 
-        <ul class="actions">
-            {% include 'common/partial/order_track_filters.html' with platform='CommerceHQ' %}
-
-            {% if not paginator.is_infinte %}
-            <li class="pull-right border-right">
-                <span class="text-default">{{paginator.count}} Item(s)</span>
-            </li>
-            {% endif %}
-        </ul>
-
+        {% include 'common/partial/order_track_filters.html' with platform='CommerceHQ' %}
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">

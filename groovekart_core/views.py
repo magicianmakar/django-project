@@ -964,6 +964,7 @@ class OrdersTrackList(ListView):
         context['store'] = store = self.get_store()
         context['shipping_carriers'] = store_shipping_carriers(store)
         context['groovekart_url'] = store.get_store_url()
+        context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': reverse('gkart:orders_list')},
             {'title': 'Tracking', 'url': reverse('gkart:orders_track')},

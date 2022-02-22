@@ -2353,7 +2353,7 @@ class ShopifyStoreApi(ApiBase):
             raise PermissionDenied()
 
         if data.get('ali_pass') == 'password is set':
-            return self.api_error('Please Enter your Aliexpress account password')
+            return self.api_error('Please Enter your AliExpress account password')
 
         current_email = user.models_user.get_config('ali_email')
         if current_email:

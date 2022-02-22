@@ -266,3 +266,12 @@ def check_shopify_pending_subscription(request):
         message += 'Shopify automatically cancels expired subscriptions after 30 days.'
         add_message(request, message)
     return {}
+
+
+def add_store_type(request):
+    try:
+        namespace = get_namespace(request)
+    except:
+        namespace = ''
+
+    return {'store_type': namespace}

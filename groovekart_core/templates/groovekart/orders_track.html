@@ -16,16 +16,7 @@
     <div class="tabs-container">
         {% include 'home/partial/tabs/orders_track.html' %}
 
-        <ul class="actions">
-            {% include 'common/partial/order_track_filters.html' with show_date_range=True show_order_errors=True show_days_passed=True platform='GrooveKart' %}
-
-            {% if not paginator.is_infinte %}
-            <li class="pull-right border-right">
-                <span class="text-default">{{paginator.count}} Item(s)</span>
-            </li>
-            {% endif %}
-        </ul>
-
+        {% include 'common/partial/order_track_filters.html' with show_date_range=True show_order_errors=True show_days_passed=True platform='GrooveKart' %}
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
@@ -107,7 +98,7 @@
 {% include 'groovekart/partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
 {% endcache %}
 
-{% include 'partial/tracking_update_modal.html' with store=store only %}
+{% include 'partial/tracking_update_modal.html' with store=store use_aliexpress_api=use_aliexpress_api only %}
 
 {% endblock %}
 

@@ -104,7 +104,7 @@ $('#query_input').change(function (e) {
     $('#query').val(val && val.indexOf('@') !== -1 ? 'b:' + btoa(val) : val);
 });
 
-$(".filter-form").submit(function() {
+$(".filter-form form").submit(function() {
     var items = $(this).find(":input").filter(function(i, el) {
         if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred'))  {
             // Note: Update in $('.save-filter-btn').click() too
@@ -129,7 +129,7 @@ $(".filter-form").submit(function() {
 $('.save-filter-btn').click(function (e) {
     e.preventDefault();
 
-    $(".filter-form").find(":input").filter(function(i, el) {
+    $(".filter-form form").find(":input").filter(function(i, el) {
         if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred')) {
             el.value = JSON.stringify(el.checked);
             el.checked = true;
@@ -142,7 +142,7 @@ $('.save-filter-btn').click(function (e) {
     $.ajax({
         url: api_url('save-orders-filter', 'chq'),
         type: 'POST',
-        data: $('.filter-form').serialize(),
+        data: $('.filter-form form').serialize(),
         success: function (data) {
             toastr.success('Orders Filter', 'Saved');
             // setTimeout(function() {

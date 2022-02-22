@@ -325,3 +325,11 @@ $('.panel-toggle .panel-heading').click(function (e) {
 
     $(e.currentTarget).parent().find('.panel-body').toggleClass('hidden');
 }).css('cursor', 'pointer');
+
+$('#accounts-menu a').on('click', function(e) {
+    var menuLink = $(this).attr('data-href');
+    if (menuLink) {
+        e.preventDefault();
+        $('a[href="' + menuLink + '"]').trigger('click');
+    }
+});

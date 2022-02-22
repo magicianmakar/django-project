@@ -181,7 +181,7 @@
         });
     });
 
-    $('.sync-selected-btn').click(function(e) {
+    $('.sync-selected-btn, .quick-sync-selected-btn').click(function(e) {
         var tracks = $.map($('.order-track').filter(function(i, el) {
             return el.checked;
         }), function(el) {
@@ -199,7 +199,13 @@
             keyboard: false
         });
 
-        $('.start-update-btn').trigger('click');
+        var target_id = e.target.id;
+        if(target_id === "quick-sync-selected-orders")  {
+            $('#quick-api-update').trigger('click');
+        }
+        else {
+            $('.start-update-btn').trigger('click');
+        }
     });
 
     $('.archive-selected-orders-btn').click(function(e) {

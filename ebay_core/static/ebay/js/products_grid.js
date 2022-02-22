@@ -7,8 +7,11 @@
 $('.bulk-action').on('click', function(e) {
     var action = $(this).attr('data-bulk-action');
 
-
     if (action.length === 0) {
+        if ($(this).hasClass('not-connected')) {
+            window.location.href = $(this).attr('href');
+            return;
+        }
         swal('Please select an action first', '', "warning");
         return;
     }

@@ -409,10 +409,21 @@ class EbayProductVariant(SureDoneProductVariantBase):
                 domain = domain.replace(f'.{i}', '')
 
             domain = domain.split('.')[-1]
+            source = {
+                'aliexpress': 'AliExpress',
+                'ebay': 'eBay',
+            }.get(domain.lower(), domain.title())
+
+            if source == 'aliexpress':
+                source = 'AliExpress'
+            elif source == 'ebay':
+                source = 'eBay'
+            else:
+                source = source.title()
 
             return {
                 'domain': domain,
-                'source': domain.title(),
+                'source': source,
                 'url': url
             }
 

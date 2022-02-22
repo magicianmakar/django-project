@@ -1255,6 +1255,9 @@ def normalize_product_title(title):
 
 
 def products_filter(res, fdata):
+    if fdata.get('ids'):
+        res = res.filter(id__in=fdata.get('ids').split(','))
+
     if fdata.get('title'):
         title = decode_params(fdata.get('title'))
         res = res.filter(title__icontains=title)

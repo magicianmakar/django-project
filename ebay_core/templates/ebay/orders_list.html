@@ -24,12 +24,6 @@
                     <span class="dropified-icons di-arrow-down"></span>
                 </a>
             </li>
-            <li>
-                <a href="javascript:;" class="text-default">
-                    Sort by
-                    <span class="dropified-icons di-arrow-down"></span>
-                </a>
-            </li>
             <li class="pull-right">
                 <span class="text-default">{{ paginator.count }} Order(s)</span>
             </li>
@@ -54,7 +48,7 @@
                 {% endif %}
             </li>
         </ul>
-        <div id="filter-form" class="hidden-form" data-hidden-link=".filter-btn">
+        <div id="filter-form" class="hidden-form {% if request.COOKIES.orders_filter == 'true' %}active{% endif %}" data-hidden-link=".filter-btn">
             <form method="get" class="form" style="position: relative;">
                 {% if request.GET.store %}
                 <input type="hidden" name="store" value="{{ request.GET.store }}">
@@ -520,12 +514,12 @@
                                             {% endif %} />
 
                                         {% if item.product %}
-                                        <a href="{% url 'ebay:product_detail' store_index=store.id pk=item.product.sku %}" class="multi-line-text-overflow" target="_blank" title="{{item.title}}">
-                                            {{item.title|truncatewords:7}}
+                                        <a href="{% url 'ebay:product_detail' store_index=store.id pk=item.product.sku %}" class="multi-line-text-overflow" target="_blank" title="{{item.title}}" style="-webkit-line-clamp: 3;">
+                                            {{item.title}}
                                         </a>
                                         {% else %}
-                                        <span class="multi-line-text-overflow" title="{{item.title}}">
-                                            {{item.title|truncatewords:7}}
+                                        <span class="multi-line-text-overflow" title="{{item.title}}" style="-webkit-line-clamp: 3;">
+                                            {{item.title}}
                                         </span>
                                         {% endif %}
                                     </div>
@@ -535,7 +529,7 @@
                                             <p>Status:</p>
                                         </label>
 
-                                        <div>
+                                        <div class="no-text-overflow">
                                             <p class="line-order-id">
                                                 {% if item.order_track %}
                                                 <a class="placed-order-details" href="#" order-id="{{order.id}}"
@@ -575,13 +569,13 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="col-md-3 header-column">
+                                    <div class="col-md-6 header-column p-r-none">
                                         <label class="pull-left">
                                             <p>Variant:</p>
                                             <p>Tracking:</p>
                                         </label>
 
-                                        <div>
+                                        <div class="no-text-overflow" style="width: calc(100% - 150px);float: left;">
                                             <p>
                                                 {{item.quantity}}x {% if item.attributes %}{{item.attributes}}{% endif %}
                                             </p>
@@ -595,11 +589,21 @@
                                                 {% endif %}
                                             </p>
                                         </div>
-                                    </div>
-                                    <div class="col-md-3 pull-right text-right no-padding">
-                                        {% if not item.is_pls %}
-                                            {% include 'ebay/partial/place_order_btn.html' %}
-                                        {% endif %}
+                                        <div class="pull-right text-right no-padding">
+                                            {% if not item.is_pls %}
+                                                {% include 'ebay/partial/place_order_btn.html' %}
+
+                                                {% if item.is_bundle %}
+                                                <button class="pull-right btn btn-success small order-bundle {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
+                                                        store-type="ebay"
+                                                        supplier-type="{{item.supplier_type}}"
+                                                        order-data="{{item.order_data_id}}"
+                                                        order-number="{{order.name}}">
+                                                    Order Bundle
+                                                </button>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
                                     </div>
 
                                     {% for bundle in item.bundles %}
