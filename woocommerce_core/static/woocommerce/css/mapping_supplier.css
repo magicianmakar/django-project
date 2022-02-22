@@ -19,7 +19,8 @@ td.variant-image .thumb {
       margin-top: 5px;
       margin-left: 5px;
       background-color: #fff;
-      border: 1px solid #ddd; }
+      border: 1px solid #ddd;
+      color: #485e74; }
   .mapping-preview .select-var-mapping:hover, .mapping-preview .change-shipping-rules:hover {
     cursor: pointer; }
   .mapping-preview .preview-display:hover, .mapping-preview .preview-display-block:hover {

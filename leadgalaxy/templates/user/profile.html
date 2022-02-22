@@ -230,7 +230,7 @@
                             </div>
                         </div>
 
-                        {% if shopify_apps_customer or True %}
+                        {% if shopify_apps_customer %}
                             {% include "partial/plans/shopify_subscription.html" with current_plan=user.profile.plan %}
                         {% elif stripe_customer %}
                             {% include "partial/plans/stripe_subscription.html" with current_plan=user.profile.plan %}

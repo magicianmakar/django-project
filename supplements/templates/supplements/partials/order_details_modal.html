@@ -26,9 +26,9 @@
           <span>Total: <b id="supplement-orders-total"></b></span>
         </div>
 
-        <a href="#" class="btn btn-danger" data-dismiss="modal" aria-label="Close">Close</a>
-        <button class="btn btn-primary place-label-orders"
-          data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Pay for Item(s)</button>
+        <a href="#" class="btn btn-default btn-outline" data-dismiss="modal" aria-label="Close">Close</a>
+        <button class="btn btn-primary place-label-orders" style="width: 160px;"
+          data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Pay</button>
       </div>
     </div>
   </div>
@@ -39,7 +39,7 @@
 <script id="id-order-detail-template" type="text/x-handlebars-template">
   {{#each orders}}{{#each this.items}}
   <tr class="supplement-item-payment" supplement-order-data-id="{{ this.id }}" order-id="{{ this.order_id }}">
-    <td><img src="{{ this.supplement.image_url }}" style="max-width: 48px; max-height: 48px;"></td>
+    <td><img src="{{ this.supplement.image_url }}" style="max-width: 150px; max-height: 70px;"></td>
     <td class="title">{{ this.supplement.title }}</td>
     <td class="text-center">
     </td>
@@ -92,19 +92,23 @@
       </div>
       {{/unless}}
     </td>
-    <td rowspan="{{ ../items.length }}"
-        class="order-total"
-        data-order-id="{{ this.order_id }}">
+    <td rowspan="{{ ../items.length }}">
+      <label class="pull-left">
+        <p>Total:</p>
+      </label>
+      <div>
+        <p class="order-total" data-order-id="{{ this.order_id }}"></p>
+      </div>
     </td>
     {{/unless}}
 
     <td class="status-text {{#if this.success}}text-success{{else}}text-danger{{/if}}">
       {{#if this.status_link}}
+      <span class="badge badge-{{#if this.success}}success{{else}}danger{{/if}}"></span>
       <a target="_blank"
-         class="{{#if this.success}}text-success{{else}}text-danger{{/if}}"
          href="{{ this.status_link }}">{{ this.status }}</a>
       {{else}}
-      {{ this.status }}
+      <span class="badge badge-warning"></span> {{ this.status }}
       {{/if}}
     </td>
   </tr>

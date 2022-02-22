@@ -10,8 +10,10 @@
                 <input type="text" name="{{ slug }}_name" value="{{ company.name }}" class="form-control" placeholder="Name">
             </div>
         </div>
+    </div>
 
-        <div class="col-md-2">
+    <div class="row">
+        <div class="col-md-4">
             <div class="form-group">
                 <label class="control-label">Country</label>
                 <select class="country_list" name="{{ slug }}_country" current="{{timezone}}" style="width:350px;">
@@ -25,7 +27,7 @@
             </div>
         </div>
 
-        <div class="col-md-2">
+        <div class="col-md-4">
             <div class="form-group">
                 <label class="control-label">City</label>
                 <input type="text" name="{{ slug }}_city" value="{{ company.city }}" class="form-control" placeholder="City">

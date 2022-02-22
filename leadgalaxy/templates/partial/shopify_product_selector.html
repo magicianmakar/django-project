@@ -1,5 +1,5 @@
 
-<div id="modal-shopify-product" class="modal fade" aria-hidden="true">
+<div id="modal-shopify-product" class="select-products-modal modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -58,7 +58,7 @@
                 <div class="row export">
                     <form class="form product-export-form" method="post">
                         <div class="form-group col-xs-12">
-                            <label>Supplier Product link:</label>
+                            <label>Supplier Product Link:</label>
                             <input type="text" class="form-control product-original-link" style="padding-right: 30px">
                             <i class="fa fa-spinner fa-spin product-original-link-loading"
                                style="display:none;position:absolute;right:22px;top:32px;font-size:1.5em"></i>
@@ -93,13 +93,13 @@
             {{/product.connected}}
         {{/connected_only}}>
         <div class="product-thumb col-md-1">
-            <a class="shopify-product" href="#" data-product-id="{{product.id}}" data-shopified-id="{{product.connected}}"
+            <a class="shopify-product product-image-selection" href="#" data-product-id="{{product.id}}" data-shopified-id="{{product.connected}}"
                 data-product-title="{{product.title}}" data-product-image="{{product.image.src}}">
                 <img src="{{product.image.src}}">
             </a>
         </div>
         <div class="col-md-11">
-            <a class="shopify-product" href="#" data-product-id="{{product.id}}" data-shopified-id="{{product.connected}}"
+            <a class="shopify-product product-selection" href="#" data-product-id="{{product.id}}" data-shopified-id="{{product.connected}}"
                 data-product-title="{{product.title}}" data-product-image="{{product.image.src}}">
                 {{product.title}}
             </a>

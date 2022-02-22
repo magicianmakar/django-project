@@ -1,16 +1,32 @@
-<form method="get">
-    {% if request.GET.store %}<input type="hidden" name="store" value="{{ request.GET.store }}">{% endif %}
-    {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
-    <li class="hidden-form">
-        <a href="javascript:;" class="text-default dropdown-toggle" data-target="#form-filter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<ul class="actions">
+    <li>
+        <a href="javascript:;" class="text-default filter-btn">
             Filter by
             <span class="dropified-icons di-arrow-down"></span>
         </a>
+    </li>
 
-        <div class="form dropdown-menu" style="width: 350px;" id="form-filter">
-            <h3>Filter</h3>
+    <li class="pull-right group">
+        <input name="query" value="{{request.GET.query|default:''}}" class="form-control" placeholder="Order ID or Tracking number">
+        <button type="submit" class="btn btn-primary btn-icon">
+          <i class="fa fa-search"></i>
+        </button>
+    </li>
+
+    {% if not paginator.is_infinte %}
+    <li class="pull-right border-right">
+        <span class="text-default">{{paginator.count}} Item(s)</span>
+    </li>
+    {% endif %}
+</ul>
+
+<div id="filter-form" class="hidden-form {% if request.COOKIES.orders_filter == 'true' %}active{% endif %}" data-hidden-link=".filter-btn">
+    <form method="get" class="form" style="position: relative;">
+        {% if request.GET.store %}<input type="hidden" name="store" value="{{ request.GET.store }}">{% endif %}
+        {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
+        <div class="row">
             {% if show_date_range %}
-            <div class="form-group">
+            <div class="col-md-4">
                 <label>Date Range</label>
                 <div id="date" class="form-control">
                     <i class="fa fa-calendar m-r-xs"></i>
@@ -22,11 +38,7 @@
                 <span class="help-block"></span>
             </div>
             {% endif %}
-            <div class="form-group pull-left">
-                <label>Query</label>
-                <input name="query" value="{{request.GET.query|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Order ID or Tracking number">
-            </div>
-            <div class="form-group">
+            <div class="col-md-4">
                 <label>Tracking #</label>
                 <select name="tracking" class="form-control">
                     <option {% if request.GET.tracking != '0' and  request.GET.tracking != '1' %}selected="selected"{% endif %} value="">Any</option>
@@ -34,7 +46,7 @@
                     <option {% if request.GET.tracking == '0' %}selected="selected"{% endif %} value="0">No Tracking #</option>
                 </select>
             </div>
-            <div class="form-group">
+            <div class="col-md-4">
                 <label>{{ platform }} Status:</label>
                 <select name="fulfillment" class="form-control">
                     <option {% if not request.GET.fulfillment  or request.GET.fulfillment == '2' %}selected="selected"{% endif %} value="2">Any</option>
@@ -42,7 +54,7 @@
                     <option {% if request.GET.fulfillment == '0' %}selected="selected"{% endif %} value="0">Not Fulfilled</option>
                 </select>
             </div>
-            <div class="form-group">
+            <div class="col-md-4">
                 <label>Supplier Status:</label>
                 <select name="reason" class="form-control" data-placeholder="Any">
                     <option value=""></option>
@@ -71,7 +83,7 @@
                 </select>
             </div>
             {% if show_order_errors %}
-            <div class="form-group">
+            <div class="col-md-4">
                 <label>Order Errors:</label>
                 <select name="errors" class="form-control" data-placeholder="Errors Filter" multiple>
                     <option value=""></option>
@@ -85,7 +97,7 @@
             </div>
             {% endif %}
 
-            <div class="form-group pull-left" style="width: 100%;">
+            <div class="col-md-4">
                 <label>Archived:</label>
                 <select name="hidden" class="form-control">
                     <option {% if request.GET.hidden == '2' %}selected="selected"{% endif %} value="2">Any</option>
@@ -95,24 +107,14 @@
             </div>
 
             {% if show_days_passed %}
-            <div class="form-group pull-left" style="width: 100%;">
+            <div class="col-md-4">
                 <label>Number of Days Passed:</label>
                 <input name="days_passed" type="number" max="360" value="{{request.GET.days_passed|default:''}}" class="form-control" placeholder="Number of Days Passed">
             </div>
             {% endif %}
 
-            <button class="btn btn-primary">Apply</button>
-        </div>
-    </li>
-    <li class="hidden-form">
-        <a href="javascript:;" class="text-default">
-            Sort by
-            <span class="dropified-icons di-arrow-down"></span>
-        </a>
-
-        <div class="form" style="width: 300px;">
-            <h3>Sort</h3>
-            <div class="form-group">
+            <div class="col-md-4">
+                <label>Sort by:</label>
                 <select name="sort" class="form-control">
                     <option value="">Select an option</option>
                     <option {% if request.GET.sort in "-order,order" %} selected {% endif %} value="order">{{ platform }} Order</option>
@@ -122,8 +124,6 @@
                     <option {% if request.GET.sort in "-add,add" %} selected {% endif %} value="add">Order Date</option>
                     <option {% if request.GET.sort|default:"-update" in "-update,update" %} selected {% endif %} value="update">Updated</option>
                 </select>
-            </div>
-            <div class="form-group" style="position: relative;">
                 <label for="sort-desc" class="control-label">
                     <input type="checkbox" name="desc" value="true" class="icheck"
                            {% if '-' in request.GET.sort|default:'-update' or request.GET.desc %}checked{% endif %}>
@@ -131,7 +131,9 @@
                 </label>
             </div>
 
-            <button class="btn btn-primary">Apply</button>
+            <div class="col-md-12">
+                <button class="btn btn-primary">Apply</button>
+            </div>
         </div>
     </li>
 </form>

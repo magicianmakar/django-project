@@ -122,9 +122,9 @@
     });
 
     $('.filter-btn').click(function(e) {
-        Cookies.set('orders_filter', !$('.filter-form').is(':visible'));
+        Cookies.set('orders_filter', !$('#filter-form').hasClass('active'));
 
-        $('.filter-form').toggle('fade');
+        $('#filter-form').toggleClass('active');
     });
 
     $('.delete-order-id-btn').click(function(e) {
@@ -202,7 +202,7 @@
             $('#quick-api-update').trigger('click');
         }
         else {
-            $('#quick-api-update').trigger('click');
+            $('.start-update-btn').trigger('click');
         }
     });
 
@@ -346,4 +346,7 @@
         });
     });
 
+    if (Cookies.get('orders_filter') == 'true') {
+        $('#filter-form').addClass('active');
+    }
 })();

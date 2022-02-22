@@ -12,14 +12,14 @@
                 <div class="modal-body">
                     <p>Link this {{ store_title }} item to a supplier order</p>
                     <ul class="m-b-lg">
-                        <li>For Aliexpress orders you can use the Order ID or Order Details url</li>
+                        <li>For AliExpress orders you can use the Order ID or Order Details url</li>
                         <li>For eBay orders you have to use the Order Details url</li>
                     </ul>
 
                     <div class="form-group">
                         <label forHtml="supplier-type">Supplier Type:</label>
                         <select class="supplier-type form-control">
-                            <option value="aliexpress">Aliexpress</option>
+                            <option value="aliexpress">AliExpress</option>
                             <option value="alibaba">Alibaba</option>
                             <option value="ebay">eBay</option>
                             {% if request.user|can:'print_on_demand.use' %}

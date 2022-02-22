@@ -124,7 +124,7 @@
                         {% if request.user.profile.plan.description %}
                             <a class="pull-left btn btn-default btn-outline btn-plan old-layout-hidden" href="/user/profile#plan">
                                 {% if request.user.profile.plan.badge_image %}
-                                    <img style="height: 35px;" src="{{ request.user.profile.plan.badge_image }}" alt=""
+                                    <img style="height: 35px; margin-right: 10px;" src="{{ request.user.profile.plan.badge_image }}" alt=""
                                         {% if 'tooltip' in request.user.profile.plan.badge_image %}
                                         qtip-tooltip="<img style='width: 100%' src='{{ request.user.profile.plan.large_badge_image }}'>"
 
@@ -163,41 +163,43 @@
                             <ul id="accounts-menu" class="dropdown-menu pull-right">
                                 <li>Account</li>
                                 <li>
-                                    <a href="{% url 'user_profile' %}">
+                                    <a href="{% url 'user_profile' %}#profile" data-href="#tab-1">
                                         <img src="{% static 'img/applications_menu/profile-settings.svg' %}">
                                         Profile Settings
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{% url 'user_profile' %}#email">
+                                    <a href="{% url 'user_profile' %}#email" data-href="#tab-2">
                                         <img src="{% static 'img/applications_menu/email-and-password.svg' %}">
                                         E-mail & Password
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{% url 'user_profile' %}#plan">
+                                    <a href="{% url 'user_profile' %}#plan" data-href="#tab-3">
                                         <img src="{% static 'img/applications_menu/plan-and-subscription.svg' %}">
                                         Plan & Subscription
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{% url 'user_profile' %}#billing">
+                                    <a href="{% url 'user_profile' %}#billing" data-href="#tab-4">
                                         <img src="{% static 'img/applications_menu/billing.svg' %}">
                                         Billing
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{% url 'user_profile' %}#invoices">
+                                    <a href="{% url 'user_profile' %}#invoices" data-href="#tab-5">
                                         <img src="{% static 'img/applications_menu/invoices.svg' %}">
                                         Invoices
                                     </a>
                                 </li>
+                                {% if request.user|can:"sales_fee.use" %}
                                 <li>
-                                    <a href="{% url 'user_profile' %}#salesfees">
+                                    <a href="{% url 'user_profile' %}#salesfees" data-href="#tab-salesfees">
                                         <img src="{% static 'img/applications_menu/fulfillment-fees.svg' %}">
                                         Fulfillment Fees
                                     </a>
                                 </li>
+                                {% endif %}
                                 <li>
                                     <a href="{% url 'subusers' %}">
                                         <img src="{% static 'img/applications_menu/sub-users.svg' %}">
@@ -272,21 +274,22 @@
 
         {% block breadcrumb-area %}
         <div class="row breadcrumbs-container wrapper border-bottom white-bg">
-            <div class="col-sm-6 page-heading no-text-overflow">
-                <h2 class="new-layout-hidden">{% block page-title %}{% endblock %}</h2>
+            <div class="col-sm-12 page-heading">
+                <ol class="breadcrumb" style="display: flex; justify-content: flex-start;">
                 {% if breadcrumbs %}
-                <ol class="breadcrumb">
                     {% for item in breadcrumbs %}
                         {% if item.url %}
-                        <li {% if forloop.last%}class="active"{% endif %}><a href="{{item.url}}">{{item.title|safe|truncatewords:10}}</a></li>
+                        <li class="{% if forloop.last%}no-text-overflow active{% endif %}"><a href="{{item.url}}">{{item.title|safe}}</a></li>
                         {% else %}
-                        <li {% if forloop.last%}class="active"{% endif %}>{{item|safe|truncatewords:10}}</li>
+                        <li class="{% if forloop.last%}no-text-overflow active{% endif %}">{{item|safe}}</li>
                         {% endif %}
                     {% endfor %}
-                </ol>
                 {% endif %}
+                    <div style="margin-left:auto;">
+                        <li class="pull-right">{% block breadcrumb-right %}{% endblock %}</li>
+                    </div>
+                </ol>
             </div>
-            <div class="col-sm-6">{% block breadcrumb-right %}{% endblock %}</div>
         </div>
         {% endblock breadcrumb-area %}
 
@@ -337,6 +340,7 @@
             </div>
         </div>
     </div>
+
   </div>
 
 {% block modal-board-add %}

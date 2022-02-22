@@ -9,6 +9,10 @@ $('.bulk-action').on('click', function(e) {
     var action = $(this).attr('data-bulk-action');
 
     if (!$('input.item-select[type=checkbox]').is(':checked')) {
+        if ($(this).hasClass('not-connected')) {
+            window.location.href = $(this).attr('href');
+            return;
+        }
         swal('Please select a product first', '', "warning");
         return;
     }

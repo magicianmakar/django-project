@@ -1,6 +1,6 @@
 <div class="row">
     <div class="col-md-12">
-        <div class="panel">
+        <div class="panel" style="border-radius:8px;">
             <div class="panel-body">
                 <p class="title">Your Current Plan:</p>
                 <ul class="list-unstyled">
@@ -10,17 +10,17 @@
                         <li class="list-group-item subscription-item" style="border:0 none">
                             {{ item.plan.get_description }}
                                 {% if item.is_active %}
-                                    <span class="badge badge-primary">
+                                    <span class="badge badge-primary" style="float: none;">
                                         {{ status.status_str }}
                                     </span>
 
                                     {% with coupon=user.stripe_customer.get_coupon %}
                                         {% if coupon %}
-                                            <span class="badge badge-success">{{ coupon }}</span>
+                                            <span class="badge badge-success" style="float: none;">{{ coupon }}</span>
                                         {% endif %}
                                     {% endwith %}
                                 {% else %}
-                                    <span class="badge badge-warning">
+                                    <span class="badge badge-warning" style="float: none;">
                                         {{ status.status_str }}
                                     </span>
                                 {% endif %}
@@ -35,8 +35,6 @@
                             {% if item.can_cancel and not item.plan.is_free and not item.plan.has_installments and not item.plan.is_lifetime_free %}
                             <button class="btn
                                            btn-danger
-                                           btn-outline
-                                           btn-xs
                                            pull-right
                                            cancel-sub-btn
                                            continue-cancel
@@ -53,7 +51,8 @@
                                     data-status="{{status.status}}"
                                     data-period-end="{{item.period_end|date:'SHORT_DATE_FORMAT'}}"
                                     data-plan="{{item.plan.get_description}}"
-                                    data-baremetrics="{{ baremetrics_form_enabled }}">
+                                    data-baremetrics="{{ baremetrics_form_enabled }}"
+                                    style="margin-top:-15px;">
                                 Cancel
                             </button>
                             {% endif %}

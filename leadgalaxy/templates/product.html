@@ -21,9 +21,12 @@
     <ul class="dropdown-menu pull-right">
       {% if request.GET.store != 'c' and user|can:'myshopify_integration.use' %}
       <li>
-        <a href="#" class="bulk-action" data-bulk-action="edit">Edit</a>
+        <a href="{% url 'bulk_edit' what='saved' %}" class="bulk-action {% if request.GET.store == 'n' %}not-connected{% endif %}" data-bulk-action="edit">Edit</a>
       </li>
       {% endif %}
+      <li>
+        <a href="{% url 'shopify_migration' %}">Import</a>
+      </li>
       <li>
         <a href="#" class="bulk-action" data-bulk-action="board">Add to Board</a>
       </li>

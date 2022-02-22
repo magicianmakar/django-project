@@ -58,7 +58,7 @@ def get_menu_structure(namespace, request):
         else:
             footer = [('help', ['help'])]
     else:
-        footer = [('help', ['help', 'faq', 'account'])]
+        footer = [('help', ['help'])]
 
     named = [
         ('account', ['account']),
@@ -94,7 +94,6 @@ def get_menu_item_data(request):
     is_plod = False
     hide_profit_dashboard = False
     hide_dashboard = True
-    is_old_layout = request.session.get('old_layout')
     user = None
 
     try:
@@ -244,19 +243,14 @@ def get_menu_item_data(request):
             'url': 'https://academy.dropified.com/training/',
         },
         'account': {
-            'title': 'Manage Account' if is_old_layout else '',
+            'title': 'Manage Account',
             'url_name': 'user_profile',
             'match': r'(/\w+)?/user/profile',
             'fa_icon': 'fa-user',
         },
         'help': {
-            'title': f'{"Dropified " if is_black else ""}Help Center' if is_old_layout else '',
+            'title': f'{"Dropified " if is_black else ""}Help Center',
             'url': 'https://learn.dropified.com/',
-            'fa_icon': 'fa-cog',
-        },
-        'faq': {
-            'title': '',
-            'url': '#',
             'fa_icon': 'fa-question-circle',
         },
         'plod_help': {

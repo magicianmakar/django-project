@@ -15,16 +15,7 @@
     <div class="tabs-container">
         {% include 'home/partial/tabs/orders_track.html' %}
 
-        <ul class="actions">
-            {% include 'common/partial/order_track_filters.html' with show_date_range=True show_order_errors=True show_days_passed=True platform='Shopify' %}
-
-            {% if not paginator.is_infinte %}
-            <li class="pull-right border-right">
-                <span class="text-default">{{paginator.count}} Item(s)</span>
-            </li>
-            {% endif %}
-        </ul>
-
+        {% include 'common/partial/order_track_filters.html' with show_date_range=True show_order_errors=True show_days_passed=True platform='Shopify' %}
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
@@ -154,7 +145,7 @@
     <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
-    <script src="{% static 'js/daterangepicker.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/daterangepicker.js' %}" type="text/javascript"></script>w
     <script src="{% static 'prints/js/track_orders.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders_track.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders_track_update.js' %}" type="text/javascript"></script>

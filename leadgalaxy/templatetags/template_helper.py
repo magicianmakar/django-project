@@ -364,7 +364,7 @@ def order_track_status(context, track, html=True):
     elif track.source_type == 'alibaba':
         supplier_name = 'Alibaba'
     else:
-        supplier_name = 'Aliexpress'
+        supplier_name = 'AliExpress'
 
     if track.source_status_details:
         if ',' in track.source_status_details:

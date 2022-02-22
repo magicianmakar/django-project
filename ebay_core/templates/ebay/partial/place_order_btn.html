@@ -3,7 +3,7 @@
 
 {% if item.supplier %}
     {% if not item.supplier.is_dropified_print %}
-    <div class="btn-group order-line-group"
+    <div class="btn-group order-line-group pull-right"
         order-id="{{order.id}}"
         line-id="{{item.id}}"
         order-data-id="{{item.order_data_id}}"
@@ -26,12 +26,12 @@
         </button>
 
     {% else %}
-        <button data-toggle="dropdown" class="btn {% if item.refunded %}btn-danger{% else %}btn-success{% endif %} btn-xs dropdown-toggle" aria-expanded="false">
-            Place Order
+        <button data-toggle="dropdown" class="btn {% if item.refunded %}btn-danger{% endif %} small dropdown-toggle" aria-expanded="false">
+            Actions
             {% if item.refunded %}
                 {% include 'partial/help_tooltip.html' with help="This Item was Refunded" qtipstyle="color:#fff" qtipicon="exclamation-triangle" %}
             {% endif %}
-            <span class="caret"></span></button>
+            <span class="dropified-icons di-arrow-up"></span></button>
     {% endif %}
 
         <ul class="dropdown-menu pull-right">

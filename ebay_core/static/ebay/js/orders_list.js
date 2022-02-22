@@ -124,7 +124,7 @@ $('.filter-btn').click(function (e) {
     $('#filter-form').toggleClass('active');
 });
 
-$('#filter-form').submit(function() {
+$('#filter-form form').submit(function() {
     $(this).find(':input').filter(function(i, el) {
         if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred'))  {
             // Note: Update in $('.save-filter-btn').click() too
@@ -142,7 +142,7 @@ $('#filter-form').submit(function() {
 $('.save-filter-btn').click(function (e) {
     e.preventDefault();
 
-    var filterFormEl = $('.filter-form');
+    var filterFormEl = $('.filter-form form');
 
     filterFormEl.find(':input').filter(function(i, el) {
         if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred')) {
