@@ -5,11 +5,14 @@ import re
 import uuid
 from copy import deepcopy
 from pusher import Pusher
+from requests.exceptions import HTTPError
 from tenacity import RetryError, retry, stop_after_attempt, wait_fixed
 from typing import List
 from unidecode import unidecode
 
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.utils.crypto import get_random_string
 
 from lib.exceptions import capture_exception, capture_message
@@ -25,7 +28,7 @@ from shopified_core.utils import hash_url_filename, safe_int, safe_json, safe_st
 from supplements.utils import supplement_customer_address
 
 from .api import SureDoneAdminApiHandler, SureDoneApiHandler
-from .models import SureDoneAccount
+from .models import InvalidSureDoneStoreInstanceId, SureDoneAccount
 
 SUREDONE_DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss'
 
@@ -71,17 +74,31 @@ class SureDoneUtils:
         # 1. Get all suredone options
         all_options_data = self.get_all_user_options()
 
-        # 2. Extract a list of all ebay channels
+        # 2. Extract a list of all channels
         if all_options_data:
             plugin_settings = safe_json(all_options_data.pop('plugin_settings', '{}'), {})
-            channel_info = plugin_settings.get('channel', {})
 
+            # 2.1. Get a list of eBay and Amazon channels
+            channel_info = plugin_settings.get('channel', {})
             self._account_stores_config = {
                 'ebay': [1, *[safe_int(i.get('instanceId')) for i in channel_info.get('ebay', {}).values()
                               if 'instanceId' in i]],
                 'amzn': [1, *[safe_int(i.get('instanceId')) for i in channel_info.get('amazon', {}).values()
                               if 'instanceId' in i]],
             }
+
+            # 2.2. Get a list of all other channel types
+            register_data = plugin_settings.get('register', {})
+
+            # 2.2.1. Facebook channels
+            if 'facebook' in register_data.get('context', {}):
+                facebook_instances = [1]
+                addnl_fb_channels = list(register_data.get('instance', {}).get('facebook', {}).values())
+                for channel in addnl_fb_channels:
+                    instance_id = channel.get('instance')
+                    if instance_id is not None and instance_id != '':
+                        facebook_instances.append(instance_id)
+                self._account_stores_config['facebook'] = facebook_instances
 
     def get_all_user_options(self, update_db=True, verify_custom_fields=False):
         all_options_data = self.api.get_all_account_options()
@@ -100,6 +117,16 @@ class SureDoneUtils:
                     })
 
         return all_options_data
+
+    def get_store_statuses_by_platform(self, platform=None):
+        try:
+            resp = self.api.get_platform_statuses()
+            resp.raise_for_status()
+        except HTTPError:
+            return [] if platform else {}
+
+        statuses = resp.json().get('results', {})
+        return statuses.get(platform, []) if platform else statuses
 
     def get_skip_channels_config(self, channel_type: str, instance_id: int, skip_type: str = 'true',
                                  send_type: str = 'false'):
@@ -282,8 +309,8 @@ class SureDoneUtils:
 
         :param updated_product_data:
         :type updated_product_data:
-        :param store_type:
-        :type store_type:
+        :param store_type: can be one of: ['ebay', 'amzn', 'facebook']
+        :type store_type: str
         :param store_instance_id:
         :type store_instance_id:
         :param old_product_data:
@@ -347,14 +374,14 @@ class SureDoneUtils:
 
         return self.api.edit_product_details_bulk(api_request_data, skip_all_channels)
 
-    def relist_product(self, guid: str, store_type: str, store_instance_id: int):
+    def relist_product(self, guids: List[str], store_type: str, store_instance_id: int):
         skip_channels_config = self.get_skip_channels_config(store_type, store_instance_id)
-        request_data = {
+        request_data = [{
             'guid': guid,
             'dropifiedconnectedstoreid': store_instance_id,
             **skip_channels_config,
-        }
-        api_request_data = self.transform_variant_data_into_sd_list_format([request_data])
+        } for guid in guids]
+        api_request_data = self.transform_variant_data_into_sd_list_format(request_data)
         return self.api.relist_product_details_bulk(api_request_data)
 
     def generate_data_per_variant(self, root_data: dict, variants_specific_data: list) -> list:
@@ -368,6 +395,9 @@ class SureDoneUtils:
             data_per_variant = [root_data]
 
         return data_per_variant
+
+    def format_error_messages_by_variant(self, errors: dict) -> str:
+        return '\n\n'.join([f'<b>Variant #{i}</b>: {m}' for i, m in errors.items()])
 
     def transform_variant_data_into_sd_list_format(self, data_per_variant: list, keys_to_exclude=None):
         if not keys_to_exclude:
@@ -565,6 +595,9 @@ class SureDoneUtils:
         # Add the required "condition" field
         computed_product_data['condition'] = computed_product_data.get('condition', 'New')
 
+        # Add the field brand derived from the vendor field
+        computed_product_data['brand'] = computed_product_data.get('vendor', '')
+
         # Step 3: Stringify store field value
         store_info = computed_product_data.pop('store', None)
         if store_info:
@@ -593,7 +626,6 @@ class SureDoneUtils:
             sd_key = dropified_key.replace('_', '')
             computed_product_data[sd_key] = computed_product_data.pop(dropified_key, '')
 
-        # TODO: update this value to whatever needs to be the default stock
         computed_product_data['stock'] = 2
 
         if len(req_variants) > 0:
@@ -676,8 +708,8 @@ class SureDoneUtils:
         :type ext_formatted_product_data: dict
         :param store_instance_id:
         :type store_instance_id:
-        :param store_type:
-        :type store_type:
+        :param store_type: can be one of: ['ebay', 'fb']
+        :type store_type: str
         :return: SureDone's API response
         :rtype: JsonResponse
         """
@@ -904,6 +936,164 @@ class SureDoneUtils:
 
         return self.api.edit_product_details_bulk(api_request_data, skip_all_channels)
 
+    def store_shipping_carriers(self):
+        carriers = [
+            {1: 'USPS'}, {2: 'UPS'}, {3: 'FedEx'}, {4: 'LaserShip'},
+            {5: 'DHL US'}, {6: 'DHL Global'}, {7: 'Canada Post'},
+            {8: 'Custom Provider'},
+        ]
+
+        return [{'id': list(c.keys()).pop(), 'title': list(c.values()).pop()} for c in carriers]
+
+    def get_shipping_carrier_name(self, carrier_id):
+        shipping_carriers = self.store_shipping_carriers()
+        for carrier in shipping_carriers:
+            if carrier['id'] == carrier_id:
+                return carrier['title']
+
+    def get_orders_by_platform_type(self, store, filters: dict, page=None, per_page=None):
+        if not page:
+            page = 1
+        if not per_page:
+            per_page = 25
+
+        # SD assigns instance IDs in the following order: 0, 2, 3, 4, etc., so if the instance ID is 1, set it to 0
+        try:
+            instance_id_filter = store.filter_instance_id
+        except InvalidSureDoneStoreInstanceId:
+            capture_exception()
+            instance_id_filter = store.store_instance_id
+
+        search_filters = {
+            'channel': {
+                'value': filters.get('platform_type'),
+                'relation': ':='
+            },
+            'instance': {
+                'value': instance_id_filter,
+                'relation': ':='
+            },
+            'archived': {
+                'value': '0',
+                'relation': ':='
+            }
+        }
+
+        sort_by = None
+        sort_order = None
+
+        # Parse and format filters
+        if filters:
+            order_by = filters.get('orderby')
+            if order_by:
+                sort_by = order_by
+
+            order = filters.get('order')
+            if order:
+                sort_order = order
+
+            customer_filter = filters.get('customer')
+            if customer_filter:
+                first_name = customer_filter.get('first_name')
+                if first_name:
+                    search_filters['sfirstname'] = {
+                        'value': first_name,
+                        'relation': ':'
+                    }
+
+                last_name = customer_filter.get('last_name')
+                if last_name:
+                    search_filters['slastname'] = {
+                        'value': last_name,
+                        'relation': ':'
+                    }
+
+                email = customer_filter.get('email')
+                if email:
+                    search_filters['email'] = {
+                        'value': email,
+                        'relation': ':='
+                    }
+
+            order_id = filters.get('order_id')
+            if order_id:
+                search_filters['ordernumber'] = {
+                    'value': order_id,
+                    'relation': ':'
+                }
+
+            country = filters.get('country')
+            if country:
+                search_filters['scountry'] = {
+                    'value': country,
+                    'relation': ':='
+                }
+
+            status = filters.get('status')
+            if status:
+                search_filters['status'] = {
+                    'value': status,
+                    'relation': ':='
+                }
+
+            oid = filters.get('oid')
+            if oid:
+                search_filters['oid'] = {
+                    'value': oid,
+                    'relation': ':='
+                }
+
+        search_filters = self.format_filters(search_filters)
+
+        # Format time filters
+        if filters and ('after' in filters or 'before' in filters):
+            time_filters = []
+            before_filter = filters.get('before', '')
+            after_filter = filters.get('after', '')
+
+            if before_filter:
+                time_filters.append(self.format_filters({'date': {'value': before_filter, 'relation': ':<='}}))
+            if after_filter:
+                time_filters.append(self.format_filters({'date': {'value': after_filter, 'relation': ':>='}}))
+
+            search_filters = f"{search_filters} {' '.join(time_filters)}"
+
+        return self.get_all_orders(search_filters,
+                                   page=page,
+                                   sort_by=sort_by,
+                                   sort_order=sort_order)
+
+    def get_item_fulfillment_status(self, order: dict, item_id):
+        shipments = order.get('shipments', [])
+        status = 'Unfulfilled'
+        for shipment_info in shipments:
+            try:
+                shipment_items = shipment_info.get('shipdetails', {}).get('items')
+            except AttributeError:
+                continue
+            if not isinstance(shipment_items, list):
+                continue
+
+            skus = [x.get('sku') for x in shipment_items if 'sku' in x]
+            for sku in skus:
+                if sku == item_id:
+                    status = 'Fulfilled'
+                    return status
+
+        return status
+
+    def order_id_from_name(self, store, order_name, default=None):
+        order_name = order_name.replace('#', '')
+        if not order_name:
+            return default
+
+        sd_orders, sd_orders_count = self.get_all_orders(filters=f'{order_name}')
+
+        if sd_orders_count and len(sd_orders):
+            return [i.get('oid') for i in sd_orders]
+
+        return default
+
     def convert_to_default_and_custom_fields(self, fields: List[str]) -> List[str]:
         return [field if self.sd_account.is_default_field(field) else self.sd_account.format_custom_field(field)
                 for field in fields]
@@ -991,6 +1181,93 @@ class SureDonePusher:
     def trigger(self, event, data, channel=None):
         channel = self.channel if channel is None else channel
         self.pusher.trigger(channel, event, data)
+
+
+class SureDoneOrderUpdater:
+    store_model = None
+    utils_class = None
+
+    def __init__(self, user=None, store=None, order_id: int = None):
+        self.utils = None
+        self.user = user
+        if user and self.utils_class is not None:
+            self.utils = self.utils_class(user)
+        self.store = store
+        self.order_id = order_id
+        self.notes = []
+
+    def add_note(self, n):
+        self.notes.append(n)
+
+    def mark_as_ordered_note(self, line_id: str, source_id: int, track):
+        source = 'Aliexpress'
+
+        if track:
+            url = track.get_source_url()
+            source = track.get_source_name()
+
+        else:
+            url = f'https://trade.aliexpress.com/order_detail.htm?orderId={source_id}'
+
+        note = f'{source} Order ID: {source_id}\n{url}'
+
+        if line_id:
+            note = f'{note}\nOrder Line: #{line_id}'
+
+        self.add_note(note)
+
+    def save_changes(self):
+        with cache.lock(f'updater_lock_{self.store.id}_{self.order_id}', timeout=15):
+            self._do_save_changes()
+
+    def _do_save_changes(self):
+        if self.notes:
+            new_note = '\n'.join(self.notes)
+            self.add_order_note(self.order_id, new_note)
+
+    def toJSON(self, additional_values: dict = None):
+        if additional_values is None:
+            additional_values = {}
+
+        return json.dumps({
+            "notes": self.notes,
+            "order": self.order_id,
+            "user": self.user.models_user.id,
+            "store": self.store.id,
+            **additional_values
+        }, sort_keys=True, indent=4)
+
+    def fromJSON(self, data):
+        if type(data) is not dict:
+            data = json.loads(data)
+
+        self.store = self.store_model.objects.get(id=data.get('store'))
+        self.order_id = data.get('order')
+        self.user = User.objects.get(id=data.get('user'))
+        if self.user and self.utils_class is not None:
+            self.utils = self.utils_class(self.user)
+        self.notes = data.get('notes')
+
+    def add_order_note(self, order_id: int, note: str):
+        if not self.utils:
+            raise AttributeError('Error saving an order note: No user was provided.')
+
+        request_body = {
+            'internalnotes': note,
+            'oid': order_id,
+        }
+
+        r = self.utils.api.update_order_details(order_id, request_body)
+        r.raise_for_status()
+
+        return r.json()
+
+    def update_order_status(self, status, tries=3):
+        while tries > 0:
+            tries -= 1
+            r = self.utils.api.update_order_details(self.order_id, {'status': status})
+            if r.ok:
+                break
 
 
 def get_or_create_suredone_account(user) -> SureDoneAccount:

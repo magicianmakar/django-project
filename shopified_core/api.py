@@ -17,6 +17,8 @@ from commercehq_core.api import CHQStoreApi
 from commercehq_core.models import CommerceHQOrderTrack, CommerceHQStore
 from ebay_core.api import EbayStoreApi
 from ebay_core.models import EbayOrderTrack, EbayStore
+from facebook_core.api import FBStoreApi
+from facebook_core.models import FBOrderTrack, FBStore
 from gearbubble_core.api import GearBubbleApi
 from gearbubble_core.models import GearBubbleOrderTrack, GearBubbleStore
 from groovekart_core.api import GrooveKartApi
@@ -143,6 +145,14 @@ class ShopifiedApi(ApiResponseMixin, View):
                 'url': i.get_admin_url()
             })
 
+        for i in user.profile.get_fb_stores():
+            stores.append({
+                'id': i.id,
+                'name': i.title,
+                'type': 'fb',
+                'url': i.get_admin_url()
+            })
+
         for i in user.profile.get_gear_stores():
             stores.append({
                 'id': i.id,
@@ -182,6 +192,8 @@ class ShopifiedApi(ApiResponseMixin, View):
                 store_model = WooStore
             elif store_type == 'ebay':
                 store_model = EbayStore
+            elif store_type == 'fb':
+                store_model = FBStore
             elif store_type == 'gear':
                 store_model = GearBubbleStore
             elif store_type == 'gkart':
@@ -204,6 +216,7 @@ class ShopifiedApi(ApiResponseMixin, View):
         chq_count = user.profile.get_chq_stores().count()
         woo_count = user.profile.get_woo_stores().count()
         ebay_count = user.profile.get_ebay_stores().count()
+        fb_count = user.profile.get_fb_stores().count()
         gear_count = user.profile.get_gear_stores().count()
         gkart_count = user.profile.get_gkart_stores().count()
         bigcommerce_count = user.profile.get_bigcommerce_stores().count()
@@ -217,7 +230,7 @@ class ShopifiedApi(ApiResponseMixin, View):
                 cache.set('quick_save_limit_{}'.format(user.id), True, timeout=user.get_config('_quick_save_limit', 5))
 
         other_stores_empty = woo_count == 0 and chq_count == 0 and gear_count == 0 and gkart_count == 0 and bigcommerce_count == 0\
-            and ebay_count == 0
+            and ebay_count == 0 and fb_count == 0
 
         if shopify_count > 0 or other_stores_empty:
             return ShopifyStoreApi.as_view()(request, **self.request_kwargs)
@@ -231,6 +244,8 @@ class ShopifiedApi(ApiResponseMixin, View):
             return BigCommerceStoreApi.as_view()(request, **self.request_kwargs)
         elif ebay_count > 0:
             return EbayStoreApi.as_view()(request, **self.request_kwargs)
+        elif fb_count > 0:
+            return FBStoreApi.as_view()(request, **self.request_kwargs)
         else:
             return GrooveKartApi.as_view()(request, **self.request_kwargs)
 
@@ -368,6 +383,23 @@ class ShopifiedApi(ApiResponseMixin, View):
                 order_tracks = order_tracks.filter(store=data.get('store'))
 
             orders.extend(core_utils.serializers_orders_track(order_tracks, 'ebay'))
+
+        # Facebook
+        store_ids = list(user.profile.get_fb_stores(flat=True))
+        if store_ids:
+            order_tracks = core_utils.using_replica(FBOrderTrack) \
+                .filter(store__in=store_ids) \
+                .filter(created_at__gte=since) \
+                .filter(source_tracking='') \
+                .exclude(source_status='FINISH') \
+                .filter(hidden=False) \
+                .defer('data') \
+                .order_by('created_at')
+
+            if data.get('store'):
+                order_tracks = order_tracks.filter(store=data.get('store'))
+
+            orders.extend(core_utils.serializers_orders_track(order_tracks, 'fb'))
 
         return self.api_success({
             'orders': orders,

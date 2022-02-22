@@ -1,13 +1,14 @@
 import json
 import os
+import re
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils.crypto import get_random_string
 
-from shopified_core.models import ProductBase, StoreBase
-from shopified_core.utils import safe_int, safe_json
+from shopified_core.models import ProductBase, StoreBase, SupplierBase
+from shopified_core.utils import get_domain, safe_int, safe_json
 
 sd_default_fields = None
 
@@ -154,16 +155,13 @@ class SureDoneStoreBase(StoreBase):
     class Meta(StoreBase.Meta):
         abstract = True
 
-    sd_account = models.ForeignKey('suredone_core.SureDoneAccount', related_name='stores', on_delete=models.CASCADE,
+    sd_account = models.ForeignKey('suredone_core.SureDoneAccount', related_name='%(app_label)sstores', on_delete=models.CASCADE,
                                    verbose_name='Parent SureDone Account')
     store_instance_id = models.IntegerField(db_index=True, editable=False, verbose_name='Store\'s instance ID')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=300, blank=True, default='')
 
     is_active = models.BooleanField(default=True)
-    legacy_auth_token_exp_date = models.DateTimeField(null=True,
-                                                      verbose_name='Store legacy authorization token expiration date')
-    oauth_token_exp_date = models.DateTimeField(null=True, verbose_name='Store oauth token expiration date')
     store_hash = models.CharField(default='', max_length=50, editable=False)
 
     auto_fulfill = models.CharField(max_length=50, null=True, blank=True)
@@ -206,16 +204,20 @@ class SureDoneProductBase(ProductBase):
         abstract = True
     parsed_media_links = []
 
-    sd_account = models.ForeignKey(SureDoneAccount, related_name='products', null=True, on_delete=models.CASCADE)
+    sd_account = models.ForeignKey(SureDoneAccount, related_name='%(app_label)sproducts', null=True, on_delete=models.CASCADE)
 
     guid = models.CharField(max_length=100, blank=False, db_index=True, unique=True, verbose_name='SureDone GUID')
     sku = models.CharField(max_length=100, blank=False, db_index=True, verbose_name='SureDone SKU')
+    source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True,
+                                       verbose_name='Platform-specific Product ID')
     product_description = models.TextField(blank=True)
     condition = models.CharField(max_length=255, blank=True, default='New')
     thumbnail_image = models.TextField(blank=True, null=True, verbose_name='Product\'s main thumbnail image')
     media_links_data = models.TextField(blank=True, null=True, verbose_name='Product\'s media links in a JSON string')
-
+    variants_config = models.TextField(null=True)
     sd_updated_at = models.DateTimeField(null=True, verbose_name='Product last updated in the SureDone DB')
+
+    _variants_for_details_view = []
 
     def __str__(self):
         return f'<SureDoneProduct: {self.id}>'
@@ -226,6 +228,13 @@ class SureDoneProductBase(ProductBase):
             return json.loads(self.data)
         except:
             return {}
+
+    @property
+    def variants_config_parsed(self):
+        try:
+            return json.loads(self.variants_config)
+        except:
+            return []
 
     @property
     def media_links(self):
@@ -250,6 +259,18 @@ class SureDoneProductBase(ProductBase):
         except:
             return {}
 
+    @property
+    def is_connected(self):
+        return bool(self.source_id)
+
+    @property
+    def all_children_variants_are_connected(self):
+        return self.is_connected and all([i.is_connected for i in self.product_variants.all()])
+
+    @property
+    def some_variants_are_connected(self):
+        return self.is_connected or any([i.is_connected for i in self.product_variants.all()])
+
     def update_data(self, data):
         if type(data) is not dict:
             data = json.loads(data)
@@ -264,10 +285,81 @@ class SureDoneProductBase(ProductBase):
         self.data = json.dumps(product_data)
 
     def retrieve(self):
-        pass
+        return self
 
     def retrieve_variants(self):
-        pass
+        return []
+
+    def get_mapping_config(self):
+        try:
+            return json.loads(self.mapping_config)
+        except:
+            return {}
+
+    def get_suppliers_mapping(self, name=None, default=None):
+        mapping = {}
+        try:
+            if self.supplier_map:
+                mapping = json.loads(self.supplier_map)
+        except:
+            mapping = {}
+
+        if name:
+            mapping = mapping.get(str(name), default)
+
+        try:
+            mapping = json.loads(mapping)
+        except:
+            pass
+
+        if type(mapping) is int:
+            mapping = str(mapping)
+
+        return mapping
+
+    def get_shipping_mapping(self, supplier=None, variant=None, default=None):
+        mapping = {}
+        try:
+            if self.shipping_map:
+                mapping = json.loads(self.shipping_map)
+            else:
+                mapping = {}
+        except:
+            mapping = {}
+
+        if supplier and variant:
+            mapping = mapping.get(f'{supplier}_{variant}', default)
+
+        try:
+            mapping = json.loads(mapping)
+        except:
+            pass
+
+        if type(mapping) is int:
+            mapping = str(mapping)
+
+        return mapping
+
+    def get_shipping_for_variant(self, supplier_id, variant_id, country_code):
+        """ Return Shipping Method for the given variant_id and country_code """
+        variant_id = -1 if variant_id == 0 else variant_id
+        mapping = self.get_shipping_mapping(supplier=supplier_id, variant=variant_id)
+
+        if variant_id and country_code and mapping and type(mapping) is list:
+            for method in mapping:
+                if country_code == method.get('country'):
+                    short_name = method.get('method_name').split(' ')
+                    if len(short_name) > 1 and short_name[1].lower() in ['post', 'seller\'s', 'aliexpress']:
+                        method['method_short'] = ' '.join(short_name[:2])
+                    else:
+                        method['method_short'] = short_name[0]
+
+                    if method['country'] == 'GB':
+                        method['country'] = 'UK'
+
+                    return method
+
+        return None
 
     def update_weight_unit(self):
         pass
@@ -278,3 +370,157 @@ class SureDoneProductBase(ProductBase):
     def get_image(self):
         images = list(self.get_images())
         return images[0] if images else None
+
+
+class SureDoneProductVariantBase(models.Model):
+    class Meta:
+        abstract = True
+    parsed_media_links = []
+
+    # GUID is unique to each product variant
+    # i.e. in SureDone each product (including product variants) has a unique GUID
+    guid = models.CharField(max_length=100, blank=False, db_index=True, unique=True, verbose_name='SureDone GUID')
+
+    # SKU is unique to each product but is common to the product's variants,
+    # i.e. in SureDone each product has a unique SKU, but the product's variants all have the same SKU
+    sku = models.CharField(max_length=100, blank=False, db_index=True, verbose_name='SureDone SKU')
+
+    variant_title = models.CharField(max_length=512, blank=True, null=True)
+    price = models.FloatField(default=0.0)
+    image = models.TextField(blank=True, null=True)
+    supplier_sku = models.CharField(max_length=512, blank=True, null=True)
+    source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True,
+                                       verbose_name='Platform-specific Product ID')
+    variant_data = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    _parsed_variant_data = {}
+    _details_for_view = {}
+
+    def __str__(self):
+        return f'<SureDoneProductVariant: {self.id}>'
+
+    def __setattr__(self, attrname, val):
+        super().__setattr__(attrname, val)
+
+        if attrname == 'variant_data' and attrname != '_parsed_variant_data':
+            self._parsed_variant_data = {}
+
+        # Reset stored details data
+        if attrname != '_details_for_view':
+            self._details_for_view = {}
+
+    @property
+    def is_connected(self):
+        return bool(self.source_id)
+
+    @property
+    def is_main_variant(self):
+        return self.guid == self.sku
+
+    @property
+    def details_for_view(self):
+        # Map Model's fields to SureDone's field names
+        if not self._details_for_view:
+            self._details_for_view = {
+                'guid': self.guid,
+                'sku': self.sku,
+                'varianttitle': self.variant_title,
+                'price': self.price,
+                'image': self.image,
+                'suppliersku': self.supplier_sku,
+                'is_connected': self.is_connected,
+                **self.parsed_variant_data,
+            }
+        return self._details_for_view
+
+    @property
+    def parsed_variant_data(self):
+        try:
+            if not self._parsed_variant_data:
+                self._parsed_variant_data = json.loads(self.variant_data)
+        except:
+            self._parsed_variant_data = {}
+
+        return self._parsed_variant_data
+
+    def save(self, *args, **kwargs):
+        # Reset stored values in case data was updated
+        self._parsed_variant_data = {}
+        self._details_for_view = {}
+
+        super().save(*args, **kwargs)
+
+
+class SureDoneSupplierBase(SupplierBase):
+    class Meta(SupplierBase.Meta):
+        abstract = True
+
+    product_guid = models.CharField(max_length=100, blank=False, db_index=True, default=None, verbose_name='SureDone GUID')
+    product_url = models.CharField(max_length=512, null=True, blank=True)
+    supplier_name = models.CharField(max_length=512, null=True, blank=True, db_index=True)
+    supplier_url = models.CharField(max_length=512, null=True, blank=True)
+    shipping_method = models.CharField(max_length=512, null=True, blank=True)
+    variants_map = models.TextField(null=True, blank=True)
+    is_default = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'<SureDoneSupplier: {self.id}>'
+
+    def get_source_id(self):
+        try:
+            if self.is_aliexpress or self.is_alibaba:
+                return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
+            elif self.is_ebay:
+                return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])
+            elif self.is_dropified_print:
+                return int(re.findall(r'print-on-demand.+?([0-9]+)', self.product_url)[0])
+            elif self.is_pls:
+                return self.get_user_supplement_id()
+        except:
+            return None
+
+    def get_store_id(self):
+        try:
+            if self.is_aliexpress:
+                return int(re.findall('/([0-9]+)', self.supplier_url).pop())
+        except:
+            return None
+
+    def short_product_url(self):
+        source_id = self.get_source_id()
+        if source_id:
+            if self.is_aliexpress:
+                return f'https://www.aliexpress.com/item/{source_id}.html'
+            if self.is_ebay:
+                return f'https://www.ebay.com/itm/{source_id}'
+
+        return self.product_url
+
+    def support_auto_fulfill(self):
+        """
+        Return True if this supplier support auto fulfill using the extension
+        Currently Aliexpress and eBay (US) support that
+        """
+
+        return self.is_aliexpress or self.is_ebay_us
+
+    @property
+    def is_aliexpress(self):
+        return self.supplier_type() == 'aliexpress'
+
+    @property
+    def is_ebay(self):
+        return self.supplier_type() == 'ebay'
+
+    @property
+    def is_ebay_us(self):
+        try:
+            return 'ebay.com' in get_domain(self.product_url, full=True)
+        except:
+            return False

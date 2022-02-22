@@ -134,7 +134,7 @@ def get_menu_item_data(request):
         'all-products': {
             'title': 'Saved Products',
             'url_name': 'products_list',
-            'match': r'(/chq|/gear|/gkart|/woo|/ebay|/bigcommerce)?/products?($|\?\w+)',
+            'match': r'(/chq|/gear|/gkart|/woo|/ebay|/fb|/bigcommerce)?/products?($|\?\w+)',
             'icon': 'img/saved-product.svg',
         },
         'import-products': {

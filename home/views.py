@@ -24,6 +24,7 @@ from woocommerce_core.views import ProfitDashboardView as WooProfitDashboardView
 from groovekart_core.views import ProfitDashboardView as GKartProfitDashboardView
 from bigcommerce_core.views import ProfitDashboardView as BigCommerceProfitDashboardView
 from ebay_core.views import ProfitDashboardView as EBayProfitDashboardView
+from facebook_core.views import ProfitDashboardView as FBProfitDashboardView
 
 from .context_processors import all_stores
 
@@ -182,6 +183,8 @@ class DashboardView(HomePageMixing):
                 view = BigCommerceProfitDashboardView.as_view()(request, *args, from_dashboard=True, **kwargs)
             elif store_type == 'ebay':
                 view = EBayProfitDashboardView.as_view()(request, *args, from_dashboard=True, **kwargs)
+            elif store_type == 'fb':
+                view = FBProfitDashboardView.as_view()(request, *args, from_dashboard=True, **kwargs)
             else:
                 view = index(request, from_dashboard=True)
 

@@ -5,7 +5,6 @@ from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.core.cache import cache
-from app.celery_base import celery_app
 from django.core.exceptions import PermissionDenied
 from django.db.models import ObjectDoesNotExist
 from django.http import JsonResponse
@@ -15,26 +14,19 @@ from django.utils.decorators import method_decorator
 
 import suredone_core.tasks as sd_tasks
 from alibaba_core.models import AlibabaOrderItem
+from app.celery_base import celery_app
 from fulfilment_fee.utils import process_sale_transaction_fee
 from lib.exceptions import capture_exception, capture_message
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.decorators import HasSubuserPermission
-from shopified_core.utils import (
-    CancelledOrderAlert,
-    clean_tracking_number,
-    dict_val,
-    get_domain,
-    remove_link_query,
-    safe_int,
-    safe_float
-)
+from shopified_core.utils import CancelledOrderAlert, clean_tracking_number, dict_val, get_domain, remove_link_query, safe_float, safe_int
 from suredone_core.models import SureDoneAccount
 
 from . import tasks
 from .api_helper import EbayApiHelper
-from .models import EbayBoard, EbayOrderTrack, EbayProduct, EbayStore, EbaySupplier, EbayProductVariant
-from .utils import EbayOrderUpdater, EbayUtils, get_ebay_store_specific_currency_options, get_fulfillment_meta, EbayOrderListQuery
+from .models import EbayBoard, EbayOrderTrack, EbayProduct, EbayProductVariant, EbayStore, EbaySupplier
+from .utils import EbayOrderListQuery, EbayOrderUpdater, EbayUtils, get_ebay_store_specific_currency_options, get_fulfillment_meta
 
 
 class EbayStoreApi(ApiBase):
@@ -563,54 +555,69 @@ class EbayStoreApi(ApiBase):
     def post_supplier(self, request, user, data):
         original_link = remove_link_query(data.get('original-link'))
         if not original_link:
-            return self.api_error('Original Link is not set', status=500)
+            return self.api_error('Original Link is not set', status=404)
 
         supplier_url = remove_link_query(data.get('supplier-link'))
         if not supplier_url:
             return self.api_error('Supplier URL is missing', status=422)
 
         product_guid = data.get('product')
+
+        if not product_guid:
+            return self.api_error('Product ID is missing', status=422)
+
         supplier_id = data.get('export', None)
-        if supplier_id:
-            product = get_object_or_404(EbayProduct, guid=product_guid)
+
+        try:
+            product = EbayProduct.objects.get(guid=product_guid)
             permissions.user_can_edit(user, product)
             store = product.store
 
             if not store:
                 return self.api_error('eBay store not found', status=500)
-        else:
+        except EbayProduct.DoesNotExist:
             product_title = data.get('product-title')
             product_image = data.get('product-image')
             product_price = data.get('product-price')
             product_attributes = data.get('product-attributes')
             store_id = data.get('ebay-store')
+
             try:
                 store = EbayStore.objects.get(pk=store_id)
                 permissions.user_can_view(user, store)
             except EbayStore.DoesNotExist:
                 return self.api_error('Store not found', status=404)
+
             can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
             if not can_add:
-                return self.api_error(
-                    'Your current plan allows up to %d saved product(s). Currently you have %d saved products.'
-                    % (total_allowed, user_count), status=401)
+                return self.api_error(f'Your current plan allows up to {total_allowed} saved product(s).'
+                                      f' Currently you have {user_count} saved products.', status=401)
 
             # Create the product from orders' data
             product_data = {
-                "guid": product_guid,
-                "title": product_title,
-                "price": product_price,
-                "media1": product_image,
-                "varianttitle": product_attributes,
-                "store": store,
-                "originalurl": original_link,
+                'guid': product_guid,
+                'title': product_title,
+                'price': product_price,
+                'media1': product_image,
+                'varianttitle': product_attributes,
+                'store': store,
+                'originalurl': original_link,
             }
             notes = ''
             ebay_utils = EbayUtils(user)
-            sd_product_save_result = ebay_utils.new_product_save(product_data, store, notes)
+            resp = ebay_utils.new_product_save(product_data, store, notes)
 
-            if not isinstance(sd_product_save_result, dict) or sd_product_save_result.get('api_response', {}).get('result') != 'success':
-                return
+            if not isinstance(resp, dict) or resp.get('api_response', {}).get('1', {}).get('result') != 'success':
+                capture_message(
+                    'Error connecting an eBay supplier.',
+                    extra={
+                        'guid': product_guid,
+                        'sd_api_response': resp,
+                        'user_id': user.id,
+                        'store_id': store.id,
+                    }
+                )
+                return self.api_error('Failed to connect the product. Please try again later.', status=400)
 
             product = EbayProduct.objects.get(guid=product_guid)
             supplier_id = product.default_supplier_id
@@ -1039,7 +1046,7 @@ class EbayStoreApi(ApiBase):
             return self.api_success()
         else:
             try:
-                resp = EbayOrderUpdater(user, store, order_id).add_ebay_order_note(order_id, note)
+                resp = EbayOrderUpdater(user, store, order_id).add_order_note(order_id, note)
                 if resp.get('results', {}).get('successful'):
                     return self.api_success()
                 else:

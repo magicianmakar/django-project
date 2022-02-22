@@ -16,6 +16,8 @@ from commercehq_core import utils as chq_utils
 from commercehq_core.models import CommerceHQOrderTrack
 from ebay_core import utils as ebay_utils
 from ebay_core.models import EbayOrderTrack
+from facebook_core import utils as fb_utils
+from facebook_core.models import FBOrderTrack
 from gearbubble_core import utils as gear_utils
 from groovekart_core import utils as gkart_utils
 from groovekart_core.models import GrooveKartOrderTrack
@@ -51,6 +53,8 @@ def get_stores(user, store_type):
         return user.profile.get_woo_stores()
     elif store_type == 'ebay':
         return user.profile.get_ebay_stores()
+    elif store_type == 'fb':
+        return user.profile.get_fb_stores()
     elif store_type == 'chq':
         return user.profile.get_chq_stores()
     else:
@@ -68,6 +72,8 @@ def get_store_from_request(request, store_type=''):
         return chq_utils.get_store_from_request(request)
     elif store_type == 'ebay':
         return ebay_utils.get_store_from_request(request)
+    elif store_type == 'fb':
+        return fb_utils.get_store_from_request(request)
     elif store_type == 'woo':
         return woo_utils.get_store_from_request(request)
     elif store_type == 'gear':
@@ -87,6 +93,8 @@ def get_store_order_track(store_type):
         return BigCommerceOrderTrack
     elif store_type == 'ebay':
         return EbayOrderTrack
+    elif store_type == 'fb':
+        return FBOrderTrack
     elif store_type == 'woo':
         return WooOrderTrack
     elif store_type == 'chq':

@@ -39,6 +39,7 @@ from analytic_events.models import RegistrationEvent
 from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier, BigCommerceUserUpload
 from commercehq_core.models import CommerceHQOrderTrack, CommerceHQProduct, CommerceHQSupplier, CommerceHQUserUpload
 from ebay_core.models import EbayProduct, EbaySupplier
+from facebook_core.models import FBProduct, FBSupplier
 from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier, GearUserUpload
 from groovekart_core.models import GrooveKartProduct, GrooveKartSupplier, GrooveKartUserUpload
 from infinite_pagination.paginator import InfinitePaginator
@@ -982,6 +983,15 @@ def get_shipping_info(request):
             else:
                 supplier = EbaySupplier.objects.get(id=supplier)
 
+        elif request.GET.get('fb'):
+
+            if int(supplier) == 0:
+                product = FBProduct.objects.get(guid=product)
+                permissions.user_can_view(request.user, product)
+                supplier = product.default_supplier
+            else:
+                supplier = FBSupplier.objects.get(id=supplier)
+
         elif request.GET.get('gear'):
 
             if int(supplier) == 0:
@@ -1062,6 +1072,8 @@ def get_shipping_info(request):
         product = get_object_or_404(BigCommerceProduct, id=request.GET.get('product'))
     elif request.GET.get('ebay'):
         product = get_object_or_404(EbayProduct, guid=request.GET.get('product'))
+    elif request.GET.get('fb'):
+        product = get_object_or_404(FBProduct, guid=request.GET.get('product'))
     else:
         product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
 

@@ -48,6 +48,11 @@
                     <a href="{% url 'ebay:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">eBay</a>
                 </li>
                 {% endif %}
+                {% if section != 'Facebook' and request.user|can:'facebook.use' %}
+                <li>
+                    <a href="{% url 'fb:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">Facebook</a>
+                </li>
+                {% endif %}
             </ul>
         </div>
 

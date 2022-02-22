@@ -1,6 +1,18 @@
 {% load perms_helper %}
 {% load static %}
 
+{% if request.user|can:'facebook.use' %}
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v12.0&appId=911185429584823&autoLogAppEvents=1"
+        nonce="JLNkdJEJ"></script>
+    <script>
+        console.log('DEBUG: hello');
+        FB.Event.subscribe('auth.login', function () {
+          window.location = "http://example.com";
+      });
+    </script>
+{% endif %}
+
 <div id="modal-add-all-store-form" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -25,6 +37,10 @@
 
                     {% if request.user|can:'bigcommerce.use' %}
                     <li><a href="#bigcommerce-section" data-toggle="tab"></a></li>
+                    {% endif %}
+
+                    {% if request.user|can:'facebook.use' %}
+                    <li><a href="#fb-section" data-toggle="tab"></a></li>
                     {% endif %}
                 </ul>
                 <div class="tab-content">
@@ -70,6 +86,13 @@
                                 <label style="display: block; margin-bottom: 5px;">
                                     <input name="amt" value="#ebay-section" type="radio">
                                     <span class="label-text">eBay</span>
+                                </label>
+                                {% endif %}
+
+                                {% if request.user|can:'facebook.use' %}
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#fb-section" type="radio">
+                                    <span class="label-text">Facebook</span>
                                 </label>
                                 {% endif %}
                             </fieldset>
@@ -276,6 +299,61 @@
                                         {% if not user.profile.get_sd_accounts|length %}data-loading-text="Setting up eBay configurations..."{% endif %}>
                                         Add store
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Facebook -->
+                    <div id="fb-section" class="tab-pane fade">
+                        <div class="row">
+                            <div class="col-sm-12" style="max-height: 500px; overflow-y: scroll;">
+                                <h3 class="m-t-none m-b">Add Facebook Store</h3>
+                                <p class="m-b">
+                                    <strong>1. Login with Facebook & Verify Business User</strong><br/>
+                                    Click "Continue with Facebook" below to start the authorization process. Verify that the user is connected to
+                                    the Facebook business page or Instagram business account that will be associated with the Dropified product catalog.
+                                </p>
+                                <p class="m-b">
+                                    <strong>2. Review & Grant Permissions</strong><br/>
+                                    Dropified requires permissions to create & manage product catalogs, process orders,
+                                    manage the Facebook page associated with the business as well as manage settings to
+                                    create a secure system user for a stable business integration. All requested permissions
+                                    must be allowed for the Dropified Facebook integration to operate reliably.
+                                </p>
+                                {% if not user.profile.get_sd_accounts|length %}
+                                    <div class="alert alert-info" role="alert">
+                                        <i class="fa fa-info-circle"></i>
+                                        Please note that Facebook setup may take longer when adding a Facebook store for the first time.
+                                    </div>
+                                {% endif %}
+
+                                <div class="row">
+                                    <div class="col-xs-6">
+                                        <img src="{% static 'img/fb-auth-grant-access-page.png' %}"
+                                             class="img-responsive center-block"
+                                             alt="Facebook App Authorization page">
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <img src="{% static 'img/fb-auth-grant-permissions-page.png' %}"
+                                             class="img-responsive center-block"
+                                             alt="Facebook App Permission page">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <hr style="margin:20px -15px">
+                                <div style="display: flex; align-items: center; justify-content: space-between">
+                                    <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                                    <div id="fb-store-create-submit-btn" style="cursor:pointer;">
+                                        <div class="fb-login-button" data-width="" data-size="medium"
+                                             data-button-type="continue_with" data-layout="default" data-auto-logout-link="false"
+                                             href="https://app.dropified.com"
+                                             style="pointer-events: none !important;"
+                                             data-use-continue-as="true"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

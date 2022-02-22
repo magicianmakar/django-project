@@ -47,6 +47,7 @@ class SendToStoreMixin:
         woo_stores = user.profile.get_woo_stores()
         big_stores = user.profile.get_bigcommerce_stores()
         ebay_stores = user.profile.get_ebay_stores(do_sync=True)
+        fb_stores = user.profile.get_fb_stores()
 
         store_data = dict(
             shopify=[{'id': s.id, 'value': s.title} for s in shopify_stores],
@@ -54,6 +55,7 @@ class SendToStoreMixin:
             gkart=[{'id': s.id, 'value': s.title} for s in gkart_stores],
             woo=[{'id': s.id, 'value': s.title} for s in woo_stores],
             ebay=[{'id': s.id, 'value': s.title} for s in ebay_stores],
+            fb=[{'id': s.id, 'value': s.title} for s in fb_stores],
             bigcommerce=[{'id': s.id, 'value': s.title} for s in big_stores],
         )
 
@@ -72,6 +74,9 @@ class SendToStoreMixin:
 
         if store_data['ebay']:
             store_types.append(('ebay', 'eBay'))
+
+        if store_data['fb']:
+            store_types.append(('fb', 'Facebook'))
 
         if store_data['bigcommerce']:
             store_types.append(('bigcommerce', 'BigCommerce'))

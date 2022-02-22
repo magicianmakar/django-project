@@ -111,6 +111,10 @@ for i in */models.py; do
             continue
         fi
 
+        if [ "$c" == "SureDoneProductVariantBase" ]; then
+            continue
+        fi
+
         grep "$c" "$admins_file" > /dev/null
 
         if [ "$?" != "0" ]; then

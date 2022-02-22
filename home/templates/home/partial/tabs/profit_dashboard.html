@@ -45,13 +45,21 @@
         {% else %}
             <li><a href="{% url 'gkart:profits' %}?store={{item.id}}">{{item.title}}</a></li>
         {% endif %}
-    {% elif item|model_name == 'ebay' %}
+    {% elif item|model_name == 'ebaystore' %}
         {% if store == item %}
             <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
         {% elif from_dashboard %}
             <li><a href="{% url 'dashboard' store_type='ebay' %}?store={{item.id}}">{{item.title}}</a></li>
         {% else %}
             <li><a href="{% url 'ebay:profits' %}?store={{item.id}}">{{item.title}}</a></li>
+        {% endif %}
+    {% elif item|model_name == 'fbstore' %}
+        {% if store == item %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% elif from_dashboard %}
+            <li><a href="{% url 'dashboard' store_type='fb' %}?store={{item.id}}">{{item.title}}</a></li>
+        {% else %}
+            <li><a href="{% url 'fb:profits' %}?store={{item.id}}">{{item.title}}</a></li>
         {% endif %}
     {% endif %}
 {% endfor %}

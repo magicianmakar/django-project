@@ -4,6 +4,7 @@ from django.utils.timezone import make_aware
 from bigcommerce_core.models import BigCommerceOrderTrack
 from commercehq_core.models import CommerceHQOrderTrack
 from ebay_core.models import EbayOrderTrack
+from facebook_core.models import FBOrderTrack
 from fulfilment_fee.utils import process_sale_transaction_fee
 from groovekart_core.models import GrooveKartOrderTrack
 from leadgalaxy.models import ShopifyOrderTrack
@@ -50,6 +51,7 @@ class Command(DropifiedBaseCommand):
                            GrooveKartOrderTrack,
                            WooOrderTrack,
                            EbayOrderTrack,
+                           FBOrderTrack,
                            CommerceHQOrderTrack,
                            BasketOrderTrack]
             for track_type in track_types:

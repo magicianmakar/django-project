@@ -71,7 +71,7 @@ class ActiveCampaignAPI:
                    'SHOPIFY_COUNT', 'WOOCOMMERCE_COUNT', 'COMMERCEHQ_COUNT',
                    'GROOVEKART_COUNT', 'BIGCOMMERCE_COUNT', 'DROPIFIED_ID',
                    'EXTERNAL_ID', 'TRIAL_ENDS', 'SIGNEDUP_AT', 'SEND_EMAILS',
-                   'ADDONS']
+                   'ADDONS', 'EBAY_COUNT', 'FACEBOOK_COUNT']
 
     def __init__(self):
         self.base = f"{settings.ACTIVECAMPAIGN_URL}"
@@ -218,6 +218,7 @@ class ActiveCampaignAPI:
             'SHOPIFY_COUNT': user.profile.get_shopify_stores().count(),
             'WOOCOMMERCE_COUNT': user.profile.get_woo_stores().count(),
             'EBAY_COUNT': user.profile.get_ebay_stores().count(),
+            'FACEBOOK_COUNT': user.profile.get_fb_stores().count(),
             'COMMERCEHQ_COUNT': user.profile.get_chq_stores().count(),
             'GROOVEKART_COUNT': user.profile.get_gkart_stores().count(),
             'BIGCOMMERCE_COUNT': user.profile.get_bigcommerce_stores().count(),
@@ -303,6 +304,8 @@ class ActiveCampaignAPI:
                 'COMMERCEHQ_COUNT': custom_attributes.get('chq_count') or '0',
                 'GROOVEKART_COUNT': custom_attributes.get('gkart_count') or '0',
                 'BIGCOMMERCE_COUNT': custom_attributes.get('bigcommerce_count') or '0',
+                'EBAY_COUNT': custom_attributes.get('ebay_count') or '0',
+                'FB_COUNT': custom_attributes.get('fb_count') or '0',
                 'PLAN': plan,
                 'PLATFORM': payment_gateway,
                 'TRIAL_ENDS': trial_ends,

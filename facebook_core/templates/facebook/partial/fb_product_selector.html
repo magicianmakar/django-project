@@ -1,0 +1,96 @@
+
+<div id="modal-fb-product" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Select Product</h4>
+          </div>
+            <div class="modal-body">
+                <div class="row">
+                    {% with stores=user.profile.get_fb_stores.count %}
+
+                    <div class="col-sm-8" style="padding-right:0">
+                        <input type="text" class="form-control input-md fb-find-product"
+                               placeholder="Find product..."
+                               data-store="{{product.qelem.store_id}}">
+                    </div>
+
+                    <div class="form-group col-sm-4" style="padding-left:5px">
+                        <select class="form-control fb-store">
+                        {% for i in user.profile.get_fb_stores %}
+                            <option value="{{i.id}}" {% if i == product.store or stores == 1 %}selected{% endif %}>
+                                {{i.title}}
+                            </option>
+                        {% endfor %}
+                        </select>
+                    </div>
+
+                    {% endwith %}
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 text-center m-t-lg fb-find-loading" style="position:absolute;display:none">
+                        <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="container-fluid fb-products ative-scroll"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-supplier-link" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Connect Supplier</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row export">
+                    <form class="form product-export-form" method="post">
+                        <div class="form-group col-xs-12">
+                            <label>Supplier Product link:</label>
+                            <input type="text" class="form-control product-original-link" style="padding-right: 30px">
+                            <i class="fa fa-spinner fa-spin product-original-link-loading"
+                               style="display:none;position:absolute;right:22px;top:32px;font-size:1.5em"></i>
+                        </div>
+                        <div class="form-group col-xs-12">
+                            <label>Supplier Name:</label>
+                            <input type="text" class="form-control product-supplier-name">
+                        </div>
+
+                        <div class="form-group col-xs-12">
+                            <label>Supplier Store Link (optional):</label>
+                            <input type="text" class="form-control product-supplier-link">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary add-supplier-info-btn" type="button" style="width: 100%;">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% verbatim %}
+
+<script id="product-select-template" type="text/x-handlebars-template">
+    <div class="product-item row">
+        <div class="product-thumb col-md-1">
+            <a class="fb-product" href="#" data-product-id="{{product.id}}" data-shopified-id="{{product.connected}}"
+                data-product-title="{{product.name}}" data-product-image="{{product.image.src}}">
+                <img src="{{product.image.src}}" style="width:45px">
+            </a>
+        </div>
+        <div class="col-md-11">
+            <a class="fb-product" href="#" data-product-id="{{product.id}}" data-shopified-id="{{product.connected}}"
+                data-product-title="{{product.name}}" data-product-image="{{product.image.src}}">{{product.name}}</a>
+        </div>
+    </div>
+</script>
+
+{% endverbatim %}

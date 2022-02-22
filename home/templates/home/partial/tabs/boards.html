@@ -54,4 +54,12 @@
             <li><a href="{% url 'ebay:boards_list' %}">eBay</a></li>
         {% endif %}
     {% endif %}
+
+     {% if user_stores.fb %}
+        {% if 'fb' in request.path %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">Facebook</a></li>
+        {% else %}
+            <li><a href="{% url 'fb:boards_list' %}">Facebook</a></li>
+        {% endif %}
+    {% endif %}
 </ul>

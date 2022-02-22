@@ -370,6 +370,7 @@ class AlibabaOrder(models.Model):
     CHQ = 'chq'
     WOO = 'woo'
     EBAY = 'ebay'
+    FB = 'fb'
     GEAR = 'gear'
     GKART = 'gkart'
     BIGCOMMERCE = 'bigcommerce'
@@ -378,6 +379,7 @@ class AlibabaOrder(models.Model):
         (CHQ, 'CommerceHQ'),
         (WOO, 'WooCommerce'),
         (EBAY, 'eBay'),
+        (FB, 'Facebook'),
         (GEAR, 'GearBubble'),
         (GKART, 'GrooveKart'),
         (BIGCOMMERCE, 'BigCommerce')

@@ -38,7 +38,7 @@ class HasSubuserPermission:
 
 
 class PlatformPermissionRequired:
-    platforms = ['shopify', 'commercehq', 'woocommerce', 'gearbubble', 'groovekart', 'bigcommerce']
+    platforms = ['shopify', 'commercehq', 'woocommerce', 'gearbubble', 'groovekart', 'bigcommerce', 'ebay', 'fb']
 
     def __init__(self, platform):
         self._platform = platform

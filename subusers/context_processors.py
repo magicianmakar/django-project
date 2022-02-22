@@ -29,6 +29,14 @@ def template_config(request):
                 'prefix': '/ebay'
             }
         }
+    elif namespace == 'fb':
+        template_config = {
+            'base': 'base_fb_core.html',
+            'url': {
+                'namespace': 'fb:',
+                'prefix': '/fb'
+            }
+        }
     elif namespace == 'gear':
         template_config = {
             'base': 'base_gearbubble_core.html',
