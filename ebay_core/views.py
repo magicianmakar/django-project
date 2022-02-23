@@ -835,6 +835,10 @@ class AuthAcceptRedirectView(RedirectView):
         user = self.request.user
         username = self.request.GET.get('username')
 
+        if EbayStore.objects.filter(store_username=username, is_active='True').exists():
+            messages.error(self.request, 'This eBay store already exists! Please try again with another eBay store.')
+            return reverse('ebay:index')
+
         ebay_utils = EbayUtils(user)
         sd_api_resp = ebay_utils.api.authorize_ebay_complete_legacy()
 
