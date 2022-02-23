@@ -114,7 +114,10 @@ class ACPApi(ApiResponseMixin):
         })
 
     def post_add_permission(self, request, user, data):
-        perm = AppPermission.objects.create(name=data['name'], description=data['desc'])
+        perm, created = AppPermission.objects.get_or_create(name=data['name'])
+        perm.description = data['desc']
+        perm.save()
+
         if data.get('bundle') == 'true':
             bundle = FeatureBundle.objects.create(title=f"{data['desc']} Bundle", slug=slugify(data['name']), hidden_from_user=True)
             bundle.permissions.add(perm)
