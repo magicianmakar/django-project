@@ -24,6 +24,7 @@ class Command(DropifiedBaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--store', action='store', type=int, help='Fulfill orders for the given store')
+        parser.add_argument('--user', action='append', type=int, help='Fulfill orders for the given user')
         parser.add_argument('--days', action='store', type=int, default=30, help='Fulfill orders created this number of days ago.')
         parser.add_argument('--max', action='store', type=int, default=500, help='Fulfill orders count limit')
         parser.add_argument('--uptime', action='store', type=float, default=8, help='Maximuim task uptime (minutes)')
@@ -35,6 +36,7 @@ class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
         fulfill_store = options.get('store')
+        fulfill_user = options.get('user')
         fulfill_max = options.get('max')
         uptime = options.get('uptime')
         days = options.get('days')
@@ -51,6 +53,9 @@ class Command(DropifiedBaseCommand):
 
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)
+
+        if fulfill_user:
+            orders = orders.filter(store__user__in=fulfill_user)
 
         if options['count_only']:
             self.write(f'Orders to auto fulfill {orders.count()}')
