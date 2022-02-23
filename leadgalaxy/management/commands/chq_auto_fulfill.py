@@ -22,6 +22,10 @@ class Command(DropifiedBaseCommand):
             help='Fulfill orders for the given store')
 
         parser.add_argument(
+            '--user', action='append', type=int,
+            help='Fulfill orders for the given user')
+
+        parser.add_argument(
             '--max', dest='max', action='store', type=int, default=500,
             help='Fulfill orders count limit')
 
@@ -31,6 +35,7 @@ class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
         fulfill_store = options.get('store')
+        fulfill_user = options.get('user')
         fulfill_max = options.get('max')
         uptime = options.get('uptime')
 
@@ -44,6 +49,9 @@ class Command(DropifiedBaseCommand):
                                              .order_by('-id')
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)
+
+        if fulfill_user:
+            orders = orders.filter(store__user__in=fulfill_user)
 
         fulfill_max = min(fulfill_max, len(orders)) if fulfill_max else len(orders)
         utils.cache_fulfillment_data(orders, fulfill_max)
