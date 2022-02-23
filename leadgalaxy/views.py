@@ -116,6 +116,7 @@ from .models import (
 )
 from .paginator import ShopifyOrderPaginator
 from .templatetags.template_helper import money_format
+from addons_core.models import Addon
 
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None, board=None, load_boards=False):
@@ -1863,8 +1864,24 @@ class OrdersView(AuthenticationMixin, TemplateView):
     def get_breadcrumbs(self):
         self.ctx.page = 'orders'
 
+        # getting total orders
+        self.ctx.total_orders = self.user.profile.get_orders_count(ShopifyOrderTrack)
+        self.ctx.autofulfill_limit = self.user.profile.get_auto_fulfill_limit()
+
+        try:
+            self.ctx.autofulfill_usage_percent = safe_float(self.ctx.total_orders) / safe_float(
+                self.ctx.autofulfill_limit)
+        except:
+            self.ctx.autofulfill_usage_percent = 0
+
+        if self.ctx.autofulfill_usage_percent > 0.8:
+            self.ctx.autofulfill_addons = Addon.objects.filter(auto_fulfill_limit__gt=0, is_active=True).all()
+        if self.ctx.autofulfill_limit != -1:
+            page_title = 'Orders ({}/{})'.format(self.ctx.total_orders, self.ctx.autofulfill_limit)
+        else:
+            page_title = 'Orders'
         self.ctx.breadcrumbs = [
-            {'url': '/orders', 'title': 'Orders'},
+            {'url': '/orders', 'title': page_title},
             {'url': f'/orders?store={self.store.id}', 'title': self.store.title},
         ]
 
@@ -3097,30 +3114,16 @@ def orders_place(request):
     # Verify if the user didn't pass order limit
     parent_user = request.user.models_user
     plan = parent_user.profile.plan
-    limit_check_key = 'order_limit_shopify_{}'.format(parent_user.id)
-    if cache.get(limit_check_key) is None and parent_user.profile.get_auto_fulfill_limit() != -1:
-        month_start = arrow.utcnow().span('month')[0]
 
-        # This is used for Oberlo migration
-        if parent_user.get_config('auto_fulfill_limit_start'):
-            auto_start = arrow.get(parent_user.get_config('auto_fulfill_limit_start'))
-            if auto_start > month_start:
-                month_start = auto_start
-
-        orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start.datetime)
-        orders_count = orders_count.order_by('order_id').count()
-
-        auto_fulfill_limit = parent_user.profile.get_auto_fulfill_limit()
-        if parent_user.get_config('_double_orders_limit'):
-            auto_fulfill_limit *= 2
+    auto_fulfill_limit = parent_user.profile.get_auto_fulfill_limit()
+    if auto_fulfill_limit != -1:
+        orders_count = parent_user.profile.get_orders_count(ShopifyOrderTrack)
 
         if not settings.DEBUG and not auto_fulfill_limit or orders_count + 1 > auto_fulfill_limit:
             messages.error(request, "Woohoo! 🎉. You are growing and you've hit your orders limit for this month."
                                     " Upgrade now to keep placing orders or wait until next "
                                     "month for your limit to reset.")
             return HttpResponseRedirect('/')
-
-        cache.set(limit_check_key, arrow.utcnow().timestamp, timeout=3600)
 
     # Save Auto fulfill event
     event_key = None

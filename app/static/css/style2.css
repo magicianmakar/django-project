@@ -2915,3 +2915,35 @@ ul.tagit:focus {
 .order .product-preview .product-img {
     max-width:64px;
 }
+
+.fulfill-limit-warning-100 {
+    background-color: #ffecec;
+    margin-bottom: 5px;
+}
+
+.fulfill-limit-warning-95 {
+    background-color: #fff5e9;
+    margin-bottom: 5px;
+}
+
+.fulfill-limit-warning-80 {
+    background-color: #e6f3ff;
+    margin-bottom: 5px;
+}
+
+.fulfill-limit-addon-block {
+    text-align: center;
+    width: 175px;
+    margin-left: 5px;
+    margin-right: 5px;
+    display: inline-block;
+}
+
+.fulfill-limit-addon-limit {
+    font-size: 40px;
+    font-weight: 700;
+
+}
+#modal-add-fulfill-limit .modal-body {
+    text-align: center;
+}

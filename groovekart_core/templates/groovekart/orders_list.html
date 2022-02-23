@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block main-container %}
-
+    {% include 'home/partial/orders_limit_upgrade.html' %}
     <div class="tabs-container">
         {% include 'home/partial/tabs/orders.html' %}
 
@@ -750,6 +750,7 @@
     <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
     <script type="text/javascript" src="{% static 'groovekart/js/groovekart_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'groovekart/js/orders_list.js' %}"></script>
+    <script src="{% static 'shopified/js/purchase_orders_credits.js' %}"></script>
 {% endcompress %}
 
 {% endblock %}

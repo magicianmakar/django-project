@@ -8,7 +8,7 @@
 {% load cache %}
 
 {% block main-container %}
-
+    {% include 'home/partial/orders_limit_upgrade.html' %}
     <div class="tabs-container">
         {% include 'home/partial/tabs/orders.html' %}
         <div class="tab-content">
@@ -580,6 +580,7 @@
     <script type="text/javascript" src="{% static 'js/order_items.js' %}"></script>
     <script type="text/javascript" src="{% static 'gearbubble/js/gearbubble_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'gearbubble/js/orders_list.js' %}"></script>
+    <script src="{% static 'shopified/js/purchase_orders_credits.js' %}"></script>
 {% endcompress %}
 
 {% endblock %}

@@ -778,7 +778,34 @@ class UserProfile(models.Model):
             addons_auto_fulfill_limit = user.profile.addons.all().aggregate(Sum('auto_fulfill_limit'))['auto_fulfill_limit__sum'] or 0
             auto_fulfill_limit += addons_auto_fulfill_limit
 
+            if user.get_config('_double_orders_limit'):
+                auto_fulfill_limit *= 2
+
         return auto_fulfill_limit
+
+    def get_orders_count(self, order_track):
+        if self.is_subuser:
+            user = self.subuser_parent
+        else:
+            user = self.user
+        limit_check_key = 'orders_count_{}_{}'.format(order_track.__name__, user.id)
+
+        if cache.get(limit_check_key) is None:
+            month_start = arrow.utcnow().span('month')[0].datetime
+
+            # This is used for Oberlo migration
+            if user.get_config('auto_fulfill_limit_start'):
+                auto_start = arrow.get(user.get_config('auto_fulfill_limit_start'))
+                if auto_start > month_start:
+                    month_start = auto_start
+
+            orders_count = order_track.objects.filter(user=user, created_at__gte=month_start).count()
+
+            cache.set(limit_check_key, orders_count, timeout=3600)
+        else:
+            orders_count = cache.get(limit_check_key)
+
+        return orders_count
 
     @property
     def is_black(self):

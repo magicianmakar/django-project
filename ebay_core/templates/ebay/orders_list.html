@@ -14,7 +14,7 @@
 {% endblock %}{% endcomment %}
 
 {% block main-container %}
-
+    {% include 'home/partial/orders_limit_upgrade.html' %}
     <div class="tabs-container">
         {% include 'home/partial/tabs/orders.html' %}
         <ul class="actions">
@@ -802,6 +802,7 @@
     <script type="text/javascript" src="{% static 'js/bulk_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'ebay/js/ebay_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'ebay/js/orders_list.js' %}"></script>
+    <script src="{% static 'shopified/js/purchase_orders_credits.js' %}"></script>
 {% endcompress %}
 
 {% endblock %}

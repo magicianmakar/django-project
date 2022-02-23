@@ -15,6 +15,7 @@
 
 {% block main-container %}
 
+    {% include 'home/partial/orders_limit_upgrade.html' %}
     <div class="tabs-container">
         {% include 'home/partial/tabs/orders.html' %}
 
@@ -698,6 +699,7 @@
     <script type="text/javascript" src="{% static 'bigcommerce/js/orders_list.js' %}"></script>
     <script src="{% static 'libs/bower_components/jquery.steps/build/jquery.steps.js' %}" type="text/javascript"></script>
     <script type="text/javascript" src="{% static 'js/bulk_orders.js' %}"></script>
+    <script src="{% static 'shopified/js/purchase_orders_credits.js' %}"></script>
 {% endcompress %}
 
 {% endblock %}

@@ -84,6 +84,7 @@ from .utils import (
 
 from . import utils
 from . import tasks
+from addons_core.models import Addon
 
 
 @login_required
@@ -799,8 +800,25 @@ class OrdersList(ListView):
         context['countries'] = get_counrties_list()
         context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
 
+        # getting total orders
+        context['total_orders'] = self.request.user.profile.get_orders_count(WooOrderTrack)
+        context['autofulfill_limit'] = self.request.user.profile.get_auto_fulfill_limit()
+
+        try:
+            context['autofulfill_usage_percent'] = safe_float(context['total_orders']) / safe_float(
+                context['autofulfill_limit'])
+        except:
+            context['autofulfill_usage_percent'] = 0
+        if context['autofulfill_usage_percent'] > 0.8:
+            context['autofulfill_addons'] = Addon.objects.filter(auto_fulfill_limit__gt=0, is_active=True).all()
+
+        if context['autofulfill_limit'] != -1:
+            page_title = 'Orders ({}/{})'.format(context['total_orders'], context['autofulfill_limit'])
+        else:
+            page_title = 'Orders'
+
         context['breadcrumbs'] = [
-            {'title': 'Orders', 'url': self.url},
+            {'title': page_title, 'url': self.url},
             {'title': store.title, 'url': '{}?store={}'.format(self.url, store.id)}]
 
         try:
@@ -1497,17 +1515,17 @@ class OrderPlaceRedirectView(RedirectView):
         # Verify if the user didn't pass order limit
         parent_user = self.request.user.models_user
         plan = parent_user.profile.plan
-        limit_check_key = 'order_limit_woo_{}'.format(parent_user.id)
-        if cache.get(limit_check_key) is None and parent_user.profile.get_auto_fulfill_limit() != -1:
-            month_start = [i.datetime for i in arrow.utcnow().span('month')][0]
-            orders_count = parent_user.wooordertrack_set.filter(created_at__gte=month_start).count()
 
-            if not settings.DEBUG and not parent_user.profile.get_auto_fulfill_limit() \
-                    or orders_count + 1 > parent_user.profile.get_auto_fulfill_limit():
-                messages.error(self.request, "You have reached your plan auto fulfill limit")
+        auto_fulfill_limit = parent_user.profile.get_auto_fulfill_limit()
+        if auto_fulfill_limit != -1:
+            orders_count = parent_user.profile.get_orders_count(WooOrderTrack)
+
+            if not settings.DEBUG and not auto_fulfill_limit or orders_count + 1 > auto_fulfill_limit:
+                messages.error(self.request,
+                               "Woohoo! 🎉. You are growing and you've hit your orders limit for this month."
+                               " Upgrade now to keep placing orders or wait until next "
+                               "month for your limit to reset.")
                 return '/'
-
-            cache.set(limit_check_key, arrow.utcnow().timestamp, timeout=3600)
 
         # Save Auto fulfill event
         event_data = {}

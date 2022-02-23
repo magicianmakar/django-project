@@ -1,0 +1,53 @@
+{% load perms_helper %}
+{% load static %}
+
+{% if autofulfill_limit != -1 and  autofulfill_usage_percent >= 1 %}
+    <div class="panel-body rounded fulfill-limit-warning-100">
+        <a style="float:right;" class="btn btn-xs btn-default" id="purchase-order-credits">Add More Orders</a>
+        You must be on a roll, you've used 100% of your orders this month. Easily add more orders or consider upgrading to a higher level plan
+    </div>
+{% elif autofulfill_limit != -1 and  autofulfill_usage_percent > 0.95 %}
+    <div class="panel-body rounded fulfill-limit-warning-95">
+        <a style="float:right;" class="btn btn-xs btn-default" id="purchase-order-credits">Add More Orders</a>
+        Action Needed! You're at 95% of your orders for this month. You'll need to increase your orders to keep them flowing!
+    </div>
+{% elif autofulfill_limit != -1 and  autofulfill_usage_percent > 0.8 %}
+    <div class="panel-body rounded fulfill-limit-warning-80">
+        <a style="float:right;" class="btn btn-xs btn-default" id="purchase-order-credits">Add More Orders</a>
+        Great Job! You've used 80% of your orders for this month.  You'll need to increase your orders for the month
+    </div>
+
+{% endif %}
+
+{% if autofulfill_addons %}
+
+    <div id="modal-add-fulfill-limit" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Purchase Order Credits</h4>
+                </div>
+
+                <div class="modal-body">
+
+                    {% for addon in autofulfill_addons %}
+                        <div class="fulfill-limit-addon-block rounded panel-body">
+                            <div class="fulfill-limit-addon-limit">
+                                {{ addon.auto_fulfill_limit }}
+                            </div>
+                            <div class="fulfill-limit-addon-label">
+                                Orders
+                            </div>
+                            <hr>
+                            <div class="fulfill-limit-addon-button">
+                                <a target="_blank" href="{{ addon.permalink }}" class="btn btn-primary ">View Pricing</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endif %}
