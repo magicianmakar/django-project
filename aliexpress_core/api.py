@@ -1,13 +1,14 @@
 
 import requests
 from collections import defaultdict
+import json
 
 from django.core.cache import cache
 from django.http import HttpResponse, JsonResponse
 
 from aliexpress_core.models import AliexpressAccount
 from aliexpress_core.settings import API_KEY, API_SECRET
-from aliexpress_core.utils import FindProductViaApi, MaillingAddress, PlaceOrder, PlaceOrderRequest, ProductBaseItem
+from aliexpress_core.utils import FindProductViaApi, MaillingAddress, PlaceOrder, PlaceOrderRequest, ProductBaseItem, ShippingInfo
 from bigcommerce_core.models import BigCommerceOrderTrack, BigCommerceProduct, BigCommerceStore
 from bigcommerce_core.utils import get_bigcommerce_order_data, get_order_product_data
 from commercehq_core.models import CommerceHQOrderTrack, CommerceHQProduct, CommerceHQStore
@@ -396,10 +397,34 @@ class AliexpressFulfillHelper():
                 else:
                     variant_id = line_item['line']['variant_id']
 
+                # Get Shipping Method from Advanced Variant Mapping
                 shipping_mapping = product_obj.get_shipping_for_variant(line_item['supplier'].id, variant_id, country_code)
                 if shipping_mapping is not None:
                     item.logistics_service_name = shipping_mapping.get('method')
+                else:  # Get Shipping methods list from Settings under AliExpress tab
+                    priority_service_list = []  # saves the list of Shipping methods in order of priority from Settings under AliExpress tab
+                    service = ''
+                    config = json.loads(self.store.user.profile.config)
+                    for i in range(1, 5):
+                        method_key = f'aliexpress_shipping_method_{i}'
+                        shipping_method = config.get(method_key)
+                        if shipping_method:
+                            priority_service_list.append(shipping_method)
 
+                    shipping_obj = ShippingMethods(line_item, self.shipping_address, aliexpress_account)
+                    shipping_data = shipping_obj.get_shipping_data()
+
+                    # Match the Shipping data with the list saved in settings. Exit the loops when the first match is found
+                    # In case no match is found, we don't set the Shipping method & default shipping is assigned.
+                    if shipping_data is not None:
+                        for service_name in priority_service_list:
+                            if service:
+                                break
+                            for data in shipping_data:
+                                if service_name == data['service_name']:
+                                    service = data['service_name']
+                                    item.logistics_service_name = data['service_name']
+                                    break
                 try:
                     if len(line_item['variant']) == 1:
                         if line_item['variant'][0]['title'] == 'Default Title':
@@ -500,6 +525,37 @@ class AliexpressProduct():
                 ali_variant_title = '/'.join(ali_variant_title_list)
                 final_skus[ali_variant_title] = data.get('id')
         return final_skus
+
+
+class ShippingMethods():
+    def __init__(self, line_item, shipping_address, aliexpress_account):
+        self.product_id = line_item['source_id']
+        self.quantity = line_item['quantity']
+        self.aliexpress_account = aliexpress_account
+        self.shipping_address = shipping_address
+
+    def get_shipping_data(self):
+        aliexpress_obj = ShippingInfo()
+        aliexpress_obj.set_app_info(API_KEY, API_SECRET)
+        data = {
+            "product_id": self.product_id,
+            "product_num": self.quantity,
+            "country_code": self.shipping_address['country_code'],
+            "provice_code": self.shipping_address['province_code'],
+            "city_code": self.shipping_address['zip'],
+            "send_goods_country_code": 'CN'
+        }
+        aliexpress_obj.set_info(json.dumps(data, indent=0))
+        try:
+            result = aliexpress_obj.getResponse(authrize=self.aliexpress_account.access_token)
+            shipping_data = result['aliexpress_logistics_buyer_freight_calculate_response']['result']
+            if shipping_data.get('success'):
+                shipping_data = shipping_data['aeop_freight_calculate_result_for_buyer_d_t_o_list']['aeop_freight_calculate_result_for_buyer_dto']
+                return shipping_data
+            else:
+                return None
+        except:
+            return None
 
 
 class AliexpressApi(ApiResponseMixin):

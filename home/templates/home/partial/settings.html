@@ -538,6 +538,20 @@
                     <textarea class="form-control" style="width:100%" row="5" name="aliexpress_api_order_notes" name="aliexpress_api_order_notes">{{config.aliexpress_api_order_notes}}</textarea>
                 </div>
             </div>
+
+            <div class="row m-t">
+                <div class="col-md-12">
+                    <h3>Save Shipping method in order of priority</h3>
+                    <hr>
+                </div>
+                {% include "home/partial/aliexpress_shipping_options.html" with method_name="aliexpress_shipping_method_1" method_value=config.aliexpress_shipping_method_1 label="Shipping Method 1" %}
+
+                {% include "home/partial/aliexpress_shipping_options.html" with method_name="aliexpress_shipping_method_2" method_value=config.aliexpress_shipping_method_2 label="Shipping Method 2" %}
+
+                {% include "home/partial/aliexpress_shipping_options.html" with method_name="aliexpress_shipping_method_3" method_value=config.aliexpress_shipping_method_3 label="Shipping Method 3" %}
+
+                {% include "home/partial/aliexpress_shipping_options.html" with method_name="aliexpress_shipping_method_4" method_value=config.aliexpress_shipping_method_4 label="Shipping Method 4" %}
+            </div>
             {% endif %}
 
             <div class="row">

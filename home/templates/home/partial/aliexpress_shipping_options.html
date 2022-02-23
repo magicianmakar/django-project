@@ -1,0 +1,68 @@
+<div class="col-md-6">
+    <div class="form-group">
+        <label for="aliexpress_shipping_method" class="control-label">
+            {{label}}
+            {% include 'partial/help_tooltip.html' with help="Automatically selects the chosen shipping method on AliExpress for all items." qtipstyle="color:#BBB" %}
+        </label>
+        <select name="{{method_name}}" class="form-control">
+            <option value="" {% if method_value == '' %}selected="selected"{% endif %}>Default</option>
+            <option value="CAINIAO_CONSOLIDATION_SA" {% if method_value == 'CAINIAO_CONSOLIDATION_SA' %}selected="selected"{% endif %} >Aliexpress Direct (Saudi Arabia)</option>
+            <option value="CAINIAO_CONSOLIDATION_AE" {% if method_value == 'CAINIAO_CONSOLIDATION_AE' %}selected="selected"{% endif %} >Aliexpress Direct (UAE)</option>
+            <option value="CAINIAO_CONSOLIDATION_BR" {% if method_value == 'CAINIAO_CONSOLIDATION_BR' %}selected="selected"{% endif %}>Aliexpress Direct (Brazil)</option>
+            <option value="CAINIAO_PREMIUM" {% if method_value == 'CAINIAO_PREMIUM' %}selected="selected"{% endif %}>AliExpress Premium Shipping</option>
+            <option value="CAINIAO_ECONOMY" {% if method_value == 'CAINIAO_ECONOMY' %}selected="selected"{% endif %}>AliExpress Saver Shipping</option>
+            <option value="CAINIAO_STANDARD" {% if method_value == 'CAINIAO_STANDARD' %}selected="selected"{% endif %}>AliExpress Standard Shipping</option>
+            <option value="ARAMEX" {% if method_value == 'ARAMEX' %}selected="selected"{% endif %}>ARAMEX</option>
+            <option value="AUSPOST" {% if method_value == 'AUSPOST' %}selected="selected"{% endif %}>Australia Post</option>
+            <option value="BSC_ECONOMY_SG" {% if method_value == 'BSC_ECONOMY_SG' %}selected="selected"{% endif %}>BSC Special Economy</option>
+            <option value="BSC_STANDARD_SG" {% if method_value == 'BSC_STANDARD_SG' %}selected="selected"{% endif %}>BSC Special Standard</option>
+            <option value="CAINIAO_EXPEDITED_ECONOMY" {% if method_value == 'CAINIAO_EXPEDITED_ECONOMY' %}selected="selected"{% endif %}>Cainiao Expedited Economy</option>
+            <option value="AE_CAINIAO_STANDARD" {% if method_value == 'AE_CAINIAO_STANDARD' %}selected="selected"{% endif %}>Cainiao Expedited Standard</option>
+            <option value="CAINIAO_STANDARD_HEAVY" {% if method_value == 'CAINIAO_STANDARD_HEAVY' %}selected="selected"{% endif %}>Cainiao Heavy Parcel Line</option>
+            <option value="CAINIAO_ECONOMY_SG" {% if method_value == 'CAINIAO_ECONOMY_SG' %}selected="selected"{% endif %}>Cainiao Saver Shipping For Special Goods</option>
+            <option value="CAINIAO_STANDARD_SG" {% if method_value == 'CAINIAO_STANDARD_SG' %}selected="selected"{% endif %}>Cainiao Standard For Special Goods</option>
+            <option value="CAINIAO_SUPER_ECONOMY" {% if method_value == 'CAINIAO_SUPER_ECONOMY' %}selected="selected"{% endif %}>Cainiao Super Economy</option>
+            <option value="CAINIAO_SUPER_ECONOMY_SG" {% if method_value == 'CAINIAO_SUPER_ECONOMY_SG' %}selected="selected"{% endif %}>Cainiao Super Economy for Special Goods</option>
+            <option value="AE_CN_SUPER_ECONOMY_G" {% if method_value == 'AE_CN_SUPER_ECONOMY_G' %}selected="selected"{% endif %}>Cainiao Super Economy Global</option>
+            <option value="CAINIAO_OVERSEAS_WH_EXPPL" {% if method_value == 'CAINIAO_OVERSEAS_WH_EXPPL' %}selected="selected"{% endif %}>Cainiao Warehouse Express Shipping</option>
+            <option value="CPAP" {% if method_value == 'CPAP' %}selected="selected"{% endif %}>China Post Air Parcel</option>
+            <option value="YANWEN_JYT" {% if method_value == 'YANWEN_JYT' %}selected="selected"{% endif %}>China Post Ordinary Small Packet Plus</option>
+            <option value="CPAM" {% if method_value == 'CPAM' %}selected="selected"{% endif %}>China Post Registered Air Mail</option>
+            <option value="CORREIOS_BR" {% if method_value == 'CORREIOS_BR' %}selected="selected"{% endif %}>Correios Brazil</option>
+            <option value="DEUTSCHE_POST" {% if method_value == 'DEUTSCHE_POST' %}selected="selected"{% endif %}>Deutsche Post</option>
+            <option value="DHL" {% if method_value == 'DHL' %}selected="selected"{% endif %}>DHL</option>
+            <option value="DHLECOM" {% if method_value == 'DHLECOM' %}selected="selected"{% endif %}>DHL e-commerce</option>
+            <option value="EMS" {% if method_value == 'EMS' %}selected="selected"{% endif %}>EMS</option><option value="E_EMS">e-EMS</option>
+            <option value="EMS_ZX_ZX_US" {% if method_value == 'EMS_ZX_ZX_US' %}selected="selected"{% endif %}>ePacket</option>
+            <option value="FEDEX" {% if method_value == 'FEDEX' %}selected="selected"{% endif %}>Fedex IP</option>
+            <option value="FEDEX_IE" {% if method_value == 'FEDEX_IE' %}selected="selected"{% endif %}>Fedex IE</option>
+            <option value="FLYT" {% if method_value == 'FLYT' %}selected="selected"{% endif %}>Flyt Express</option>
+            <option value="FLYT_ECONOMY_SG" {% if method_value == 'FLYT_ECONOMY_SG' %}selected="selected"{% endif %}>Flyt Special Economy</option>
+            <option value="GLS_FR" {% if method_value == 'GLS_FR' %}selected="selected"{% endif %}>GLS France</option><option value="GLS_ES" {% if method_value == 'GLS_ES' %}selected="selected"{% endif %} >GLS Spain</option>
+            <option value="LAPOSTE" {% if method_value == 'LAPOSTE' %}selected="selected"{% endif %} >La Poste</option>
+            <option value="MEEST" {% if method_value == 'MEEST' %}selected="selected"{% endif %} >Meest</option>
+            <option value="POSTKR" {% if method_value == 'POSTKR' %}selected="selected"{% endif %} >POSTKR</option>
+            <option value="POST_NL" {% if method_value == 'POST_NL' %}selected="selected"{% endif %}>PostNL</option>
+            <option value="RUSSIAN_POST" {% if method_value == 'RUSSIAN_POST' %}selected="selected"{% endif %}>Russian Post</option>
+            <option value="SF_EPARCEL_OM" {% if method_value == 'SF_EPARCEL_OM' %}selected="selected"{% endif %} >SF Economic Air Mail</option>
+            <option value="SF_EPARCEL" {% if method_value == 'SF_EPARCEL' %}selected="selected"{% endif %} >SF eParcel</option>
+            <option value="SF" {% if method_value == 'SF' %}selected="selected"{% endif %}>SF Express</option><option value="SGP">Singapore Post</option>
+            <option value="SUNYOU_RM" {% if method_value == 'SUNYOU_RM' %}selected="selected"{% endif %} >SunYou</option>
+            <option value="SUNYOU_ECONOMY" {% if method_value == 'SUNYOU_ECONOMY' %}selected="selected"{% endif %} >SunYou Economic Air Mail</option>
+            <option value="SUNYOU_ECONOMY_SG" {% if method_value == 'SUNYOU_ECONOMY_SG' %}selected="selected"{% endif %} >SunYou Special Economy</option>
+            <option value="SHUNYOU_STANDARD_SG" {% if method_value == 'SHUNYOU_STANDARD_SG' %}selected="selected"{% endif %} >SunYou Special Standard</option>
+            <option value="CHP" {% if method_value == 'CHP' %}selected="selected"{% endif %} >Swiss Post</option>
+            <option value="TNT" {% if method_value == 'TNT' %}selected="selected"{% endif %} >TNT</option>
+            <option value="LAOPOST" {% if method_value == 'LAOPOST' %}selected="selected"{% endif %}>TOPYOU</option>
+            <option value="TOPYOU_ECONOMY_SG" {% if method_value == 'TOPYOU_ECONOMY_SG' %}selected="selected"{% endif %}>TOPYOU Special Economy</option>
+            <option value="PTT" {% if method_value == 'PTT' %}selected="selected"{% endif %}>Turkey Post</option>
+            <option value="UBI" {% if method_value == 'UBI' %}selected="selected"{% endif %}>UBI</option>
+            <option value="UPS" {% if method_value == 'UPS' %}selected="selected"{% endif %}>UPS</option>
+            <option value="UPSE" {% if method_value == 'UPSE' %}selected="selected"{% endif %}>UPS Expedited</option>
+            <option value="USPS" {% if method_value == 'USPS' %}selected="selected"{% endif %}>USPS</option>
+            <option value="YANWEN_ECONOMY" {% if method_value == 'YANWEN_ECONOMY' %}selected="selected"{% endif %}>Yanwen Economic Air Mail</option>
+            <option value="YANWEN_ECONOMY_SG" {% if method_value == 'YANWEN_ECONOMY_SG' %}selected="selected"{% endif %}>Yanwen Special Economy</option>
+            <option value="YANWEN_AM" {% if method_value == 'YANWEN_AM' %}selected="selected"{% endif %}>Yanwen Special Standard</option>
+        </select>
+    </div>
+</div>

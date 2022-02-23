@@ -714,3 +714,7 @@ div.launcher-container {
     flex-direction: column;
     align-items: center;
 }
+
+.shipping-rules-display span.badge.badge-default {
+    background-color: #969696;
+}

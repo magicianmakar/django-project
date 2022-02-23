@@ -96,6 +96,17 @@ class FindProductViaApi(RestApi):
         return 'aliexpress.ds.product.get'
 
 
+class ShippingInfo(RestApi):
+    def __init__(self, domain='gw.api.taobao.com', port=80):
+        RestApi.__init__(self, domain, port)
+
+    def getapiname(self):
+        return 'aliexpress.logistics.buyer.freight.calculate'
+
+    def set_info(self, info):
+        self.param_aeop_freight_calculate_for_buyer_d_t_o = info
+
+
 class OrderInfo(RestApi):
     def __init__(self, domain='gw.api.taobao.com', port=80):
         RestApi.__init__(self, domain, port)
