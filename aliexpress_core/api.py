@@ -1,5 +1,6 @@
 
 import requests
+import phonenumbers
 from collections import defaultdict
 import json
 
@@ -349,9 +350,11 @@ class AliexpressFulfillHelper():
         address.country = self.shipping_address['country_code']
 
         try:
-            address.phone_country, address.mobile_no = self.shipping_address['phone'].split('-')
+            parsed = phonenumbers.parse(self.shipping_address['phone'])
+            address.phone_country = parsed.country_code
+            address.mobile_no = parsed.national_number
         except:
-            return self.order_error("Invalid Phone number. Please reenter the number with dialing code separated by a '-'.eg: +1-987654321")
+            return self.order_error("Invalid Phone number. Please enter a valid number")
 
         req = PlaceOrderRequest()
         req.setAddress(address)
