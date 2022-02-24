@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
 
 from shopified_core.utils import save_user_ip, encode_params
+from lib.exceptions import capture_exception
 
 Cookie.Morsel._reserved['samesite'] = 'SameSite'
 
@@ -22,7 +23,10 @@ class UserIpSaverMiddleware(object):
 
     def __call__(self, request):
         if request.user.is_authenticated and not request.session.get('is_hijacked_user'):
-            save_user_ip(request)
+            try:
+                save_user_ip(request)
+            except:
+                capture_exception(level='warning')
 
         return self.get_response(request)
 

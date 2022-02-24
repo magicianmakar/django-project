@@ -662,15 +662,18 @@ def save_user_ip(request):
     extension = get_extension_version(request)
     session = get_user_session(request)
 
-    user_ip, created = UserIpRecord.objects.update_or_create(
-        user=user,
-        ip=ip,
-        browser=browser,
-        session=session,
-        defaults={
-            'last_seen_at': timezone.now(),
-        }
-    )
+    created = False
+    match = {'user': user, 'ip': ip, 'browser': browser, 'session': session}
+    try:
+        user_ip, created = UserIpRecord.objects.update_or_create(
+            **match,
+            defaults={
+                'last_seen_at': timezone.now(),
+            }
+        )
+    except UserIpRecord.MultipleObjectsReturned:
+        user_ip = UserIpRecord.objects.filter(**match).order_by('-last_seen_at').first()
+        UserIpRecord.objects.filter(**match).exclude(id=user_ip.id).delete()
 
     if created or not user_ip.country:
         from last_seen.tasks import update_ip_details
