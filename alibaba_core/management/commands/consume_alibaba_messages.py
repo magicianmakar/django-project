@@ -37,7 +37,7 @@ class Command(DropifiedBaseCommand):
         if messages:
             self.write('[Alibaba] Messages received')
             for m in messages['tmc_message']:
-                self.write(m)
+                self.write(json.dumps(m))
             self.confirm_messages([m['id'] for m in messages['tmc_message']])
             self.write('[Alibaba] Messages confirmed')
 
