@@ -153,6 +153,8 @@ class Command(DropifiedBaseCommand):
         self.create_property('dr_gkart_count', 'Groovekart Store Count', 'number', 'number')
         self.create_property('dr_bigcommerce_count', 'Bigcommerce Store Count', 'number', 'number')
 
+        self.create_property('dr_tracks_30_day_count', 'Orders Fulfillement last 30 Days', 'number', 'number')
+
         self.create_property('dr_orders_30_day_count', 'Orders Count last 30 Days', 'number', 'number')
         self.create_property('dr_orders_all_count', 'Orders Count all time', 'number', 'number')
 
@@ -232,8 +234,9 @@ class Command(DropifiedBaseCommand):
         revenues = ShopifyOrderRevenue.objects.filter(created_at__gte=date_limit) \
             .values('user_id').annotate(sum=Sum('total_price_usd')).order_by('-sum')
 
+        self.progress_total(revenues.count())
         for revenue in revenues:
-            self.write(f"{revenue['user_id']} => {revenue['sum']}")
+            self.progress_update()
             try:
                 user = User.objects.get(id=revenue['user_id'])
                 user.set_config('_shopify_orders_revenue', {
@@ -242,9 +245,14 @@ class Command(DropifiedBaseCommand):
             except User.DoesNotExist:
                 continue
 
+        self.progress_close()
+
     def is_seen(self, user):
         try:
             last_seen = LastSeen.objects.when(user, 'website')
+            if HubspotAccount.objects.filter(hubspot_user=user).exists():
+                return True
+
             return last_seen and last_seen > arrow.utcnow().replace(years=-2).datetime
         except KeyboardInterrupt:
             raise
@@ -411,9 +419,6 @@ class Command(DropifiedBaseCommand):
                 first_row = False
 
     def load_tracks(self):
-        self.write(f'https://api.keen.io/3.0/projects/{settings.KEEN_PROJECT_ID}/queries/count')
-        self.write(f'/{settings.KEEN_READ_KEY}/')
-
         rep = requests.post(
             url=f'https://api.keen.io/3.0/projects/{settings.KEEN_PROJECT_ID}/queries/count',
             headers={'Authorization': settings.KEEN_READ_KEY},
@@ -431,14 +436,18 @@ class Command(DropifiedBaseCommand):
         )
 
         if rep.ok:
-            for result in rep.json()['result']:
-                self.write(f"{result['user_id']} => {result['result']}")
+            results = rep.json()['result']
+            self.progress_total(len(results))
+            for result in results:
                 try:
+                    self.progress_update()
                     user = User.objects.get(id=result['user_id'])
                     user.set_config('_shopify_orders_count', {
                         '30': result['result'],
                     })
                 except User.DoesNotExist:
                     continue
+
+                self.progress_close()
         else:
             self.write(f'Keen Error: {rep.text}')

@@ -9,8 +9,6 @@ from django.conf import settings
 from shopified_core.utils import safe_int, safe_str
 from .models import HubspotAccount
 
-INTERVALS = ['7', '14', '30', '90', '120', '365', '-1']
-
 
 def create_contact(user: User):
     data = generate_create_contact(user)
@@ -173,10 +171,13 @@ def generate_create_contact(user: User):
 
     data['properties']['number_of_stores'] = data['properties']['dr_stores_count']
 
+    data['properties']['dr_tracks_30_day_count'] = 0
+
     data['properties']['dr_orders_all_count'] = 0
-    data['properties']['dr_orders_all_sum'] = 0
     data['properties']['dr_orders_30_day_count'] = 0
+
     data['properties']['dr_orders_30_day_sum'] = 0
+    data['properties']['dr_orders_all_sum'] = 0
 
     shopify_orders_count = user.get_config('_shopify_orders_count')
     if shopify_orders_count:
@@ -189,6 +190,14 @@ def generate_create_contact(user: User):
         for stat_info_name in ['30']:
             if shopify_orders_revenue.get(stat_info_name):
                 data['properties'][f'dr_orders_{stat_info_name}_day_sum'] = int(shopify_orders_revenue[stat_info_name])
+
+    shopify_orders_stat = user.get_config('_shopify_orders_stat')
+    if shopify_orders_stat:
+        for inter in ['30', '-1']:
+            name = f'{inter}_day' if inter != '-1' else 'all'
+            for stat_info_name in ['count']:
+                if shopify_orders_stat.get(stat_info_name):
+                    data['properties'][f'dr_orders_{name}_{stat_info_name}'] = int(shopify_orders_stat[stat_info_name][inter])
 
     baremetrics_sub_stat = user.get_config('_baremetrics_sub')
     if baremetrics_sub_stat:
