@@ -154,6 +154,7 @@ class Command(DropifiedBaseCommand):
         self.create_property('dr_bigcommerce_count', 'Bigcommerce Store Count', 'number', 'number')
 
         self.create_property('dr_tracks_30_day_count', 'Orders Fulfillement last 30 Days', 'number', 'number')
+        self.create_property('dr_tracks_all_count', 'Orders Fulfillement all time', 'number', 'number')
 
         self.create_property('dr_orders_30_day_count', 'Orders Count last 30 Days', 'number', 'number')
         self.create_property('dr_orders_all_count', 'Orders Count all time', 'number', 'number')
@@ -419,7 +420,31 @@ class Command(DropifiedBaseCommand):
                 first_row = False
 
     def load_tracks(self):
-        rep = requests.post(
+        users_maps = defaultdict(dict)
+
+        for timeframe, keyname in {'this_30_days': '30', 'this_36_months': '-1'}.items():
+            self.write(f' >> Get orders count for {timeframe}')
+            rep = self.get_keen_orders_count(timeframe)
+            if rep.ok:
+                results = rep.json()['result']
+                for result in results:
+                    users_maps[result['user_id']][keyname] = result['result']
+            else:
+                self.write(f'Keen Error: {rep.text}')
+
+        self.progress_total(len(users_maps))
+        for user_id, result in users_maps.items():
+            self.progress_update()
+            try:
+                user = User.objects.get(id=user_id)
+                user.set_config('_shopify_orders_count', result)
+            except User.DoesNotExist:
+                continue
+
+        self.progress_close()
+
+    def get_keen_orders_count(self, timeframe):
+        return requests.post(
             url=f'https://api.keen.io/3.0/projects/{settings.KEEN_PROJECT_ID}/queries/count',
             headers={'Authorization': settings.KEEN_READ_KEY},
             data={
@@ -428,26 +453,9 @@ class Command(DropifiedBaseCommand):
                 "timezone": "UTC",
                 "group_by": ["user_id"],
                 "interval": None,
-                "timeframe": "this_30_days",
+                "timeframe": timeframe,
                 "zero_fill": None,
                 "filters": [],
                 "order_by": '[{"direction": "DESC", "property_name": "result"}]'
             }
         )
-
-        if rep.ok:
-            results = rep.json()['result']
-            self.progress_total(len(results))
-            for result in results:
-                try:
-                    self.progress_update()
-                    user = User.objects.get(id=result['user_id'])
-                    user.set_config('_shopify_orders_count', {
-                        '30': result['result'],
-                    })
-                except User.DoesNotExist:
-                    continue
-
-                self.progress_close()
-        else:
-            self.write(f'Keen Error: {rep.text}')
