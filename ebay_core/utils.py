@@ -857,6 +857,87 @@ class EbayUtils(SureDoneUtils):
 
         return new_tracker_orders
 
+    def split_product(self, product: EbayProduct, split_factor: str):
+        """
+        Split an existing product on SureDone and push all changes to Dropified DB
+        :param product: product for split
+        :type product: EbayProduct
+        :param split_factor:
+        :type split_factor: str
+        :return: SureDone's API response
+        :rtype: JsonResponse
+        """
+        if not self.api:
+            return
+
+        sd_api_result = self.sd_split_product(product, split_factor)
+
+        # If the SureDone returns no data, then the product was not successfully splitted
+        if sd_api_result.get('api_response', {}).get('result') != 'success':
+            return sd_api_result
+
+        # If the SureDone returns data successfully, then update the products from SureDone in Dropified DB
+        splitted_products = sd_api_result.pop('splitted_products')
+
+        original_sku = product.sku
+        original_parent_product = product.parsed
+        original_product_variants = list(original_parent_product.get('attributes', {}).values())
+        original_product_variants.append(original_parent_product)
+
+        new_products = {}
+        for splitted_product in splitted_products:
+            product_id = splitted_product.get('id')
+            new_sku = splitted_product['sku']
+            new_products[new_sku] = new_products.get(new_sku, {})
+            for original_product_variant in original_product_variants:
+                if product_id != original_product_variant.get('id'):
+                    continue
+
+                original_product_variant['sku'] = new_sku
+                original_product_variant['variantsconfig'] = splitted_product.get('variantsconfig')
+
+                # create new data field for splitted products
+                if original_product_variant['guid'] == new_sku:
+                    if 'attributes' in new_products[new_sku].keys():
+                        original_product_variant['attributes'] = new_products[new_sku]['attributes']
+                    else:
+                        original_product_variant['attributes'] = []
+                    new_products[new_sku] = original_product_variant
+                else:
+                    if 'attributes' in new_products[new_sku].keys():
+                        new_products[new_sku]['attributes'].append(original_product_variant)
+                    else:
+                        new_products[new_sku]['attributes'] = original_product_variant
+
+                # update data on EbayProductVariant table of Dropified DB
+                ebay_product_variant = EbayProductVariant.objects.get(guid=original_product_variant['guid'])
+                ebay_product_variant.sku = new_sku
+                ebay_product_variant.save()
+
+        # update data on EbayProduct table of Dropified DB
+        for guid, data in new_products.items():
+            ebay_product = EbayProduct.objects.get(guid=original_sku)
+
+            for splitted_product in splitted_products:
+                if splitted_product['sku'] == guid:
+                    ebay_product.variants_config = splitted_product['variantsconfig']
+                    break
+
+            if data['attributes']:
+                data['attributes'] = {k + 1: v for k, v in enumerate(data['attributes'])}
+            ebay_product.update_data(data)
+            ebay_product.thumbnail_image = data.get('media1', '')
+
+            if guid == original_sku:
+                ebay_product.save()
+            else:
+                ebay_product.pk = None
+                ebay_product.guid = guid
+                ebay_product.sku = guid
+                ebay_product.save()
+
+        return sd_api_result
+
     def duplicate_product(self, product_data: dict, store: EbayStore):
         """
         Save a new (duplicated) product to SureDone.

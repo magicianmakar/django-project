@@ -17,6 +17,7 @@ from django.views.generic import ListView
 from django.views.generic.base import RedirectView
 from django.views.generic.detail import DetailView
 
+from addons_core.models import Addon
 from leadgalaxy.utils import (
     affiliate_link_set_query,
     get_admitad_affiliate_url,
@@ -42,14 +43,14 @@ from shopified_core.utils import (
     http_excption_status_code,
     jwt_encode,
     order_data_cache,
+    safe_float,
     safe_int,
-    safe_float
+    safe_json,
 )
 from suredone_core.utils import get_daterange_filters
 
 from .models import EbayBoard, EbayOrderTrack, EbayProduct, EbayStore, EbaySupplier
 from .utils import EbayListPaginator, EbayOrderListQuery, EbayUtils, get_store_from_request
-from addons_core.models import Addon
 
 
 class ProductsList(ListView):
@@ -140,7 +141,10 @@ class ProductDetailView(DetailView):
         context['product_data'] = json.dumps(product_data_dict)
         context['variants'] = json.dumps(self.object.variants_for_details_view)
         variants_config = self.object.parsed.get('variantsconfig', '{}')
-        context['variants_config'] = json.loads(variants_config) if variants_config else []
+        variants_config = [variant_config for variant_config in safe_json(variants_config) if
+                           len(variant_config.get('values', [])) > 1]
+        context['variants_config'] = variants_config if variants_config else [{'title': 'No variants!'}]
+        context['split_disabled'] = 'disabled' if not variants_config else ''
 
         products_url = reverse('ebay:products_list')
         context['breadcrumbs'] = [{'title': 'Products', 'url': products_url}, self.object.title]

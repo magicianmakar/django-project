@@ -695,7 +695,12 @@ def product_delete(user_id, parent_guid, store_id):
 @celery_app.task(base=CaptureFailure)
 def do_smart_board_sync_for_product(user_id, product_id):
     user = User.objects.get(id=user_id)
-    product = EbayProduct.objects.get(id=product_id)
+
+    try:
+        product = EbayProduct.objects.get(id=product_id)
+    except EbayProduct.DoesNotExist:
+        return
+
     try:
         permissions.user_can_edit(user, product)
         smart_board_by_product(user, product)
@@ -757,6 +762,69 @@ def order_save_changes(self, data):
         if not self.request.called_directly:
             countdown = retry_countdown(f'retry_ordered_tags_{order_id}', self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
+
+
+@celery_app.task(base=CaptureFailure)
+def product_split(product_guid, split_factor, user_id):
+    user = User.objects.get(id=user_id)
+    product = EbayProduct.objects.get(guid=product_guid)
+    default_error_message = 'Something went wrong, please try again.'
+    pusher_event = 'product-split'
+    can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
+
+    if not can_add:
+        product.store.pusher.trigger(pusher_event, {
+            'success': False,
+            'error': "Woohoo! 🎉. You are growing and you've hit your account limit for products. "
+                     "Upgrade your plan to keep importing new products"
+        })
+        return
+    try:
+        sd_api_resp = EbayUtils(user).split_product(product, split_factor)
+
+        if not isinstance(sd_api_resp, dict):
+            product.store.pusher_trigger(pusher_event, {
+                'success': False,
+                'product': product.guid,
+                'error': default_error_message
+            })
+            return
+
+        err_msg = EbayUtils(user).format_error_messages('actions', sd_api_resp)
+        if err_msg:
+            product.store.pusher_trigger(pusher_event, {
+                'success': False,
+                'product': product.guid,
+                'error': err_msg or default_error_message
+            })
+            return
+
+        if sd_api_resp.get('api_response', {}).get('result') != 'success':
+            product.store.pusher_trigger(pusher_event, {
+                'success': False,
+                'product': product.guid,
+                'error': sd_api_resp.get('message') or default_error_message
+            })
+            return
+
+        redirect_url = f"{reverse('ebay:products_list')}?store=n"
+
+        product.store.pusher_trigger(pusher_event, {
+            'success': True,
+            'product': product.guid,
+            'redirect_url': redirect_url,
+        })
+
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+
+        product.store.pusher_trigger(pusher_event, {
+            'success': False,
+            'error': http_exception_response(e, json=True).get('message', 'Server Error'),
+            'product': product.guid,
+            'product_url': reverse('ebay:product_detail', kwargs={'pk': product.guid, 'store_index': product.store.pk})
+        })
 
 
 @celery_app.task(base=CaptureFailure)

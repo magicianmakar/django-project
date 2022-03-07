@@ -59,3 +59,25 @@ class EbayApiHelper(ApiHelperBase):
 
     def set_product_default_supplier(self, product, supplier):
         return supplier
+
+    def split_product(self, product, split_factor, user):
+        """
+        Split an existing product on SureDone and push all changes to Dropified DB
+        :param product: product for split
+        :type product: EbayProduct
+        :param split_factor:
+        :type split_factor: str
+        :param user:
+        :type user:
+        :return: SureDone's API response
+        :rtype: JsonResponse
+        """
+
+        tasks.product_split.apply_async(kwargs={
+            'product_guid': product.guid,
+            'split_factor': split_factor,
+            'user_id': user.id,
+        }, countdown=0, expires=240)
+
+        pusher = {'key': settings.PUSHER_KEY, 'channel': product.store.pusher_channel()}
+        return {'pusher': pusher}

@@ -399,14 +399,15 @@ class SureDoneUtils:
     def format_error_messages_by_variant(self, errors: dict) -> str:
         return '\n\n'.join([f'<b>Variant #{i}</b>: {m}' for i, m in errors.items()])
 
-    def transform_variant_data_into_sd_list_format(self, data_per_variant: list, keys_to_exclude=None):
+    def transform_variant_data_into_sd_list_format(self, data_per_variant: list, identifier_type='guid',
+                                                   keys_to_exclude=None):
         if not keys_to_exclude:
             keys_to_exclude = []
         # Get all possible keys across all variants
         keys_set = list(set().union(*(d.keys() for d in data_per_variant)))
         # Exclude 'guid' field to move it to the first position in all keys
-        extended_keys_to_exclude = keys_to_exclude + ['guid']
-        all_keys = ['guid'] + list(filter(lambda x: x not in extended_keys_to_exclude, keys_set))
+        extended_keys_to_exclude = keys_to_exclude + [identifier_type]
+        all_keys = [identifier_type] + list(filter(lambda x: x not in extended_keys_to_exclude, keys_set))
 
         # Transform a list of dicts to a list of lists
         # First element is a list of all keys
@@ -919,6 +920,61 @@ class SureDoneUtils:
                 failed_set_indices[i] = api_resp
 
         return failed_set_indices
+
+    def sd_split_product(self, product, split_factor: str):
+        """
+        Split the product on SureDone.
+        :param product:
+        :type product:
+        :param split_factor:
+        :type split_factor:
+        :return:
+        :rtype:
+        """
+        # Step 1: Get all product variants
+        parent_product = product.parsed
+        products = [parent_product, *list(parent_product.get('attributes', {}).values())]
+
+        # Step 2: Group all product variants by split_factor
+        product_split_variants = product.variants_config_parsed
+        variants_config = []
+        split_variants = []
+
+        for split_variant in product_split_variants:
+            if split_variant.get('title') != split_factor:
+                variants_config.append(split_variant)
+            else:
+                split_variants = split_variant.get('values', [])
+
+        if len(split_variants) > len(products):
+            return {'message': 'Something went wrong: \n not enough variants of product to split.'}
+
+        split_product_data = []
+
+        # Data for custom fields is stored in format "ucf{field_name_with_no_space_chars}"
+        # so check both formats of the field
+        minified_split_factor = self.sd_account.format_custom_field(split_factor)
+        for factor in split_variants:
+            split_products = [product for product in products if product.get(split_factor) == factor
+                              or product.get(minified_split_factor) == factor]
+            sku = split_products[0]['guid']
+            new_variants_config = deepcopy(variants_config)
+            new_variants_config.append({'title': split_factor, 'values': [factor]})
+            for split_product in split_products:
+                update_product_data = {
+                    'id': split_product.get('id'),
+                    'sku': sku,
+                    'variantsconfig': new_variants_config
+                }
+                split_product_data.append(update_product_data)
+
+        # Step 3: Transform data into array-based data
+        api_request_data = self.transform_variant_data_into_sd_list_format(split_product_data, identifier_type='id')
+        skip_all_channels = True
+
+        sd_api_response = self.api.edit_product_details_bulk(api_request_data, skip_all_channels)
+
+        return {'api_response': sd_api_response, 'splitted_products': split_product_data}
 
     def update_product_variant(self, updated_product_data: dict, skip_all_channels=True):
         """

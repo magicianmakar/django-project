@@ -492,38 +492,53 @@ $('#modal-pick-variant .btn-submit').click(function(e) {
         return;
     }
 
-    var product_id = config.product_id;
+    var product_id = product.id;
+    var btn = $('#btn-split-variants');
+    btn.bootstrapBtn('loading');
+    btn.addClass('disabled');
 
-    $(this).bootstrapBtn('loading');
+    if (!verifyPusherIsDefined()) {
+        return;
+    }
 
-    $.ajax({
-        url: api_url('product-split-variants', 'ebay'),
-        type: 'POST',
-        data: {
-            product: product_id,
-            split_factor: split_factor,
-        },
-        context: {btn: $(this)},
-        success: function (data) {
-            var btn = this.btn;
-            btn.bootstrapBtn('reset');
+    var pusher = new Pusher(config.sub_conf.key);
+    var channel = pusher.subscribe(config.sub_conf.channel);
 
-            if ('products_ids' in data) {
-                // check if current product is already connected to shopify..
-                if ($('#product-export-btn').attr('target') === 'shopify-update') {
-                  toastr.success('The variants are now split into new products.\r\n' +
-                    'The new products will get connected to shopify very soon.', 'Product Split!');
-                } else {
-                  toastr.success('The variants are now split into new products.', 'Product Split!');
-                }
-                setTimeout(function() { window.location.href = '/ebay/products'; }, 500);
+    channel.bind('product-split', function (eventData) {
+        if (eventData.product === product.guid) {
+            pusher.unsubscribe(channel);
+
+            if (eventData.success) {
+                toastr.success("The variants are now split into new products.", "Product Split!");
+                setTimeout(function () {
+                    window.location.href = 'redirect_url' in eventData ? eventData.redirect_url : '/ebay/products';
+                }, 1000);
             }
-        },
-        error: function (data) {
-            this.btn.bootstrapBtn('reset');
-
-            displayAjaxError('Split variants into separate products', data);
+            if (eventData.error) {
+                displayAjaxError('Split Product', eventData);
+            }
+            btn.bootstrapBtn('reset');
+            btn.removeClass('disabled');
         }
+    });
+
+    channel.bind('pusher:subscription_succeeded', function () {
+        $.ajax({
+            url: api_url('product-split-variants', 'ebay'),
+            type: 'POST',
+            data: {
+                product: product_id,
+                split_factor: split_factor,
+            },
+            success: function (data) {
+            },
+            error: function (data) {
+                pusher.unsubscribe(channel);
+                displayAjaxError('Split Product', data);
+                btn.bootstrapBtn('reset');
+                btn.removeClass('disabled');
+            }
+        });
     });
 
     $('#modal-pick-variant').modal('hide');
