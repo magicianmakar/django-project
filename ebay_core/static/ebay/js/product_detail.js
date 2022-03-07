@@ -53,7 +53,7 @@ function prepareApiData(productData, variants) {
         ebay_category_id: productData.ebay_category_id,
         vendor: $('#product-vendor').val(),
         published: $('#product-visible').prop('checked'),
-        // images: productData.images,
+        images: productData.images,
         variants: []
     };
 
@@ -667,13 +667,13 @@ function imageClicked(e) {
     var imageID = $(e.target).parents('.var-image-block').find('img').attr('image-id');
     var new_images = [];
 
-    for (var i = 0; i < product.media_links.length; i++) {
-        if (i !== imageID) {
-            new_images.push(product.media_links[i]);
+    for (var i = 0; i < product.allImages.length; i++) {
+        if (i != imageID) {
+            new_images.push(product.allImages[i]);
         }
     }
 
-    product.media_links = new_images;
+    product.allImages = product.images = product.media_links = new_images;
     $(e.target).parent().remove();
 
     renderImages();
@@ -699,7 +699,7 @@ $('#save-product-notes').click(function (e) {
         context: btn,
         data: {
             'notes': $('#product-notes').val(),
-            'product': config.product_id,
+            'product': config.product_guid,
         },
         success: function(data) {
             if (data.status == 'ok') {
@@ -721,7 +721,7 @@ $('.export-add-btn').click(function (e) {
     e.preventDefault();
 
     var default_export = config.exports.length ? {
-        product: config.product_id
+        product: config.product_guid
     } : config.default_export;
 
     if (config.exports.length) {
@@ -1216,7 +1216,7 @@ window.ebayProductSelected = function (store, ebay_id) {
         url: api_url('product-connect', 'ebay'),
         type: 'POST',
         data: {
-            product: config.product_id,
+            product: config.product_guid,
             ebay: ebay_id,
             store: store
         },
@@ -1255,7 +1255,7 @@ $('.product-connection-disconnect').click(function (e) {
         if (isConfirmed) {
             $.ajax({
                 url: api_url('product-connect', 'ebay') + '?' + $.param({
-                    product: config.product_id,
+                    product: config.product_guid,
                 }),
                 type: 'DELETE',
                 success: function (data) {

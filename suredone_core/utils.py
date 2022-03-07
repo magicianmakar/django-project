@@ -1098,6 +1098,57 @@ class SureDoneUtils:
         return [field if self.sd_account.is_default_field(field) else self.sd_account.format_custom_field(field)
                 for field in fields]
 
+    def update_suredone_product_data_images(self, product, old_url, new_url):
+        store_type = product.store.store_type
+        store_instance_id = product.ebay_store_index
+        skip_all_channels = True
+
+        sd_product = product.parsed
+        sd_product_variants = list(sd_product.get('attributes', {}).values())
+        product_variants = [sd_product, *sd_product_variants]
+        update_data = {}
+
+        for i in range(10):
+            i += 1
+            if sd_product.get(f'media{i}') == old_url and i != 1:
+                update_data = {
+                    f'media{i}': new_url,
+                    'variants': [{'guid': variant.get('guid')} for variant in product_variants]
+                }
+
+        if not update_data and sd_product.get('mediax'):
+            mediax = sd_product['mediax'].split('*')
+            mediax = [new_url if url == old_url else url for url in mediax]
+
+            update_data = {
+                'mediax': '*'.join(mediax),
+                'variants': [{'guid': variant.get('guid')} for variant in product_variants]
+            }
+
+        if not update_data:
+            for product_variant in product_variants:
+                if product_variant.get('media1') == old_url:
+                    update_data = {
+                        'media1': new_url,
+                        'variants': [{'guid': variant.get('guid')}
+                                     for variant in product_variants
+                                     if variant['media1'] == old_url]
+                    }
+
+        # Update images in Dropified DB
+        images = json.loads(product.parsed['allimages'])
+        images = [new_url if url == old_url else url for url in images]
+        product.media_links_data = images
+        product.save(update_fields=['media_links_data'])
+
+        sd_response = self.update_product_details(
+            update_data,
+            store_type=store_type,
+            store_instance_id=store_instance_id,
+            skip_all_channels=skip_all_channels)
+
+        return sd_response
+
 
 class SureDoneAdminUtils:
     def generate_sd_username(self, user, test=False):

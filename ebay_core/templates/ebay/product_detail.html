@@ -291,10 +291,9 @@
                                                 </a>
                                             {% endif %}
 
-                                            {% comment %}<button class="btn btn-success btn-xs add-images-btn"
-                                                    original-product="{{ product.parsed.originalurl }}">More images
-                                            </button>{% endcomment %}
-
+                                            <button class="btn btn-success btn-xs add-images-btn" original-product="{{ product.parsed.originalurl }}">
+                                                More images
+                                            </button>
                                             {% if request.user|can:'youtube_ads.use' %}
                                                 <a class="btn btn-primary btn-xs"
                                                    href="{% url 'youtube_ads.views.index' %}?type=all&q={{ product.title }}"
@@ -1053,7 +1052,7 @@
 
     <script type="text/javascript">
 
-        let product = {{ product_data|safe }};
+        var product = {{ product_data|safe }};
         product.media_links = JSON.parse(product.media_links_data);
 
         let variants = {{ variants|safe }};
@@ -1065,6 +1064,7 @@
         });
 
         product.allImages = Array.from(new Set(product.media_links.concat(variantsImages)));
+        product.images = product.allImages;
 
         let productDetailsTemp;
         try {
@@ -1077,7 +1077,8 @@
         let config = {
             token: '{{ token }}',
             user_id: {{user.id}},
-            product_id: '{{product.guid}}',
+            product_id: '{{product.id}}',
+            product_guid: '{{product.guid}}',
             product_notes: '{{product.notes|default:''|escapejs}}',
 
             {% if product.some_variants_are_connected %}
@@ -1088,9 +1089,9 @@
                 ebay_options: null,
             {% endif %}
 
-            image_uploader: false, // TODO: enable after implementation {{ request.user|can:'image_uploader.use'|lower }},
-            photo_editor: false, // TODO: enable after implementation {{ request.user|can:'aviary_photo_editor.view'|lower }},
-            advanced_photo_editor: false, // TODO: enable after implementation {{ request.user|can:'pixlr_photo_editor.view'|lower }},
+            image_uploader: {{ request.user|can:'image_uploader.use'|lower }},
+            photo_editor: {{ request.user|can:'aviary_photo_editor.view'|lower }},
+            advanced_photo_editor: {{ request.user|can:'pixlr_photo_editor.view'|lower }},
             feather_editor: null,
 
             product_extra_images: [
@@ -1134,7 +1135,7 @@
 
             clipping_magic: {
                 api_id: '{{user.clippingmagic.api_id|default:""}}',
-                clippingmagic_editor: false, // TODO: enable a fter implementation{{ user|can:'clippingmagic.use'|lower }},
+                clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},
             },
 
             sub_conf: {
@@ -1240,11 +1241,11 @@
         {% endcompress %}
     {% endif %}{% endcomment %}
 
-    {% comment %}{% if request.user|can:'image_uploader.use' %}
+    {% if request.user|can:'image_uploader.use' %}
         {% compress js %}
         <script type="text/javascript" src="{% static 'ebay/js/uploader.js' %}"></script>
         {% endcompress %}
-    {% endif %}{% endcomment %}
+    {% endif %}
 
     {% if request.user|can:'aliextractor.use' %}
         <script src="{% static 'libs/bower_components/chart.js/dist/Chart.min.js' %}"></script>

@@ -35,10 +35,12 @@ from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.tasks import keen_order_event
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
+    aws_s3_context,
     clean_query_id,
     format_queueable_orders,
     http_exception_response,
     http_excption_status_code,
+    jwt_encode,
     order_data_cache,
     safe_int,
     safe_float
@@ -145,6 +147,9 @@ class ProductDetailView(DetailView):
 
         store_products = f'{products_url}?store={self.store.id}'
         context['breadcrumbs'].insert(1, {'title': self.store.title, 'url': store_products})
+
+        context.update(aws_s3_context())
+        context['token'] = jwt_encode({'id': self.request.user.id})
 
         return context
 

@@ -38,7 +38,7 @@ from alibaba_core import utils as alibaba_utils
 from analytic_events.models import RegistrationEvent
 from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier, BigCommerceUserUpload
 from commercehq_core.models import CommerceHQOrderTrack, CommerceHQProduct, CommerceHQSupplier, CommerceHQUserUpload
-from ebay_core.models import EbayProduct, EbaySupplier
+from ebay_core.models import EbayProduct, EbaySupplier, EbayUserUpload
 from facebook_core.models import FBProduct, FBSupplier
 from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier, GearUserUpload
 from groovekart_core.models import GrooveKartProduct, GrooveKartSupplier, GrooveKartUserUpload
@@ -90,6 +90,7 @@ from stripe_subscription.utils import get_stripe_invoice, get_stripe_invoice_lis
 from supplements.lib.shipstation import get_address as get_shipstation_address
 from supplements.models import PLSOrder
 from supplements.tasks import update_shipstation_address
+from suredone_core.utils import SureDoneUtils
 from woocommerce_core.models import WooProduct, WooSupplier, WooUserUpload
 
 from . import tasks, utils
@@ -1683,6 +1684,23 @@ def save_image_s3(request):
 
         if old_url and not old_url == upload_url:
             update_product_data_images(product, old_url, upload_url)
+
+    elif request.GET.get('ebay') or request.POST.get('ebay'):
+        product = EbayProduct.objects.get(id=product_id)
+
+        permissions.user_can_edit(user, product)
+
+        EbayUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
+
+        if old_url and not old_url == upload_url:
+            sd_utils = SureDoneUtils(user=user.models_user, account_id=product.sd_account_id)
+            data = sd_utils.update_suredone_product_data_images(product, old_url, upload_url)
+            data = json.dumps(data)
+            return JsonResponse({
+                'status': 'ok',
+                'url': upload_url,
+                'data': data
+            })
 
     else:
         product = ShopifyProduct.objects.get(id=product_id)
