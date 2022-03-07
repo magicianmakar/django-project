@@ -954,6 +954,25 @@ class EbayUtils(SureDoneUtils):
 
         return default
 
+    def parse_ebay_errors(self, api_error_message):
+        api_ebay_errors_list = [error for error in api_error_message.split('Failure | ') if 'ErrorCode:' in error]
+
+        parsed_ebay_errors_list = []
+        for api_ebay_error in api_ebay_errors_list:
+            api_ebay_error = api_ebay_error.replace(' | ', '\n')
+            ebay_error_items = api_ebay_error.split('\n')
+            ebay_error = {}
+            for ebay_error_item in ebay_error_items:
+                if 'ErrorCode:' in ebay_error_item:
+                    ebay_error["error_code"] = ebay_error_item.replace('ErrorCode:', '').strip()
+                if 'ShortMessage:' in ebay_error_item:
+                    ebay_error["short_message"] = ebay_error_item.replace('ShortMessage:', '').strip()
+                if 'LongMessage:' in ebay_error_item:
+                    ebay_error["long_message"] = ebay_error_item.replace('LongMessage:', '').strip()
+            parsed_ebay_errors_list.append(ebay_error)
+
+        return parsed_ebay_errors_list
+
 
 class EbayOrderUpdater:
     def __init__(self, user=None, store: EbayStore = None, order_id: int = None):
