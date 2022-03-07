@@ -21,16 +21,16 @@ class Command(DropifiedBaseCommand):
             for entry in api_categories['category']:
                 category_id = str(entry['category_id'])
                 category, created = AliexpressCategory.objects.update_or_create(
-                    slug=slugify(entry['category_name']),
                     name=entry['category_name'],
                     aliexpress_id=category_id,
-                    description=entry['category_name'],
                 )
+                category.slug = slugify(entry['category_name'])
+                category.description = entry['category_name']
+
                 if 'parent_category_id' in entry.keys():
                     parent_category = AliexpressCategory.objects.get(
                         aliexpress_id=entry['parent_category_id']
                     )
-
                     category.parent = parent_category
 
                 # Hide categories

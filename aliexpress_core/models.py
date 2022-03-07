@@ -339,7 +339,7 @@ class AliexpressAccount(models.Model):
 
 class AliexpressCategory(models.Model):
     class Meta:
-        ordering = ['order']
+        ordering = ['-order']
         verbose_name_plural = 'Aliexpress Categories'
 
     slug = models.SlugField(max_length=255)
