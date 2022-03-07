@@ -1374,6 +1374,8 @@ class BoardsList(ListView):
     model = WooBoard
     context_object_name = 'boards'
     template_name = 'woocommerce/boards_list.html'
+    paginator_class = SimplePaginator
+    paginate_by = 8
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):

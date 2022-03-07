@@ -77,63 +77,8 @@
                 </div>
                 {% endfor %}
             </div>
-            <div class="panel-body new-layout-hidden">
-                <form id="board-search-form" method="get" role="form" class="form-inline">
-                    <div class="form-group pull-right">
-                        <label>Search:</label>
-                        <input type="text" class="form-control" name="search" placeholder="Board title" value="{{ request.GET.search|default:'' }}">
-                    </div>
-                </form>
-                <table class="table table-bordered dataTables">
-                    <thead>
-                        <tr>
-                            <th style="width:50%">Title</th>
-                            <th>Products</th>
-                            <th>Updated</th>
-                            <th>Options</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in current_page.object_list %}
-                        <tr class="board-box">
-                            <td>
-                                <a class="edit-user-premsc" board-id="{{item.id}}" href="/boards/{{item.id}}">
-                                    {{item.title}}
-                                </a>
-                            </td>
-                            <td class="products-count">
-                                    <a href="/boards/{{item.id}}?store=n" class="btn btn-outline btn-xs btn-default">
-                                        {% if item.saved != None %}{{ item.saved }}{% endif %} Saved</a>
 
-                                    <a href="/boards/{{item.id}}?store=c" class="btn btn-outline btn-xs btn-default">
-                                        {% if item.connected != None %}{{ item.connected }}{% endif %} Connected</a>
-
-                            </td>
-                            <td>{{item.updated_at|date}}</td>
-                            <td>
-                                <button board-id="{{item.id}}" class="btn btn-xs btn-primary board-edit"><i class="fa fa-edit"></i>Edit</button>
-                                <button board-id="{{item.id}}" class="btn btn-xs btn-warning board-empty"><i class="fa fa-eraser"></i> Empty</button>
-                                <button board-id="{{item.id}}" class="btn btn-xs btn-danger board-delete"><i class="fa fa-times"></i> Delete</button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <div id="pages-info" class="row">
-                    <div class="col-sm-12">
-                        <div id="results-count" class="pull-left">
-                            Showing {{ current_page.start_index }} to {{ current_page.end_index }} of
-                            {{ count }} entries
-                        </div>
-                        {% include "partial/paginator.html" %}
-                    </div>
-                </div>
-
-                <button class="btn btn-success add-board-btn">
-                    <i class="fa fa-plus"></i> Add Board
-                </button>
-            </div>
+            {% include "partial/paginator.html" %}
         </div>
     </div>
 </div>
@@ -184,47 +129,6 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extracss %}
-    <style type="text/css">
-    tbody td {
-        padding: 0px;
-        margin: 0px;
-    }
-
-    #board-search-form {
-        height: 35px;
-        margin-bottom: 5px;
-    }
-
-    #pages-info {
-        margin-bottom: 15px;
-    }
-    #results-count {
-        height: 28px;
-        line-height: 28px;
-    }
-
-    .pagination {
-        margin: 0 15px 0 0;
-        float: right;
-    }
-    .pagination > li > a,
-    .pagination > li > span {
-        font-size: 13px;
-    }
-    .pagination-lg > li:first-child > a,
-    .pagination-lg > li:first-child > span {
-        border-top-left-radius: 4px;
-        border-bottom-left-radius: 4px;
-    }
-    .pagination-lg > li:last-child > a,
-    .pagination-lg > li:last-child > span {
-        border-top-right-radius: 4px;
-        border-bottom-right-radius: 4px;
-    }
-    </style>
 {% endblock %}
 
 {% block extrajs %}

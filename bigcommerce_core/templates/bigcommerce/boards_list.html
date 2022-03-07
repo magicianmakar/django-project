@@ -78,58 +78,7 @@
                 {% endfor %}
             </div>
 
-            <div class="panel-body new-layout-hidden">
-                <table class="table table-bordered dataTables">
-                    <thead>
-                        <tr>
-                            <th style="width:50%">Title</th>
-                            <th>Products</th>
-                            <th>Updated</th>
-                            <th>Options</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in boards %}
-                        <tr id="board-row-{{item.id}}" class="board-box">
-                            <td>
-                                <a
-                                    class="edit-user-premsc"
-                                    board-id="{{item.id}}"
-                                    href="{% url 'bigcommerce:board_detail' item.id %}">
-                                    {{item.title}}
-                                </a>
-                            </td>
-                            <td class="products-count">
-                                <a href="{% url 'bigcommerce:board_detail' item.id %}?store=n" class="btn btn-outline btn-xs btn-default"><span class="product-count">{{ item.saved_count|default:'0' }}</span> Saved</a>
-                                <a href="{% url 'bigcommerce:board_detail' item.id %}?store=c" class="btn btn-outline btn-xs btn-default"><span class="product-count">{{ item.connected_count|default:'0' }}</span> Connected</a>
-                            </td>
-                            <td>{{item.updated_at|date}}</td>
-                            <td>
-                                <button
-                                    data-board-id="{{item.id}}"
-                                    class="btn btn-xs btn-primary board-edit bigcommerce-edit-board-btn">
-                                    <i class="fa fa-edit"></i>Edit
-                                </button>
-                                <button
-                                    data-board-id="{{item.id}}"
-                                    class="btn btn-xs btn-warning board-empty bigcommerce-empty-board-btn">
-                                    <i class="fa fa-eraser"></i> Empty
-                                </button>
-                                <button
-                                    data-board-id="{{item.id}}"
-                                    class="btn btn-xs btn-danger board-delete bigcommerce-delete-board-btn">
-                                    <i class="fa fa-times"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <button class="btn btn-success bigcommerce-add-board-btn">
-                    <i class="fa fa-plus"></i> Add Board
-                </button>
-            </div>
+            {% include "partial/paginator.html" %}
         </div>
     </div>
 </div>
@@ -179,20 +128,6 @@
     </div>
 </div>
 {% include 'bigcommerce/modal_board_update.html' %}
-{% endblock %}
-
-{% block extracss %}
-    <!-- Data Tables -->
-    <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
-    <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
-    <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
-
-    <style type="text/css">
-    tbody td {
-        padding: 0px;
-        margin: 0px;
-    }
-    </style>
 {% endblock %}
 
 {% block extrajs %}

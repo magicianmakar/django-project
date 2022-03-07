@@ -77,6 +77,8 @@
                 </div>
                 {% endfor %}
             </div>
+
+            {% include "partial/paginator.html" %}
         </div>
     </div>
 </div>
@@ -126,20 +128,6 @@
     </div>
 </div>
 {% include 'ebay/modal_board_update.html' %}
-{% endblock %}
-
-{% block extracss %}
-    <!-- Data Tables -->
-    <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
-    <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
-    <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
-
-    <style type="text/css">
-    tbody td {
-        padding: 0px;
-        margin: 0px;
-    }
-    </style>
 {% endblock %}
 
 {% block extrajs %}
