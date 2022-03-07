@@ -4,6 +4,7 @@ import re
 
 from django.contrib.auth.models import User
 from django.core.cache import cache, caches
+from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -14,9 +15,19 @@ from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
-from shopified_core.utils import fix_order_data, safe_float, safe_int, safe_json, safe_str
+from shopified_core.utils import (
+    fix_order_data,
+    safe_float,
+    safe_int,
+    safe_json,
+    safe_str,
+    http_exception_response,
+    http_excption_status_code
+)
 from suredone_core.models import InvalidSureDoneStoreInstanceId
 from suredone_core.utils import SureDoneUtils, get_or_create_suredone_account, parse_suredone_date, sd_customer_address
+
+import leadgalaxy.utils as leadgalaxy_utils
 
 
 class EbayUtils(SureDoneUtils):
@@ -1569,3 +1580,84 @@ def get_currency_options():
         ('CNY', 'Chinese Renminbi'),
         ('MXN', 'Mexican Peso'),
     ]
+
+
+def cache_fulfillment_data(order_tracks, orders_max=None, output=None):
+    """
+    Caches order data of given `EbayOrderTrack` instances
+    """
+    order_tracks = order_tracks[:orders_max] if orders_max else order_tracks
+    sd_all_orders = []
+    stores = set()
+    users = set()
+
+    for order_track in order_tracks:
+        stores.add(order_track.store)
+        users.add(order_track.user)
+
+    for user in users:
+        user_order_tracks = [order_track for order_track in order_tracks if order_track.user_id == user.id]
+        sd_all_orders += EbayUtils(user).get_tracking_orders(user_order_tracks)
+
+    cache_data = {}
+    counter = 0
+    for store in stores:
+        try:
+            counter += 1
+            # get all orders from the store
+            sd_orders = [sd_order.order for sd_order in sd_all_orders if sd_order.store_id == store.id]
+
+            if output:
+                output.write(f'[{counter}/{len(stores)}] eBay Cache: {len(sd_orders)} Orders for store: {store.title}:{store.id}')
+
+            for sd_order in sd_orders:
+                country = sd_order['shipping']['country'] or sd_order['billing']['country']
+                cache_data[f"ebay_auto_country_{store.id}_{sd_order['oid']}"] = country
+
+                for item in sd_order.get('items', []):
+                    cache_key = f"ebay_auto_fulfilled_order_{store.id}_{sd_order['oid']}_{item['sku']}"
+                    cache_data[cache_key] = (item.get('fulfillment_status') == 'fulfilled')
+
+        except Exception as e:
+            if output:
+                output.write(f'    eBay Cache Error for {store.title}:{store.id}')
+                output.write(f'    HTTP Code: {http_excption_status_code(e)} Error: {http_exception_response(e)}')
+
+            capture_exception(extra=http_exception_response(e))
+
+    cache.set_many(cache_data, timeout=3600)
+
+    return list(cache_data.keys())
+
+
+def cached_order_line_fulfillment_status(order_track):
+    return cache.get(f'ebay_auto_fulfilled_order_{order_track.store.id}_{order_track.order_id}_{order_track.line_id}')
+
+
+def order_track_fulfillment(order_track, user_config=None):
+    tracking_number = order_track.source_tracking
+
+    # Keys are set by `ebay_core.utils.cache_fulfillment_data`
+    country = cache.get(f'ebay_auto_country_{order_track.store_id}_{order_track.order_id}')
+
+    shipping_carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
+    if country and country == 'US':
+        if leadgalaxy_utils.is_chinese_carrier(tracking_number) or leadgalaxy_utils.shipping_carrier(tracking_number) == 'USPS':
+            shipping_carrier_name = 'USPS'
+
+    shipping_carrier_name = 'AfterShip' if not shipping_carrier_name else shipping_carrier_name
+    date_shipped = arrow.get(timezone.now()).format('MM/DD/YYYY')
+
+    meta_data = get_fulfillment_meta(
+        shipping_carrier_name,
+        tracking_number,
+        order_track.line_id,
+        date_shipped
+    )
+
+    data = {
+        'shipments': [meta_data],
+        'shippingstatus': 'COMPLETE',
+    }
+
+    return data
