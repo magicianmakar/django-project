@@ -352,9 +352,12 @@ class AliexpressFulfillHelper():
 
         try:
             parsed = phonenumbers.parse(self.shipping_address['phone'])
-            address.phone_country = parsed.country_code
-            address.mobile_no = parsed.national_number
-        except:
+            address.phone_country = '+' + str(parsed.country_code)
+            if '0000000000' in self.shipping_address['phone']:
+                address.mobile_no = '0000000000'
+            else:
+                address.mobile_no = parsed.national_number
+        except Exception:
             return self.order_error("Invalid Phone number. Please enter a valid number")
 
         req = PlaceOrderRequest()
