@@ -19,6 +19,7 @@ from leadgalaxy.utils import get_shopify_order
 from groovekart_core.models import GrooveKartOrderTrack, GrooveKartProduct, GrooveKartStore
 from groovekart_core.utils import get_gkart_order
 from lib.exceptions import capture_exception
+from lib.aliexpress_api import TopException
 from shopified_core import permissions
 from shopified_core.exceptions import AliexpressFulfillException
 from shopified_core.mixins import ApiResponseMixin
@@ -463,7 +464,15 @@ class AliexpressFulfillHelper():
 
             aliexpress_order.set_info(req)
 
-            result = aliexpress_order.getResponse(authrize=aliexpress_account.access_token)
+            try:
+                result = aliexpress_order.getResponse(authrize=aliexpress_account.access_token)
+            except TopException as e:
+                if e.errorcode == 27 and e.message.strip().lower() == 'invalid session':
+                    error_message = 'Session expired. Please reconnect your AliExpress account'
+                    return self.order_error(error_message)
+                else:
+                    return self.order_error(e.message)
+
             result = result.get('aliexpress_trade_buy_placeorder_response')
 
             if result and result.get('result') and result['result']['is_success']:
