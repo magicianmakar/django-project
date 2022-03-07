@@ -4,6 +4,8 @@ from celery import chain
 from requests.exceptions import HTTPError
 
 from django.conf import settings
+from django.core.cache import cache
+from app.celery_base import celery_app
 from django.core.exceptions import PermissionDenied
 from django.db.models import ObjectDoesNotExist
 from django.http import JsonResponse
@@ -18,7 +20,15 @@ from lib.exceptions import capture_exception, capture_message
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.decorators import HasSubuserPermission
-from shopified_core.utils import CancelledOrderAlert, clean_tracking_number, dict_val, get_domain, remove_link_query, safe_int
+from shopified_core.utils import (
+    CancelledOrderAlert,
+    clean_tracking_number,
+    dict_val,
+    get_domain,
+    remove_link_query,
+    safe_int,
+    safe_float
+)
 from suredone_core.models import SureDoneAccount
 
 from . import tasks
@@ -1010,3 +1020,42 @@ class FBStoreApi(ApiBase):
 
         pusher = {'key': settings.PUSHER_KEY, 'channel': store.pusher_channel()}
         return self.api_success({'pusher': pusher})
+
+    def post_products_supplier_sync(self, request, user, data):
+        try:
+            store = FBStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except FBStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        products = [product for product in data.get('products').split(',') if product]
+        if not products:
+            return self.api_error('No selected products to sync', status=422)
+
+        user_store_supplier_sync_key = f'user_store_supplier_sync_{user.id}_{store.id}'
+        if cache.get(user_store_supplier_sync_key) is not None:
+            return self.api_error('Sync in progress', status=404)
+        sync_price = data.get('sync_price', False)
+        price_markup = safe_float(data['price_markup'])
+        compare_markup = safe_float(data['compare_markup'])
+        sync_inventory = data.get('sync_inventory', False)
+        task = tasks.products_supplier_sync.apply_async(
+            args=[store.id, user.id, products, sync_price, price_markup, compare_markup, sync_inventory,
+                  user_store_supplier_sync_key], expires=180)
+        cache.set(user_store_supplier_sync_key, task.id, timeout=3600)
+        return self.api_success({'task': task.id})
+
+    def post_products_supplier_sync_stop(self, request, user, data):
+        try:
+            store = FBStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except FBStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        user_store_supplier_sync_key = f'user_store_supplier_sync_{user.id}_{store.id}'
+        task_id = cache.get(user_store_supplier_sync_key)
+        if task_id is not None:
+            celery_app.control.revoke(task_id, terminate=True)
+            cache.delete(user_store_supplier_sync_key)
+            return self.api_success()
+        return self.api_error('No Sync in progress', status=404)

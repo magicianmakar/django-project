@@ -3,6 +3,7 @@ from requests.exceptions import HTTPError
 
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.core.cache import cache
 from django.template.defaultfilters import truncatewords
 from django.urls import reverse
 
@@ -15,6 +16,11 @@ from suredone_core.utils import SureDonePusher
 
 from .models import FBProduct, FBStore
 from .utils import FBOrderUpdater, FBUtils, smart_board_by_product
+
+from product_alerts.utils import (
+    get_supplier_variants,
+    variant_index_from_supplier_sku,
+)
 
 
 @celery_app.task(base=CaptureFailure)
@@ -545,3 +551,170 @@ def variant_image(user_id, parent_guid, guid, product_data, store_id, skip_publi
             'error': http_exception_response(e, json=True).get('message', 'Server Error'),
             'product': product.guid
         })
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def products_supplier_sync(self, store_id, user_id, products, sync_price, price_markup, compare_markup, sync_inventory, cache_key):
+    store = FBStore.objects.get(id=store_id)
+    user = User.objects.get(id=user_id)
+    products = FBProduct.objects.filter(guid__in=products, user=store.user, store=store, source_id__gt=0)
+    total_count = 0
+    for product in products:
+        if product.have_supplier() and (product.default_supplier.is_aliexpress or product.default_supplier.is_ebay):
+            total_count += 1
+
+    push_data = {
+        'task': self.request.id,
+        'count': total_count,
+        'success': 0,
+        'fail': 0,
+    }
+    store.pusher_trigger('products-supplier-sync', push_data)
+
+    for product in products:
+        if not product.have_supplier() or not (product.default_supplier.is_aliexpress or product.default_supplier.is_ebay):
+            continue
+
+        supplier = product.default_supplier
+        push_data['id'] = product.id
+        push_data['title'] = product.title
+        push_data['fb_link'] = product.fb_url
+        push_data['supplier_link'] = supplier.product_url
+        push_data['status'] = 'ok'
+        push_data['error'] = None
+
+        try:
+            # Fetch supplier variants
+            attempts = 3
+            while attempts:
+                supplier_variants = get_supplier_variants(supplier.supplier_type(), supplier.get_source_id())
+                attempts -= 1
+                if len(supplier_variants) > 0:
+                    break
+
+            supplier_prices = [v.get('price') for v in supplier_variants if v.get('price')]
+            supplier_min_price = min(supplier_prices)
+            supplier_max_price = max(supplier_prices)
+        except Exception:
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to load supplier data'
+            push_data['fail'] += 1
+            store.pusher_trigger('products-supplier-sync', push_data)
+            continue
+
+        try:
+            # Fetch facebook variants
+            variants = product.retrieve_variants()
+            variants = [variant.__dict__ for variant in variants]
+        except Exception:
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to load facebook data'
+            push_data['fail'] += 1
+            store.pusher_trigger('products-supplier-sync', push_data)
+            continue
+
+        try:
+            # Check if there's only one price
+            # 'price' key exception is thrown if there is no variant
+            if len(variants) > 1:
+                same_price = (len(set([v.get('price') for v in variants if v.get('price')])) == 1
+                              or supplier_min_price == supplier_max_price)
+            else:
+                same_price = (len(variants) == 1
+                              or len(supplier_variants) == 1)
+            # New Data
+            updated = False
+            mapped_variants = {}
+            unmapped_variants = []
+
+            if sync_price and same_price:
+                # Use one price for all variants
+                for i, variant in enumerate(variants):
+                    variant['price'] = round(supplier_max_price * (100 + price_markup) / 100.0, 2)
+                    variant['compareatprice'] = round(supplier_variants[i].get('price') * (100 + compare_markup) / 100.0, 2)
+                    updated = True
+
+            if (sync_price and not same_price) or sync_inventory:
+                indexes = []
+                for i, variant in enumerate(supplier_variants):
+                    sku = variant.get('sku')
+                    if not sku:
+                        if len(variants) == 1 and len(supplier_variants) == 1:
+                            idx = 0
+                        else:
+                            continue
+                    else:
+                        idx = variant_index_from_supplier_sku(product, sku, variants)
+                        if idx is None and len(variants) > 1:
+                            for j, v in enumerate(variants):
+                                if j not in indexes and variant.get('sku_short') == v.get('supplier_sku') and v.get('supplier_sku'):
+                                    idx = j
+                                    indexes.append(j)
+                                    break
+                            if idx is None:
+                                continue
+                        elif len(variants) == 1 and len(supplier_variants) == 1:
+                            idx = 0
+
+                    mapped_variants[str(variants[idx].get('id'))] = True
+
+                    # Sync inventory
+                    if sync_inventory:
+                        variants[idx]['stock'] = variant.get('availabe_qty')
+
+                    # Sync price
+                    if sync_price and not same_price:
+                        variants[idx]['price'] = round(variant.get('price') * (100 + price_markup) / 100.0, 2)
+                        variants[idx]['compareatprice'] = round(variant.get('price') * (100 + compare_markup) / 100.0, 2)
+                        updated = True
+
+                    if len(variants) == len(indexes):
+                        break
+
+            # check unmapped variants
+            for variant in variants:
+                if not mapped_variants.get(str(variant.get('id')), False):
+                    unmapped_variants.append(variant.get('variant_title'))
+
+            # prepare synced data for an update on SureDone
+            updated_product_data = {}
+            for i, variant in enumerate(variants):
+                if variant.get('parent_product_id') == variant.get('guid') and variant.get('guid'):
+                    index_of_parent_variant = i
+
+                variants[i] = {
+                    'guid': variant.get('guid'),
+                    'stock': variant.get('stock'),
+                    'price': variant.get('price'),
+                    'compareatprice': variant.get('compareatprice')
+                }
+            updated_product_data = variants[index_of_parent_variant]
+            updated_product_data['variants'] = variants
+
+            if updated:
+                fb_utils = FBUtils(user)
+                try:
+                    fb_utils.update_product_details(
+                        updated_product_data=updated_product_data,
+                        store_type=store.store_type,
+                        store_instance_id=store.store_instance_id
+                    )
+                    fb_utils.get_fb_product_details(parent_guid=updated_product_data['guid'])
+                except Exception:
+                    capture_exception()
+                    push_data['status'] = 'fail'
+                    push_data['error'] = 'Failed to update data'
+                    push_data['fail'] += 1
+
+            if len(unmapped_variants) > 0:
+                push_data['error'] = 'Warning - Unmapped: {}'.format(','.join(unmapped_variants))
+            push_data['success'] += 1
+        except Exception:
+            capture_exception()
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to update data'
+            push_data['fail'] += 1
+
+        store.pusher_trigger('products-supplier-sync', push_data)
+
+    cache.delete(cache_key)
