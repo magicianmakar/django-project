@@ -576,7 +576,15 @@ class OrdersList(ListView):
             },
         }
 
-    def get_order_data_variant(self, line):
+    def get_order_data_variant(self, line, product=None):
+        if product is not None:
+            if line.get('variants'):
+                variant_id = line['variants']['variant_id']
+                if safe_int(variant_id) == 0:
+                    variant_id = -1
+                mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                if mapped:
+                    return mapped
         return [{'title': option.get('value')} for option in line.get('variants', {}).get('options', [])]
 
     def get_products_by_source_id(self, product_ids):
@@ -774,7 +782,7 @@ class OrdersList(ListView):
                         order_data = self.get_order_data(order, item, product, supplier)
                         order_data['products'] = bundle_data
                         order_data['is_bundle'] = len(bundle_data) > 0
-                        order_data['variant'] = self.get_order_data_variant(item)
+                        order_data['variant'] = self.get_order_data_variant(item, product=product)
                         order_data['weight'] = item.get('weight')
                         order_data['is_refunded'] = order['order_status'] == 'Refunded'
                         order_data_id = order_data['id']

@@ -23,7 +23,7 @@ from lib.aliexpress_api import TopException
 from shopified_core import permissions
 from shopified_core.exceptions import AliexpressFulfillException
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import app_link
+from shopified_core.utils import app_link, safe_int
 from woocommerce_core.models import WooOrderTrack, WooProduct, WooStore
 from woocommerce_core.utils import get_woo_order
 
@@ -398,6 +398,8 @@ class AliexpressFulfillHelper():
                     variant_id = line_item['line']['variation_id']
                 elif store_type == 'gkart':
                     variant_id = line_item['line']['variants']['variant_id']
+                    if safe_int(variant_id) == 0:
+                        variant_id = -1
                 else:
                     variant_id = line_item['line']['variant_id']
 
