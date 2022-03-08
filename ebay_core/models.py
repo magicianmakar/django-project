@@ -200,10 +200,14 @@ class EbayProduct(SureDoneProductBase):
                 domain = domain.replace(f'.{i}', '')
 
             domain = domain.split('.')[-1]
+            source = {
+                'aliexpress': 'AliExpress',
+                'ebay': 'eBay',
+            }.get(domain.lower(), domain.title())
 
             return {
                 'domain': domain,
-                'source': domain.title(),
+                'source': source,
                 'url': url
             }
 

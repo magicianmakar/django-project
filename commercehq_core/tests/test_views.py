@@ -517,7 +517,7 @@ class CommerceHQProductTestCase(BaseTestCase):
 
         expected = {
             'domain': 'aliexpress',
-            'source': 'Aliexpress',
+            'source': 'AliExpress',
             'url': supplier.product_url,
         }
 

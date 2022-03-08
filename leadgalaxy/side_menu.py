@@ -58,7 +58,7 @@ def get_menu_structure(namespace, request):
         else:
             footer = [('help', ['help'])]
     else:
-        footer = [('help', ['help'])]
+        footer = []
 
     named = [
         ('account', ['account']),

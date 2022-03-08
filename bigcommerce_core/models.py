@@ -329,13 +329,6 @@ class BigCommerceProduct(ProductBase):
                 'ebay': 'eBay',
             }.get(domain.lower(), domain.title())
 
-            if source == 'aliexpress':
-                source = 'AliExpress'
-            elif source == 'ebay':
-                source = 'eBay'
-            else:
-                source = source.title()
-
             return {
                 'domain': domain,
                 'source': source,

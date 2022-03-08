@@ -6,16 +6,11 @@
 {% load perms_helper %}
 {% block tab_content %}
 
-
-
-<h1>Checkout</h1>
-
-
 <div class="container-fluid">
     <form id="checkout-form" class="form-horizontal">
         <div class="row">
             <div class="col-md-6 row">
-                <h2>Billing Details:</h2>
+                <h3>Billing Details:</h3>
 
                             <div class="form-group"><label class="col-sm-2 control-label">Name</label>
                                 <div class="col-sm-4">
@@ -81,7 +76,7 @@
             </div>
 
             <div class="col-md-6">
-                <h2>Shipping Details:</h2>
+                <h3>Shipping Details:</h3>
                              <div class="form-group"><label class="col-sm-2 control-label">Name</label>
                                 <div class="col-sm-4">
                                     <input type="text" name="shipping_first_name" value="{{ user.first_name }}" class="form-control" placeholder="First Name">
@@ -152,7 +147,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
-            <h2>Your Order:</h2>
+            <h3>Your Order:</h3>
         </div>
     </div>
     <div class="row">

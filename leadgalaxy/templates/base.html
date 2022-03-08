@@ -206,6 +206,29 @@
                                         Sub Users
                                     </a>
                                 </li>
+                                {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
+                                <li>
+                                    <a href="https://plod.dropified.com/">
+                                        <i class="fa fa-question-circle" style="color:#6BAA55;margin:0 10px 0 2px;"></i>
+                                        Private Label Help
+                                    </a>
+                                </li>
+                                {% if user.is_staff %}
+                                <li>
+                                    <a href="https://learn.dropified.com/">
+                                        <i class="fa fa-question-circle" style="color:#6BAA55;margin:0 10px 0 2px;"></i>
+                                        Learning Center
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% else %}
+                                <li>
+                                    <a href="https://learn.dropified.com/">
+                                        <i class="fa fa-question-circle" style="color:#6BAA55;margin:0 10px 0 2px;"></i>
+                                        Learning Center
+                                    </a>
+                                </li>
+                                {% endif %}
                                 <li class="divider" style="margin:16px 0;"></li>
                                 <li>
                                     <a href="{% url 'leadgalaxy.views.logout' %}">

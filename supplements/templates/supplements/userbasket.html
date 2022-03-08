@@ -7,7 +7,6 @@
 
 
 
-<h1>Basket Items</h1>
 <table class='table table-striped' >
   <thead>
     <th>Product</th>
@@ -44,9 +43,9 @@
   {% if basket_items.count %}
       <div class="row basket-total-bottom">
           <div class="col-md-6 text-right">
-            <h2>Total:
+            <h3>Total:
                 $<span class="basket-total"></span>
-            </h2>
+            </h3>
           </div>
         <div class="col-md-6 text-right">
                 <a class="btn" href="{% url 'pls:my_supplements' %}">Continue Shopping</a>
