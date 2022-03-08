@@ -597,9 +597,9 @@ fieldset[disabled] .btn-primary.active {
 
 div#bulk-ordering-app-launcher {
     position: fixed;
-    z-index: 2147483003;
+    z-index: 0;
     bottom: 15px;
-    right: 290px;
+    right: 305px;
     width: 60px;
     /* height: 60px; */
     border-radius: 50%;
@@ -632,7 +632,7 @@ div.bulk-ordering-app {
     position: fixed;
     background: #ffffff;
     bottom: 10px;
-    right: 0px;
+    right: 15px;
     height: 630px;
     width: 390px;
     min-height: 250px;
