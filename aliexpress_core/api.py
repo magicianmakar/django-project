@@ -350,10 +350,16 @@ class AliexpressFulfillHelper():
         address.zip = self.shipping_address['zip']
         address.country = self.shipping_address['country_code']
 
+        if not self.shipping_address['phone'].startswith('+'):
+            dialing_code = '+' + str(phonenumbers.country_code_for_region(self.shipping_address['country_code']))
+            order_phone_number = dialing_code + '-' + self.shipping_address['phone']
+        else:
+            order_phone_number = self.shipping_address['phone']
+
         try:
-            parsed = phonenumbers.parse(self.shipping_address['phone'])
+            parsed = phonenumbers.parse(order_phone_number)
             address.phone_country = '+' + str(parsed.country_code)
-            if '0000000000' in self.shipping_address['phone']:
+            if '0000000000' in order_phone_number:
                 address.mobile_no = '0000000000'
             else:
                 address.mobile_no = parsed.national_number
