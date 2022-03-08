@@ -783,7 +783,7 @@ li.border-left {
 
 .scrtabs-tab-container ~ .actions li.border-right,
 .nav.nav-tabs ~ .actions li.border-right,
-li.border-left {
+li.border-right {
     border-right: 1px solid #e6ebef;
     padding-right: 15px;
 }
