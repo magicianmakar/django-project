@@ -556,17 +556,24 @@ class ShippingMethods():
         self.quantity = line_item['quantity']
         self.aliexpress_account = aliexpress_account
         self.shipping_address = shipping_address
+        self.variant = line_item.get('variant', {})
 
     def get_shipping_data(self):
         aliexpress_obj = ShippingInfo()
         aliexpress_obj.set_app_info(API_KEY, API_SECRET)
+
+        send_goods_country_code = 'CN'
+        for v in self.variant:
+            if v.get('title').lower() == 'united states':
+                send_goods_country_code = 'US'
+                break
         data = {
             "product_id": self.product_id,
             "product_num": self.quantity,
             "country_code": self.shipping_address['country_code'],
             "provice_code": self.shipping_address['province_code'],
             "city_code": self.shipping_address['zip'],
-            "send_goods_country_code": 'CN'
+            "send_goods_country_code": send_goods_country_code
         }
         aliexpress_obj.set_info(json.dumps(data, indent=0))
         try:
