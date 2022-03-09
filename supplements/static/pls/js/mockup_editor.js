@@ -54,7 +54,6 @@ var MockupEditor = (function() {
             var pdfWidth = parseFloat((labelImage.width / 300).toFixed(2));
             var pdfHeight = parseFloat((labelImage.height / 300).toFixed(2));
             if (window.location.href.indexOf('debug=1') > -1) {
-                console.log(pdfWidth + 'x' + pdfHeight);
                 return false;
             }
 

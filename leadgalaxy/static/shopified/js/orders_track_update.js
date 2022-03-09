@@ -162,7 +162,6 @@
                 error: 0
             };
         }
-        console.log(orders);
 
         $('.pending-msg', modal).hide();
         $('.update-progress, .update-progress p', modal).show();
@@ -190,7 +189,6 @@
                 unfulfilled_only: $('#update-unfulfilled-only').is(':checked')
             }
         }).done(function(data) {
-            console.log(data);
             updatePromise = P.map(data, checkOrder, {
                 concurrency: parseInt($('#update-concurrency').val(), 10).bound(1, 10)
             }).then(function(allValues) {

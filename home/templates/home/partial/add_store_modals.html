@@ -6,7 +6,6 @@
     <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v12.0&appId=911185429584823&autoLogAppEvents=1"
         nonce="JLNkdJEJ"></script>
     <script>
-        console.log('DEBUG: hello');
         FB.Event.subscribe('auth.login', function () {
           window.location = "http://example.com";
       });
