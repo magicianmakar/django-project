@@ -421,6 +421,10 @@ def product_export(user_id, parent_guid, store_id):
 
         api_response = ebay_utils.relist_product([parent_guid], 'ebay', store.store_instance_id)
         api_error_message = api_response.get('1', {}).get('errors')
+        if api_error_message:
+            parsed_ebay_errors_list = ebay_utils.parse_ebay_errors(api_error_message)
+        else:
+            parsed_ebay_errors_list = None
 
         # Verify that the product got listed by fetching the product from SureDone
         store.pusher_trigger(pusher_event, {
@@ -434,7 +438,8 @@ def product_export(user_id, parent_guid, store_id):
             store.pusher_trigger(pusher_event, {
                 'success': False,
                 'product': product.guid,
-                'error': api_error_message or default_error_message
+                'error': api_error_message or default_error_message,
+                'parsed_ebay_errors_list': parsed_ebay_errors_list
             })
             return
 
@@ -465,7 +470,8 @@ def product_export(user_id, parent_guid, store_id):
             store.pusher_trigger(pusher_event, {
                 'success': False,
                 'product': product.guid,
-                'error': error_message
+                'error': error_message,
+                'parsed_ebay_errors_list': parsed_ebay_errors_list
             })
             return
 
@@ -560,12 +566,20 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
 
         # If the product was not successfully posted
         error_msg = ebay_utils.format_error_messages('actions', sd_api_response)
+
+        api_error_message = sd_api_response.get('1', {}).get('errors')
+        if api_error_message:
+            parsed_ebay_errors_list = ebay_utils.parse_ebay_errors(api_error_message)
+        else:
+            parsed_ebay_errors_list = None
+
         if error_msg:
             store.pusher_trigger(pusher_event, {
                 'success': False,
                 'error': error_msg,
                 'product': product.guid,
-                'product_url': url
+                'product_url': url,
+                'parsed_ebay_errors_list': parsed_ebay_errors_list
             })
             return
 
@@ -643,6 +657,11 @@ def product_delete(user_id, parent_guid, store_id):
         ebay_utils = EbayUtils(user)
         is_connected = product.is_connected
         sd_api_resp = ebay_utils.delete_product_with_all_variations(parent_guid)
+        api_error_message = sd_api_resp.get('1', {}).get('errors')
+        if api_error_message:
+            parsed_ebay_errors_list = ebay_utils.parse_ebay_errors(api_error_message)
+        else:
+            parsed_ebay_errors_list = None
 
         if not isinstance(sd_api_resp, dict):
             store.pusher_trigger(pusher_event, {
@@ -657,7 +676,8 @@ def product_delete(user_id, parent_guid, store_id):
             store.pusher_trigger(pusher_event, {
                 'success': False,
                 'product': product.guid,
-                'error': err_msg or default_error_message
+                'error': err_msg or default_error_message,
+                'parsed_ebay_errors_list': parsed_ebay_errors_list
             })
             return
 
@@ -665,7 +685,8 @@ def product_delete(user_id, parent_guid, store_id):
             store.pusher_trigger(pusher_event, {
                 'success': False,
                 'product': product.guid,
-                'error': sd_api_resp.get('message') or default_error_message
+                'error': sd_api_resp.get('message') or default_error_message,
+                'parsed_ebay_errors_list': parsed_ebay_errors_list
             })
             return
 

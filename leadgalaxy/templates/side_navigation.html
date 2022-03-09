@@ -15,30 +15,28 @@
   {% endif %}
   " href="#"></a>
 <nav id="side-menu" class="navbar-default sidebar navbar-static-side
-  {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
+  {% if request.user|can:'black.use' %}
   pls
   {% endif %}
   " role="navigation" >
     <div class="sidebar-collapse">
         <div class="logo">
           <a href="{% if request.user|can:'dashboard.view' %}{% url 'dashboard' %}{% else %}{% url 'index' %}{% endif %}">
-                {% if user|can:'pls.use' or user.profile.private_label %}
-                  {% if 'private-label' in user.profile.plan.slug or user.profile.private_label or request.session.shopify_api == 'private-label' %}
-                    <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white3.new.png"/>
-                  {% else %}
-                    <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white.png"/>
-                  {% endif %}
+                {% if 'private-label' in request.user.profile.plan.slug or request.user.profile.private_label or request.session.shopify_api == 'private-label' %}
+                  <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white3.new.png"/>
+                {% elif request.user|can:'black.use' %}
+                  <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white.png"/>
                 {% else %}
                   <img src="{% static 'dropified-logo-white-s.png' %}"/>
                 {% endif %}
             </a>
         </div>
 
-    {% if user.is_authenticated %}
+    {% if request.user.is_authenticated %}
     <div class="profile new-layout-hidden">
       <div class="name">
         <a href='{% url "user_profile" %}'>
-          <strong class="font-bold">{{user.get_full_name|default:'Profile'}}</strong>
+          <strong class="font-bold">{{request.user.get_full_name|default:'Profile'}}</strong>
         </a>
       </div>
       <div class="icon">
@@ -94,7 +92,7 @@
       {% endfor %}
       {% endfor %}
 
-      {% if user.models_user.profile.plan.support_addons %}
+      {% if request.user.models_user.profile.plan.support_addons %}
       <li class="section-no-icon">
           <a href="{% url 'addons.list_view' %}">
             <img src="{% static 'img/addon-store.svg' %}" class="item-icon"/>
@@ -104,7 +102,7 @@
       {% endif %}
 
       {# Dropified Black #}
-      {% if user|can:'pls.use' or user.profile.private_label or request.user|can:'pls_staff.use' %}
+      {% if request.user|can:'pls.use' %}
       <li class="section side-menu-dropdown">
         <span class="section-header">
           <div class="new-layout-hidden">
@@ -332,7 +330,7 @@
     </ul>
 
     {# footer #}
-    <ul class="navfooter {% if user.is_staff %}staff{% endif %}">
+    <ul class="navfooter {% if request.user.is_staff %}staff{% endif %}">
       <li class="section-no-icon new-layout-hidden">
         <a href="{{ sidemenu.named.academy.url }}" target="_blank"
             class="itooltip" data-placement="right" title="Step by Step Course">

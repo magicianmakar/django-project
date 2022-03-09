@@ -294,6 +294,9 @@ function productExport(btn) {
                     window.location.reload(true);
                 }, 1500);
             } else {
+                if (eventData.parsed_ebay_errors_list) {
+                    eventData = handleEbayErrorsList(eventData.parsed_ebay_errors_list);
+                }
                 displayAjaxError('eBay Export', eventData, true);
             }
         }
@@ -348,6 +351,9 @@ $('#product-update-btn').click(function (e) {
                 toastr.success('Product Updated.','eBay Update');
             }
             if (eventData.error) {
+                if (eventData.parsed_ebay_errors_list) {
+                    eventData = handleEbayErrorsList(eventData.parsed_ebay_errors_list);
+                }
                 displayAjaxError('eBay Update', eventData, true);
             }
         }
@@ -415,6 +421,9 @@ function deleteProduct(productGuid) {
                 }, 1000);
             }
             if (eventData.error) {
+                if (eventData.parsed_ebay_errors_list) {
+                    eventData = handleEbayErrorsList(eventData.parsed_ebay_errors_list);
+                }
                 displayAjaxError('Delete Product', eventData);
             }
         }
@@ -1592,4 +1601,26 @@ $('.variant-checkbox').on('click', function() {
     showAdvancedVariantsView();
     // }
 })();
+
+//this function create bootstrap collapse (accordion) template for errors list array
+function handleEbayErrorsList(parsed_ebay_errors_list) {
+    var html_ebay_errors_list = '<div class="panel-group text-left" id="accordion" role="tablist" aria-multiselectable="true">';
+
+    parsed_ebay_errors_list.forEach(
+        function(ebay_error, index) {
+            html_ebay_errors_list += '<div class="panel panel-default">';
+            html_ebay_errors_list += '<div class="panel-heading" role="tab" id="heading' + index + '">';
+            html_ebay_errors_list += '<h4 class="panel-title">';
+            html_ebay_errors_list += '<a role="button" data-toggle="collapse" data-parent="#accordion"';
+            html_ebay_errors_list += 'href="#collapse' + index + '" aria-expanded="false" aria-controls="collapse' + index +'">';
+            html_ebay_errors_list += 'Error Code ' + ebay_error.error_code + ': </br>' + ebay_error.short_message + '</a></h4></div>';
+            html_ebay_errors_list += '<div id="collapse' + index + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading' + index + '">';
+            html_ebay_errors_list += '<div class="panel-body">' + ebay_error.long_message + '</div></div></div>';
+        }
+    );
+    html_ebay_errors_list += '</div>';
+
+    return html_ebay_errors_list;
+}
+
 })(config, product, variants, variantsConfig, productDetails);

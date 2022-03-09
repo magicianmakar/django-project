@@ -9,23 +9,44 @@ from django.conf import settings
 from shopified_core.utils import safe_int, safe_str
 from .models import HubspotAccount
 
-INTERVALS = ['7', '14', '30', '90', '120', '365', '-1']
+
+def create_contact(user: User):
+    data = generate_create_contact(user)
+
+    try:
+        result = api_requests('https://api.hubapi.com/crm/v3/objects/contacts', data, 'POST')
+
+        HubspotAccount.objects.update_or_create(
+            hubspot_user=user,
+            defaults={
+                'hubspot_vid': result['id']
+            }
+        )
+
+        return result
+
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 409:
+            message = e.response.json().get('message')
+            existing_id = re.findall(r'Contact already exists. Existing ID: ([0-9]+)', message)
+            if existing_id:
+                HubspotAccount.objects.update_or_create(hubspot_user=user, defaults={'hubspot_vid': existing_id.pop()})
+                return update_contact(user)
+
+        print('HTTP Error:', user.email, e.response.status_code, re.findall(
+            r'\\"message\\":\\"([^\\]+)\\"', e.response.text) or e.response.json().get('message'))
+        raise e
 
 
-def api_requests(url, data, method='post'):
-    r = getattr(requests, method.lower())(
-        url=url,
-        json=data,
-        params={'hapikey': settings.HUPSPOT_API_KEY}
-    )
+def update_contact(user: User, account: HubspotAccount = None):
+    try:
+        if account is None:
+            account = HubspotAccount.objects.get(hubspot_user=user)
 
-    if not r.ok and r.status_code == 429:
-        time.sleep(1)
-        return api_requests(url=url, data=data, method=method)
-
-    r.raise_for_status()
-
-    return r.json()
+        data = generate_create_contact(user)
+        return api_requests(f'https://api.hubapi.com/crm/v3/objects/contacts/{account.hubspot_vid}', data, 'PATCH')
+    except HubspotAccount.DoesNotExist:
+        return create_contact(user)
 
 
 def clean_plan_name(plan):
@@ -58,6 +79,22 @@ def clean_plan_name(plan):
     plan = re.sub(r'Free Gift', '', plan).strip()
 
     return plan
+
+
+def api_requests(url, data, method='post'):
+    r = getattr(requests, method.lower())(
+        url=url,
+        json=data,
+        params={'hapikey': settings.HUPSPOT_API_KEY}
+    )
+
+    if not r.ok and r.status_code == 429:
+        time.sleep(1)
+        return api_requests(url=url, data=data, method=method)
+
+    r.raise_for_status()
+
+    return r.json()
 
 
 def generate_create_contact(user: User):
@@ -134,11 +171,33 @@ def generate_create_contact(user: User):
 
     data['properties']['number_of_stores'] = data['properties']['dr_stores_count']
 
+    data['properties']['dr_tracks_all_count'] = 0
+    data['properties']['dr_tracks_30_day_count'] = 0
+
+    data['properties']['dr_orders_all_count'] = 0
+    data['properties']['dr_orders_30_day_count'] = 0
+
+    data['properties']['dr_orders_30_day_sum'] = 0
+    data['properties']['dr_orders_all_sum'] = 0
+
+    shopify_orders_count = user.get_config('_shopify_orders_count')
+    if shopify_orders_count:
+        for stat_info_name in ['30', '-1']:
+            name = f'{stat_info_name}_day' if stat_info_name != '-1' else 'all'
+            if shopify_orders_count.get(stat_info_name):
+                data['properties'][f'dr_orders_{name}_count'] = int(shopify_orders_count[stat_info_name])
+
+    shopify_orders_revenue = user.get_config('_shopify_orders_revenue')
+    if shopify_orders_revenue:
+        for stat_info_name in ['30']:
+            if shopify_orders_revenue.get(stat_info_name):
+                data['properties'][f'dr_orders_{stat_info_name}_day_sum'] = int(shopify_orders_revenue[stat_info_name])
+
     shopify_orders_stat = user.get_config('_shopify_orders_stat')
     if shopify_orders_stat:
-        for inter in INTERVALS:
+        for inter in ['30', '-1']:
             name = f'{inter}_day' if inter != '-1' else 'all'
-            for stat_info_name in ['count', 'sum']:
+            for stat_info_name in ['count']:
                 if shopify_orders_stat.get(stat_info_name):
                     data['properties'][f'dr_orders_{name}_{stat_info_name}'] = int(shopify_orders_stat[stat_info_name][inter])
 
@@ -152,42 +211,3 @@ def generate_create_contact(user: User):
         data['properties']['store_revenue'] = admitad_revenue['sum']
 
     return data
-
-
-def create_contact(user: User):
-    data = generate_create_contact(user)
-
-    try:
-        result = api_requests('https://api.hubapi.com/crm/v3/objects/contacts', data, 'POST')
-
-        HubspotAccount.objects.update_or_create(
-            hubspot_user=user,
-            defaults={
-                'hubspot_vid': result['id']
-            }
-        )
-
-        return result
-
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 409:
-            message = e.response.json().get('message')
-            existing_id = re.findall(r'Contact already exists. Existing ID: ([0-9]+)', message)
-            if existing_id:
-                HubspotAccount.objects.update_or_create(hubspot_user=user, defaults={'hubspot_vid': existing_id.pop()})
-                return update_contact(user)
-
-        print('HTTP Error:', user.email, e.response.status_code, re.findall(
-            r'\\"message\\":\\"([^\\]+)\\"', e.response.text) or e.response.json().get('message'))
-        raise e
-
-
-def update_contact(user: User, account: HubspotAccount = None):
-    try:
-        if account is None:
-            account = HubspotAccount.objects.get(hubspot_user=user)
-
-        data = generate_create_contact(user)
-        return api_requests(f'https://api.hubapi.com/crm/v3/objects/contacts/{account.hubspot_vid}', data, 'PATCH')
-    except HubspotAccount.DoesNotExist:
-        return create_contact(user)

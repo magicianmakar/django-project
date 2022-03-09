@@ -340,20 +340,21 @@ def variant_index_from_supplier_sku(product, sku, variants=None):
         if variants and len(variants) == 1:
             return 0
 
-    for idx, variant in enumerate(variants):
-        variant_id = variant['id'] if 'id' in variant else variant.get('id_product_variant')  # TODO: excption for GKart
-        mapping = product.get_variant_mapping(variant_id, for_extension=True)
-        if mapping and match_sku_with_mapping_sku(sku, mapping):
-            match.sku_mapping_sku.append(idx)
+    if variants:
+        for idx, variant in enumerate(variants):
+            variant_id = variant['id'] if 'id' in variant else variant.get('id_product_variant')  # TODO: excption for GKart
+            mapping = product.get_variant_mapping(variant_id, for_extension=True)
+            if mapping and match_sku_with_mapping_sku(sku, mapping):
+                match.sku_mapping_sku.append(idx)
 
-        elif variant.get('sku') and match_sku_with_shopify_sku(sku, variant.get('sku')):
-            match.sku_shopify_sku.append(idx)
+            elif variant.get('sku') and match_sku_with_shopify_sku(sku, variant.get('sku')):
+                match.sku_shopify_sku.append(idx)
 
-        elif mapping and match_sku_title_with_mapping_title(sku, mapping):
-            match.title_mapping_title.append(idx)
+            elif mapping and match_sku_title_with_mapping_title(sku, mapping):
+                match.title_mapping_title.append(idx)
 
-        elif match_sku_title_with_shopify_variant_title(sku, variant):
-            match.title_shopify_title.append(idx)
+            elif match_sku_title_with_shopify_variant_title(sku, variant):
+                match.title_shopify_title.append(idx)
 
     if match.sku_mapping_sku:
         return match.sku_mapping_sku.pop()

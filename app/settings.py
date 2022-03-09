@@ -536,6 +536,7 @@ CLIPPINGMAGIC_API_SECRET = os.environ.get('CLIPPINGMAGIC_API_SECRET')
 FACEBOOK_PIXEL_ID = os.environ.get('FACEBOOK_PIXEL_ID')
 
 KEEN_PROJECT_ID = os.environ.get('KEEN_PROJECT_ID')
+KEEN_READ_KEY = os.environ.get('KEEN_READ_KEY')
 
 # GearBubble
 GEARBUBBLE_STAGING_URL = 'http://staging-gearbubble.com'

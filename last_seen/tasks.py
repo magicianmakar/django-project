@@ -14,5 +14,5 @@ def update_ip_details(user_ip_id):
         if data and not data.get('bogon'):
             user_ip.country = data['country']
             user_ip.city = data['city']
-            user_ip.org = data['org']
+            user_ip.org = data.get('org')
             user_ip.save()
