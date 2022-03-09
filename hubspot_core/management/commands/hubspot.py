@@ -99,7 +99,6 @@ class Command(DropifiedBaseCommand):
             if len(users) == 1:
                 unique_active_users.append(users[0])
             else:
-                self.write(f' > Email {email} have {len(users)} duplicates')
                 found_user = None
                 for u in users:
                     if not u.profile.plan.is_free:
@@ -107,8 +106,6 @@ class Command(DropifiedBaseCommand):
 
                 if not found_user:
                     found_user = users[0]
-
-                self.write(f' >>> Using plan {found_user.profile.plan.slug}')
 
                 unique_active_users.append(found_user)
 
