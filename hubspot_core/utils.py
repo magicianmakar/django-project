@@ -185,7 +185,7 @@ def generate_create_contact(user: User):
         for stat_info_name in ['30', '-1']:
             name = f'{stat_info_name}_day' if stat_info_name != '-1' else 'all'
             if shopify_orders_count.get(stat_info_name):
-                data['properties'][f'dr_orders_{name}_count'] = int(shopify_orders_count[stat_info_name])
+                data['properties'][f'dr_tracks_{name}_count'] = int(shopify_orders_count[stat_info_name])
 
     shopify_orders_revenue = user.get_config('_shopify_orders_revenue')
     if shopify_orders_revenue:
