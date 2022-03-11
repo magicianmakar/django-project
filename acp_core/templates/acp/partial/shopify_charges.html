@@ -1,4 +1,4 @@
-{% load template_helper %}
+{% load template_helper acp_helper %}
 
 <table class="table table-striped table-hover">
     <thead>
@@ -11,20 +11,12 @@
     </thead>
     <tbody>
     {% for i in shopify_application_charges %}
-        <tr
-                {% if i.status == 'active' %}
-                    style="color: #28901d"
-                {% elif i.status == 'expired' %}
-                    style="color: #172386"
-                {% else %}
-                    style="color: #af3a3a"
-                {% endif %}
-        >
-            <td><span class="itooltip" title="{{ i.created_at }}">{% date_humanize i.created_at %}</span></td>
-            <td>{{ i.name }}</td>
-            <td>{{ i.status|title }}</td>
-            <td>${{ i.price }}</td>
-        </tr>
+        <tr>
+            <td {% shopify_charge_class i %}><span class="itooltip" title="{{ i.created_at }}">{% date_humanize i.created_at %}</span></td>
+            <td {% shopify_charge_class i %}>{{ i.name }}</td>
+            <td {% shopify_charge_class i %}>{{ i.status|title }}</td>
+            <td {% shopify_charge_class i %}>${{ i.price }}</td>
+        </tr>status
     {% empty %}
         <tr>
             <td colspan="5" class="text-center">No Shopify Single Charges</td>

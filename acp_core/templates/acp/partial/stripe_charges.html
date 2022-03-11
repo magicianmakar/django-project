@@ -1,3 +1,5 @@
+{% load acp_helper %}
+
 {% if last_charges %}
     <table class="table table-striped table-hover">
         <thead>
@@ -13,22 +15,13 @@
         </thead>
         <tbody>
         {% for i in last_charges %}
-            <tr
-                    {% if i.status == 'succeeded' and not i.dispute %}
-                        {% if i.amount_refunded %}
-                            style="color: #172386"
-                        {% else %}
-                            style="color: #28901d"
-                        {% endif %}
-                    {% endif %}
-                            {% if i.status == 'failed' %}style="color: #af3a3a"{% endif %}
-            >
-                <td><span class="itooltip" title="{{ i.date }}">{{ i.date_str }}</span></td>
-                <td>{{ i.amount }}</td>
-                <td>
+            <tr>
+                <td {% stripe_charge_class i %}><span class="itooltip" title="{{ i.date }}">{{ i.date_str }}</span></td>
+                <td {% stripe_charge_class i %}>{{ i.amount }}</td>
+                <td {% stripe_charge_class i %}>
                     {{ i.amount_refunded|default:'' }}
                 </td>
-                <td>
+                <td {% stripe_charge_class i %}>
                     {{ i.status|title }}
 
                     {% if i.failure_message %}
@@ -40,15 +33,15 @@
                     {% endif %}
 
                 </td>
-                <td>
+                <td {% stripe_charge_class i %}>
                     <a href="{{ i.invoice.url }}" target="_blank">{{ i.invoice.id }}</a>
                 </td>
-                <td>
+                <td {% stripe_charge_class i %}>
                     {% if i.receipt_url %}
                         <a href="{{ i.receipt_url }}" target="_blank">{{ i.receipt_number|default:'View Receipt' }}</a>
                     {% endif %}
                 </td>
-                <td>
+                <td {% stripe_charge_class i %}>
                     <a href="#" class="btn btn-xs btn-warning refund-charge-btn"
                        {% if i.amount == i.amount_refunded %}disabled{% endif %}
                        user-id="{{ target_user.id }}"
