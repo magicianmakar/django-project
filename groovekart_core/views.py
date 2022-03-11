@@ -314,7 +314,7 @@ class BoardsList(ListView):
     context_object_name = 'boards'
     template_name = 'groovekart/boards_list.html'
     paginator_class = SimplePaginator
-    paginate_by = 8
+    paginate_by = 12
 
     def get_queryset(self):
         qs = super(BoardsList, self).get_queryset()

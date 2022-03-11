@@ -870,7 +870,7 @@ def boards_list(request):
         user_boards_list = user_boards_list.filter(title__icontains=search_title)
     boards_count = len(user_boards_list)
 
-    paginator = SimplePaginator(user_boards_list, 8)
+    paginator = SimplePaginator(user_boards_list, 12)
     page = safe_int(request.GET.get('page'), 1)
     page = min(max(1, page), paginator.num_pages)
     current_page = paginator.page(page)
