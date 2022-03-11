@@ -63,12 +63,12 @@
                             <span class="text-muted">{{item.updated_at|date}}</span>
                         </div>
                         <div class="ibox-content">
-                            <a href="/boards/{{item.id}}?store=n">
+                            <a href="{% url 'gkart:board_detail' pk=item.id %}?store=n">
                                 <span class="badge">{{ item.saved|default:"0" }}</span>
                                 <span>Saved</span>
                             </a>
                             <br>
-                            <a href="/boards/{{item.id}}?store=c">
+                            <a href="{% url 'gkart:board_detail' pk=item.id %}?store=c">
                                 <span class="badge">{{ item.connected|default:"0" }}</span>
                                 <span>Connected</span>
                             </a>
