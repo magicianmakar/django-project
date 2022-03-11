@@ -7,10 +7,13 @@
     </li>
 
     <li class="pull-right group">
-        <input name="query" value="{{request.GET.query|default:''}}" class="form-control" placeholder="Order ID or Tracking number">
-        <button type="submit" class="btn btn-primary btn-icon">
-          <i class="fa fa-search"></i>
-        </button>
+        <form method="get" class="form">
+            {% if request.GET.store %}<input type="hidden" name="store" value="{{ request.GET.store }}">{% endif %}
+            <input name="query" value="{{request.GET.query|default:''}}" class="form-control" placeholder="Order ID or Tracking number">
+            <button type="submit" class="btn btn-primary btn-icon">
+            <i class="fa fa-search"></i>
+            </button>
+    </form>
     </li>
 
     {% if not paginator.is_infinte %}

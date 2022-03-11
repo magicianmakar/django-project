@@ -1018,7 +1018,7 @@ li.border-right {
 
 .product-box .img-wrapper {
     width: 100%;
-    height: 22vw;
+    height: 17vw;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2953,4 +2953,10 @@ ul.tagit:focus {
 }
 #modal-add-fulfill-limit .modal-body {
     text-align: center;
+}
+
+.well {
+    box-shadow: none;
+    border-radius: 8px;
+    border: 1px solid #e7eaec;
 }

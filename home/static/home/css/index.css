@@ -150,19 +150,6 @@ h3.setting-title {
     background-color: #fafafa;
 }
 
-.label {
-    border-radius: 3px;
-    background-color: #f7f7f8;
-    color: #564c4c;
-    /*font-size: 12px;*/
-    /*lines-height: 1.5;*/
-    font-weight: 500;
-}
-
-.label:hover {
-    background-color: #dbdbdb;
-}
-
 table a.label:focus, a.label:hover {
     color: #564c4c;
 }

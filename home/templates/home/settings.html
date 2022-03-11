@@ -36,7 +36,12 @@
 
             {% if user|can:'aliexpress_settings.use' %}
             <li class="aliexpress-tab">
-                <a data-toggle="tab" href="#aliexpress-settings" data-auto-hash="aliexpress" data-auto-click="true" aria-expanded="false">AliExpress</a>
+                <a data-toggle="tab" href="#aliexpress-settings" data-auto-hash="aliexpress" data-auto-click="true" aria-expanded="false">
+                    AliExpress
+                    {% if user|can:'aliexpress_api_integration.use' %}
+                    <label class="label label-primary">New</label>
+                    {% endif %}
+                </a>
             </li>
             {% endif %}
 
