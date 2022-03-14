@@ -1105,6 +1105,7 @@ li.border-right {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: block;
 }
 
 .multi-line-text-overflow {
