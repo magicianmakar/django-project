@@ -599,9 +599,8 @@ div#bulk-ordering-app-launcher {
     position: fixed;
     z-index: 0;
     bottom: 15px;
-    right: 305px;
+    right: 380px;
     width: 60px;
-    /* height: 60px; */
     border-radius: 50%;
     cursor: pointer;
 }
@@ -632,7 +631,7 @@ div.bulk-ordering-app {
     position: fixed;
     background: #ffffff;
     bottom: 10px;
-    right: 15px;
+    right: 90px;
     height: 630px;
     width: 390px;
     min-height: 250px;
@@ -717,4 +716,8 @@ div.launcher-container {
 
 .shipping-rules-display span.badge.badge-default {
     background-color: #969696;
+}
+
+div#filter-form {
+    z-index: 0;
 }
