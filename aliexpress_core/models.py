@@ -77,14 +77,15 @@ class AliexpressAccount(models.Model):
                     params['category_ids'] = str(category_id)
                 if keywords:
                     params['keywords'] = str(keywords)
+                # AliExpress accepts price parameter as unit cent
                 if price_min:
-                    params['min_sale_price'] = price_min
+                    params['min_sale_price'] = int(price_min * 100)
                 if price_max:
-                    params['max_sale_price'] = price_max
+                    params['max_sale_price'] = int(price_max * 100)
 
                 result = APIRequest().affiliate_products(params=params)
                 if result.get('error', None):
-                    return result
+                    return '', result
 
                 products_data['total_results'] = result['result']['total_record_count']
                 products_data['api_products'] = result['result']['products'].get('product', [])
@@ -170,7 +171,7 @@ class AliexpressAccount(models.Model):
 
                 result = APIRequest().ds_recommended_products(params=params)
                 if result.get('error', None):
-                    return result
+                    return '', result
 
                 products_data['total_results'] = result['total_record_count']
                 products_data['api_products'] = result['products'].get('integer', [])
