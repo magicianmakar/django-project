@@ -336,15 +336,10 @@ class OrderTrackBase(models.Model):
     def get_source_url(self):
         if self.source_id:
             if self.source_type == 'ebay':
-                if re.match(r'\d{2}-\d{4}-\d{6}', self.source_id):
-                    return f'https://order.ebay.com/ord/show?/ViewPaymentStatus&purchaseOrderId={self.source_id}&orderId={self.source_id}'
-                elif re.match(r'\d{2}-\d{5}-\d{5}', self.source_id):
-                    if self.created_at < arrow.get('2022-02-01').datetime:
-                        return f'https://order.ebay.com/ord/show?orderId={self.source_id}&purchaseOrderId={self.source_id}#/'
-                    else:
-                        return f'https://order.ebay.com/ord/show?/ViewPaymentStatus&purchaseOrderId={self.source_id}&orderId={self.source_id}'
+                if re.match(r'\d{2}-\d{5}-\d{5}', self.source_id) and self.created_at < arrow.get('2022-02-01').datetime:
+                    return f'https://order.ebay.com/ord/show?orderId={self.source_id}&purchaseOrderId={self.source_id}#/'
                 else:
-                    return f'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId={self.source_id}&orderId={self.source_id}'
+                    return f'https://order.ebay.com/ord/show?/ViewPaymentStatus&purchaseOrderId={self.source_id}'
             elif self.source_type == 'other':
                 return ''
             elif self.source_type == 'supplements':
