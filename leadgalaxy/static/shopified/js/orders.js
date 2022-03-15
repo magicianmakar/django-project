@@ -528,40 +528,16 @@ $('.view-order-notes').click(function (e) {
     });
 });
 
-$('.note-panel').click(function (e) {
-    if ($(this).prop('editing-mode') === true) {
-        return;
-    } else {
-        $(this).prop('editing-mode', true);
-        $(this).prop('init-width', $(this).css('width'));
-        $(this).prop('init-height', $(this).css('height'));
-        $(this).prop('init-overflow', $(this).css('overflow'));
-    }
-
-    $(this).animate({
-        width: '500px',
-        height: '300px',
-    }, 300, function() {
-        $(this).css('overflow', 'initial');
-    });
-
-    $('.edit-note', this).toggle();
-    $('.note-preview', this).toggle();
+$('.note-panel .note-preview').click(function (e) {
+    var parent = $(this).parents('.note-panel');
+    $('.edit-note', parent).toggleClass('hidden');
+    $('.note-preview', parent).toggleClass('hidden');
 });
 
 $('.note-panel .note-edit-cancel').click(function (e) {
     var parent = $(this).parents('.note-panel');
-    parent.animate({
-        width: $(parent).prop('init-width'),
-        height: $(parent).prop('init-height'),
-    }, 300, function() {
-        $(parent).css('overflow', $(parent).prop('init-overflow'));
-        $(parent).prop('editing-mode', false);
-    });
-
-    $('.edit-note', parent).toggle();
-    $('.note-preview', parent).toggle();
-
+    $('.edit-note', parent).toggleClass('hidden');
+    $('.note-preview', parent).toggleClass('hidden');
 });
 
 $('.note-panel .note-edit-save').click(function (e) {
@@ -587,16 +563,7 @@ $('.note-panel .note-edit-save').click(function (e) {
         success: function (data) {
             if (data.status == 'ok') {
                 toastr.success('Order Note', 'Order note saved in Shopify.');
-
-                // Truncate note
-                var maxLength = 70;
-                var noteText = note.substr(0, maxLength);
-                noteText = noteText.substr(0, Math.min(noteText.length, noteText.lastIndexOf(" ")));
-                if (note.length > maxLength) {
-                    noteText = noteText+'...';
-                }
-
-                $('.note-preview .note-text', this.parent).text(noteText);
+                 $('.note-preview .note-text', this.parent).text(note);
             } else {
                 displayAjaxError('Add Note', data);
             }

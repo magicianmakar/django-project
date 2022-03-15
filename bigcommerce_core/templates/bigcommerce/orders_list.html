@@ -115,6 +115,7 @@
                                     <label class="pull-left">
                                         <p>Order ID:</p>
                                         <p>Order Date:</p>
+                                        <p>Order Value:</p>
                                     </label>
 
                                     <div>
@@ -122,38 +123,19 @@
                                             <a href="{{order.order_url}}" target="_blank">#{{order.id}}</a>
                                         </p>
                                         <p class="no-text-overflow">{% date_humanize order.date relative=False %}</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-xs-6 header-column">
-                                    <label class="pull-left">
-                                        <p>Payment Status:</p>
-                                        <p>Order Value:</p>
-                                    </label>
-
-                                    <div>
-                                        <p class="itooltip no-text-overflow" title="{% date_humanize order.date_paid html=False %}">
-                                            {% if order.date_paid %}
-                                                <span class="badge badge-primary"></span> Paid
-                                            {% else %}
-                                                <span class="badge badge-warning"></span> Unpaid
-                                            {% endif %}
-                                        </p>
                                         <p class="no-text-overflow">{% money_format order.total_inc_tax store %}</p>
                                     </div>
                                 </div>
                                 <div class="col-md-3 col-xs-6 header-column">
                                     <label class="pull-left">
-                                        <p>Shipping:</p>
                                         <p>Ship To:</p>
+                                        <p>Shipping:</p>
+                                        <p>Payment Status:</p>
                                     </label>
 
                                     <div>
                                         <p class="no-text-overflow">
-                                            <span class="badge badge-{% if not order.fulfillment_status %}danger{% else %}primary{% endif %}"></span>
-                                            {{order.fulfillment_status|default:"Unfulfilled"|title}}
-                                        </p>
-                                        {% if order.shipping_address.country_iso2 %}
-                                        <p class="no-text-overflow">
+                                            {% if order.shipping_address.country_iso2 %}
                                             <img class="itooltip shipping-country-code" shipping-country-code="{{order.shipping_address.country_iso2|lower}}"
                                                  style="width: 28px; margin-bottom: 4px;" title="{{order.shipping_address.country_iso2}}"
                                                  src="//cdn.dropified.com/static/flags/{{order.shipping_address.country_iso2|lower}}.svg">
@@ -182,8 +164,68 @@
                                                     {{order.billing_address.first_name|default:''}} {{order.billing_address.last_name|default:''}}
                                                 {% endif %}
                                             </span>
+                                            {% endif %}
                                         </p>
-                                        {% endif %}
+                                        <p class="no-text-overflow">
+                                            <span class="badge badge-{% if not order.fulfillment_status %}danger{% else %}primary{% endif %}"></span>
+                                            {{order.fulfillment_status|default:"Unfulfilled"|title}}
+                                        </p>
+                                        <p class="itooltip no-text-overflow" title="{% date_humanize order.date_paid html=False %}">
+                                            {% if order.date_paid %}
+                                                <span class="badge badge-primary"></span> Paid
+                                            {% else %}
+                                                <span class="badge badge-warning"></span> Unpaid
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-xs-6 header-column">
+                                    <label class="pull-left">
+                                        <p>Address:</p>
+                                        <p></p>
+                                        <p></p>
+                                    </label>
+
+                                    <div>
+                                    {% if order.has_shipping_address %}
+                                        <p class="no-text-overflow">
+                                            {{order.shipping_address.street_1}}
+                                            {% if order.shipping_address.street_2 %}
+                                            - {{order.shipping_address.street_2}}
+                                            {% endif %}
+                                        </p>
+                                        <p class="no-text-overflow">
+                                            {{order.shipping_address.city}}
+                                            {% if order.shipping_address.state %}
+                                            - {{order.shipping_address.state}}
+                                            {% endif %}
+                                        </p>
+                                        <p class="no-text-overflow">
+                                            {% if order.shipping_address.zip %}
+                                            {{order.shipping_address.zip}}
+                                            {% endif %}
+                                            / {{order.billing_address.phone}}
+                                        </p>
+                                    {% else %}
+                                        <p class="no-text-overflow">
+                                            {{order.billing_address.street_1}}
+                                            {% if order.billing_address.street_2 %}
+                                            - {{order.billing_address.street_2}}
+                                            {% endif %}
+                                        </p>
+                                        <p class="no-text-overflow">
+                                            {{order.billing_address.city}}
+                                            {% if order.billing_address.state %}
+                                            - {{order.billing_address.state}}
+                                            {% endif %}
+                                        </p>
+                                        <p class="no-text-overflow">
+                                            {% if order.billing_address.zip %}
+                                            {{order.billing_address.zip}}
+                                            {% endif %}
+                                            / {{order.billing_address.phone}}
+                                        </p>
+                                    {% endif %}
                                     </div>
                                 </div>
                                 <div class="col-md-3 col-xs-6 header-column actions">

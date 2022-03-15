@@ -2143,6 +2143,8 @@ a span.badge + span:not(.badge) {
     margin-top: 6px;
 }
 
+.row ~ .row .header-column > label > p,
+.row ~ .row .header-column > div > p,
 .header-column > label > p ~ p,
 .header-column > div > p ~ p {
     margin-top: 12px;
@@ -2959,4 +2961,57 @@ ul.tagit:focus {
     box-shadow: none;
     border-radius: 8px;
     border: 1px solid #e7eaec;
+}
+
+textarea.note {
+    margin-right: 10px;
+    min-height: 55px;
+    font-size: 13px;
+    padding: 5px 10px;
+}
+
+.note-panel {
+    width:calc(100% - 10px);
+    cursor: pointer;
+    float: left;
+}
+
+.edit-note {
+    display: flex;
+}
+
+.note-preview,
+.note-preview .note-text:empty {
+    display: flex !important;
+    min-height: 55px;
+    align-items: center;
+    width: 100%;
+}
+
+.note-preview .note-text:empty:before {
+    content: "Add Note";
+    text-align: center;
+    width: 100%;
+    border: 1px dotted;
+    line-height: 55px;
+    border-radius: 8px;
+}
+
+.edit-note .btn {
+    float: left;
+    width: 70px;
+    margin-top: 1px;
+}
+
+@media (max-width: 1280px) {
+    .edit-note .btn {
+        width: 25px;
+    }
+    .edit-note .btn > span {
+        display: none;
+    }
+}
+
+.hidden {
+    display: none!important;
 }

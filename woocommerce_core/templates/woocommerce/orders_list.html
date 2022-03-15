@@ -179,6 +179,7 @@
                                     <label class="pull-left">
                                         <p>Order ID:</p>
                                         <p>Order Date:</p>
+                                        <p>Order Value:</p>
                                     </label>
 
                                     <div>
@@ -186,38 +187,19 @@
                                             <a href="{{order.order_url}}" target="_blank">#{{order.id}}</a>
                                         </p>
                                         <p class="no-text-overflow">{% date_humanize order.date relative=False %}</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-xs-6 header-column">
-                                    <label class="pull-left">
-                                        <p>Payment Status:</p>
-                                        <p>Order Value:</p>
-                                    </label>
-
-                                    <div>
-                                        <p class="itooltip no-text-overflow" title="{% date_humanize order.date_paid html=False %}">
-                                            {% if order.date_paid %}
-                                                <span class="badge badge-primary"></span> Paid
-                                            {% else %}
-                                                <span class="badge badge-warning"></span> Unpaid
-                                            {% endif %}
-                                        </p>
                                         <p class="no-text-overflow">{% money_format order.total store %}</p>
                                     </div>
                                 </div>
                                 <div class="col-md-3 col-xs-6 header-column">
                                     <label class="pull-left">
-                                        <p>Shipping:</p>
                                         <p>Ship To:</p>
+                                        <p>Shipping:</p>
+                                        <p>Payment Status:</p>
                                     </label>
 
                                     <div>
                                         <p class="no-text-overflow">
-                                            <span class="badge badge-{% if not order.fulfillment_status %}danger{% else %}primary{% endif %}"></span>
-                                            {{order.fulfillment_status|default:"Unfulfilled"|title}}
-                                        </p>
-                                        {% if order.shipping.country %}
-                                        <p class="no-text-overflow">
+                                            {% if order.shipping.country %}
                                             <img class="itooltip m-r-xs shipping-country-code" shipping-country-code="{{order.shipping.country|lower}}"
                                                  style="width: 28px; margin-bottom: 4px;" title="{{order.shipping.country}}" src="//cdn.dropified.com/static/flags/{{order.shipping.country|lower}}.svg">
 
@@ -251,6 +233,72 @@
                                                     {{order.billing.first_name|default:''}} {{order.billing.last_name|default:''}}
                                                 {% endif %}
                                             </span>
+                                            {% endif %}
+                                        </p>
+                                        <p class="no-text-overflow">
+                                            <span class="badge badge-{% if not order.fulfillment_status %}danger{% else %}primary{% endif %}"></span>
+                                            {{order.fulfillment_status|default:"Unfulfilled"|title}}
+                                        </p>
+                                        <p class="no-text-overflow">
+                                            {% if order.status == 'on-hold' %}
+                                            <span class="badge badge-danger primary"></span>
+                                            {% elif order.status == 'pending' %}
+                                            <span class="badge badge-warning primary"></span>
+                                            {% elif order.status == 'completed' %}
+                                            <span class="badge badge-primary completed-order"></span>
+                                            {% elif order.status == 'processing' and order.partially_ordered %}
+                                            <span class="badge badge-warning primary"></span>
+                                            {% elif order.status == 'processing' and order.lines_count == order.tracked_lines %}
+                                            <span class="badge badge-warning primary completed-order"></span>
+                                            {% else %}
+                                            <span class="badge"></span>
+                                            {% endif %}
+                                            {{order.status|title}}
+                                            {% if order.partially_ordered %}(Partially Ordered){% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-xs-6 header-column">
+                                    <label class="pull-left">
+                                        <p>Address:</p>
+                                        <p></p>
+                                        <p></p>
+                                    </label>
+
+                                    <div>
+                                        {% if order.has_shipping_address %}
+                                        <p class="no-text-overflow">
+                                            {{order.shipping.address_1}}{% if order.shipping.number %}, {{order.shipping.number}}{% endif %}
+                                            {% if order.shipping.address_2 %}
+                                            - {{order.shipping.address_2}}
+                                            {% endif %}
+                                        </p>
+                                        <p class="no-text-overflow">
+                                            {{order.shipping.city}}
+                                            {% if order.shipping.state %}
+                                            - {{order.shipping.state|default:'N/A'}}
+                                            {% endif %}
+                                        </p>
+                                        <p class="no-text-overflow">
+                                            {% if order.shipping.postcode %}{{order.shipping.postcode}}{% endif %}
+                                            {% if order.billing.phone %}/ {{order.billing.phone}}{% endif %}
+                                        </p>
+                                        {% else %}
+                                        <p class="no-text-overflow">
+                                            {{order.billing.address_1}}{% if order.billing.number %}, {{order.billing.number}}{% endif %}
+                                            {% if order.billing.address_2 %}
+                                            - {{order.billing.address_2}}
+                                            {% endif %}
+                                        </p>
+                                        <p class="no-text-overflow">
+                                            {{order.billing.city}}
+                                            {% if order.billing.state %}
+                                            - {{order.billing.state}}
+                                            {% endif %}
+                                        </p>
+                                        <p class="no-text-overflow">
+                                            {% if order.billing.postcode %}{{order.billing.postcode}}{% endif %}
+                                            {% if order.billing.phone %}/ {{order.billing.phone}}{% endif %}
                                         </p>
                                         {% endif %}
                                     </div>
@@ -346,6 +394,26 @@
                                         </ul>
                                     </div>
                                     {% endif %}
+
+                                    <div class="note-panel">
+                                        <div class="note-preview">
+                                            <span class="note-text multi-line-text-overflow">{{order.notes|default:'' }}</span>
+                                        </div>
+                                        <div class="edit-note hidden">
+                                            <textarea class="note form-control">{{order.notes|default:''}}</textarea>
+                                            <div style="flex-shrink: 2; display: flex; flex-direction: column-reverse;">
+                                                <button class="btn btn-primary btn-xs note-edit-save"
+                                                        order-id="{{order.id}}" store-id="{{store.id}}">
+                                                    <i class="fa fa-save"></i>
+                                                    <span>Save</span>
+                                                </button>
+                                                <button class="btn btn-default btn-xs note-edit-cancel">
+                                                    <i class="fa fa-times"></i>
+                                                    <span>Cancel</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -438,30 +506,6 @@
                                 <div class="col-md-2">
                                     <b></b>
                                 </div>
-                                <div class="col-md-3 col-md-offset-3">
-                                    <div class="note-panel panel panel-default hidden-sm hidden-xs">
-                                        <div class="panel-heading">
-                                            Order Notes
-                                        </div>
-                                        <div class="panel-body">
-                                            <div class="note-preview">
-                                                <span class="note-text">Loading...</span>
-                                            </div>
-                                            <div class="edit-note">
-                                                <textarea class="note">{{order.notes|default:''}}</textarea>
-                                                <button class="btn btn-primary btn-xs note-edit-save"
-                                                        order-id="{{order.id}}" store-id="{{store.id}}">
-                                                    <i class="fa fa-save"></i> Save
-                                                </button>
-                                                <button class="btn btn-default btn-xs note-edit-cancel">
-                                                    <i class="fa fa-times"></i> Cancel
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <i class="fa fa-edit" style="position:absolute;bottom:0px;right:5px;z-index:1200"></i>
-                                    </div>
-                                </div>
                             </div>
 
                             {% for item in order.items %}
@@ -502,11 +546,11 @@
 
                                         {% if item.product %}
                                         <a href="{% url 'woo:product_detail' item.product.id %}" class="multi-line-text-overflow" target="_blank" title="{{item.name}}" style="-webkit-line-clamp: 3;">
-                                            {{item.name|truncatewords:7}}
+                                            {{item.name}}
                                         </a>
                                         {% else %}
                                         <span title="{{item.name}}" class="multi-line-text-overflow" style="-webkit-line-clamp: 3;">
-                                            {{item.name|truncatewords:7}}
+                                            {{item.name}}
                                         </span>
                                         {% endif %}
                                     </div>
