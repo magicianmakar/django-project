@@ -131,7 +131,12 @@
                   <div class="col-md-6 breadcrumbs-container">
                     <ol class="breadcrumb">
                       <li><a href="{% url 'aliexpress:products' %}">Find Products</a></li>
-                      <li class="active">{{category.name}} ({{total_results}} items)</li>
+                      <li class="active">
+                        {{category.description}}
+                        {% if total_results %}
+                        ({{total_results}} items)
+                        {% endif %}
+                      </li>
                     </ol>
                   </div>
                 </div>

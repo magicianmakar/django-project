@@ -42,10 +42,7 @@ class AliexpressAccount(models.Model):
         from .aliexpress_api import APIRequest
         return APIRequest(self.access_token)
 
-    @classmethod
-    def get_affiliate_products(cls, **kwargs):
-        from .aliexpress_api import APIRequest
-
+    def get_affiliate_products(self, **kwargs):
         user = kwargs.get('user')
         page = kwargs.get('page')
         category_id = kwargs.get('category_id')
@@ -82,7 +79,7 @@ class AliexpressAccount(models.Model):
                 if price_max:
                     params['max_sale_price'] = price_max
 
-                result = APIRequest().affiliate_products(params=params)
+                result = self.request.affiliate_products(params=params)
                 if result.get('error', None):
                     return result
 
@@ -136,10 +133,7 @@ class AliexpressAccount(models.Model):
 
         return products_data['total_results'], formatted_products
 
-    @classmethod
-    def get_ds_recommended_products(cls, **kwargs):
-        from .aliexpress_api import APIRequest
-
+    def get_ds_recommended_products(self, **kwargs):
         user = kwargs.get('user')
         page = kwargs.get('page')
         category_id = kwargs.get('category_id')
@@ -168,7 +162,7 @@ class AliexpressAccount(models.Model):
                 if category_id:
                     params['category_id'] = str(category_id)
 
-                result = APIRequest().ds_recommended_products(params=params)
+                result = self.request.ds_recommended_products(params=params)
                 if result.get('error', None):
                     return result
 
@@ -221,10 +215,7 @@ class AliexpressAccount(models.Model):
 
         return products_data['total_results'], formatted_products
 
-    @classmethod
-    def get_ds_product_details(cls, product_id, currency='USD', raw=False, use_cache=True):
-        from .aliexpress_api import APIRequest
-
+    def get_ds_product_details(self, product_id, currency='USD', raw=False, use_cache=True):
         ds_result = {}
         ds_cache_key = f'aliexpress_ds_product_details_{product_id}_{currency}'
         affiliate_result = {}
@@ -237,7 +228,7 @@ class AliexpressAccount(models.Model):
                 'product_id': product_id,
                 'target_currency': currency,
             }
-            ds_result = APIRequest().find_ds_product(params=params)
+            ds_result = self.request.find_ds_product(params=params)
             if ds_result.get('error', None):
                 return ds_result
 
@@ -248,7 +239,7 @@ class AliexpressAccount(models.Model):
                 'product_ids': product_id,
                 'target_currency': currency,
             }
-            affiliate_result = APIRequest().find_affiliate_product(params=params)
+            affiliate_result = self.request.find_affiliate_product(params=params)
             if affiliate_result.get('error', None):
                 return affiliate_result
 

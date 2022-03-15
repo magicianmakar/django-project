@@ -11,6 +11,7 @@ from lib.exceptions import capture_exception
 from shopified_core.utils import get_store_api
 
 from .aliexpress_api import RestApi
+from .settings import DEFAULT_USER
 
 TOKEN = '50002001035rqggaZzI2hlT9Uxf9iFv4tTuHJdwgyHwSADa1e7759d89ORfe4gfBGlF8'
 
@@ -126,6 +127,17 @@ class PlaceOrder(RestApi):
         self.param_place_order_request4_open_api_d_t_o = info.to_json()
 
 
+def get_aliexpress_account(user=None):
+    account = None
+    if user:
+        account = user.models_user.aliexpress_account.first()
+    if not account:
+        default_user = User.objects.get(username=DEFAULT_USER)
+        account = default_user.models_user.aliexpress_account.first()
+
+    return account
+
+
 def get_store_data(user):
     shopify_stores = user.profile.get_shopify_stores()
     chq_stores = user.profile.get_chq_stores()
@@ -197,8 +209,6 @@ def apply_user_config(user, product):
 
 
 def save_aliexpress_products(request, products_data):
-    from aliexpress_core.models import AliexpressAccount
-
     result_products = {'saved': [], 'errored': []}
     for user_id, product_data in products_data.items():
         try:
@@ -206,9 +216,7 @@ def save_aliexpress_products(request, products_data):
         except:
             capture_exception()
 
-        aliexpress_account = user.aliexpress_account.first()
-        if not aliexpress_account:
-            aliexpress_account = AliexpressAccount()
+        aliexpress_account = get_aliexpress_account(user=user)
 
         api_product = aliexpress_account.get_ds_product_details(product_data['product_id'], currency=product_data['currency'])
         if api_product.get('error', None):
