@@ -265,7 +265,7 @@
     });
 
     $('.choose-plan').click(function(e) {
-        var parent = $(this).parents('.subsciption-plan');
+        var parent = $(this).parents('.plan-wrapper').find('.subsciption-plan');
         var plan = parent.data('data-plan');
 
         if (!window.skipPlanSelectConfirmation) {
