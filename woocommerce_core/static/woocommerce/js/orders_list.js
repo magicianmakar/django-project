@@ -541,8 +541,7 @@ $('.note-panel .note-edit-save').click(function (e) {
         data: {
             'order_id': order_id,
             'store': store,
-            'note': note,
-            'parent': parent
+            'note': note
         },
         context: {btn: this, parent: parent},
         success: function (data) {
@@ -816,7 +815,7 @@ function pusherSub() {
         }
 
         order.find('.note-panel textarea').val(data.note);
-        order.find('.note-panel .note-text').text(data.note_snippet);
+        order.find('.note-panel .note-text').text(data.note);
 
         fixNotePanelHeight(order);
     });

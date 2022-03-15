@@ -3003,7 +3003,7 @@ textarea.note {
     margin-top: 1px;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 2400px) {
     .edit-note .btn {
         width: 25px;
     }

@@ -282,7 +282,7 @@
                                     <label class="pull-left">
                                         <p>Ship To:</p>
                                         <p>Shipping:</p>
-                                        <p>Payment Status:</p>
+                                        <p>Payment:</p>
                                     </label>
 
                                     <div>
@@ -314,6 +314,10 @@
                                         </p>
                                         {% endif %}
                                         <p class="no-text-overflow">
+                                            <span class="badge badge-{% if not order.fulfillment_status %}danger{% else %}primary{% endif %}"></span>
+                                            {{order.fulfillment_status|default:"Unfulfilled"|title}}
+                                        </p>
+                                        <p class="no-text-overflow">
                                             <span class="badge badge-{% if order.financial_status != 'paid' %}warning{% else %}primary{% endif %}"></span>
                                             {{order.financial_status|title}}
                                             {% if order_risk_levels_enabled %}
@@ -321,10 +325,6 @@
                                             <span class="order-risk-level itooltip" order-id="{{order.id}}" title="Order Risk Level"></span>
                                             {% endif %}
                                             {% endif %}
-                                        </p>
-                                        <p class="no-text-overflow">
-                                            <span class="badge badge-{% if not order.fulfillment_status %}danger{% else %}primary{% endif %}"></span>
-                                            {{order.fulfillment_status|default:"Unfulfilled"|title}}
                                         </p>
                                     </div>
                                 </div>
@@ -356,7 +356,10 @@
                                             {% endif %}
                                         </p>
                                         <p class="no-text-overflow">
-                                            {{order.shipping_address.zip}} / {{order.shipping_address.phone}}
+                                            {{order.shipping_address.zip}}
+                                            {% if order.shipping_address.phone %}
+                                            / {{order.shipping_address.phone}}
+                                            {% endif %}
                                         </p>
                                     </div>
                                 </div>

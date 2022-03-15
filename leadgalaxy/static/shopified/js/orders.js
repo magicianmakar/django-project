@@ -869,7 +869,7 @@ function pusherSub() {
         }
 
         order.find('.note-panel textarea').val(data.note);
-        order.find('.note-panel .note-text').text(data.note_snippet);
+        order.find('.note-panel .note-text').text(data.note);
 
         fixNotePanelHeight(order);
     });
