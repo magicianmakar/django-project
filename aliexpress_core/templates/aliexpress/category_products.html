@@ -132,7 +132,7 @@
                     <ol class="breadcrumb">
                       <li><a href="{% url 'aliexpress:products' %}">Find Products</a></li>
                       <li class="active">
-                        {{category.name}}
+                        {{category.description}}
                         {% if total_results %}
                         ({{total_results}} items)
                         {% endif %}

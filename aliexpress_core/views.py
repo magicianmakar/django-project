@@ -18,7 +18,7 @@ from shopified_core.utils import app_link, external_link, safe_float, safe_int
 
 from .models import AliexpressAccount, AliexpressCategory
 from .settings import API_KEY, API_SECRET
-from .utils import get_store_data
+from .utils import get_aliexpress_account, get_store_data
 
 
 class AuthorizeView(RedirectView):
@@ -103,9 +103,7 @@ class Products(TemplateView):
 
             return context
 
-        aliexpress_account = self.request.user.aliexpress_account.first()
-        if not aliexpress_account:
-            aliexpress_account = AliexpressAccount()
+        aliexpress_account = get_aliexpress_account(user=self.request.user)
 
         params = {
             'user': self.request.user,
@@ -179,9 +177,7 @@ class CategoryProducts(TemplateView):
         category_id = kwargs.get('category_id')
         category = get_object_or_404(AliexpressCategory, pk=category_id)
 
-        aliexpress_account = self.request.user.aliexpress_account.first()
-        if not aliexpress_account:
-            aliexpress_account = AliexpressAccount()
+        aliexpress_account = get_aliexpress_account(user=self.request.user)
 
         params = {
             'user': self.request.user,

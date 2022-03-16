@@ -25,7 +25,7 @@ class UtilTestCase(BaseTestCase):
         self.monitor_id = 1
 
     def test_get_supplier_variants(self):
-        if not settings.ALIEXPRESS_DROPSHIP_API_TOKEN:
+        if not settings.ALIEXPRESS_DEFAULT_USER:
             return
 
         variants = get_supplier_variants('aliexpress', self.product_id)
@@ -41,7 +41,7 @@ class UtilTestCase(BaseTestCase):
             self.assertGreaterEqual(v['availabe_qty'], 0)
 
     def test_get_supplier_variants_with_non_available_stock(self):
-        if not settings.ALIEXPRESS_DROPSHIP_API_TOKEN:
+        if not settings.ALIEXPRESS_DEFAULT_USER:
             return
 
         variants = get_supplier_variants('aliexpress', 32955059114)

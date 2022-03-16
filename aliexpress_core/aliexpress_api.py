@@ -4,7 +4,7 @@ import socket
 from lib.aliexpress_api import RestApi, TopException
 from lib.exceptions import capture_exception
 
-from .settings import AFFILIATE_API_KEY, AFFILIATE_API_SECRET, API_KEY, API_SECRET, API_TOKEN
+from .settings import AFFILIATE_API_KEY, AFFILIATE_API_SECRET, API_KEY, API_SECRET
 
 
 class AliexpressAffiliateApi(RestApi):
@@ -57,8 +57,6 @@ class AliexpressFindDSProduct(AliexpressDropshipApi):
 class APIRequest():
     def __init__(self, access_token=None):
         self.access_token = access_token
-        if self.access_token is None:
-            self.access_token = API_TOKEN
 
     def _request(self, api, params=None, remaining_tries=3):
         if remaining_tries < 1:
