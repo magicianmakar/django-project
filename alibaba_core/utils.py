@@ -1,6 +1,7 @@
 import arrow
 import json
 import re
+import requests
 import socket
 from bs4 import BeautifulSoup
 from copy import deepcopy
@@ -12,6 +13,7 @@ from django.core.cache import cache
 from django.db.models import Q
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
+from django.utils.html import format_html
 
 from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import format_shopify_send_to_store
@@ -23,6 +25,11 @@ from shopified_core.models_utils import get_product_model, get_store_model
 from shopified_core.utils import dict_val, float_to_str, get_cached_order, get_store_api, safe_int
 
 from .models import AlibabaOrder, AlibabaOrderItem
+
+ALIBABA_DS_SORT_MAP = {
+    'most_relevant': 'COMPREHENSIVE_DESC',
+    'order_count': 'ORDER_DESC',
+}
 
 
 class TopAuthTokenCreateRequest(RestApi):
@@ -173,6 +180,15 @@ def get_access_token_url(user):
     return f"{base_url}?appKey={settings.ALIBABA_APP_KEY}"
 
 
+def get_alibaba_account(user):
+    account = user.alibaba.first()
+    if not account:
+        default_user = User.objects.get(username=settings.ALIBABA_DEFAULT_USER)
+        account = default_user.alibaba.first()
+
+    return account
+
+
 def get_description_simplified(description):
     soup = BeautifulSoup(description, features='html.parser')
     specs = soup.table
@@ -238,10 +254,7 @@ def save_alibaba_products(request, products_data, import_to=None, publish=True):
             capture_exception()
             return
 
-        account = user.alibaba.first()
-        if not account:
-            default_user = User.objects.get(username=settings.ALIBABA_DEFAULT_USER)
-            account = default_user.alibaba.first()
+        account = get_alibaba_account(user)
 
         products = account.get_products(product_ids)
         for api_product in products:
@@ -1045,3 +1058,46 @@ def get_tracking_links(trade_ids, default_url=None):
         return result[0][1]
     else:
         return result
+
+
+def get_search(url, **kwargs):
+    headers = {'Content-type': 'application/json;charset=UTF-8'}
+
+    price_min = kwargs['price_min']
+    price_max = kwargs['price_max']
+    category = kwargs.get('category', '')
+    data = {
+        "keyword": kwargs['search_query'],
+        "currency": kwargs['currency'],
+        "sortType": ALIBABA_DS_SORT_MAP.get(kwargs['sort'], 'COMPREHENSIVE_DESC'),
+        "pageNo": kwargs['page'],
+        "pageSize": 20,
+    }
+    if price_min:
+        data['priceFrom'] = price_min
+    if price_max:
+        data['priceTo'] = price_max
+    if category:
+        data['category'] = str(category)
+
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+
+    api_products = response.json()['data'].get('list', [])
+    total_results = response.json()['data']['page']['totalNum']
+    results = []
+
+    for product in api_products:
+        results.append({
+            'alibaba_product_id': product['productId'],
+            'title': format_html(product['subject']),
+            'price_range': product['dsPrice'],
+            'shipping_time': product['shippingTime'],
+            'url': product['detail'].split('?')[0],
+            'image': product['image'],
+            'shipping_price': product['freight'],
+            'moq': product['moq'],
+        })
+
+    products = {'count': total_results, 'results': results}
+
+    return products
