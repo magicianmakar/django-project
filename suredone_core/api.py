@@ -155,11 +155,26 @@ class SureDoneApiHandler:
 
         return requests.get(url, params=request_data, headers=self.HEADERS)
 
+    def post_fb_onboard_instance(self, cms_id: str, instance_id: int):
+        url = f'{self.API_ENDPOINT}/v3/authorize/facebook/onboard'
+        data = param({
+            'cms_id': cms_id,
+            'instance': instance_id,
+        })
+
+        return requests.post(url, data=data, headers=self.HEADERS)
+
     def add_new_fb_instance(self, instance_id: int):
         url = f'{self.API_ENDPOINT}/v3/authorize/facebook/create'
         data = param({'instance': instance_id})
 
         return requests.post(url, data=data, headers=self.HEADERS)
+
+    def remove_fb_channel_auth(self, instance_id):
+        url = f'{self.API_ENDPOINT}/v3/authorize/facebook/revoke'
+        request_data = {'instance': instance_id}
+
+        return requests.get(url, params=request_data, headers=self.HEADERS)
 
     def authorize_fb_complete(self, instance, code, granted_scopes, denied_scopes, state):
         url = f'{self.API_ENDPOINT}/v3/authorize/facebook/complete'

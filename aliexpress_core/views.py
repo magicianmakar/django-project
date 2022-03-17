@@ -14,7 +14,7 @@ from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 
 from shopified_core import permissions
-from shopified_core.utils import app_link, external_link, safe_int
+from shopified_core.utils import app_link, external_link, safe_float, safe_int
 
 from .models import AliexpressAccount, AliexpressCategory
 from .settings import API_KEY, API_SECRET
@@ -82,8 +82,8 @@ class Products(TemplateView):
         page = safe_int(self.request.GET.get('page', 1))
         use_filters = self.request.GET.get('f', None)
         sort = self.request.GET.get('sort', '-order_count')
-        price_min = safe_int(self.request.GET.get('price_min', None))
-        price_max = safe_int(self.request.GET.get('price_max', None))
+        price_min = safe_float(self.request.GET.get('price_min', None))
+        price_max = safe_float(self.request.GET.get('price_max', None))
         upsell = not self.request.user.can('find_products.use')
 
         categories = AliexpressCategory.parent_ctaegories()
@@ -121,16 +121,16 @@ class Products(TemplateView):
         else:
             total_results, products_list = aliexpress_account.get_ds_recommended_products(**params)
 
+        if not isinstance(products_list, list) and products_list.get('error', None):
+            error = products_list['error']
+            products_list = []
+
         if sort.startswith('-'):
             products_list = sorted(products_list, key=lambda x: x[sort.strip('-')], reverse=True)
         else:
             products_list = sorted(products_list, key=lambda x: x[sort])
 
         store_data = get_store_data(self.request.user)
-
-        if not isinstance(products_list, list) and products_list.get('error', None):
-            error = products_list['error']
-            products_list = []
 
         paginator = {
             'show': True if len(products_list) >= 20 else False,
@@ -171,8 +171,8 @@ class CategoryProducts(TemplateView):
         page = safe_int(self.request.GET.get('page', 1))
         use_filters = self.request.GET.get('f', None)
         sort = self.request.GET.get('sort', '-order_count')
-        price_min = safe_int(self.request.GET.get('price_min', None))
-        price_max = safe_int(self.request.GET.get('price_max', None))
+        price_min = safe_float(self.request.GET.get('price_min', None))
+        price_max = safe_float(self.request.GET.get('price_max', None))
 
         category_id = kwargs.get('category_id')
         category = get_object_or_404(AliexpressCategory, pk=category_id)
@@ -196,16 +196,16 @@ class CategoryProducts(TemplateView):
         else:
             total_results, products_list = aliexpress_account.get_ds_recommended_products(**params)
 
+        if not isinstance(products_list, list) and products_list.get('error', None):
+            error = products_list['error']
+            products_list = []
+
         if sort.startswith('-'):
             products_list = sorted(products_list, key=lambda x: x[sort.strip('-')], reverse=True)
         else:
             products_list = sorted(products_list, key=lambda x: x[sort])
 
         store_data = get_store_data(self.request.user)
-
-        if not isinstance(products_list, list) and products_list.get('error', None):
-            error = products_list['error']
-            products_list = []
 
         paginator = {
             'show': True if len(products_list) >= 20 else False,

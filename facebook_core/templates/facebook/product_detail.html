@@ -340,6 +340,14 @@
 
                                 <div class="buttons col-xs-12">
                                     <div class="row">
+                                        <div class="col-md-4 col-xs-12">
+                                            {% if product.is_pending %}
+                                                <div class="alert alert-info" role="alert">
+                                                    <i class="fa fa-info-circle"></i>&nbsp;
+                                                    A product export has been queued and is pending.
+                                                </div>
+                                            {% endif %}
+                                        </div>
                                         <div class="col-xs-12">
                                             {% if not product.some_variants_are_connected %}
                                                 <button id="product-export-btn" target="product-export" type="submit"
@@ -382,7 +390,7 @@
                                                     {% endif %}
                                                     {% if request.user|can:'product_variant_setup.view' %}
                                                         <li><a href="{{ product.variant_edit }}" target="_blank">
-                                                            <i class="fa fa-file-image-o"></i> Set up Variant Images</a>
+                                                            <i class="fa fa-file-image-o"></i> Set Up Variant Images</a>
                                                         </li>
                                                         {% endif %}
                                                     {% if product.some_variants_are_connected %}

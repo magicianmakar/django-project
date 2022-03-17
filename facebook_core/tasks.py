@@ -2,13 +2,15 @@ from json import JSONDecodeError
 from requests.exceptions import HTTPError
 
 from django.contrib.auth.models import User
-from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
+from django.core.exceptions import PermissionDenied
 from django.template.defaultfilters import truncatewords
 from django.urls import reverse
+from django.utils import timezone
 
 from app.celery_base import CaptureFailure, celery_app, retry_countdown
 from lib.exceptions import capture_exception
+from product_alerts.utils import get_supplier_variants, variant_index_from_supplier_sku
 from shopified_core import permissions
 from shopified_core.utils import get_domain, http_exception_response, http_excption_status_code, safe_json
 from suredone_core.models import SureDoneAccount
@@ -16,11 +18,6 @@ from suredone_core.utils import SureDonePusher
 
 from .models import FBProduct, FBStore
 from .utils import FBOrderUpdater, FBUtils, smart_board_by_product
-
-from product_alerts.utils import (
-    get_supplier_variants,
-    variant_index_from_supplier_sku,
-)
 
 
 @celery_app.task(base=CaptureFailure)
@@ -251,7 +248,10 @@ def product_export(user_id, parent_guid, store_id, pusher_channel):
                 'product': product.guid,
                 'error': fb_utils.format_error_messages_by_variant(api_error_messages)
             })
-            return
+            return api_error_messages
+
+        product.last_export_date = timezone.now()
+        product.save()
 
         sd_pusher.trigger(pusher_event, {
             'success': True,

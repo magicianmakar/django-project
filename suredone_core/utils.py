@@ -370,7 +370,8 @@ class SureDoneUtils:
 
         # Step 3: Transform data into array-based data
         # Exclude 'sku' field in the final request to SureDone because the field is readonly
-        api_request_data = self.transform_variant_data_into_sd_list_format(data_per_variant, ['sku'])
+        api_request_data = self.transform_variant_data_into_sd_list_format(
+            data_per_variant, keys_to_exclude=['sku'])
 
         return self.api.edit_product_details_bulk(api_request_data, skip_all_channels)
 
@@ -415,8 +416,7 @@ class SureDoneUtils:
         # Rest of elements are values for each variant in the same order as keys in all_keys
         api_request_data += [
             [
-                variant_data[key] if key in variant_data else ''
-                for key in all_keys
+                variant_data.get(key, '') for key in all_keys
             ]
             for variant_data in data_per_variant
         ]
@@ -788,7 +788,8 @@ class SureDoneUtils:
                 excluded_fields.append(field)
 
         # Transform the SureDone data from a dictionary format into an array-based bulk edit format
-        api_request_data = self.transform_variant_data_into_sd_list_format(product_data, excluded_fields)
+        api_request_data = self.transform_variant_data_into_sd_list_format(
+            product_data, keys_to_exclude=excluded_fields)
         api_response = self.api.add_products_bulk(api_request_data, skip_all_channels=True)
 
         return {

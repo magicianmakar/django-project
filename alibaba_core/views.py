@@ -1,12 +1,13 @@
 import arrow
 import requests
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.http import Http404
-from django.shortcuts import redirect
+from django.shortcuts import redirect, reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
@@ -181,3 +182,23 @@ class CategoryProducts(TemplateView):
         })
 
         return context
+
+
+@method_decorator(login_required, name='dispatch')
+class ProductsRedirectView(RedirectView):
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        try:
+            token = self.request.user.models_user.alibaba.first().get_ecology_token()
+        except:
+            messages.error(self.request, "Your Dropified account is not connected to Alibaba")
+            return f"{reverse('settings')}#alibaba-settings"
+
+        params = (
+            # ('wx_screen_direc', 'portrait'),
+            # ('wx_navbar_transparent', 'true'),
+            # ('path', '/p/dt0c706ur/index.html'),
+            ('ecology_token', token),
+        )
+        return f"https://dropshipping.alibaba.com?{urlencode(params)}"

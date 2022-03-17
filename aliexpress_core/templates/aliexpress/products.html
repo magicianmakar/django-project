@@ -45,7 +45,7 @@
               </div>
               {% if search_query %}
               <div class="form-group">
-                <label style="width: 100%;">Price (USD cent)</label>
+                <label style="width: 100%;">Price</label>
                 <input name="price_min" type="text" class="form-control" value="{{request.GET.price_min}}" placeholder="Min." style="width: 49%;">
                 <input name="price_max" type="text" class="form-control" value="{{request.GET.price_max}}" placeholder="Max." style="width: 49%; margin-left: 2%;">
               </div>
@@ -183,16 +183,22 @@
                       </div>
                     </div>
                   </div>
-                  {% empty %}
-                    <h3 class="text-center">No products found yet.</h3>
-                    {% if error %}
-                    <br />
+                  {% endfor %}
+                </div>
+                {% if not products %}
+                <div class="row">
+                  <div class="col-md-2">
+                    <h3>No products found yet.</h3>
+                  </div>
+                  {% if error %}
+                  <div class="col-md-6">
                     <h4 class="text-center">
                       <b>Error: {{error}}</b>
                     </h4>
-                    {% endif %}
-                  {% endfor %}
+                  </div>
+                  {% endif %}
                 </div>
+                {% endif %}
 
                 {% if paginator.show %}
                 <div class="row">

@@ -1105,6 +1105,7 @@ li.border-right {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: block;
 }
 
 .multi-line-text-overflow {
@@ -2863,7 +2864,7 @@ ul.tagit:focus {
 
 .sweet-alert button.confirm {
   padding: 8px 10px;
-  min-width: 220px;
+  min-width: 205px;
   background: #6BAA55;
   box-shadow: 0px 1px 3px #0000000D, 0px 2px 1px #00000008, 0px 1px 1px #0000000A;
 }
@@ -2871,16 +2872,6 @@ ul.tagit:focus {
 .sweet-alert  .la-ball-fall {
   top: 6px;
 }
-
-/*.sa-icon.sa-warning,
-.sa-icon.sa-info {
-    display: none !important;
-}
-
-.sa-icon.sa-error.animateErrorIcon ~ .sa-custom {
-    display: none !important;
-}
-*/
 
 .select-products-modal .container-fluid {
     padding:10px 20px;

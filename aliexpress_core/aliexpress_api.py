@@ -94,6 +94,9 @@ class APIRequest():
             if e.errorcode == 15 and e.subcode == 'isp.top-remote-connection-timeout':
                 return self._request(api, params=params, remaining_tries=remaining_tries - 1)
 
+            if e.errorcode == 27 and e.subcode == 'invalid-sessionkey':
+                return {'error': 'Please re-connect your AliExpress account in settings'}
+
     def get_aliexpress_categories(self, params=None):
         api = AliexpressCategories()
 

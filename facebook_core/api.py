@@ -5,7 +5,6 @@ from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.core.cache import cache
-from app.celery_base import celery_app
 from django.core.exceptions import PermissionDenied
 from django.db.models import ObjectDoesNotExist
 from django.http import JsonResponse
@@ -15,20 +14,13 @@ from django.utils.decorators import method_decorator
 
 import suredone_core.tasks as sd_tasks
 from alibaba_core.models import AlibabaOrderItem
+from app.celery_base import celery_app
 from fulfilment_fee.utils import process_sale_transaction_fee
 from lib.exceptions import capture_exception, capture_message
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.decorators import HasSubuserPermission
-from shopified_core.utils import (
-    CancelledOrderAlert,
-    clean_tracking_number,
-    dict_val,
-    get_domain,
-    remove_link_query,
-    safe_int,
-    safe_float
-)
+from shopified_core.utils import CancelledOrderAlert, clean_tracking_number, dict_val, get_domain, remove_link_query, safe_float, safe_int
 from suredone_core.models import SureDoneAccount
 
 from . import tasks
@@ -167,6 +159,40 @@ class FBStoreApi(ApiBase):
         pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
         return self.api_success({'pusher': pusher})
 
+    def post_onboard_store(self, request, user, data):
+        data = data.dict()
+        store_id = data.get('store_id')
+        cms_id = data.get('cms_id')
+
+        if not store_id:
+            return self.api_error('Missing a required "store_id" field.')
+        if not cms_id:
+            return self.api_error('Missing a required "cms_id" field.')
+
+        store = get_object_or_404(FBStore, id=store_id)
+        permissions.user_can_edit(user, store)
+
+        result = None
+        try:
+            result = FBUtils(user).onboard_fb_instance(cms_id=cms_id, instance_id=store.filter_instance_id)
+            if result.get('failed'):
+                capture_message(extra={
+                    'message': 'Errors when onboarding a Facebook store',
+                    'store_id': store.id,
+                    'user_id': user.id,
+                    'sd_response': result,
+                })
+        except HTTPError:
+            capture_exception(extra={
+                'message': 'Failed to onboard a Facebook store',
+                'store_id': store.id,
+                'user_id': user.id,
+                'sd_response': result,
+            })
+            return self.api_error('Error onboarding the Facebook store. Please try again later.')
+
+        return self.api_success({'result': 'success'})
+
     def post_advanced_settings(self, request, user, data):
         """
         Update store's advanced settings. The settings include store's default shipping, return policies, etc.
@@ -222,12 +248,7 @@ class FBStoreApi(ApiBase):
 
         # Delete auth token on SureDone
         fb_utils = FBUtils(user)
-        sd_api_request_data = {
-            'instance': store.store_instance_id,
-            'channel': 'facebook',
-            'revoke': 'true',
-        }
-        sd_auth_channel_resp = fb_utils.api.authorize_channel_v1(sd_api_request_data)
+        sd_auth_channel_resp = fb_utils.api.remove_fb_channel_auth(store.store_instance_id)
 
         # Handle SD API errors
         if not sd_auth_channel_resp or not isinstance(sd_auth_channel_resp, dict):
@@ -331,7 +352,7 @@ class FBStoreApi(ApiBase):
             permissions.user_can_view(user, product)
 
         if product.source_id and product.store.id == store.id:
-            return self.api_error('Product already connected to an Facebook store.')
+            return self.api_error('Product already connected to a Facebook store.')
 
         tasks.product_export.apply_async(kwargs={
             'user_id': user.id,

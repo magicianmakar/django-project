@@ -45,7 +45,7 @@ from shopified_core.utils import (
     order_data_cache,
     safe_float,
     safe_int,
-    safe_json,
+    safe_json
 )
 from suredone_core.utils import get_daterange_filters
 
@@ -143,7 +143,7 @@ class ProductDetailView(DetailView):
         variants_config = self.object.parsed.get('variantsconfig', '{}')
         variants_config = [variant_config for variant_config in safe_json(variants_config) if
                            len(variant_config.get('values', [])) > 1]
-        context['variants_config'] = variants_config if variants_config else [{'title': 'No variants!'}]
+        context['variants_config'] = variants_config if variants_config else []
         context['split_disabled'] = 'disabled' if not variants_config else ''
 
         products_url = reverse('ebay:products_list')

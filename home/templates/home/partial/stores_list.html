@@ -376,71 +376,74 @@
                         <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
                         <a class="store-link" href="{% url 'fb:products_list' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
-                    <td class="no-wrap text-right">
-                        <a href="{% url 'fb:products_list' %}?store={{ item.id }}" class="label">Products</a>
-                    </td>
-                    <td>
-                        <a href="{% url 'fb:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
-                    </td>
-                    <td>
-                        <a href="{% url 'fb:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
-                    </td>
-                    {% if not user.is_subuser %}
-                    <td style="white-space:nowrap" class="hidden-sm hidden-xs">
-                        <div class="btn-group ">
-                            <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
-                                <i class="fa fa-cog"></i> <span class=""></span></button>
-                            <ul class="dropdown-menu pull-right">
+                    {% if not item.auth_completed %}
+                        <td class="no-wrap text-right" colspan="4">
+                            <a href="{% url 'fb:onboard' item.id %}" class="label label-warning" style="background-color: #f0ad4e; color: white;">
+                                Complete Authorization
+                            </a>
+                        </td>
+                    {% else %}
+                        <td class="no-wrap text-right">
+                            <a href="{% url 'fb:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                        </td>
+                        <td>
+                            <a href="{% url 'fb:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                        </td>
+                        <td>
+                            <a href="{% url 'fb:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                        </td>
 
-                                <li>
-                                    <a class="visit-store " href="{{item.get_store_url}}" target="_blank">
-                                        <i class="fa fa-external-link"></i> Visit Store
-                                    </a>
-                                </li>
+                        {% if not user.is_subuser %}
+                        <td style="white-space:nowrap" class="hidden-sm hidden-xs">
+                            <div class="btn-group ">
+                                <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                    <i class="fa fa-cog"></i> <span class=""></span></button>
+                                <ul class="dropdown-menu pull-right">
 
-                                <li class="divider"></li>
-                                <li>
-                                    <a data-store-id="{{item.pk}}" class="fb-verify-api-url"
-                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
-                                        <i class="fa fa-check-circle-o"></i> Verify
-                                    </a>
-                                </li>
+                                    <li>
+                                        <a class="visit-store " href="{{item.get_store_url}}" target="_blank">
+                                            <i class="fa fa-external-link"></i> Visit Store
+                                        </a>
+                                    </li>
 
-                                <li>
-                                    <a data-store-id="{{item.id}}" class="reauthorize-fb-store"
-                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
-                                        <i class="fa fa-refresh"></i> Re-Authorize
-                                    </a>
-                                </li>
+                                    <li class="divider"></li>
+                                    {% comment %}<li>
+                                        <a data-store-id="{{item.pk}}" class="fb-verify-api-url"
+                                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
+                                            <i class="fa fa-check-circle-o"></i> Verify
+                                        </a>
+                                    </li>{% endcomment %}
 
-                                <li>
-                                    <a store-id="{{item.pk}}" store-type="fb" class="change-tracking-url">
-                                        <i class="fa fa-chain"></i> Custom Tracking URL
-                                    </a>
-                                </li>
+                                    <li>
+                                        <a data-store-id="{{item.id}}" class="reauthorize-fb-store"
+                                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
+                                            <i class="fa fa-refresh"></i> Re-Authorize
+                                        </a>
+                                    </li>
 
-                                <li>
-                                    <a store-id="{{item.pk}}" store-type="fb" class="change-currency">
-                                        <i class="fa fa-dollar"></i> Store Currency
-                                    </a>
-                                </li>
+                                    <li>
+                                        <a store-id="{{item.pk}}" store-type="fb" class="change-tracking-url">
+                                            <i class="fa fa-chain"></i> Custom Tracking URL
+                                        </a>
+                                    </li>
 
-                                <li>
-                                    <a data-store-id="{{item.id}}" data-store-username="{{item.store_username}}" class="fb-store-settings-btn">
-                                        <i class="fa fa-cogs"></i> Advanced Settings
-                                    </a>
-                                </li>
+                                    <li>
+                                        <a store-id="{{item.pk}}" store-type="fb" class="change-currency">
+                                            <i class="fa fa-dollar"></i> Store Currency
+                                        </a>
+                                    </li>
 
-                                <li>
-                                    <a
-                                        class="fb-delete-store-btn btn-danger btn-outline"
-                                        data-store-id="{{ item.pk }}">
-                                        <i class="fa fa-times"></i> Delete
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </td>
+                                    <li>
+                                        <a
+                                            class="fb-delete-store-btn btn-danger btn-outline"
+                                            data-store-id="{{ item.pk }}">
+                                            <i class="fa fa-times"></i> Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                        {% endif %}
                     {% endif %}
                 </tr>
                 {% endif %}

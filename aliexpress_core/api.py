@@ -547,6 +547,13 @@ class AliexpressProduct():
                 ali_variant_title_list = sorted(ali_variant_title_list)
                 ali_variant_title = '/'.join(ali_variant_title_list)
                 final_skus[ali_variant_title] = data.get('id')
+
+                # for products imported via API
+                alternate_variant_title_list = [i.get('sku_property_value') for i in sku_list]
+                alternate_variant_title_list = sorted(alternate_variant_title_list)
+                alternate_variant_title = '/'.join(alternate_variant_title_list)
+                final_skus[alternate_variant_title] = data.get('id')
+
         return final_skus
 
 
