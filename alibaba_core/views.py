@@ -17,7 +17,7 @@ from shopified_core import permissions
 from shopified_core.utils import safe_int
 
 from .models import AlibabaAccount
-from .utils import TopAuthTokenCreateRequest
+from .utils import TopAuthTokenCreateRequest, get_alibaba_account, get_search
 
 
 @method_decorator(login_required, name='dispatch')
@@ -68,6 +68,13 @@ class Products(TemplateView):
         context = super().get_context_data(**kwargs)
         search_query = self.request.GET.get('q', '')
         page = safe_int(self.request.GET.get('page', 1))
+        use_filters = self.request.GET.get('f', None)
+        currency = self.request.GET.get('currency', 'USD')
+        price_min = self.request.GET.get('price_min', '')
+        price_max = self.request.GET.get('price_max', '')
+        sort = self.request.GET.get('sort', '-order_count')
+
+        account = get_alibaba_account(self.request.user)
 
         ranked_categories = cache.get('alibaba_ranked_categories', {})
         if not ranked_categories:
@@ -77,19 +84,42 @@ class Products(TemplateView):
             ).json()
             cache.set('alibaba_ranked_categories', ranked_categories, timeout=600)
 
-        api_url = f'dropshipping-api/ranked-products?include_nontop=true&page={page}'
         cache_key = f'alibaba_ranked_products_{page}'
         if search_query:
-            api_url = f'{api_url}&keyword={search_query}'
             cache_key = f'{cache_key}_{search_query}'
 
-        ranked_products = cache.get(cache_key, {})
+        ranked_products = {}
+        if not use_filters:
+            ranked_products = cache.get(cache_key, {})
+        if search_query and not ranked_products:
+            api_url = 'https://dropshipping.alibaba.com/saas/ajax/product/search/query_product'
+            params = {
+                'search_query': search_query,
+                'page': page,
+                'currency': currency,
+                'price_min': safe_int(price_min),
+                'price_max': safe_int(price_max),
+                'sort': sort,
+            }
+            ranked_products = get_search(api_url, **params)
+            cache.set(cache_key, ranked_products, timeout=600)
+
         if not ranked_products:
+            api_url = f'dropshipping-api/ranked-products?include_nontop=true&page={page}' \
+                      f'&price_from={price_min}&price_to={price_max}'
             ranked_products = requests.get(
                 settings.INSIDER_REPORT_HOST + api_url,
-                verify=False
+                verify=False,
             ).json()
+            if sort.startswith('-'):
+                ranked_products['results'] = sorted(ranked_products['results'], key=lambda x: x['total_quantities'], reverse=True)
+            else:
+                ranked_products['results'] = sorted(ranked_products['results'], key=lambda x: x['total_quantities'])
             cache.set(cache_key, ranked_products, timeout=600)
+
+        if account.user == self.request.user:
+            for product in ranked_products['results']:
+                product['url'] = f'{product["url"]}?ecology_token={account.ecology_token}'
 
         store_data = get_store_data(self.request.user)
 
@@ -128,6 +158,13 @@ class CategoryProducts(TemplateView):
         context = super().get_context_data(**kwargs)
         search_query = self.request.GET.get('q', '')
         page = safe_int(self.request.GET.get('page', 1))
+        use_filters = self.request.GET.get('f', None)
+        currency = self.request.GET.get('currency', 'USD')
+        price_min = self.request.GET.get('price_min', '')
+        price_max = self.request.GET.get('price_max', '')
+        sort = self.request.GET.get('sort', '-order_count')
+
+        account = get_alibaba_account(self.request.user)
 
         category_id = kwargs.get('category_id')
         category = ''
@@ -148,19 +185,43 @@ class CategoryProducts(TemplateView):
         if not category:
             raise Http404('Category does not exist')
 
-        api_url = f'dropshipping-api/ranked-products?include_nontop=true&category_ids[]={category_id}&page={page}'
         cache_key = f'alibaba_ranked_products_{category_id}_{page}'
         if search_query:
-            api_url = f'{api_url}&keyword={search_query}'
             cache_key = f'{cache_key}_{search_query}'
 
-        ranked_products = cache.get(cache_key, {})
+        ranked_products = {}
+        if not use_filters:
+            ranked_products = cache.get(cache_key, {})
+        if search_query and not ranked_products:
+            api_url = 'https://dropshipping.alibaba.com/saas/ajax/product/search/query_product'
+            params = {
+                'category': category['alibaba_category_id'],
+                'search_query': search_query,
+                'page': page,
+                'currency': currency,
+                'price_min': safe_int(price_min),
+                'price_max': safe_int(price_max),
+                'sort': sort,
+            }
+            ranked_products = get_search(api_url, **params)
+            cache.set(cache_key, ranked_products, timeout=600)
+
         if not ranked_products:
+            api_url = f'dropshipping-api/ranked-products?include_nontop=true&category_ids[]={category_id}&page={page}' \
+                      f'&price_from={price_min}&price_to={price_max}'
             ranked_products = requests.get(
                 settings.INSIDER_REPORT_HOST + api_url,
                 verify=False
             ).json()
+            if sort.startswith('-'):
+                ranked_products['results'] = sorted(ranked_products['results'], key=lambda x: x['total_quantities'], reverse=True)
+            else:
+                ranked_products['results'] = sorted(ranked_products['results'], key=lambda x: x['total_quantities'])
             cache.set(cache_key, ranked_products, timeout=600)
+
+        if account.user == self.request.user:
+            for product in ranked_products['results']:
+                product['url'] = f'{product["url"]}?ecology_token={account.ecology_token}'
 
         store_data = get_store_data(self.request.user)
 

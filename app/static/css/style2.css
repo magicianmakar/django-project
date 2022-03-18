@@ -2634,6 +2634,7 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
   -webkit-box-orient: vertical;
   overflow: hidden;
   color: #3b4d5e;
+  height: 38px;
 }
 
 .find-products-container .card .card-content .card-price {
