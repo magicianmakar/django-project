@@ -454,6 +454,11 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(clean_tracking_number('CNCAI2006110481392\n8'), 'CNCAI20061104813928')
         self.assertEqual(clean_tracking_number(f'CNCAI2006110481392{" " * 10}\n{" " * 10}8'), 'CNCAI20061104813928')
 
+        # Null values
+        self.assertEqual(clean_tracking_number(None), '')
+        self.assertEqual(clean_tracking_number(''), '')
+        self.assertEqual(clean_tracking_number('    '), '')
+
 
 class ShippingHelperFunctionsTestCase(BaseTestCase):
 

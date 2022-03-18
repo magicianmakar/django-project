@@ -850,18 +850,20 @@ def using_store_db(m):
 
 
 def clean_tracking_number(tn):
-    tracking_number = re.sub(r'[\n\r\t]', ' ', tn).strip()
     tracking = ''
-    first_tracking_len = 0
-    for t in tracking_number.split():
-        if not tracking:
-            tracking = t
-            first_tracking_len = len(t)
-        elif first_tracking_len and len(t) >= first_tracking_len and safe_int(t, None) is None:
-            if t != tracking:  # Prevent duplicates
-                tracking = f'{tracking},{t}'
-        else:
-            tracking = f'{tracking}{t}'
+
+    if tn:
+        tracking_number = re.sub(r'[\n\r\t]', ' ', tn).strip()
+        first_tracking_len = 0
+        for t in tracking_number.split():
+            if not tracking:
+                tracking = t
+                first_tracking_len = len(t)
+            elif first_tracking_len and len(t) >= first_tracking_len and safe_int(t, None) is None:
+                if t != tracking:  # Prevent duplicates
+                    tracking = f'{tracking},{t}'
+            else:
+                tracking = f'{tracking}{t}'
 
     return tracking
 
