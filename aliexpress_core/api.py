@@ -571,9 +571,18 @@ class ShippingMethods():
 
         send_goods_country_code = 'CN'
         for v in self.variant:
-            if v.get('title').lower() == 'united states':
-                send_goods_country_code = 'US'
-                break
+            if isinstance(v, dict):
+                if v.get('title'):
+                    if v.get('title').lower().strip() == 'united states':
+                        send_goods_country_code = 'US'
+                        break
+            elif isinstance(v, str):
+                if v.lower().strip() == 'united states':
+                    send_goods_country_code = 'US'
+                    break
+            else:
+                return None
+
         data = {
             "product_id": self.product_id,
             "product_num": self.quantity,
