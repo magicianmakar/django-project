@@ -59,6 +59,10 @@ class FBStore(SureDoneStoreBase):
     def auth_completed(self):
         return self.system_token
 
+    @property
+    def instance_prefix(self):
+        return f'facebook{self.instance_prefix_id}'
+
     def get_store_url(self):
         if self.commerce_manager_id:
             return f'https://business.facebook.com/commerce/{self.commerce_manager_id}'

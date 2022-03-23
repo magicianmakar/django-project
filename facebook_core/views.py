@@ -878,6 +878,7 @@ class AuthAcceptRedirectView(RedirectView):
         fb_state = self.request.GET.get('state')
 
         fb_utils = FBUtils(user)
+        sd_api_resp = None
         try:
             sd_api_resp = fb_utils.api.authorize_fb_complete(
                 instance=instance_id,
@@ -888,6 +889,12 @@ class AuthAcceptRedirectView(RedirectView):
             )
             sd_api_resp.raise_for_status()
         except HTTPError:
+            capture_exception(extra={
+                'description': 'API error when authorizing a Facebook store with SureDone.',
+                'suredone_account_id': fb_utils.sd_account.id,
+                'response_code': sd_api_resp.status_code if sd_api_resp else None,
+                'response_reason': sd_api_resp.reason if sd_api_resp else None,
+            })
             messages.error(self.request, 'Something went wrong when authorizing a Facebook store. Please try again.')
             return reverse('fb:index')
 

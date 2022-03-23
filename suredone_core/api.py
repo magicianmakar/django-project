@@ -343,6 +343,10 @@ class SureDoneApiHandler:
 
         return requests.patch(url, data=api_data, params=params, headers=headers)
 
+    def update_plugin_settings(self, data: dict):
+        url = f'{self.API_ENDPOINT}/v1/settings/plugins'
+        return requests.post(url, data=param(data), headers=self.HEADERS)
+
 
 class SureDoneAdminApiHandler:
     API_ENDPOINT = 'https://api.suredone.com'

@@ -1,3 +1,5 @@
+from requests.exceptions import HTTPError
+
 from django.contrib.auth.models import User
 
 from app.celery_base import CaptureFailure, celery_app
@@ -65,36 +67,59 @@ def configure_user_custom_fields(sd_account_id, user_id):
 
         # Set up custom fields for variants
         failed_variant_fields = sd_utils.sd_account.verify_variation_fields(all_options_data)
-        request_data = {'site_cart_variants_set': failed_variant_fields}
+        if failed_variant_fields:
+            request_data = {'site_cart_variants_set': failed_variant_fields}
 
-        tries_left = 3
-        success = False
-        while tries_left > 0 and not success:
-            api_resp = sd_utils.api.update_user_settings(request_data)
-            try:
-                api_resp_data = api_resp.json()
+            tries_left = 3
+            success = False
+            while tries_left > 0 and not success:
+                api_resp = sd_utils.api.update_user_settings(request_data)
+                try:
+                    api_resp_data = api_resp.json()
 
-                error_messages = api_resp_data.get('errors', {}).get('site_cart_variants_set')
-                if api_resp_data.get('result') != 'success' or error_messages:
-                    capture_message('Request to set custom fields variations failed.', extra={
+                    error_messages = api_resp_data.get('errors', {}).get('site_cart_variants_set')
+                    if api_resp_data.get('result') != 'success' or error_messages:
+                        capture_message('Request to set custom fields variations failed.', extra={
+                            'suredone_account_id': sd_account_id,
+                            'response_code': api_resp.status_code,
+                            'response_reason': api_resp.reason,
+                            'response_data': api_resp_data,
+                            'failed_variant_fields': failed_variant_fields,
+                        })
+                    else:
+                        success = True
+                        break
+                except Exception:
+                    capture_exception(extra={
+                        'description': 'API error when trying to set custom field variants.',
                         'suredone_account_id': sd_account_id,
                         'response_code': api_resp.status_code,
                         'response_reason': api_resp.reason,
-                        'response_data': api_resp_data,
-                        'failed_variant_fields': failed_variant_fields,
+                        'failed_variant_fields': failed_variant_fields
                     })
-                else:
-                    success = True
-                    break
-            except Exception:
-                capture_exception(extra={
-                    'description': 'API error when trying to set custom field variants.',
-                    'suredone_account_id': sd_account_id,
-                    'response_code': api_resp.status_code,
-                    'response_reason': api_resp.reason,
-                    'failed_variant_fields': failed_variant_fields
-                })
-            tries_left -= 1
+                tries_left -= 1
+
+        # Verify facebook fields mapping
+        missing_fields_per_store = sd_utils.sd_account.verify_fb_fields_mapping(all_options_data)
+        request_data = {'plugin_settings': [
+            {
+                'name': 'facebook',
+                'instance': key,
+                'set': 'custom_field_mappings',
+                'value': value,
+            } for key, value in missing_fields_per_store.items()
+        ]}
+        api_resp = sd_utils.api.update_plugin_settings(request_data)
+        try:
+            api_resp.raise_for_status()
+        except HTTPError:
+            capture_exception(extra={
+                'description': 'API error when trying to set facebook fields mapping.',
+                'suredone_account_id': sd_account_id,
+                'response_code': api_resp.status_code,
+                'response_reason': api_resp.reason,
+                'failed_variant_fields': failed_variant_fields
+            })
 
     except:
         capture_exception(extra={
