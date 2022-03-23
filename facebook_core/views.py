@@ -114,7 +114,7 @@ class ProductDetailView(DetailView):
 
     @method_decorator(login_required)
     def dispatch(self, request, pk, store_index, *args, **kwargs):
-        if not request.user.can('fb.use'):
+        if not request.user.can('facebook.use'):
             raise permissions.PermissionDenied()
 
         self.product_guid = pk
