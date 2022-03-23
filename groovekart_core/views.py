@@ -20,6 +20,7 @@ from django.views.generic.base import RedirectView
 from django.views.generic.detail import DetailView
 from django.core.cache.utils import make_template_fragment_key
 
+from aliexpress_core.models import AliexpressAccount
 from profits.mixins import ProfitDashboardMixin
 
 from supplements.lib.shipstation import get_address as get_shipstation_address
@@ -993,6 +994,7 @@ class OrdersTrackList(ListView):
         context['shipping_carriers'] = store_shipping_carriers(store)
         context['groovekart_url'] = store.get_store_url()
         context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
+        context['aliexpress_account_count'] = AliexpressAccount.objects.filter(user=self.request.user.models_user).count()
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': reverse('gkart:orders_list')},
             {'title': 'Tracking', 'url': reverse('gkart:orders_track')},

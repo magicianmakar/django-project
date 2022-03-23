@@ -11,7 +11,16 @@
                         <div class="pending-msg">
                             <p>Update <b class="pending-orders"></b> in your store.</p>
                             <p>Make sure you are logged in your supplier with the right account.</p>
+                            
                         </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12">
+                        {% if not aliexpress_account_count %}
+                            <p class="text-danger">It seems your AliExpress account is not linked with Dropified for Quick Tracking Update.</p>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -107,11 +116,17 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <p> {{ aliexpress_account_count }}</p>
                 <button class="btn btn-primary pull-left start-update-btn" id="start-update-btn"
                     data-store="{{store.id}}">Start Update</button>
                 {% if use_aliexpress_api %}
+                {% if aliexpress_account_count %}
                     <button class="btn btn-primary pull-left quick-update-btn" id="quick-api-update"
                         data-store="{{store.id}}">Quick API Update</button>
+                {% else %}
+                    <a href="/settings#aliexpress" class="btn btn-primary pull-left"
+                    >Link AliExpress account</a>
+                {% endif %}
                 {% endif %}
                 <button class="btn btn-danger btn-outline pull-left stop-update-btn" style="display:none"
                     data-store="{{store.id}}">Stop Update</button>

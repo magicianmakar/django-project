@@ -195,6 +195,9 @@ class ShopifyStoreApi(ApiBase):
         store_type = data.get('store_type')
 
         result = shopify_orders_tasks.get_order_info_via_api(order, source_id, store_id, store_type)
+        if isinstance(result, str):
+            return self.api_error(result, status=500)
+
         if result.get('error_code'):
             if result.get('sub_code') == 'isv.target-not-found':
                 return self.api_error('Orders Sync: Not Authorized to view order.', status=500)

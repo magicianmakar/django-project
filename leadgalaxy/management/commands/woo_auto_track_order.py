@@ -72,6 +72,12 @@ class Command(DropifiedBaseCommand):
                 user = order.store.user
                 data = orders_tasks.get_order_info_via_api(order, order.source_id, order.store.id, 'woo', user)
                 if data and not data.get('error_msg'):
+                    if isinstance(data, str):
+                        self.write(f"Skipping tracking orders for user {user}: {data}")
+                        if data == 'Aliexpress Account is not connected':
+                            break
+                        else:
+                            continue
                     new_tracking_number = (data.get('tracking_number') and data.get('tracking_number') not in order.source_tracking)
                     if data.get('tracking_number') != '' and new_tracking_number:
                         self.add_tracking_number_to_order(order, user, data)

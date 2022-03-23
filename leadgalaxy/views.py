@@ -81,6 +81,7 @@ from shopified_core.utils import (
     using_replica,
     version_compare
 )
+from aliexpress_core.models import AliexpressAccount
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import ShopifyOrder, ShopifyOrderLog, ShopifyOrderShippingLine, ShopifyOrderVariant, ShopifySyncStatus
 from stripe_subscription.invoices.pdf import draw_pdf
@@ -3045,6 +3046,7 @@ def orders_track(request):
     return render(request, 'orders_track.html', {
         'store': store,
         'use_aliexpress_api': request.user.models_user.can('aliexpress_api_integration.use'),
+        'aliexpress_account_count': AliexpressAccount.objects.filter(user=request.user).count(),
         'orders': orders,
         'date': date,
         'order_threshold': order_threshold,

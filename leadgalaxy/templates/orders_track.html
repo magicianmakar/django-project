@@ -102,7 +102,7 @@
     </div>
 
 {% include 'partial/fulfillment_modal.html' with store=store notify=True only %}
-{% include 'partial/tracking_update_modal.html' with store=store use_aliexpress_api=use_aliexpress_api only %}
+{% include 'partial/tracking_update_modal.html' with store=store use_aliexpress_api=use_aliexpress_api aliexpress_account_count=aliexpress_account_count only %}
 
 {% endblock %}
 
