@@ -685,7 +685,7 @@ class ProductsApiTestCase(BaseTestCase):
         r = self.client.post('/api/user-profile', data)
         self.assertEqual(r.status_code, 200)
         data = {
-            'vat': '123456789123',
+            'vat': '123456789123941',
         }
         r = self.client.post('/api/user-profile', data)
         self.assertEqual(r.status_code, 400)
