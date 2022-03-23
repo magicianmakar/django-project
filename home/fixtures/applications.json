@@ -1,732 +1,746 @@
 [
-{
-  "model": "home.applicationmenu",
-  "pk": 1,
-  "fields": {
-    "title": "Store Control\u2122",
-    "slug": "store-control",
-    "sort_order": 5
-  }
-},
-{
-  "model": "home.applicationmenu",
-  "pk": 2,
-  "fields": {
-    "title": "Product Connect\u2122",
-    "slug": "product-connect",
-    "sort_order": 1
-  }
-},
-{
-  "model": "home.applicationmenu",
-  "pk": 3,
-  "fields": {
-    "title": "Order Control\u2122",
-    "slug": "order-control",
-    "sort_order": 3
-  }
-},
-{
-  "model": "home.applicationmenu",
-  "pk": 4,
-  "fields": {
-    "title": "Product Control\u2122",
-    "slug": "product-control",
-    "sort_order": 2
-  }
-},
-{
-  "model": "home.applicationmenu",
-  "pk": 5,
-  "fields": {
-    "title": "Research Suite\u2122",
-    "slug": "research-suite",
-    "sort_order": 4
-  }
-},
-{
-  "model": "home.applicationmenu",
-  "pk": 6,
-  "fields": {
-    "title": "Dropified Academy\u2122",
-    "slug": "dropified-academy",
-    "sort_order": 6
-  }
-},
-{
-  "model": "home.applicationmenu",
-  "pk": 7,
-  "fields": {
-    "title": "Marketing Suite\u2122",
-    "slug": "marketing-suite",
-    "sort_order": 0
-  }
-},
-{
-  "model": "home.applicationmenu",
-  "pk": 8,
-  "fields": {
-    "title": "Dropified Labs\u2122",
-    "slug": "dropified-labs",
-    "sort_order": 7
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 1,
-  "fields": {
-    "menu": 1,
-    "title": "Manage Stores",
-    "description": "Connect Dropified\u00ae to your favorite ecommerce platforms, all managed and controlled from one place.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/w2XGck5Zqx.svg",
-    "link": "https://www.dropified.com/manage-stores-2/",
-    "sort_order": 15,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 2,
-  "fields": {
-    "menu": 2,
-    "title": "Inventory Display\u2122",
-    "description": "Automatically display realtime inventory from your Vendors on your platform.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/z0Hbic2Nmx.svg",
-    "link": "https://www.dropified.com/inventory-display/",
-    "sort_order": 16,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 3,
-  "fields": {
-    "menu": 3,
-    "title": "Default Shipping Options\u2122",
-    "description": "Save time and reduce errors by specifying your desired shipping option as the default for order processing.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/pJI6AxoBZi.svg",
-    "link": "https://www.dropified.com/default-shipping-options/",
-    "sort_order": 39,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 4,
-  "fields": {
-    "menu": 4,
-    "title": "Youzign\u2122 Image Editor Integration",
-    "description": "Want an easy-to-use image editor similar to Canva? Dropified\u00ae integrates with Youzign, so you can seamlessly create and import your designs as unique and high-converting product images.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/D5hHzitzns.svg",
-    "link": "https://www.dropified.com/youzign-image-editor-integration/",
-    "sort_order": 36,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 5,
-  "fields": {
-    "menu": 5,
-    "title": "Dropified Insiders Report\u2122",
-    "description": "The Dropified Insiders Report\u2122 gives unique marketing insight to give you the top selling products from real marketplace sales data, compiled from our team\u2019s research, AI and data shared from marketplace partners.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/HWcuST3eJ5.svg",
-    "link": "https://www.dropified.com/dropified-insiders-report/",
-    "sort_order": 2,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 6,
-  "fields": {
-    "menu": 6,
-    "title": "Dropified Academy\u2122 Overview",
-    "description": "Grow your business and quickly become a Dropified power user with Dropified Academy\u2122.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/VetJ1n8ZQG.svg",
-    "link": "https://www.dropified.com/dropified-academy/",
-    "sort_order": 10,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 7,
-  "fields": {
-    "menu": 7,
-    "title": "Profit Dashboard\u2122",
-    "description": "See all of your store\u2019s sales data and instantly get the pulse of your business on one screen.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/k9jd3EIJyc.svg",
-    "link": "https://www.dropified.com/profit-dashboard-5/",
-    "sort_order": 4,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 8,
-  "fields": {
-    "menu": 8,
-    "title": "Dropified 3PL\u2122",
-    "description": "Send your products to a 3rd party warehouse and have them seamlessly connect to Dropified\u2019s other powerful apps.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/sInl6h5Fbk.svg",
-    "link": "https://www.dropified.com/dropified-3pl-2/",
-    "sort_order": 28,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 9,
-  "fields": {
-    "menu": 3,
-    "title": "AliExpress Order Audit\u2122",
-    "description": "AliExpress Order Audit\u2122 analyzes each of your orders and checks them for errors/mismatches with shipping addresses and supplier order numbers and flags them so you can keep your order history clean and accurate.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/7SNge8kpIp.svg",
-    "link": "https://www.dropified.com/aliexpress-order-audit/",
-    "sort_order": 22,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 10,
-  "fields": {
-    "menu": 3,
-    "title": "Inventory Payback\u2122",
-    "description": "Get paid back on wholesale products you purchase from AliExpress with Inventory Payback\u2122 from Dropified.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/8exYtNCdgc.svg",
-    "link": "https://www.dropified.com/inventory-payback-2/",
-    "sort_order": 23,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 11,
-  "fields": {
-    "menu": 2,
-    "title": "Product Connector\u2122",
-    "description": "The Product Connector\u2122 is powered by our unique Chrome Extension that utilizes APIs to connect products that you want to sell.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/W9SzFJvDzB.svg",
-    "link": "https://www.dropified.com/product-connector-2/",
-    "sort_order": 24,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 12,
-  "fields": {
-    "menu": 7,
-    "title": "Customer Service Playbook\u2122",
-    "description": "Great customer service is incredible for repeat buyers, an amazing customer experience and great reviews.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/ERBTBMMtsj.svg",
-    "link": "https://www.dropified.com/customer-service-playbook-2/",
-    "sort_order": 25,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 13,
-  "fields": {
-    "menu": 7,
-    "title": "Tube Hunt\u2122",
-    "description": "Use Tube Hunt\u2122 to quickly find and extract lists of highly relevant and popular YouTube videos that you can start showing your ads on\u2026 in minutes.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/6PAqwtVLwO.svg",
-    "link": "https://www.dropified.com/tubehunt-5/",
-    "sort_order": 26,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 14,
-  "fields": {
-    "menu": 7,
-    "title": "Dropified Affiliate\u2122",
-    "description": "Promote Dropified to earn recurring revenue at the rate of 20%.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/pppF4wNDDt.svg",
-    "link": "https://www.dropified.com/dropified-affiliate/",
-    "sort_order": 27,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 15,
-  "fields": {
-    "menu": 3,
-    "title": "Order X-Ray\u2122",
-    "description": "Order X-Ray\u2122 is a dashboard that provides an overview of your customer orders.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/KQZbmoKjT4.svg",
-    "link": "https://www.dropified.com/order-x-ray/",
-    "sort_order": 29,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 17,
-  "fields": {
-    "menu": 4,
-    "title": "Instant Image Downloader\u2122",
-    "description": "Download your favorite product images so you can post them to social media or make adjustments on your favorite editing platforms.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/W9qKqZgPGp.svg",
-    "link": "https://www.dropified.com/instant-image-downloader/",
-    "sort_order": 31,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 18,
-  "fields": {
-    "menu": 4,
-    "title": "Shopify Bulk Editor\u2122",
-    "description": "Bulk edit several product variants at one time by adjusting price, weight, product type, vendor and product tags.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/Ggc0PDsEt8.svg",
-    "link": "https://www.dropified.com/shopify-bulk-editor/",
-    "sort_order": 32,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 19,
-  "fields": {
-    "menu": 4,
-    "title": "Product Alerts\u2122",
-    "description": "Product Alerts\u2122 keeps you up-to-date of inventory and cost-related changes.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/AP5NaNM2wu.svg",
-    "link": "https://www.dropified.com/product-alerts-2/",
-    "sort_order": 0,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 20,
-  "fields": {
-    "menu": 5,
-    "title": "Custom Product Boards\u2122",
-    "description": "Save the killer products you discover to Dropified product boards with one click for easy category management, similar to how you would use Pinterest.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/BkRt7RrkQR.svg",
-    "link": "https://www.dropified.com/custom-product-boards/",
-    "sort_order": 1,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 21,
-  "fields": {
-    "menu": 7,
-    "title": "Power Affiliate Pro\u2122",
-    "description": "Once you hit a higher volume, or are a lifetime user, you can earn the max rate of 40% when promoting Dropified\u00ae.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/dFFrqNPJa5.svg",
-    "link": "https://www.dropified.com/power-affiliate-pro/",
-    "sort_order": 3,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 23,
-  "fields": {
-    "menu": 3,
-    "title": "AliExpress Order Exporter\u2122",
-    "description": "The AliExpress Order Exporter\u2122 solves the problem of getting order history out of AliExpress.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/O3Y6puB1JC.svg",
-    "link": "https://www.dropified.com/aliexpress-order-exporter/",
-    "sort_order": 6,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 24,
-  "fields": {
-    "menu": 2,
-    "title": "US Marketplace\u2122",
-    "description": "Reduce shipping times\u00a0with more reliable carriers to get your products in the hands of your customers faster! The US Marketplace\u2122 displays products from AliExpress marketplace that are already located in US warehouses.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/IR9OHtcNCh.svg",
-    "link": "https://www.dropified.com/us-marketplace/",
-    "sort_order": 7,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 25,
-  "fields": {
-    "menu": 7,
-    "title": "Call Flex\u2122",
-    "description": "Get complete flexibility and control of your very own toll free or local number.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/ZIJXNDran4.svg",
-    "link": "https://www.dropified.com/callflex-3/",
-    "sort_order": 8,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 26,
-  "fields": {
-    "menu": 8,
-    "title": "Sales Channels\u2122",
-    "description": "Connect and sell your products on sales channels like eBay, Amazon, Walmart, Facebook Marketplace, Google Shopping and more, all managed and controlled from one place.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/rZ902TtaZi.svg",
-    "link": "https://www.dropified.com/sales-channels/",
-    "sort_order": 9,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 27,
-  "fields": {
-    "menu": 4,
-    "title": "Vendor Control\u2122",
-    "description": "Have a product supplier that isn't working out?\u00a0Easily switch vendors in a matter of seconds while keeping existing product descriptions and edits unchanged!.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/1vmSmiw06T.svg",
-    "link": "https://www.dropified.com/vendor-control-2/",
-    "sort_order": 11,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 28,
-  "fields": {
-    "menu": 2,
-    "title": "Product Import Templates",
-    "description": "Product Import Templates save you time and reinforce brand messaging by allowing you to create custom product description templates for any product that you import with the Product Connector\u2122.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/HaBAXCzypQ.svg",
-    "link": "https://www.dropified.com/product-import-templates/",
-    "sort_order": 12,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 29,
-  "fields": {
-    "menu": 3,
-    "title": "Custom Products Notifier\u2122",
-    "description": "Some products on AliExpress can be customized\u00a0(for example their name on a necklace).",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/o0Kwf7XKB2.svg",
-    "link": "https://www.dropified.com/custom-products-notifier/",
-    "sort_order": 13,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 30,
-  "fields": {
-    "menu": 4,
-    "title": "Product Archiver\u2122",
-    "description": "Want to revert to your supplier\u2019s original product description? Save the original product information inside the Dropified\u00ae Portal so you can always reference it later whenever you\u2019d like.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/ZTmBgQFGBh.svg",
-    "link": "https://www.dropified.com/product-archiver/",
-    "sort_order": 14,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 32,
-  "fields": {
-    "menu": 3,
-    "title": "High Speed Captcha Solver\u2122",
-    "description": "You expect your order processing to flow smoothly, so when AliExpress throws up pesky CAPTCHAs it can really throw off your groove.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/JPCpdGk2br.svg",
-    "link": "https://www.dropified.com/high-speed-captcha-solver/",
-    "sort_order": 18,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 33,
-  "fields": {
-    "menu": 2,
-    "title": "Automatic Margin Assistant\u2122",
-    "description": "Automatic Margin Assistant\u2122 works with the Product Connector\u2122 and saves you time and ensures product profitability.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/8AV682e1zP.svg",
-    "link": "https://www.dropified.com/automatic-margin-assistant/",
-    "sort_order": 19,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 34,
-  "fields": {
-    "menu": 5,
-    "title": "AliExtractor\u2122",
-    "description": "With AliExtractor\u2122, use product data from AliExpress to find high selling products quickly with great profit margins.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/ygx0R6nYpj.svg",
-    "link": "https://www.dropified.com/aliextractor-3/",
-    "sort_order": 20,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 35,
-  "fields": {
-    "menu": 3,
-    "title": "Shipping Sync\u2122",
-    "description": "Shipping Sync\u2122 automatically syncs tracking numbers and shipping updates from your AliExpress suppliers to your eCommerce platform.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/OjXTOQEDLZ.svg",
-    "link": "https://www.dropified.com/shipping-sync-2/",
-    "sort_order": 21,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 36,
-  "fields": {
-    "menu": 3,
-    "title": "Dropified Order Bot\u2122",
-    "description": "Use the Dropified Order Bot\u2122 to automatically place multiple or single orders with your suppliers to place customer orders on multiple marketplaces.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/uOtyyQsYH1.svg",
-    "link": "https://www.dropified.com/dropified-order-bot/",
-    "sort_order": 33,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 37,
-  "fields": {
-    "menu": 7,
-    "title": "Swipe Box Headline Generator\u2122",
-    "description": "With the Swipe Box Headline Generator\u2122, instantly swipe proven headlines that you can use in your ads, sales copy and promotions.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/M2VTrGMXYX.svg",
-    "link": "https://www.dropified.com/swipe-box-headline-generator/",
-    "sort_order": 34,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 38,
-  "fields": {
-    "menu": 4,
-    "title": "Advanced Product Editor",
-    "description": "The Advanced Product Editor gives you control over all of your product information to create the best listing possible.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/VTUifgJFkf.svg",
-    "link": "https://www.dropified.com/advanced-product-editor-2/",
-    "sort_order": 35,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 39,
-  "fields": {
-    "menu": 4,
-    "title": "ProVariant\u2122",
-    "description": "ProVariant\u2122 gives you complete control over your product variants.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/XPCpJs7GJq.svg",
-    "link": "https://www.dropified.com/provariant/",
-    "sort_order": 37,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 40,
-  "fields": {
-    "menu": 4,
-    "title": "Google Product Feed\u2122",
-    "description": "Generate product feeds optimized for Google Shopping without having to spend money on extra apps.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/wLwZKk0lzm.svg",
-    "link": "https://www.dropified.com/google-product-feed/",
-    "sort_order": 38,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 41,
-  "fields": {
-    "menu": 7,
-    "title": "Ad Design Studio\u2122",
-    "description": "Ad Design Studio\u2122 allows you to create and edit stunning image ads.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/u25PoemInv.svg",
-    "link": "https://www.dropified.com/ad-design-studio/",
-    "sort_order": 40,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 42,
-  "fields": {
-    "menu": 4,
-    "title": "Product Image Editor\u2122",
-    "description": "Edit product images directly within Dropified\u00ae and have the updates saved instantly.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/OoL4lcFHMd.svg",
-    "link": "https://www.dropified.com/product-image-editor/",
-    "sort_order": 41,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 43,
-  "fields": {
-    "menu": 4,
-    "title": "Custom Product Images\u2122",
-    "description": "Want to use an external image editor to create custom or lifestyle images? No problem! Easily upload your own images\u00a0to product listings to make them pop with your own designs and branding.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/OYByrc5zha.svg",
-    "link": "https://www.dropified.com/custom-product-images/",
-    "sort_order": 42,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 44,
-  "fields": {
-    "menu": 3,
-    "title": "Custom Tracking URL\u2122",
-    "description": "Brand your Custom Tracking URL\u2122 with your domain name or a 3rd party service to provide a more seamless experience for customers to track their shipments.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/iXTRad78ar.svg",
-    "link": "https://www.dropified.com/custom-tracking-url-2/",
-    "sort_order": 44,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 45,
-  "fields": {
-    "menu": 7,
-    "title": "Sub Users\u2122",
-    "description": "Add your team (staff, contractors or other users) to Dropified\u00ae and control what areas they can access.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/fCNBct56Qc.svg",
-    "link": "https://www.dropified.com/sub-users/",
-    "sort_order": 45,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 46,
-  "fields": {
-    "menu": 4,
-    "title": "Advanced Bundles\u2122",
-    "description": "Combine multiple products together to create custom product bundles without having to purchase a separate app.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/K04oYbU4F2.svg",
-    "link": "https://www.dropified.com/advanced-bundles-2/",
-    "sort_order": 46,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 47,
-  "fields": {
-    "menu": 4,
-    "title": "Facebook Product Feed\u2122",
-    "description": "Generate product feeds optimized for Facebook\u00a0Dynamic Product Ads without having to spend money on extra apps.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/yxpkKMfvE9.svg",
-    "link": "https://www.dropified.com/facebook-product-feed/",
-    "sort_order": 43,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 48,
-  "fields": {
-    "menu": 4,
-    "title": "High Speed Reviews\u2122",
-    "description": "With High Speed Reviews\u2122, get real social proof from customers who have already reviewed the product by downloading reviews from AliExpress.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/xfqeyO1CsM.svg",
-    "link": "https://www.dropified.com/high-speed-reviews/",
-    "sort_order": 49,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 49,
-  "fields": {
-    "menu": 4,
-    "title": "Ali-Inventory Sync\u2122",
-    "description": "Automatically sync product inventory (from AliExpress) so that your inventory levels are available at a glance.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/avttV0WIVZ.svg",
-    "link": "https://www.dropified.com/ali-inventory-sync/",
-    "sort_order": 47,
-    "new_tab": true,
-    "plans": []
-  }
-},
-{
-  "model": "home.applicationmenuitem",
-  "pk": 50,
-  "fields": {
-    "menu": 3,
-    "title": "Tracking Delay Alerts\u2122",
-    "description": "Instantly be notified\u00a0if your supplier is late to ship out your customer orders.",
-    "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/WqSfrREc7M.svg",
-    "link": "https://www.dropified.com/tracking-delay-alerts/",
-    "sort_order": 48,
-    "new_tab": true,
-    "plans": []
-  }
-}
+    {
+        "model": "home.applicationmenu",
+        "pk": 1,
+        "fields": {
+            "title": "Store Control\u2122",
+            "slug": "store-control",
+            "sort_order": 5
+        }
+    },
+    {
+        "model": "home.applicationmenu",
+        "pk": 2,
+        "fields": {
+            "title": "Product Connect\u2122",
+            "slug": "product-connect",
+            "sort_order": 1
+        }
+    },
+    {
+        "model": "home.applicationmenu",
+        "pk": 3,
+        "fields": {
+            "title": "Order Control\u2122",
+            "slug": "order-control",
+            "sort_order": 3
+        }
+    },
+    {
+        "model": "home.applicationmenu",
+        "pk": 4,
+        "fields": {
+            "title": "Product Control\u2122",
+            "slug": "product-control",
+            "sort_order": 2
+        }
+    },
+    {
+        "model": "home.applicationmenu",
+        "pk": 5,
+        "fields": {
+            "title": "Research Suite\u2122",
+            "slug": "research-suite",
+            "sort_order": 4
+        }
+    },
+    {
+        "model": "home.applicationmenu",
+        "pk": 6,
+        "fields": {
+            "title": "Dropified Academy\u2122",
+            "slug": "dropified-academy",
+            "sort_order": 6
+        }
+    },
+    {
+        "model": "home.applicationmenu",
+        "pk": 7,
+        "fields": {
+            "title": "Marketing Suite\u2122",
+            "slug": "marketing-suite",
+            "sort_order": 0
+        }
+    },
+    {
+        "model": "home.applicationmenu",
+        "pk": 8,
+        "fields": {
+            "title": "Dropified Labs\u2122",
+            "slug": "dropified-labs",
+            "sort_order": 7
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 1,
+        "fields": {
+            "menu": 1,
+            "title": "Manage Stores",
+            "description": "Connect Dropified\u00ae to your favorite ecommerce platforms, all managed and controlled from one place.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/w2XGck5Zqx.svg",
+            "link": "https://www.dropified.com/manage-stores-2/",
+            "sort_order": 15,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 2,
+        "fields": {
+            "menu": 2,
+            "title": "Inventory Display\u2122",
+            "description": "Automatically display realtime inventory from your Vendors on your platform.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/z0Hbic2Nmx.svg",
+            "link": "https://www.dropified.com/inventory-display/",
+            "sort_order": 16,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 3,
+        "fields": {
+            "menu": 3,
+            "title": "Default Shipping Options\u2122",
+            "description": "Save time and reduce errors by specifying your desired shipping option as the default for order processing.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/pJI6AxoBZi.svg",
+            "link": "https://www.dropified.com/default-shipping-options/",
+            "sort_order": 39,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 4,
+        "fields": {
+            "menu": 4,
+            "title": "Youzign\u2122 Image Editor Integration",
+            "description": "Want an easy-to-use image editor similar to Canva? Dropified\u00ae integrates with Youzign, so you can seamlessly create and import your designs as unique and high-converting product images.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/D5hHzitzns.svg",
+            "link": "https://www.dropified.com/youzign-image-editor-integration/",
+            "sort_order": 36,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 5,
+        "fields": {
+            "menu": 5,
+            "title": "Dropified Insiders Report\u2122",
+            "description": "The Dropified Insiders Report\u2122 gives unique marketing insight to give you the top selling products from real marketplace sales data, compiled from our team\u2019s research, AI and data shared from marketplace partners.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/HWcuST3eJ5.svg",
+            "link": "https://www.dropified.com/dropified-insiders-report/",
+            "sort_order": 2,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 6,
+        "fields": {
+            "menu": 6,
+            "title": "Dropified Academy\u2122 Overview",
+            "description": "Grow your business and quickly become a Dropified power user with Dropified Academy\u2122.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/VetJ1n8ZQG.svg",
+            "link": "https://www.dropified.com/dropified-academy/",
+            "sort_order": 10,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 7,
+        "fields": {
+            "menu": 7,
+            "title": "Profit Dashboard\u2122",
+            "description": "See all of your store\u2019s sales data and instantly get the pulse of your business on one screen.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/k9jd3EIJyc.svg",
+            "link": "https://www.dropified.com/profit-dashboard-5/",
+            "sort_order": 4,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 8,
+        "fields": {
+            "menu": 8,
+            "title": "Dropified 3PL\u2122",
+            "description": "Send your products to a 3rd party warehouse and have them seamlessly connect to Dropified\u2019s other powerful apps.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/sInl6h5Fbk.svg",
+            "link": "https://www.dropified.com/dropified-3pl-2/",
+            "sort_order": 28,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 9,
+        "fields": {
+            "menu": 3,
+            "title": "AliExpress Order Audit\u2122",
+            "description": "AliExpress Order Audit\u2122 analyzes each of your orders and checks them for errors/mismatches with shipping addresses and supplier order numbers and flags them so you can keep your order history clean and accurate.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/7SNge8kpIp.svg",
+            "link": "https://www.dropified.com/aliexpress-order-audit/",
+            "sort_order": 22,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 10,
+        "fields": {
+            "menu": 3,
+            "title": "Inventory Payback\u2122",
+            "description": "Get paid back on wholesale products you purchase from AliExpress with Inventory Payback\u2122 from Dropified.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/8exYtNCdgc.svg",
+            "link": "https://www.dropified.com/inventory-payback-2/",
+            "sort_order": 23,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 11,
+        "fields": {
+            "menu": 2,
+            "title": "Product Connector\u2122",
+            "description": "The Product Connector\u2122 is powered by our unique Chrome Extension that utilizes APIs to connect products that you want to sell.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/W9SzFJvDzB.svg",
+            "link": "https://www.dropified.com/product-connector-2/",
+            "sort_order": 24,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 12,
+        "fields": {
+            "menu": 7,
+            "title": "Customer Service Playbook\u2122",
+            "description": "Great customer service is incredible for repeat buyers, an amazing customer experience and great reviews.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/ERBTBMMtsj.svg",
+            "link": "https://www.dropified.com/customer-service-playbook-2/",
+            "sort_order": 25,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 13,
+        "fields": {
+            "menu": 7,
+            "title": "Tube Hunt\u2122",
+            "description": "Use Tube Hunt\u2122 to quickly find and extract lists of highly relevant and popular YouTube videos that you can start showing your ads on\u2026 in minutes.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/6PAqwtVLwO.svg",
+            "link": "https://www.dropified.com/tubehunt-5/",
+            "sort_order": 26,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 14,
+        "fields": {
+            "menu": 7,
+            "title": "Dropified Affiliate\u2122",
+            "description": "Promote Dropified to earn recurring revenue at the rate of 20%.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/pppF4wNDDt.svg",
+            "link": "https://www.dropified.com/dropified-affiliate/",
+            "sort_order": 27,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 15,
+        "fields": {
+            "menu": 3,
+            "title": "Order X-Ray\u2122",
+            "description": "Order X-Ray\u2122 is a dashboard that provides an overview of your customer orders.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/KQZbmoKjT4.svg",
+            "link": "https://www.dropified.com/order-x-ray/",
+            "sort_order": 29,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 17,
+        "fields": {
+            "menu": 4,
+            "title": "Instant Image Downloader\u2122",
+            "description": "Download your favorite product images so you can post them to social media or make adjustments on your favorite editing platforms.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/W9qKqZgPGp.svg",
+            "link": "https://www.dropified.com/instant-image-downloader/",
+            "sort_order": 31,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 18,
+        "fields": {
+            "menu": 4,
+            "title": "Shopify Bulk Editor\u2122",
+            "description": "Bulk edit several product variants at one time by adjusting price, weight, product type, vendor and product tags.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/Ggc0PDsEt8.svg",
+            "link": "https://www.dropified.com/shopify-bulk-editor/",
+            "sort_order": 32,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 19,
+        "fields": {
+            "menu": 4,
+            "title": "Product Alerts\u2122",
+            "description": "Product Alerts\u2122 keeps you up-to-date of inventory and cost-related changes.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/AP5NaNM2wu.svg",
+            "link": "https://www.dropified.com/product-alerts-2/",
+            "sort_order": 0,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 20,
+        "fields": {
+            "menu": 5,
+            "title": "Custom Product Boards\u2122",
+            "description": "Save the killer products you discover to Dropified product boards with one click for easy category management, similar to how you would use Pinterest.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/BkRt7RrkQR.svg",
+            "link": "https://www.dropified.com/custom-product-boards/",
+            "sort_order": 1,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 21,
+        "fields": {
+            "menu": 7,
+            "title": "Power Affiliate Pro\u2122",
+            "description": "Once you hit a higher volume, or are a lifetime user, you can earn the max rate of 40% when promoting Dropified\u00ae.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/dFFrqNPJa5.svg",
+            "link": "https://www.dropified.com/power-affiliate-pro/",
+            "sort_order": 3,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 23,
+        "fields": {
+            "menu": 3,
+            "title": "AliExpress Order Exporter\u2122",
+            "description": "The AliExpress Order Exporter\u2122 solves the problem of getting order history out of AliExpress.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/O3Y6puB1JC.svg",
+            "link": "https://www.dropified.com/aliexpress-order-exporter/",
+            "sort_order": 6,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 24,
+        "fields": {
+            "menu": 2,
+            "title": "US Marketplace\u2122",
+            "description": "Reduce shipping times\u00a0with more reliable carriers to get your products in the hands of your customers faster! The US Marketplace\u2122 displays products from AliExpress marketplace that are already located in US warehouses.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/IR9OHtcNCh.svg",
+            "link": "https://www.dropified.com/us-marketplace/",
+            "sort_order": 7,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 25,
+        "fields": {
+            "menu": 7,
+            "title": "Call Flex\u2122",
+            "description": "Get complete flexibility and control of your very own toll free or local number.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/ZIJXNDran4.svg",
+            "link": "https://www.dropified.com/callflex-3/",
+            "sort_order": 8,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 26,
+        "fields": {
+            "menu": 8,
+            "title": "Sales Channels\u2122",
+            "description": "Connect and sell your products on sales channels like eBay, Amazon, Walmart, Facebook Marketplace, Google Shopping and more, all managed and controlled from one place.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/rZ902TtaZi.svg",
+            "link": "https://www.dropified.com/sales-channels/",
+            "sort_order": 9,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 27,
+        "fields": {
+            "menu": 4,
+            "title": "Vendor Control\u2122",
+            "description": "Have a product supplier that isn't working out?\u00a0Easily switch vendors in a matter of seconds while keeping existing product descriptions and edits unchanged!.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/1vmSmiw06T.svg",
+            "link": "https://www.dropified.com/vendor-control-2/",
+            "sort_order": 11,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 28,
+        "fields": {
+            "menu": 2,
+            "title": "Product Import Templates",
+            "description": "Product Import Templates save you time and reinforce brand messaging by allowing you to create custom product description templates for any product that you import with the Product Connector\u2122.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/HaBAXCzypQ.svg",
+            "link": "https://www.dropified.com/product-import-templates/",
+            "sort_order": 12,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 29,
+        "fields": {
+            "menu": 3,
+            "title": "Custom Products Notifier\u2122",
+            "description": "Some products on AliExpress can be customized\u00a0(for example their name on a necklace).",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/o0Kwf7XKB2.svg",
+            "link": "https://www.dropified.com/custom-products-notifier/",
+            "sort_order": 13,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 30,
+        "fields": {
+            "menu": 4,
+            "title": "Product Archiver\u2122",
+            "description": "Want to revert to your supplier\u2019s original product description? Save the original product information inside the Dropified\u00ae Portal so you can always reference it later whenever you\u2019d like.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/ZTmBgQFGBh.svg",
+            "link": "https://www.dropified.com/product-archiver/",
+            "sort_order": 14,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 32,
+        "fields": {
+            "menu": 3,
+            "title": "High Speed Captcha Solver\u2122",
+            "description": "You expect your order processing to flow smoothly, so when AliExpress throws up pesky CAPTCHAs it can really throw off your groove.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/JPCpdGk2br.svg",
+            "link": "https://www.dropified.com/high-speed-captcha-solver/",
+            "sort_order": 18,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 33,
+        "fields": {
+            "menu": 2,
+            "title": "Automatic Margin Assistant\u2122",
+            "description": "Automatic Margin Assistant\u2122 works with the Product Connector\u2122 and saves you time and ensures product profitability.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/8AV682e1zP.svg",
+            "link": "https://www.dropified.com/automatic-margin-assistant/",
+            "sort_order": 19,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 34,
+        "fields": {
+            "menu": 5,
+            "title": "AliExtractor\u2122",
+            "description": "With AliExtractor\u2122, use product data from AliExpress to find high selling products quickly with great profit margins.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/ygx0R6nYpj.svg",
+            "link": "https://www.dropified.com/aliextractor-3/",
+            "sort_order": 20,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 35,
+        "fields": {
+            "menu": 3,
+            "title": "Shipping Sync\u2122",
+            "description": "Shipping Sync\u2122 automatically syncs tracking numbers and shipping updates from your AliExpress suppliers to your eCommerce platform.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/OjXTOQEDLZ.svg",
+            "link": "https://www.dropified.com/shipping-sync-2/",
+            "sort_order": 21,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 36,
+        "fields": {
+            "menu": 3,
+            "title": "Dropified Order Bot\u2122",
+            "description": "Use the Dropified Order Bot\u2122 to automatically place multiple or single orders with your suppliers to place customer orders on multiple marketplaces.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/uOtyyQsYH1.svg",
+            "link": "https://www.dropified.com/dropified-order-bot/",
+            "sort_order": 33,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 37,
+        "fields": {
+            "menu": 7,
+            "title": "Swipe Box Headline Generator\u2122",
+            "description": "With the Swipe Box Headline Generator\u2122, instantly swipe proven headlines that you can use in your ads, sales copy and promotions.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/M2VTrGMXYX.svg",
+            "link": "https://www.dropified.com/swipe-box-headline-generator/",
+            "sort_order": 34,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 38,
+        "fields": {
+            "menu": 4,
+            "title": "Advanced Product Editor",
+            "description": "The Advanced Product Editor gives you control over all of your product information to create the best listing possible.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/VTUifgJFkf.svg",
+            "link": "https://www.dropified.com/advanced-product-editor-2/",
+            "sort_order": 35,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 39,
+        "fields": {
+            "menu": 4,
+            "title": "ProVariant\u2122",
+            "description": "ProVariant\u2122 gives you complete control over your product variants.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/XPCpJs7GJq.svg",
+            "link": "https://www.dropified.com/provariant/",
+            "sort_order": 37,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 40,
+        "fields": {
+            "menu": 4,
+            "title": "Google Product Feed\u2122",
+            "description": "Generate product feeds optimized for Google Shopping without having to spend money on extra apps.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/wLwZKk0lzm.svg",
+            "link": "https://www.dropified.com/google-product-feed/",
+            "sort_order": 38,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 41,
+        "fields": {
+            "menu": 7,
+            "title": "Ad Design Studio\u2122",
+            "description": "Ad Design Studio\u2122 allows you to create and edit stunning image ads.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/u25PoemInv.svg",
+            "link": "https://www.dropified.com/ad-design-studio/",
+            "sort_order": 40,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 42,
+        "fields": {
+            "menu": 4,
+            "title": "Product Image Editor\u2122",
+            "description": "Edit product images directly within Dropified\u00ae and have the updates saved instantly.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/OoL4lcFHMd.svg",
+            "link": "https://www.dropified.com/product-image-editor/",
+            "sort_order": 41,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 43,
+        "fields": {
+            "menu": 4,
+            "title": "Custom Product Images\u2122",
+            "description": "Want to use an external image editor to create custom or lifestyle images? No problem! Easily upload your own images\u00a0to product listings to make them pop with your own designs and branding.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/OYByrc5zha.svg",
+            "link": "https://www.dropified.com/custom-product-images/",
+            "sort_order": 42,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 44,
+        "fields": {
+            "menu": 3,
+            "title": "Custom Tracking URL\u2122",
+            "description": "Brand your Custom Tracking URL\u2122 with your domain name or a 3rd party service to provide a more seamless experience for customers to track their shipments.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/iXTRad78ar.svg",
+            "link": "https://www.dropified.com/custom-tracking-url-2/",
+            "sort_order": 44,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 45,
+        "fields": {
+            "menu": 7,
+            "title": "Sub Users\u2122",
+            "description": "Add your team (staff, contractors or other users) to Dropified\u00ae and control what areas they can access.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/fCNBct56Qc.svg",
+            "link": "https://www.dropified.com/sub-users/",
+            "sort_order": 45,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 46,
+        "fields": {
+            "menu": 4,
+            "title": "Advanced Bundles\u2122",
+            "description": "Combine multiple products together to create custom product bundles without having to purchase a separate app.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/K04oYbU4F2.svg",
+            "link": "https://www.dropified.com/advanced-bundles-2/",
+            "sort_order": 46,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 47,
+        "fields": {
+            "menu": 4,
+            "title": "Facebook Product Feed\u2122",
+            "description": "Generate product feeds optimized for Facebook\u00a0Dynamic Product Ads without having to spend money on extra apps.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/yxpkKMfvE9.svg",
+            "link": "https://www.dropified.com/facebook-product-feed/",
+            "sort_order": 43,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 48,
+        "fields": {
+            "menu": 4,
+            "title": "High Speed Reviews\u2122",
+            "description": "With High Speed Reviews\u2122, get real social proof from customers who have already reviewed the product by downloading reviews from AliExpress.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/xfqeyO1CsM.svg",
+            "link": "https://www.dropified.com/high-speed-reviews/",
+            "sort_order": 49,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 49,
+        "fields": {
+            "menu": 4,
+            "title": "Ali-Inventory Sync\u2122",
+            "description": "Automatically sync product inventory (from AliExpress) so that your inventory levels are available at a glance.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/avttV0WIVZ.svg",
+            "link": "https://www.dropified.com/ali-inventory-sync/",
+            "sort_order": 47,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 50,
+        "fields": {
+            "menu": 3,
+            "title": "Tracking Delay Alerts\u2122",
+            "description": "Instantly be notified\u00a0if your supplier is late to ship out your customer orders.",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/WqSfrREc7M.svg",
+            "link": "https://www.dropified.com/tracking-delay-alerts/",
+            "sort_order": 48,
+            "new_tab": true,
+            "plans": []
+        }
+    },
+    {
+        "model": "home.applicationmenuitem",
+        "pk": 51,
+        "fields": {
+            "menu": 8,
+            "title": "Roadmap",
+            "description": "Submit ideas, vote on features and provide feedback. Like and upvote your favorite roadmap features so our team knows where to focus!",
+            "icon_url": "https://dropified-staging-uploads.s3.amazonaws.com/uploads/u7690/app_menu_icons/P0vYluSmgx.svg",
+            "link": "https://app.dropified.com/roadmap",
+            "sort_order": 50,
+            "new_tab": false,
+            "plans": []
+        }
+    }
 ]

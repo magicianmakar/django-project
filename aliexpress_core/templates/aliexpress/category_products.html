@@ -147,7 +147,7 @@
 
                     <div class="card-image">
                       <input class="aliexpress-product-select new-layout-hidden" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox"/>
-                      <a href="{{ item.original_url }}" target="_blank">
+                      <a href="{% url 'goto_aliexpress' item.id %}" target="_blank">
                         <img class="no-img" src="{{item.images|force_https}}">
                       </a>
                     </div>
@@ -162,7 +162,7 @@
                       {% endif %}
                     </div>
                     <div class="card-content">
-                      <a href="{{ item.original_url }}" class="card-title" target="_blank"> {{item.title}}</a>
+                      <a href="{% url 'goto_aliexpress' item.id %}" class="card-title" target="_blank"> {{item.title}}</a>
                       <span class="card-price">{% money_format item.price currency=item.currency %}</span> </br>
                       <span class="card-reviews" data-rating="{{ item.rating }}"></span>
                       <div class="card-orders m-t-xs">
@@ -175,7 +175,7 @@
                             data-toggle="modal" data-target="#modal-aliexpress-import-products"> Import </button>
                         </div>
                         <div class="col-md-8 text-right">
-                          <a href="{{ item.details_url }}" class="btn btn-xs" target="_blank">
+                          <a href="{% url 'goto_aliexpress' item.id %}" class="btn btn-xs" target="_blank">
                             Details <i class="fa fa-external-link"></i>
                           </a>
                         </div>

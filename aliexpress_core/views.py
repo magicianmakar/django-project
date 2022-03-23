@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 
+from leadgalaxy.utils import get_admitad_affiliate_url, get_admitad_credentials
 from shopified_core import permissions
 from shopified_core.utils import app_link, external_link, safe_float, safe_int
 
@@ -60,7 +61,8 @@ class TokenView(RedirectView):
             )
 
             op = 'created' if created else 'updated'
-            messages.success(self.request, f"Your AliExpress account ({account.aliexpress_username}) was successfully {op}")
+            msg = f"Your AliExpress account ({account.aliexpress_username}) was successfully {op}"
+            messages.success(self.request, msg)
 
             return '/settings#aliexpress-settings'
 
@@ -226,3 +228,16 @@ class CategoryProducts(TemplateView):
         })
 
         return context
+
+
+@method_decorator(login_required, name='dispatch')
+class GotoAliexpress(RedirectView):
+    permanent = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        url = f"https://www.aliexpress.com/item/{kwargs.get('product_id')}.html"
+        admitad_credentials = get_admitad_credentials(self.request.user.models_user)
+        details_url = get_admitad_affiliate_url(admitad_credentials[0], url,
+                                                user=self.request.user.models_user)
+
+        return details_url

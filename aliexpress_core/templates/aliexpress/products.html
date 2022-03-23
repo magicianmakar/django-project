@@ -148,7 +148,7 @@
 
                     <div class="card-image">
                       <input class="aliexpress-product-select new-layout-hidden" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox"/>
-                      <a href="{% if upsell %}#{% else %}{{ item.original_url }}{% endif %}" target="_blank">
+                      <a href="{% if upsell %}#{% else %}{% url 'goto_aliexpress' item.id %}{% endif %}" target="_blank">
                         <img class="no-img" src="{{item.images|force_https}}">
                       </a>
                     </div>
@@ -163,7 +163,7 @@
                       {% endif %}
                     </div>
                     <div class="card-content">
-                      <a href="{% if upsell %}#{% else %}{{ item.original_url }}{% endif %}" class="card-title" target="_blank"> {{item.title}}</a>
+                      <a href="{% if upsell %}#{% else %}{% url 'goto_aliexpress' item.id %}{% endif %}" class="card-title" target="_blank"> {{item.title}}</a>
                       <span class="card-price">{% money_format item.price currency=item.currency %}</span> </br>
                       <span class="card-reviews" data-rating="{{ item.rating }}"></span>
                       <div class="card-orders m-t-xs">
@@ -176,7 +176,7 @@
                             {% if not upsell %}data-toggle="modal" data-target="#modal-aliexpress-import-products"{% endif %}> Import </button>
                         </div>
                         <div class="col-md-8 text-right">
-                          <a href="{% if upsell %}#{% else %}{{ item.details_url }}{% endif %}" class="btn btn-xs" target="_blank">
+                          <a href="{% if upsell %}#{% else %}{% url 'goto_aliexpress' item.id %}{% endif %}" class="btn btn-xs" target="_blank">
                             Details <i class="fa fa-external-link"></i>
                           </a>
                         </div>

@@ -79,7 +79,7 @@
 {% block extracss %}
     <style type="text/css">
         {% if not article.show_searchbar %}
-            .navbar-header {
+            .navbar-header, .page-search-nav {
                 display: none !important;
             }
         {% endif %}
@@ -96,6 +96,15 @@
             }
             #page-wrapper {
                 margin: 0 !important;
+            }
+
+            .row.border-bottom.page-search-nav, .navbar-minimalize {
+                display: none !important;
+            }
+
+            .wrapper-content, .article .ibox-content {
+                padding: 0 !important;
+                z-index: 3000;
             }
         {% endif %}
 

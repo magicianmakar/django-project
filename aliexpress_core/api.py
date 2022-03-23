@@ -413,6 +413,8 @@ class AliexpressFulfillHelper():
                     variant_id = line_item['line']['variant_id']
 
                 # Get Shipping Method from Advanced Variant Mapping
+                if country_code == 'UK':
+                    country_code = 'GB'
                 shipping_mapping = product_obj.get_shipping_for_variant(line_item['supplier'].id, variant_id, country_code)
                 if shipping_mapping is not None:
                     item.logistics_service_name = shipping_mapping.get('method')
@@ -571,9 +573,18 @@ class ShippingMethods():
 
         send_goods_country_code = 'CN'
         for v in self.variant:
-            if v.get('title').lower() == 'united states':
-                send_goods_country_code = 'US'
-                break
+            if isinstance(v, dict):
+                if v.get('title'):
+                    if v.get('title').lower().strip() == 'united states':
+                        send_goods_country_code = 'US'
+                        break
+            elif isinstance(v, str):
+                if v.lower().strip() == 'united states':
+                    send_goods_country_code = 'US'
+                    break
+            else:
+                return None
+
         data = {
             "product_id": self.product_id,
             "product_num": self.quantity,

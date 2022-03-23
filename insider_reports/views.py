@@ -76,7 +76,7 @@ def products_details(request, alibaba_product_id):
     if not request.user.can('insider_reports.use'):
         return render(request, 'insider_reports/mock_products_list.html', )
 
-    api_url = f'dropshipping-api/ranked-products?&alibaba_product_id={alibaba_product_id}'
+    api_url = f'dropshipping-api/ranked-products?include_nontop=true&alibaba_product_id={alibaba_product_id}'
     print(api_url)
 
     try:
