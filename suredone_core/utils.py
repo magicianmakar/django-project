@@ -109,7 +109,8 @@ class SureDoneUtils:
             if verify_custom_fields:
                 failed_sets = self.sd_account.verify_custom_fields_created(all_options_data)
                 failed_variant_fields = self.sd_account.verify_variation_fields(all_options_data)
-                if failed_sets or failed_variant_fields:
+                missing_fb_field_mappings = self.sd_account.verify_fb_fields_mapping(all_options_data)
+                if failed_sets or failed_variant_fields or missing_fb_field_mappings:
                     from .tasks import configure_user_custom_fields
                     configure_user_custom_fields.apply_async(kwargs={
                         'sd_account_id': self.sd_account.id,

@@ -247,7 +247,7 @@ class CategoryProducts(TemplateView):
 
 @method_decorator(login_required, name='dispatch')
 class ProductsRedirectView(RedirectView):
-    permanent = True
+    permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
         try:

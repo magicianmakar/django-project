@@ -45,7 +45,7 @@ from shopified_core.utils import (
     order_data_cache,
     safe_float,
     safe_int,
-    safe_json,
+    safe_json
 )
 from suredone_core.utils import get_daterange_filters
 
@@ -874,10 +874,6 @@ class AuthAcceptRedirectView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         user = self.request.user
         username = self.request.GET.get('username')
-
-        if EbayStore.objects.filter(store_username=username, is_active='True').exists():
-            messages.error(self.request, 'This eBay store already exists! Please try again with another eBay store.')
-            return reverse('ebay:index')
 
         ebay_utils = EbayUtils(user)
         sd_api_resp = ebay_utils.api.authorize_ebay_complete_legacy()

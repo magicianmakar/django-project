@@ -7,6 +7,8 @@ from django.core.cache import cache
 
 from leadgalaxy.models import ShopifyStore
 from commercehq_core.models import CommerceHQStore
+from ebay_core.models import EbayStore
+from facebook_core.models import FBStore
 from woocommerce_core.models import WooStore
 from gearbubble_core.models import GearBubbleStore
 from groovekart_core.models import GrooveKartStore
@@ -45,7 +47,9 @@ def user_can_add(user, obj, raise_on_error=True):
                 isinstance(obj, WooStore) or \
                 isinstance(obj, GearBubbleStore) or \
                 isinstance(obj, BigCommerceStore) or \
-                isinstance(obj, GrooveKartStore):
+                isinstance(obj, GrooveKartStore) or \
+                isinstance(obj, EbayStore) or \
+                isinstance(obj, FBStore):
             return raise_or_return_result("Sub-User can not add new stores", raise_on_error=raise_on_error)
 
         can = obj_user == user.profile.subuser_parent
@@ -69,8 +73,12 @@ def user_can_add(user, obj, raise_on_error=True):
                     stores = user.profile.get_gkart_stores(flat=True)
                 elif isinstance(store, BigCommerceStore):
                     stores = user.profile.get_bigcommerce_stores(flat=True)
+                elif isinstance(store, EbayStore):
+                    stores = user.profile.get_ebay_stores(flat=True)
+                elif isinstance(store, FBStore):
+                    stores = user.profile.get_fb_stores(flat=True)
                 else:
-                    return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
+                    return raise_or_return_result("Unknown Store Type", raise_on_error=raise_on_error)
 
                 if store.id not in stores:
                     return raise_or_return_result("You don't have autorization to edit this store.", raise_on_error=raise_on_error)
@@ -96,7 +104,9 @@ def user_can_view(user, obj, raise_on_error=True, superuser_can=True):
                     isinstance(obj, WooStore) or \
                     isinstance(obj, GrooveKartStore) or \
                     isinstance(obj, BigCommerceStore) or \
-                    isinstance(obj, GearBubbleStore):
+                    isinstance(obj, GearBubbleStore) or \
+                    isinstance(obj, EbayStore) or \
+                    isinstance(obj, FBStore):
                 store = obj
             elif hasattr(obj, 'store'):
                 store = obj.store
@@ -116,8 +126,12 @@ def user_can_view(user, obj, raise_on_error=True, superuser_can=True):
                     stores = user.profile.get_gkart_stores(flat=True)
                 elif isinstance(store, BigCommerceStore):
                     stores = user.profile.get_bigcommerce_stores(flat=True)
+                elif isinstance(store, EbayStore):
+                    stores = user.profile.get_ebay_stores(flat=True)
+                elif isinstance(store, FBStore):
+                    stores = user.profile.get_fb_stores(flat=True)
                 else:
-                    return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
+                    return raise_or_return_result("Unknown Store Type", raise_on_error=raise_on_error)
 
                 if store.id not in stores:
                     return raise_or_return_result("You don't have autorization to view this store.", raise_on_error=raise_on_error)
@@ -139,7 +153,9 @@ def user_can_edit(user, obj, raise_on_error=True):
                 isinstance(obj, WooStore) or \
                 isinstance(obj, GrooveKartStore) or \
                 isinstance(obj, BigCommerceStore) or \
-                isinstance(obj, GearBubbleStore):
+                isinstance(obj, GearBubbleStore) or \
+                isinstance(obj, EbayStore) or \
+                isinstance(obj, FBStore):
             return raise_or_return_result("Sub-User can not edit stores", raise_on_error=raise_on_error)
 
         can = obj_user == user.profile.subuser_parent
@@ -162,8 +178,12 @@ def user_can_edit(user, obj, raise_on_error=True):
                     stores = user.profile.get_gkart_stores(flat=True)
                 elif isinstance(store, BigCommerceStore):
                     stores = user.profile.get_bigcommerce_stores(flat=True)
+                elif isinstance(store, EbayStore):
+                    stores = user.profile.get_ebay_stores(flat=True)
+                elif isinstance(store, FBStore):
+                    stores = user.profile.get_fb_stores(flat=True)
                 else:
-                    return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
+                    return raise_or_return_result("Unknown Store Type", raise_on_error=raise_on_error)
 
                 if store.id not in stores:
                     return raise_or_return_result("You don't have autorization to view this store.", raise_on_error=raise_on_error)
@@ -185,7 +205,9 @@ def user_can_delete(user, obj, raise_on_error=True):
                 isinstance(obj, WooStore) or \
                 isinstance(obj, GrooveKartStore) or \
                 isinstance(obj, BigCommerceStore) or \
-                isinstance(obj, GearBubbleStore):
+                isinstance(obj, GearBubbleStore) or \
+                isinstance(obj, EbayStore) or \
+                isinstance(obj, FBStore):
             return raise_or_return_result("Sub-User can not delete stores", raise_on_error=raise_on_error)
 
         can = obj_user == user.profile.subuser_parent
@@ -279,6 +301,8 @@ def can_add_product(user, ignore_daily_limit=False):
         user_count += profile.user.gearbubbleproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
         user_count += profile.user.groovekartproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
         user_count += profile.user.bigcommerceproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
+        user_count += profile.user.ebayproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
+        user_count += profile.user.fbproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
 
         cache.set(products_count_key, user_count, timeout=600)
 

@@ -150,12 +150,46 @@ class SureDoneAccount(StoreBase):
         options_config = self.parsed_options_config
         return bool(options_config.get('business_country') and options_config.get('business_zip'))
 
+    def verify_fb_fields_mapping(self, options: dict):
+        stores = self.facebook_core_stores.all()
+        missing_fields_per_store = {}
+        required_field_mappings = {
+            'link': 'dropifiedfbproductlink',
+            'description': 'longdescription'
+        }
+        for store in stores:
+            prefix = store.instance_prefix
+            plugin_settings = safe_json(options.get(f'plugin_settings_{prefix}')).get('sets', {})
+            fields_mapping = plugin_settings.get('custom_field_mappings', {}).get('value', {})
+
+            # If there are 0 field mappings, SureDone returns a list for custom_field_mappings.value
+            if not isinstance(fields_mapping, dict):
+                missing_fields_per_store[store.filter_instance_id] = required_field_mappings
+
+            # If there are some field mappings, verify each mapping pair separately
+            else:
+                current_missing_pairs = {}
+                for key, value in required_field_mappings.items():
+                    if fields_mapping.get(key) != value:
+                        current_missing_pairs[key] = value
+
+                if current_missing_pairs:
+                    # It's important to include the existing field mappings in the request body to update settings
+                    # because otherwise they will be erased, i.e. a request to update field mappings overwrites a
+                    # list of field mappings that already exists with a new one removing anything that was not included
+                    missing_fields_per_store[store.filter_instance_id] = {
+                        **fields_mapping,
+                        **current_missing_pairs,
+                    }
+
+        return missing_fields_per_store
+
 
 class SureDoneStoreBase(StoreBase):
     class Meta(StoreBase.Meta):
         abstract = True
 
-    sd_account = models.ForeignKey('suredone_core.SureDoneAccount', related_name='%(app_label)sstores', on_delete=models.CASCADE,
+    sd_account = models.ForeignKey('suredone_core.SureDoneAccount', related_name='%(app_label)s_stores', on_delete=models.CASCADE,
                                    verbose_name='Parent SureDone Account')
     store_instance_id = models.IntegerField(db_index=True, editable=False, verbose_name='Store\'s instance ID')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -198,13 +232,17 @@ class SureDoneStoreBase(StoreBase):
 
         return 0 if instance_id == 1 else instance_id
 
+    @property
+    def instance_prefix_id(self):
+        return '' if self.store_instance_id == 1 else f'{self.store_instance_id}'
+
 
 class SureDoneProductBase(ProductBase):
     class Meta(ProductBase.Meta):
         abstract = True
     parsed_media_links = []
 
-    sd_account = models.ForeignKey(SureDoneAccount, related_name='%(app_label)sproducts', null=True, on_delete=models.CASCADE)
+    sd_account = models.ForeignKey(SureDoneAccount, related_name='%(app_label)s_products', null=True, on_delete=models.CASCADE)
 
     guid = models.CharField(max_length=100, blank=False, db_index=True, unique=True, verbose_name='SureDone GUID')
     sku = models.CharField(max_length=100, blank=False, db_index=True, verbose_name='SureDone SKU')

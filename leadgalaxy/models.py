@@ -104,6 +104,16 @@ SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS = (
     ('view_profit_dashboard', 'View profit dashboard')
 )
 
+SUBUSER_EBAY_STORE_PERMISSIONS = (
+    *SUBUSER_STORE_PERMISSIONS_BASE,
+    ('send_to_ebay', 'Send products to eBay'),
+)
+
+SUBUSER_FB_STORE_PERMISSIONS = (
+    *SUBUSER_STORE_PERMISSIONS_BASE,
+    ('send_to_facebook', 'Send products to Facebook'),
+)
+
 PRICE_MARKUP_TYPES = (
     ('margin_percent', 'Increase by percentage'),
     ('margin_amount', 'Increase by amount'),
@@ -192,6 +202,8 @@ class UserProfile(models.Model):
             self.user.shopifyboard_set.filter(products__isnull=False).exists(),
             self.user.commercehqboard_set.filter(products__isnull=False).exists(),
             self.user.wooboard_set.filter(products__isnull=False).exists(),
+            self.user.ebayboard_set.filter(products__isnull=False).exists(),
+            self.user.fbboard_set.filter(products__isnull=False).exists(),
             self.user.gearbubbleboard_set.filter(products__isnull=False).exists(),
             self.user.groovekartboard_set.filter(products__isnull=False).exists(),
             self.user.bigcommerceboard_set.filter(products__isnull=False).exists(),

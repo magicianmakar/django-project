@@ -25,7 +25,11 @@ class FBUtils(SureDoneUtils):
         if 'facebook' in plugin_settings.get('context', {}):
             active_instances.append(0)
 
-        additional_fb_channels = plugin_settings.get('instance', {}).get('facebook', {}).values()
+        try:
+            additional_fb_channels = plugin_settings.get('instance', {}).get('facebook', {}).values()
+        except AttributeError:
+            additional_fb_channels = []
+
         active_instances.extend([i.get('instance') for i in additional_fb_channels])
         return active_instances
 
@@ -87,6 +91,7 @@ class FBUtils(SureDoneUtils):
 
         if auth_url:
             pass
+            # TODO: uncomment once SureDone supports dynamic redirect URL
             # subdomain = 'dev' if settings.DEBUG else 'app'
             # redirect_url = urllib.parse.quote_plus(f'https://{subdomain}.dropified.com/fb/accept-auth')
             # state = re.search('state=.+&', auth_url).group(0).replace('&', '')
@@ -95,6 +100,19 @@ class FBUtils(SureDoneUtils):
             # auth_url = auth_url.replace(state, f'state={new_state}')
 
         return auth_url
+
+    def get_fb_shop_options(self, instance_id):
+        resp = self.api.get_fb_channel_auth_url(instance_id=instance_id)
+        resp.raise_for_status()
+
+        commerce_managers = resp.json().get('results', {}).get('successful', {}).get('commerce_managers', [])
+        return commerce_managers
+
+    def onboard_fb_instance(self, cms_id, instance_id):
+        resp = self.api.post_fb_onboard_instance(cms_id=cms_id, instance_id=instance_id)
+        resp.raise_for_status()
+
+        return resp.json().get('results', {})
 
     def sync_fb_stores(self):
         if not self.api:
@@ -114,7 +132,10 @@ class FBUtils(SureDoneUtils):
             self.sync_or_create_store_instance(1, all_options_data)
 
         # 3.2. Check the rest of the facebook instances
-        additional_fb_channels = list(plugin_settings.get('instance', {}).get('facebook', {}).values())
+        try:
+            additional_fb_channels = list(plugin_settings.get('instance', {}).get('facebook', {}).values())
+        except AttributeError:
+            additional_fb_channels = []
 
         for channel in additional_fb_channels:
             instance_id = channel.get('instance')
@@ -134,8 +155,9 @@ class FBUtils(SureDoneUtils):
         except FBStore.DoesNotExist:
             # Create a new store to reflect the SureDone's data
 
+            creds = fb_store_data.get('creds', {})
             # system_token = fb_store_data.get('creds', {}).get('system_token', {}).get('value')
-            access_token = fb_store_data.get('creds', {}).get('access_token', {}).get('value')
+            access_token = creds.get('access_token', {}).get('value')
 
             is_active = bool(access_token)
 
@@ -146,6 +168,7 @@ class FBUtils(SureDoneUtils):
                 title=instance_title,
                 commerce_manager_id=fb_store_data.get('sets', {}).get('commerce_manager_id', {}).get('value'),
                 is_active=is_active,
+                creds=creds,
             )
 
     def product_save_draft(self, product_data: dict, store: FBStore, notes: str, activate: bool):

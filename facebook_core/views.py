@@ -135,7 +135,7 @@ class ProductDetailView(DetailView):
         product_data_dict = {k: v for k, v in product_data_dict.items()
                              if k not in ['sd_updated_at', 'updated_at', 'created_at']}
 
-        context['product_data'] = json.dumps(product_data_dict)
+        context['product_data'] = json.dumps(product_data_dict, default=str)
         context['variants'] = json.dumps(self.object.variants_for_details_view)
         variants_config = self.object.parsed.get('variantsconfig', '{}')
         context['variants_config'] = json.loads(variants_config) if variants_config else []
@@ -878,6 +878,7 @@ class AuthAcceptRedirectView(RedirectView):
         fb_state = self.request.GET.get('state')
 
         fb_utils = FBUtils(user)
+        sd_api_resp = None
         try:
             sd_api_resp = fb_utils.api.authorize_fb_complete(
                 instance=instance_id,
@@ -888,6 +889,12 @@ class AuthAcceptRedirectView(RedirectView):
             )
             sd_api_resp.raise_for_status()
         except HTTPError:
+            capture_exception(extra={
+                'description': 'API error when authorizing a Facebook store with SureDone.',
+                'suredone_account_id': fb_utils.sd_account.id,
+                'response_code': sd_api_resp.status_code if sd_api_resp else None,
+                'response_reason': sd_api_resp.reason if sd_api_resp else None,
+            })
             messages.error(self.request, 'Something went wrong when authorizing a Facebook store. Please try again.')
             return reverse('fb:index')
 
@@ -909,5 +916,48 @@ class AuthAcceptRedirectView(RedirectView):
             messages.error(self.request, error)
             return reverse('fb:index')
 
-        messages.success(self.request, 'Your Facebook store has been added!')
-        return reverse('fb:index')
+        instance_id_for_db = instance_id if instance_id != 0 else 1
+        try:
+            store = FBStore.objects.get(store_instance_id=instance_id_for_db, user=user.models_user)
+        except FBStore.DoesNotExist:
+            store = FBStore.objects.create(
+                sd_account=fb_utils.sd_account,
+                store_instance_id=instance_id_for_db,
+                user=user.models_user,
+                is_active=True,
+            )
+
+        messages.success(self.request, 'Your Facebook store has been added! Please complete the onboarding process below to complete authorization.')
+        return reverse('fb:onboard', kwargs={'pk': store.id})
+
+
+class CompleteAuthView(DetailView):
+    model = FBStore
+    context_object_name = 'store'
+    template_name = 'facebook/shop_onboarding.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('facebook.use'):
+            raise permissions.PermissionDenied()
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        permissions.user_can_view(self.request.user, self.object)
+        context['breadcrumbs'] = ['Facebook Shop Onboarding']
+
+        if self.object.auth_completed:
+            error = f'The Facebook Store <strong>{self.object.title}</strong> has already been onboarded.'
+            messages.error(self.request, error)
+            return context
+
+        fb_utils = FBUtils(self.request.user)
+        try:
+            context['fb_shops'] = fb_utils.get_fb_shop_options(self.object.filter_instance_id)
+        except HTTPError:
+            error = 'Failed to load Facebook commerce managers. Please try again later.'
+            messages.error(self.request, error)
+
+        return context

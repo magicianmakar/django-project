@@ -4,8 +4,10 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
 from shopified_core.decorators import add_to_class
 from shopified_core.models import BoardBase, OrderTrackBase, UserUploadBase
@@ -30,6 +32,8 @@ class FBStore(SureDoneStoreBase):
     commerce_manager_id = models.CharField(default='', null=True, blank=True, max_length=100,
                                            verbose_name='Facebook Commerce Manager ID')
 
+    creds = JSONField(default=dict, verbose_name='Facebook creds')
+
     def sync(self, instance_title: str, options_data: dict):
         store_prefix = f"facebook{'' if self.store_instance_id == 1 else self.store_instance_id}"
         fb_store_data = safe_json(options_data.get(f'plugin_settings_{store_prefix}'))
@@ -38,13 +42,26 @@ class FBStore(SureDoneStoreBase):
         self.store_name = fb_sets_data.get('page_shop_name', {}).get('value')
         self.commerce_manager_id = fb_sets_data.get('commerce_manager_id', {}).get('value')
 
-        access_token = fb_store_data.get('creds', {}).get('access_token', {}).get('value')
+        self.creds = fb_store_data.get('creds', {})
+        access_token = self.creds.get('access_token', {}).get('value')
         self.is_active = bool(access_token)
 
         # Get facebook account title
         self.title = instance_title
 
         self.save()
+
+    @property
+    def system_token(self):
+        return self.creds.get('system_token', {}).get('value')
+
+    @property
+    def auth_completed(self):
+        return self.system_token
+
+    @property
+    def instance_prefix(self):
+        return f'facebook{self.instance_prefix_id}'
 
     def get_store_url(self):
         if self.commerce_manager_id:
@@ -89,6 +106,8 @@ class FBProduct(SureDoneProductBase):
     page_link = models.CharField(max_length=510, blank=True, default='', verbose_name='Product page link')
     status = models.CharField(max_length=50, blank=True, null=True, default='',
                               verbose_name='Product publication status on Facebook')
+    last_export_date = models.DateTimeField(null=True, blank=True,
+                                            verbose_name='Datetime of product export to Facebook')
 
     def __str__(self):
         return f'<FacebookProduct: {self.id}>'
@@ -97,9 +116,17 @@ class FBProduct(SureDoneProductBase):
     def is_connected(self):
         return self.status == 'active'
 
+    def get_export_date_delta(self):
+        try:
+            return (timezone.now() - self.last_export_date).seconds
+        except:
+            return None
+
     @property
     def is_pending(self):
-        return self.status == 'pending'
+        export_date_delta = self.get_export_date_delta()
+        is_pending = self.status == 'pending' or (export_date_delta and export_date_delta / 3600 < 3)
+        return not self.is_connected and is_pending
 
     @property
     def parsed(self):

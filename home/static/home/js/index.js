@@ -1933,6 +1933,34 @@
         });
     });
 
+    $('.fb-delete-store-btn').click(function(e) {
+        e.preventDefault();
+        var storeId = $(this).data('store-id');
+
+        swal({
+            title: 'Are you sure?',
+            text: 'Please, confirm that you want to delete this store. This action cannot be undone.',
+            type: 'warning',
+            showCancelButton: true,
+            showLoaderOnConfirm: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: 'Yes, delete it!',
+            closeOnConfirm: false
+        }, function() {
+            $.ajax({
+                url: api_url('store', 'fb') + '?' + $.param({id: storeId}),
+                method: 'DELETE',
+                success: function() {
+                    $('#fb-store-row-' + storeId).hide();
+                    swal('Deleted!', 'The store has been deleted.', 'success');
+                },
+                error: function(data) {
+                    displayAjaxError('Delete Store', data);
+                }
+            });
+        });
+    });
+
     $('.filter-store-btn').click(function (e) {
         e.preventDefault();
 
