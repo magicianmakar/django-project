@@ -486,6 +486,30 @@ def subscription_cancel(request):
 
 @login_required
 @csrf_protect
+def subscription_apply_cancellation_coupon(request):
+    user = request.user
+
+    # switch to lifetime free is it was previously set
+    if user.get_config('cancellation_coupon_applied'):
+        return JsonResponse({'error': 'Coupon was already applied before'}, status=500)
+
+    subscription = user.stripesubscription_set.latest('created_at')
+    sub = subscription.refresh()
+
+    res = stripe.Subscription.modify(
+        sub.id,
+        coupon='cancellation-payoff',
+    )
+
+    if res['discount']:
+        user.set_config('cancellation_coupon_applied', True)
+        return JsonResponse({'status': 'ok'})
+    else:
+        return JsonResponse({'error': 'Unknown error occured'}, status=500)
+
+
+@login_required
+@csrf_protect
 def subscription_activate(request):
     user = request.user
 

@@ -39,13 +39,7 @@
                                            cancel-sub-btn
                                            continue-cancel
                                            itooltip"
-                                    {% if item.plan.is_build %}
-                                    data-steps="#modal-keep-my-plan,#modal-pause-plan"
-                                    {% elif item.plan.is_plod %}
-                                    data-steps="#modal-keep-my-plan"
-                                    {% else %}
-                                    data-steps="#modal-on-grandfathered-plan,#modal-pause-plan"
-                                    {% endif %}
+                                    data-steps="#modal-cancel-plan-options,#modal-cancel-confirm"
                                     title="Cancel Your Subscription"
                                     data-subscription="{{item.id}}"
                                     data-status="{{status.status}}"

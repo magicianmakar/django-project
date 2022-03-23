@@ -1,3 +1,199 @@
+{% load compress %}
+<div id="modal-cancel-plan-options" class="modal stripe-cancel-step" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="width: 1300px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h3 class="modal-title">Change Your Plan</h3>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+
+                        <div class="plan-table plans-monthly m-t flex-row">
+                            {% if current_plan_revision != current_plan.revision %}
+                                <div class="flex-column">
+                                    <div class="plan-wrapper selected">
+                                        <div class="subsciption-plan import-monthly-shopify" data-plan-title="Keep Plan" data-plan="99" data-trial-days="">
+                                            <p class="top-line">You're currently on<br>&nbsp </p>
+                                            <h3>{{ current_plan.title }}</h3>
+                                            <hr>
+
+                                        </div>
+
+                                        <div class="features">
+                                            <div data-index="0" data-plan="import-monthly-shopify" class="plan-feature ">
+                                                <p class="plan-feature">
+                                                 Dropified's legacy plans are no longer publicly available. Legacy plans have different features and limits compared to current plans. Still have questions? Contact our friendly customer success team.
+                                                </p>
+
+
+                                            </div>
+
+
+                                        </div>
+                                        <p class="cta">
+                                                <p class="price">{{ current_plan.get_price }}</p>
+                                                    <button type="button" data-dismiss="modal" class="btn btn-primary">
+                                                        Keep Current Plan
+                                                    </button>
+
+                                            </p>
+
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% if current_plan_revision != stripe_downgrade_plan and stripe_downgrade_plan %}
+                             <div class="flex-column">
+                                    <div class="plan-wrapper ">
+                                        <div class="subsciption-plan import-monthly-shopify" data-plan-title="Keep Plan" data-plan="{{ stripe_downgrade_plan.id }}" data-trial-days="">
+                                            <p class="top-line">Slow down and stay focused </p>
+                                            <h3>{{ stripe_downgrade_plan.title }}</h3>
+                                            <hr>
+
+                                        </div>
+
+                                        <div class="features">
+                                            <div data-index="0" data-plan="import-monthly-shopify" class="plan-feature ">
+                                                <p class="plan-feature">
+                                                 {{ stripe_downgrade_plan.get_description }}
+                                                </p>
+
+
+                                            </div>
+
+
+                                        </div>
+                                        <p class="cta">
+                                                <p class="price">{{ stripe_downgrade_plan.get_price }}</p>
+                                                    <button type="button" class="btn btn-primary update-plan" data-plan="{{ stripe_downgrade_plan.id }}">
+
+                                                        Switch My Plan
+                                                    </button>
+
+                                            </p>
+
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <div class="flex-column">
+                                    <div class="plan-wrapper ">
+                                        <div style="position: relative"><span class="label-recommended">Recommended</span></div>
+
+                                        <div class="subsciption-plan import-monthly-shopify" data-plan-title="Keep Plan" data-plan="{{ stripe_paused_plan.id }}" data-trial-days="">
+                                            <p class="top-line">Take a break, save my progress </p>
+                                            <h3>{{ stripe_paused_plan.title }}</h3>
+                                            <hr>
+                                        </div>
+
+                                        <div class="features">
+                                            <div data-index="0" data-plan="import-monthly-shopify" class="plan-feature ">
+                                                <p class="plan-feature">
+                                                Need a break? Pause your subscription instead of cancelling to save your work and still maintain access to exclusive "members only" training.
+                                                <br><br>
+                                                    Your account will remain exactly as it is and can be restarted or cancelled at any time.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <p class="cta">
+                                                <p class="price">{{ stripe_paused_plan.get_price }}</p>
+                                                    <button type="button" class="btn btn-primary update-plan" data-plan="{{ stripe_paused_plan.id }}">
+
+                                                        Pause Plan
+                                                    </button>
+
+                                            </p>
+
+                                    </div>
+                            </div>
+
+
+                            <div class="flex-column">
+                                    <div class="plan-wrapper cancel">
+                                        <div class="subsciption-plan import-monthly-shopify" data-plan-title="Keep Plan" data-plan="{{ stripe_paused_plan.id }}" data-trial-days="">
+                                            <p class="top-line">Cancel my account </p>
+                                            <h3>Remove Account and Delete data</h3>
+                                            <hr>
+
+                                        </div>
+
+                                        <div class="features">
+                                            <div data-index="0" data-plan="import-monthly-shopify" class="plan-feature ">
+                                                <p class="plan-feature">
+                                                Cancellation will remove your progress and permanently delete your data on the account. Please ensure this is your full intention before proceeding.
+                                                </p>
+
+
+                                            </div>
+
+
+                                        </div>
+                                        <p class="cta">
+                                                <p class="price"> &nbsp;</p>
+                                                    <button type="button" data-dismiss="modal" class="btn btn-danger continue-cancel " >
+                                                        Finalize Cancellation <i class="fa fa-trash"></i>
+                                                    </button>
+
+                                            </p>
+
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="modal-cancel-confirm" class="modal stripe-cancel-step" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 column plan-table">
+                        <p class="top-line">Before you go </p>
+                        <h3>50% OFF <br> Next 3 Months</h3>
+                        <p class="plan-feature m-b-lg">We understand the challenges of starting a new eCommerce business. If the challenge has become financial, please accept this offering as an opportunity to stick to your goal of running an online business.</p>
+
+                        <p class="cta">
+                                {% if cancellation_coupon_applied %}
+                                    <button type="button" data-dismiss="modal" class="btn btn-primary  " disabled readonly>
+                                        Already Applied
+                                    </button>
+                                {% else %}
+                                    <button type="button" data-dismiss="modal" class="btn btn-primary apply-cancellation-coupon " >
+                                        Accept Offer <i class="fa fa-check"></i>
+                                    </button>
+                                {% endif %}
+
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-6 column plan-table">
+                        <p class="top-line">Delete my data </p>
+                        <h3>Maybe it's Goodbye, maybe it's see you soon.</h3>
+                        <p class="plan-feature m-b-lg">If this is the end, thank you for everything. We truly appreciate all users who gave us the opportunity. If there was something we could have changed, please ensure to share with our team at support@dropified.com</p>
+
+                        <p class="cta">
+                                <button type="button" data-dismiss="modal" class="btn btn-danger continue-cancel" >
+                                    Close My Account <i class="fa fa-trash"></i>
+                                </button>
+                        </p>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <div id="modal-on-grandfathered-plan" class="modal stripe-cancel-step" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -96,3 +292,108 @@
         </div>
     </div>
 </div>
+
+
+
+
+{% block extracss %}
+{% compress css %}
+    <style type="text/css">
+        #modal-cancel-plan-options .plan-wrapper hr {
+            width: 100%;
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #modal-cancel-plan-options .top-line {
+                font-size: 16px;
+                font-weight: 600;
+                color: #485e74;
+                padding-bottom: 20px;
+                text-transform: uppercase;
+                height: 72px;
+        }
+
+        #modal-cancel-confirm .top-line {
+                font-size: 16px;
+                font-weight: 600;
+                color: #485e74;
+                padding-bottom: 20px;
+                text-transform: uppercase;
+                height: 54px;
+        }
+
+        #modal-cancel-plan-options .price {
+                font-size: 22px;
+                font-weight: 600;
+                color: #485e74;
+
+        }
+
+        #modal-cancel-plan-options .plan-wrapper .subsciption-plan {
+            text-align: left;
+        }
+        #modal-cancel-plan-options .plan-wrapper {
+            padding: 20px;
+        }
+        #modal-cancel-plan-options .plan-wrapper .features {
+            min-height: 220px;
+        }
+
+        #modal-cancel-plan-options .plan-wrapper h3 {
+            min-height: 65px;
+        }
+
+        #modal-cancel-confirm .modal-body h3 {
+            min-height: 85px;
+            font-size: 25px;
+            font-weight: 600;
+            color: #1D262F;;
+        }
+        #modal-cancel-confirm .features {
+            min-height: 100px;
+        }
+        #modal-cancel-confirm .column {
+            text-align: center;
+            padding: 40px;
+        }
+
+        #modal-cancel-plan-options .flex-column {
+            display: flex;
+            flex-grow: 1;
+            margin: 0 0 0 20px;
+        }
+
+        #modal-cancel-confirm,
+        #modal-cancel-plan-options {
+            background: rgba(29, 38, 47, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        #modal-cancel-plan-options .plan-feature {
+            text-align: left 
+        }
+
+        #modal-cancel-plan-options .label-recommended { 
+            padding: 3px 6px;
+            position: absolute;
+            width: 107px;
+            height: 20px;
+            right: -20px;
+            top: -20px;
+            background: #6BAA55;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            color: white;
+            font-family: 'Inter';
+            line-height: 15px;
+        }
+
+        #modal-cancel-plan-options .plan-wrapper.cancel:hover {
+            border-color: red;
+        }
+
+    </style>
+{% endcompress %}
+{% endblock %}

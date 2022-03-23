@@ -18,6 +18,9 @@ urlpatterns = [
     url(r'^cancel$', stripe_subscription.views.subscription_cancel,
         name='stripe_subscription.views.subscription_cancel'),
 
+    url(r'^apply_cancellation_coupon$', stripe_subscription.views.subscription_apply_cancellation_coupon,
+        name='stripe_subscription.views.subscription_apply_cancellation_coupon'),
+
     url(r'^activate$', stripe_subscription.views.subscription_activate,
         name='stripe_subscription.views.subscription_activate'),
 

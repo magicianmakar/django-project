@@ -1435,7 +1435,13 @@ def user_profile(request):
 
     stripe_paused_plan = GroupPlan.objects.filter(slug='paused-plan').first()
     shopify_paused_plan = GroupPlan.objects.filter(slug='paused-plan-shopify').first()
-
+    try:
+        if profile.plan.is_plod():
+            stripe_downgrade_plan = GroupPlan.objects.filter(slug='plus-monthly').first()
+        else:
+            stripe_downgrade_plan = GroupPlan.objects.filter(slug='21pro-monthly').first()
+    except:
+        stripe_downgrade_plan = None
     if request.user.get_config('_enable_yearly_60dc_plan'):
         stripe_plans_yearly = list(stripe_plans_yearly)
         stripe_plans_yearly.append(GroupPlan.objects.get(slug='premier-yearly-60dc'))
@@ -1528,6 +1534,7 @@ def user_profile(request):
         'stripe_plans': stripe_plans,
         'stripe_plans_yearly': stripe_plans_yearly,
         'stripe_paused_plan': stripe_paused_plan,
+        'stripe_downgrade_plan': stripe_downgrade_plan,
         'shopify_paused_plan': shopify_paused_plan,
         'shopify_plans': shopify_plans,
         'shopify_plans_yearly': shopify_plans_yearly,
@@ -1543,6 +1550,8 @@ def user_profile(request):
         'callflex': callflex.toDict(),
         'shopify_admin_url': shopify_admin_url,
         'page': 'user_profile',
+        'current_plan_revision': settings.PLAN_REVISION,
+        'cancellation_coupon_applied': request.user.get_config('cancellation_coupon_applied'),
         'breadcrumbs': ['Profile']
     })
 

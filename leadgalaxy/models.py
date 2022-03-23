@@ -2252,6 +2252,25 @@ class GroupPlan(models.Model):
 
         return desc
 
+    def get_price(self):
+
+        interval = 'year' if self.payment_interval == 'yearly' else 'month'
+
+        if self.is_stripe():
+            desc = '${:0.2f}/{}'.format(self.stripe_plan.amount, interval)
+
+        elif (not self.monthly_price and self.monthly_price is not None) or self.is_free:
+            desc = 'Inactive'
+
+        elif self.monthly_price:
+            pricing = float(self.monthly_price) * 12.0 if self.payment_interval == 'yearly' else self.monthly_price
+            desc = '${:0.2f}/{}'.format(pricing, interval)
+
+        elif self.payment_interval == 'lifetime':
+            desc = 'Lifetime'
+
+        return desc
+
     def get_total_cost(self):
         if self.payment_interval == 'yearly' and self.monthly_price:
             return float(self.monthly_price) * 12.0
