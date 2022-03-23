@@ -18,6 +18,7 @@
         {% include 'common/partial/order_track_filters.html' with platform='WooCommerce' %}
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
+                {{ aliexpress_account_count }}
                 <div class="panel-body">
                     <table class="table table-condensed xtable-hover">
                       <thead>
@@ -103,7 +104,7 @@
 {% include 'woocommerce/partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
 {% endcache %}
 
-{% include 'partial/tracking_update_modal.html' with store=store use_aliexpress_api=use_aliexpress_api only %}
+{% include 'partial/tracking_update_modal.html' with store=store use_aliexpress_api=use_aliexpress_api aliexpress_account_count=aliexpress_account_count only %}
 
 {% endblock %}
 

@@ -290,6 +290,8 @@ class EbayStoreApi(ApiBase):
                                   ' or contact support@dropified.com')
 
         store.is_active = False
+        store.save()
+
         return self.api_success()
 
     def get_store_verify(self, request, user, data):

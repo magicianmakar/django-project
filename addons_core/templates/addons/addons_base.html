@@ -6,8 +6,8 @@
 
 {% block nav %}
     <nav class="navbar navbar-default">
-        <div class="container">
-            <div class="navbar-header">
+        <div class="container" style="height: 65px;">
+            <div>
                 <a class="navbar-brand" href="{% url 'addons.list_view' %}">
                     <img style="max-width:125px" src="{% static 'dropified-logo-d.png' %}" alt="Dropified">
                 </a>
@@ -19,9 +19,6 @@
                 Login
                 {% endif %}
             </a>
-            {% if user|can:'addons_edit.use' %}
-            <a href="{% url 'admin:addons_core_addon_add' %}" class="btn btn-success btn-rounded navbar-btn navbar-right"><i class="fa fa-plus"></i> Add Addon</a>
-            {% endif %}
             <form class="navbar-form navbar-right" action="{% url 'addons.list_view' %}">
                 <div class="form-group">
                     <div class="add-on-color">
@@ -67,7 +64,7 @@
 {% endcompress %}
 <style>
 body {
-    font-family: Poppins !important;
+    font-family: Inter !important;
 }
 </style>
 {% endblock %}

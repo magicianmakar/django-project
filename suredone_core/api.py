@@ -347,6 +347,12 @@ class SureDoneApiHandler:
         url = f'{self.API_ENDPOINT}/v1/settings/plugins'
         return requests.post(url, data=param(data), headers=self.HEADERS)
 
+    def update_plugin_settings_json(self, data: dict):
+        url = f'{self.API_ENDPOINT}/v1/settings'
+        headers = {**self.HEADERS, 'Content-Type': 'Application/json'}
+
+        return requests.post(url, json=data, headers=headers)
+
 
 class SureDoneAdminApiHandler:
     API_ENDPOINT = 'https://api.suredone.com'

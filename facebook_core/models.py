@@ -43,8 +43,6 @@ class FBStore(SureDoneStoreBase):
         self.commerce_manager_id = fb_sets_data.get('commerce_manager_id', {}).get('value')
 
         self.creds = fb_store_data.get('creds', {})
-        access_token = self.creds.get('access_token', {}).get('value')
-        self.is_active = bool(access_token)
 
         # Get facebook account title
         self.title = instance_title

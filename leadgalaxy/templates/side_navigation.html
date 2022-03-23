@@ -92,15 +92,6 @@
       {% endfor %}
       {% endfor %}
 
-      {% if request.user.models_user.profile.plan.support_addons %}
-      <li class="section-no-icon">
-          <a href="{% url 'addons.list_view' %}">
-            <img src="{% static 'img/addon-store.svg' %}" class="item-icon"/>
-            Addon Store
-          </a>
-      </li>
-      {% endif %}
-
       {# Dropified Black #}
       {% if request.user|can:'pls.use' %}
       <li class="section side-menu-dropdown">

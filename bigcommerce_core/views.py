@@ -23,6 +23,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.core.cache.utils import make_template_fragment_key
 from bigcommerce.api import BigcommerceApi
 
+from aliexpress_core.models import AliexpressAccount
 from profits.mixins import ProfitDashboardMixin
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired
@@ -1332,6 +1333,7 @@ class OrdersTrackList(ListView):
 
         context['rejected_status'] = ALIEXPRESS_REJECTED_STATUS
         context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
+        context['aliexpress_account_count'] = AliexpressAccount.objects.filter(user=self.request.user.models_user).count()
 
         return context
 

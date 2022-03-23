@@ -24,6 +24,7 @@ from django.template.defaultfilters import truncatewords
 from django.contrib.auth import get_user_model
 from django.core.cache.utils import make_template_fragment_key
 
+from aliexpress_core.models import AliexpressAccount
 from profits.mixins import ProfitDashboardMixin
 from supplements.lib.shipstation import get_address as get_shipstation_address
 from supplements.models import PLSOrder
@@ -1358,6 +1359,7 @@ class OrdersTrackList(ListView):
             'url': '{}?store={}'.format(reverse('woo:orders_list'), context['store'].id)
         }]
         context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
+        context['aliexpress_account_count'] = AliexpressAccount.objects.filter(user=self.request.user).count()
 
         context['rejected_status'] = ALIEXPRESS_REJECTED_STATUS
 

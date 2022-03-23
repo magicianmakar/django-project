@@ -751,6 +751,9 @@ class FBUtils(SureDoneUtils):
 
         return sd_api_result
 
+    def disable_plugin_store(self, instance: int):
+        return self.update_plugin_store_status('facebook', instance, 'off')
+
 
 class FBOrderUpdater(SureDoneOrderUpdater):
     store_model = FBStore
