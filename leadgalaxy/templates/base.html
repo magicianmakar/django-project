@@ -206,6 +206,14 @@
                                         Sub Users
                                     </a>
                                 </li>
+                                {% if user.models_user.profile.plan.support_addons %}
+                                <li>
+                                    <a href="{% url 'addons.list_view' %}">
+                                        <img src="{% static 'img/applications_menu/addons.svg' %}">
+                                        Addon Store
+                                    </a>
+                                </li>
+                                {% endif %}
                                 {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
                                 <li>
                                     <a href="https://plod.dropified.com/">

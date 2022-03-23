@@ -1135,10 +1135,6 @@ li.border-right {
     left: 12px;
 }
 
-.navbar-default {
-    background-color: #3b4d5e !important;
-}
-
 .navbar-default.pls {
     background-color: #24272e !important;
 }
