@@ -5,15 +5,18 @@ from django.contrib import admin, messages
 from django.contrib.admin import helpers
 from django.db.models import Sum
 from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse, path
+from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
 
 from lib.exceptions import capture_exception
-from .lib.shipstation import get_shipstation_order, create_shipstation_order
+
 from .forms import ShippingGroupAdminForm
+from .lib.shipstation import create_shipstation_order, get_shipstation_order
 from .models import (
     AuthorizeNetCustomer,
+    BasketItem,
+    BasketOrder,
     LabelComment,
     LabelSize,
     MockupType,
@@ -26,9 +29,7 @@ from .models import (
     UserSupplement,
     UserSupplementImage,
     UserSupplementLabel,
-    UserUnpaidOrder,
-    BasketItem,
-    BasketOrder
+    UserUnpaidOrder
 )
 
 
@@ -334,6 +335,7 @@ class ShippingGroupAdmin(admin.ModelAdmin):
         'locations',
         'immutable',
     )
+    search_fields = ('name',)
 
 
 @admin.register(LabelSize)
