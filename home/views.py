@@ -219,6 +219,17 @@ class GotoPage(View):
         if not stores:
             return self.get_failure_url()
 
-        store = stores[0]
-        url = store.get_page_url(url_name)
-        return redirect(url)
+        for store in stores:
+            try:
+                url = store.get_page_url(url_name)
+                return redirect(url)
+            except:
+                pass
+
+        messages.error(request, 'Could not find the requested page')
+
+        capture_message('Redirect not found', extra={
+            'url_name': url_name,
+        })
+
+        return store.get_page_url('index')
