@@ -3,7 +3,6 @@ from django.core.cache import cache
 from django.db import models
 from django.template.defaultfilters import slugify
 
-from leadgalaxy.utils import get_admitad_affiliate_url, get_admitad_credentials
 from lib.exceptions import capture_exception
 from shopified_core.utils import float_to_str, hash_url_filename
 
@@ -43,7 +42,6 @@ class AliexpressAccount(models.Model):
         return APIRequest(self.access_token)
 
     def get_affiliate_products(self, **kwargs):
-        user = kwargs.get('user')
         page = kwargs.get('page')
         category_id = kwargs.get('category_id')
         keywords = kwargs.get('keywords')
@@ -93,7 +91,6 @@ class AliexpressAccount(models.Model):
                 capture_exception()
 
         formatted_products = []
-        admitad_credentials = get_admitad_credentials(user.models_user)
 
         for product in products_data['api_products']:
             extra_images = [img_url for img_url in product['product_small_image_urls']['string']]
@@ -101,8 +98,6 @@ class AliexpressAccount(models.Model):
                 rating = product['evaluate_rate'].strip('%')
             except KeyError:
                 rating = '0'
-
-            details_url = get_admitad_affiliate_url(admitad_credentials[0], product['product_detail_url'], user=user.models_user)
 
             save_for_later = {
                 'id': product['product_id'],
@@ -124,7 +119,7 @@ class AliexpressAccount(models.Model):
                 'discount': product['discount'],
                 'order_count': product['lastest_volume'],
                 'rating': rating,
-                'details_url': details_url,
+                'details_url': product['product_detail_url'],
             }
 
             if raw:
@@ -135,7 +130,6 @@ class AliexpressAccount(models.Model):
         return products_data['total_results'], formatted_products
 
     def get_ds_recommended_products(self, **kwargs):
-        user = kwargs.get('user')
         page = kwargs.get('page')
         category_id = kwargs.get('category_id')
         currency = kwargs.get('currency')
@@ -176,7 +170,6 @@ class AliexpressAccount(models.Model):
                 capture_exception()
 
         formatted_products = []
-        admitad_credentials = get_admitad_credentials(user.models_user)
 
         for product in products_data['api_products']:
             extra_images = [img_url for img_url in product['product_small_image_urls']['string']]
@@ -184,8 +177,6 @@ class AliexpressAccount(models.Model):
                 rating = product['evaluate_rate'].strip('%')
             except KeyError:
                 rating = '0'
-
-            details_url = get_admitad_affiliate_url(admitad_credentials[0], product['product_detail_url'], user=user.models_user)
 
             save_for_later = {
                 'id': product['product_id'],
@@ -206,7 +197,7 @@ class AliexpressAccount(models.Model):
                 'discount': product['discount'],
                 'order_count': product['lastest_volume'],
                 'rating': rating,
-                'details_url': details_url,
+                'details_url': product['product_detail_url'],
             }
 
             if raw:
