@@ -413,7 +413,7 @@
 
 {% include 'payments/billing_modal.html' %}
 {% include 'payments/pay_now_modal.html' %}
-{% include 'payments/subscription_cancel.html' %}
+{% include 'payments/subscription_cancel.html' with current_plan=user.profile.plan current_plan_revision=current_plan_revision stripe_downgrade_plan=stripe_downgrade_plan stripe_paused_plan=stripe_paused_plan cancellation_coupon_applied=cancellation_coupon_applied %}
 {% include 'payments/callflex_subscription_cancel.html' %}
 {% include 'payments/pause_account.html' %}
 {% include 'payments/shopify_cancellation_flow.html' %}
@@ -494,7 +494,7 @@
         'shopify_plan': '{% url "shopify_subscription.views.subscription_plan" %}',
         'callflex_subscription': '{% url "stripe_subscription.views.callflex_subscription" %}',
         'shopify_callflex_subscription': '{% url "shopify_subscription.views.subscription_callflex" %}',
-
+        'subscription_apply_cancellation_coupon': '{% url "stripe_subscription.views.subscription_apply_cancellation_coupon" %}',
         'stripe': '{% app_setting "STRIPE_PUBLIC_KEY" %}',
     };
 

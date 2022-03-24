@@ -248,19 +248,25 @@ class FBStoreApi(ApiBase):
 
         # Delete auth token on SureDone
         fb_utils = FBUtils(user)
-        sd_auth_channel_resp = fb_utils.api.remove_fb_channel_auth(store.store_instance_id)
-
-        # Handle SD API errors
-        if not sd_auth_channel_resp or not isinstance(sd_auth_channel_resp, dict):
-            return self.api_error('Something went wrong, please try again.', status=400)
-        elif sd_auth_channel_resp.get('result') != 'success':
-            error_message = sd_auth_channel_resp.get('message')
-            error_message = error_message if error_message else 'Something went wrong. Please try again.'
-            return self.api_error(error_message, status=400)
+        # TODO: revoke an auth token from SureDone once SureDone adds an API support for it
+        # sd_auth_channel_resp = fb_utils.api.remove_fb_channel_auth(store.store_instance_id)
 
         # Disable the channel on SureDone
-        channel_prefix = fb_utils.get_fb_prefix(store.store_instance_id)
-        sd_disable_store_resp = fb_utils.api.update_settings({f'site_{channel_prefix}connect': 'off'})
+        sd_disable_store_resp = fb_utils.disable_plugin_store(store.filter_instance_id)
+        try:
+            sd_disable_store_resp.raise_for_status()
+            sd_disable_store_resp = sd_disable_store_resp.json()
+        except HTTPError:
+            capture_exception(extra={
+                'message': 'Failed to disable a Facebook store on SureDone',
+                'store_id': store.id,
+                'user_id': user.id,
+                'sd_response_status': sd_disable_store_resp.status_code,
+                'sd_response_reason': sd_disable_store_resp.reason,
+                'sd_response_data': sd_disable_store_resp.json(),
+            })
+            return self.api_error('Failed to remove the Facebook channel. Please try again'
+                                  ' or contact support@dropified.com')
 
         # If failed to disable the fb instance
         if sd_disable_store_resp.get('result') != 'success':
@@ -268,6 +274,8 @@ class FBStoreApi(ApiBase):
                                   ' or contact support@dropified.com')
 
         store.is_active = False
+        store.save()
+
         return self.api_success()
 
     def get_store_verify(self, request, user, data):

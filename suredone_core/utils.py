@@ -1207,6 +1207,16 @@ class SureDoneUtils:
 
         return sd_response
 
+    def update_plugin_store_status(self, platform: str, instance: int, status: str):
+        return self.api.update_plugin_settings_json({
+            'plugin_settings': [{
+                'name': platform,
+                'instance': instance,
+                'set': 'status',
+                'value': status,  # Can be either 'off' or 'on'
+            }]
+        })
+
 
 class SureDoneAdminUtils:
     def generate_sd_username(self, user, test=False):

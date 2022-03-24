@@ -254,6 +254,26 @@
         });
     }
 
+
+    function applyCancellationCoupon(){
+        $.ajax({
+            url: config.subscription_apply_cancellation_coupon,
+            type: 'POST',
+            data: {},
+            success: function(data) {
+                toastr.success("Your coupon has been applied.", "Plan Subscription");
+                swal.close();
+
+                setTimeout(function() {
+                    window.location.href = '/user/profile#plan';
+                }, 1500);
+            },
+            error: function(data) {
+                displayAjaxError('Plan Subscription', data);
+            }
+        });
+    }
+
     $('.update-to-premier').on('click', function(e) {
         e.preventDefault();
         // Select plan by premier plan slug
@@ -562,6 +582,11 @@
     $(".update-plan").click(function(e) {
         $(this).button('loading');
         selectPlan($(this).data('plan'));
+    });
+
+    $(".apply-cancellation-coupon").click(function(e) {
+        $(this).button('loading');
+        applyCancellationCoupon();
     });
 
     $('.reactivate-sub-btn').click(function(e) {
