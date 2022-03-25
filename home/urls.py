@@ -11,4 +11,5 @@ urlpatterns = [
     path('dashboard', home.views.DashboardView.as_view(), name='dashboard'),
     path('goto/page/<str:url_name>', home.views.GotoPage.as_view(), name='goto-page'),
     path('go/aliexpress/<product_id>/', aliexpress_core.views.GotoAliexpress.as_view(), name='goto_aliexpress'),
+    path('roadmap', home.views.RoadMap.as_view(), name='roadmap'),
 ]
