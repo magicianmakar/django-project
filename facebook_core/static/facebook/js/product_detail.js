@@ -34,7 +34,7 @@ function showProductInfo(rproduct) {
         }
 
         if (product.product_description) {
-            document.editor.setData(product.product_description);
+            $('#product-description').val(product.product_description);
         }
 
         renderImages();
@@ -49,7 +49,7 @@ function prepareApiData(productData, variants) {
         guid: productData.guid,
         producttype: $('#product-type').val().trim(),
         tags: $('#product-tag').val(),
-        longdescription: document.editor.getData(),
+        longdescription: $('#product-description').val().trim(),
         fb_category_id: productData.fb_category_id,
         vendor: $('#product-vendor').val(),
         published: $('#product-visible').prop('checked'),
@@ -106,6 +106,7 @@ function prepareApiData(productData, variants) {
             });
         }*/
     }
+
     return apiData;
 }
 
@@ -198,15 +199,6 @@ function verifyRequiredFields() {
             $(this).parent().removeClass('has-error');
         }
     });
-
-    // Verify that the product description is not empty
-    var description = document.editor.getData();
-    if (!description || description === '') {
-        invalidFields++;
-        $('#product-description').parent().addClass('has-error');
-    } else {
-        $('#product-description').parent().removeClass('has-error');
-    }
 
     if (invalidFields > 0) {
         swal('Product Export', 'Please fill out all required fields first!', 'error');
@@ -563,6 +555,7 @@ function productSave(btn, callback) {
     var channel = pusher.subscribe(config.sub_conf.channelUser);
 
     channel.bind('fb-product-update', function(eventData) {
+
         if (eventData.product === product.guid) {
             if (eventData.progress) {
                 btn.text(eventData.progress);
@@ -582,6 +575,7 @@ function productSave(btn, callback) {
     });
 
     channel.bind('pusher:subscription_succeeded', function() {
+
         $.ajax({
             url: api_url('product-update', 'fb'),
             type: 'POST',
@@ -1523,7 +1517,6 @@ $('.variant-checkbox').on('click', function() {
 });
 
 (function() {
-    setup_full_editor('product-description');
     showProductInfo(product);
 
     setTimeout(function() {
