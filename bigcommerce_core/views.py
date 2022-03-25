@@ -829,8 +829,7 @@ class OrdersList(ListView):
             context['autofulfill_addons'] = Addon.objects.filter(auto_fulfill_limit__gt=0, is_active=True).all()
 
         if context['autofulfill_limit'] != -1:
-            page_title = 'Orders <span class="af-limits">({}/{})</span>'. \
-                format(context['total_orders'], context['autofulfill_limit'])
+            page_title = 'Orders ({}/{})'.format(context['total_orders'], context['autofulfill_limit'])
         else:
             page_title = 'Orders'
 

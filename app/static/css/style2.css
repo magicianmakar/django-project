@@ -363,6 +363,7 @@ tbody#stores-table-body > tr > td {
     font-size: 13px;
     border-radius: 8px;
     z-index: 10001;
+    box-shadow: 0 0 16px 3px rgb(29 38 47 / 20%);
 }
 
 .dropdown-menu .divider {
@@ -1750,7 +1751,7 @@ li.border-right {
 }
 
 .alert-row-detail {
-  height: 36px;
+  height: auto;
   padding: 8px;
   border-top: 1px solid #E8E8E8;
   font-weight: normal;
@@ -2983,6 +2984,7 @@ textarea.note {
     border: 1px dotted;
     line-height: 55px;
     border-radius: 8px;
+    color: #969696;
 }
 
 .edit-note .btn {
@@ -3002,4 +3004,8 @@ textarea.note {
 
 .hidden {
     display: none!important;
+}
+
+#loopedinSelector {
+    margin-right: -3px;
 }

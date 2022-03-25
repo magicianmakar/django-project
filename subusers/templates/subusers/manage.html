@@ -249,12 +249,12 @@
             var btn = $(this);
             var add_extra_user = btn.data('extra');
             var extra_user_cost = btn.data('cost');
-            var text = 'Add new sub user to your account';
+            var text = 'Add a new sub user to your account';
             if (add_extra_user) {
                 text = "<p>You are about to add an additional user to your plan for <b>$" + extra_user_cost + "/month</b>. Would you like to continue?</p>";
             }
             swal({
-                title: "Add Sub User?",
+                title: "Add Sub User",
                 text: text,
                 type: "input",
                 html: true,
@@ -264,7 +264,7 @@
                 animation: "slide-from-top",
                 inputPlaceholder: "Email address",
                 showLoaderOnConfirm: true,
-                confirmButtonText: "Yes, Add This Sub User",
+                confirmButtonText: "Invite User",
                 confirmButtonColor: "#6BAA55",
             }, function(inputValue) {
                 if (inputValue === false) {
