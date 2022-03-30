@@ -151,7 +151,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['id'])] = item
 
         if not need_fulfill_items:
-            return self.set_order_success_msg('Order have no items that need ordering')
+            return self.set_order_success_msg('The order has no item that needs processing')
 
         self.items = need_fulfill_items
         self.fulfill_aliexpress_order('woo')
@@ -455,7 +455,7 @@ class AliexpressFulfillHelper():
                 except:
                     aliexpress_variant_sku_dict = self.ds_product_data(line_item['source_id'], aliexpress_account)
                     if aliexpress_variant_sku_dict is None:
-                        self.order_item_error(line_id, 'This item is discontinued in Aliexpress.')
+                        self.order_item_error(line_id, 'This item is discontinued in AliExpress.')
                         continue
 
                     try:

@@ -3055,7 +3055,7 @@ def orders_track(request):
     return render(request, 'orders_track.html', {
         'store': store,
         'use_aliexpress_api': request.user.models_user.can('aliexpress_api_integration.use'),
-        'aliexpress_account_count': AliexpressAccount.objects.filter(user=request.user).count(),
+        'aliexpress_account_count': AliexpressAccount.objects.filter(user=request.user.models_user).count(),
         'orders': orders,
         'date': date,
         'order_threshold': order_threshold,
