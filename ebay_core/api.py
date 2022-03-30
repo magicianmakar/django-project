@@ -1,5 +1,6 @@
 import arrow
 import json
+from functools import cmp_to_key
 from celery import chain
 from requests.exceptions import HTTPError
 
@@ -11,6 +12,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.forms.models import model_to_dict
 
 import suredone_core.tasks as sd_tasks
 from alibaba_core.models import AlibabaOrderItem
@@ -1178,3 +1180,96 @@ class EbayStoreApi(ApiBase):
             cache.delete(user_store_supplier_sync_key)
             return self.api_success()
         return self.api_error('No Sync in progress', status=404)
+
+    def post_bundles_mapping(self, request, user, data):
+        if not user.can('mapping_bundle.use'):
+            return self.api_error('Your current plan doesn\'t have this feature.', status=403)
+
+        product = EbayProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        product.set_bundle_mapping(data.get('mapping'))
+        product.save()
+
+        return self.api_success()
+
+    def post_ebay_products(self, request, user, data):
+        store = safe_int(data.get('store'))
+        if not store:
+            return self.api_error('No store was selected', status=404)
+        try:
+            store = EbayStore.objects.get(id=store)
+            permissions.user_can_view(user, store)
+            parent_products = list(EbayProduct.objects.filter(store=store))
+            parent_products = [parent_product for parent_product in parent_products if parent_product.is_connected]
+
+            products = []
+
+            for product in parent_products:
+                product = model_to_dict(product)
+                product['image'] = {'src': product.get('thumbnail_image')}
+                product['name'] = product.get('title')
+                products.append(product)
+
+            if data.get('connected') or data.get('hide_connected'):
+                connected = {}
+                for p in store.products.filter(source_id__in=[i['source_id'] for i in products]).values_list('id', 'source_id'):
+                    connected[p[1]] = p[0]
+
+                for idx, i in enumerate(products):
+                    products[idx]['connected'] = connected.get(i['source_id'])
+
+                def connected_cmp(a, b):
+                    if a['connected'] and b['connected']:
+                        return a['connected'] < b['connected']
+                    elif a['connected']:
+                        return 1
+                    elif b['connected']:
+                        return -1
+                    else:
+                        return 0
+
+                products = sorted(products, key=cmp_to_key(connected_cmp), reverse=True)
+
+                if data.get('hide_connected'):
+                    products = [p for p in products if not p.get('connected')]
+
+            return self.api_success({'products': products})
+
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+    def get_autocomplete_variants(self, request, user, data):
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'User login required'})
+
+        q = request.GET.get('query', '').strip()
+        if not q:
+            q = request.GET.get('term', '').strip()
+
+        if not q:
+            return JsonResponse({'query': q, 'suggestions': []}, safe=False)
+
+        try:
+            store = EbayStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+            ebay_product = EbayProduct.objects.get(id=data.get('product'))
+            permissions.user_can_edit(user, ebay_product)
+            ebay_product_variants = list(ebay_product.retrieve_variants())
+
+            results = []
+            for variant in ebay_product_variants:
+                results.append({
+                    'value': variant.variant_title,
+                    'data': variant.id,
+                    'image': variant.image
+                })
+
+            return JsonResponse({'query': q, 'suggestions': results}, safe=False)
+
+        except EbayStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        except EbayProduct.DoesNotExist:
+            return JsonResponse({'error': 'Product not found'}, status=404)

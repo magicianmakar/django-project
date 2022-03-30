@@ -29,7 +29,7 @@
 
     Vue.component('bundle-mapping-table', {
         template: '#bundle-mapping-table-tpl',
-        props: ['variants'],
+        props: ['variants', 'store_id'],
         data: function() {
             return {
                 save_btn: null
@@ -50,7 +50,7 @@
                 });
 
                 $.ajax({
-                    url: api_url('bundles-mapping', 'woo'),
+                    url: api_url('bundles-mapping', 'ebay'),
                     type: 'POST',
                     data: JSON.stringify({
                         mapping: api_data,
@@ -81,12 +81,12 @@
 
     Vue.component('variant-row', {
         template: '#variant-row-tpl',
-        props: ['variants', 'variant', 'variant_idx'],
+        props: ['variants', 'variant', 'variant_idx', 'store_id'],
     });
 
     Vue.component('product-row', {
         template: '#product-row-tpl',
-        props: ['product', 'product_idx', 'variant'],
+        props: ['product', 'product_idx', 'variant', 'store_id'],
         methods: {
             removeProduct: function (e) {
                 this.variant.products.splice(this.product_idx, 1);
@@ -117,11 +117,11 @@
 
                 if (this.initSelect) {
                     $('.product-select', this.$el).click(function (e) {
-                        $('#modal-woocommerce-product').prop('connected', true);
-                        $('#modal-woocommerce-product').modal('show');
+                        $('#modal-ebay-product').prop('connected', true);
+                        $('#modal-ebay-product').modal('show');
 
-                        // Product Woocommerce Connect
-                        window.woocommerceProductSelected = function (store, woo_id, product_data) {
+                        // Product eBay Connect
+                        window.ebayProductSelected = function (store, ebay_id, product_data) {
                             if (!product_data.shopified) {
                                 toastr.error('Product is not connected');
                                 return;
@@ -139,7 +139,7 @@
                                 variant_image: null,
                             };
 
-                            $('#modal-woocommerce-product').modal('hide');
+                            $('#modal-ebay-product').modal('hide');
                         };
                     });
 
@@ -156,7 +156,7 @@
                 $('select.variant-select', el).prop('disabled', true);
 
                 $.ajax({
-                    url: '/woo/autocomplete/variants',
+                    url: api_url('autocomplete-variants', 'ebay'),
                     type: 'GET',
                     data: {
                         store: store_id,
@@ -231,7 +231,8 @@
     new Vue({
         el: '#bundle-mapping-entry',
         data: {
-            variants: bundle_mapping
+            variants: bundle_mapping,
+            store_id: store_id,
         }
     });
 

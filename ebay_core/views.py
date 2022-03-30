@@ -48,9 +48,8 @@ from shopified_core.utils import (
     safe_json
 )
 from shopified_core.mocks import (
-    # get_mocked_bundle_variants,
+    get_mocked_bundle_variants,
     get_mocked_supplier_variants,
-    # get_mocked_alert_changes,
 )
 from suredone_core.utils import get_daterange_filters
 
@@ -288,7 +287,7 @@ class MappingSupplierView(DetailView):
         context['breadcrumbs'] = [
             {'title': 'Products', 'url': reverse('ebay:products_list')},
             {'title': product.store.title, 'url': f'{reverse("ebay:products_list")}?store={product.store.id}'},
-            {'title': product.title, 'url': reverse('ebay:product_detail', args=[product.store.id, product.id])},
+            {'title': product.title, 'url': reverse('ebay:product_detail', args=[product.store.id, product.guid])},
             'Advanced Mapping'
         ]
 
@@ -309,6 +308,63 @@ class MappingBundleView(DetailView):
     model = EbayProduct
     template_name = 'ebay/mapping_bundle.html'
     context_object_name = 'product'
+    product_id = ''
+
+    @method_decorator(login_required)
+    def dispatch(self, request, pk, *args, **kwargs):
+        if not request.user.can('ebay.use'):
+            raise permissions.PermissionDenied()
+
+        self.product_id = pk
+
+        return super(MappingBundleView, self).dispatch(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        try:
+            product = EbayProduct.objects.get(id=self.product_id)
+            return product
+        except EbayProduct.DoesNotExist:
+            return EbayUtils(self.request.user).get_ebay_product_details(self.product_id)
+
+    def get_context_data(self, **kwargs):
+        context = super(MappingBundleView, self).get_context_data(**kwargs)
+        product = self.object
+        permissions.user_can_view(self.request.user, self.object)
+
+        context['api_product'] = product.parsed
+        context['product_variants'] = product_variants = list(product.retrieve_variants())
+
+        bundle_mapping = []
+
+        for product_variant in product_variants:
+            variant = model_to_dict(product_variant)
+            variant['products'] = product.get_bundle_mapping(product_variant.id, default=[])
+            variant['title'] = product_variant.variant_title
+            variant['image'] = {'src': variant.get('image')}
+
+            bundle_mapping.append(variant)
+
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('ebay:products_list')},
+            {'title': self.object.store.title, 'url': f'{reverse("ebay:products_list")}?store={product.store.id}'},
+            {'title': self.object.title, 'url': reverse('ebay:product_detail', args=[product.store.id, product.guid])},
+            'Bundle Mapping'
+        ]
+
+        context.update({
+            'store': product.store,
+            'product_id': product.id,
+            'product': product,
+            'bundle_mapping': bundle_mapping,
+        })
+
+        context['upsell'] = False
+        if not self.request.user.can('mapping_bundle.use'):
+            context['upsell'] = True
+            context['bundle_mapping'] = get_mocked_bundle_variants(
+                context['product'], context['bundle_mapping'])
+
+        return context
 
 
 class VariantsEditView(DetailView):

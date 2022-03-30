@@ -12,7 +12,7 @@
                 <tr>
                     <td>
                         <template v-for="(item, index) in variants">
-                            <variant-row :variants="variants" :variant="item" :variant_idx="index" />
+                            <variant-row :variants="variants" :variant="item" :variant_idx="index" :store_id="store_id" />
                         </template>
                     </td>
                 </tr>
@@ -38,11 +38,11 @@
                     style="width: 40px" class="variant-image"
                     src="//cdn.dropified.com/static/img/no-image-sm.png" />
 
-            <label>{{variant.variant.join(" / ")}}</label>
+            <label>{{variant.variant_title}}</label>
         </div>
 
         <template v-for="(product, index) in variant.products">
-            <product-row :variant="variant" :product="product" :product_idx="index" />
+            <product-row :variant="variant" :product="product" :product_idx="index" :store_id="store_id" />
         </template>
 
         <add-product-row :variant="variant"></add-product-row>
@@ -66,7 +66,7 @@
                 style="width: 40px"
                 src="//cdn.dropified.com/static/img/no-image-sm.png" />
 
-            <a :href="'/woo/product/mapping/' + product.id" target="_blank">{{product.title | truncate}}</a>
+            <a :href="'/ebay/product/mapping/' + store_id + '/' + variant.guid" target="_blank">{{product.title | truncate}}</a>
          </div>
 
          <div style="flex-grow:1">
