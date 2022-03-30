@@ -1158,7 +1158,7 @@ class SureDoneUtils:
 
     def update_suredone_product_data_images(self, product, old_url, new_url):
         store_type = product.store.store_type
-        store_instance_id = product.ebay_store_index
+        store_instance_id = getattr(product, f'{store_type}_store_index')
         skip_all_channels = True
 
         sd_product = product.parsed

@@ -39,7 +39,7 @@ from analytic_events.models import RegistrationEvent
 from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier, BigCommerceUserUpload
 from commercehq_core.models import CommerceHQOrderTrack, CommerceHQProduct, CommerceHQSupplier, CommerceHQUserUpload
 from ebay_core.models import EbayProduct, EbaySupplier, EbayUserUpload
-from facebook_core.models import FBProduct, FBSupplier
+from facebook_core.models import FBProduct, FBSupplier, FBUserUpload
 from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier, GearUserUpload
 from groovekart_core.models import GrooveKartProduct, GrooveKartSupplier, GrooveKartUserUpload
 from infinite_pagination.paginator import InfinitePaginator
@@ -1701,6 +1701,23 @@ def save_image_s3(request):
         permissions.user_can_edit(user, product)
 
         EbayUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
+
+        if old_url and not old_url == upload_url:
+            sd_utils = SureDoneUtils(user=user.models_user, account_id=product.sd_account_id)
+            data = sd_utils.update_suredone_product_data_images(product, old_url, upload_url)
+            data = json.dumps(data)
+            return JsonResponse({
+                'status': 'ok',
+                'url': upload_url,
+                'data': data
+            })
+
+    elif request.GET.get('fb') or request.POST.get('fb'):
+        product = FBProduct.objects.get(id=product_id)
+
+        permissions.user_can_edit(user, product)
+
+        FBUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
 
         if old_url and not old_url == upload_url:
             sd_utils = SureDoneUtils(user=user.models_user, account_id=product.sd_account_id)
