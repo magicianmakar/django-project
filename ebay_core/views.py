@@ -47,6 +47,11 @@ from shopified_core.utils import (
     safe_int,
     safe_json
 )
+from shopified_core.mocks import (
+    # get_mocked_bundle_variants,
+    get_mocked_supplier_variants,
+    # get_mocked_alert_changes,
+)
 from suredone_core.utils import get_daterange_filters
 
 from .models import EbayBoard, EbayOrderTrack, EbayProduct, EbayStore, EbaySupplier
@@ -202,10 +207,11 @@ class ProductMappingView(DetailView):
         variants_map = product.get_variant_mapping(supplier=supplier)
         variants_map = {key: json.loads(value) for key, value in list(variants_map.items())}
         if product.variants_config_parsed:
-            var_attributes_keys = [i.get('title') for i in product.variants_config_parsed]
+            var_attributes_keys = [i.get('title').replace(' ', '') for i in product.variants_config_parsed]
             for variant in product.product_variants.all():
                 var_data = variant.parsed_variant_data
-                options = [{'title': var_data.get(key)} for key in var_attributes_keys]
+                options = [{'title': var_data.get(key), 'image': False} for key in var_attributes_keys]
+                options[0]['image'] = variant.image
                 variants_map.setdefault(variant.guid, options)
 
         return variants_map
@@ -230,15 +236,78 @@ class ProductMappingView(DetailView):
 
 class MappingSupplierView(DetailView):
     model = EbayProduct
-    # template_name = 'ebay/mapping_supplier.html'
+    template_name = 'ebay/mapping_supplier.html'
     context_object_name = 'product'
     product_guid = ''
     store = None
 
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('ebay.use'):
+            raise permissions.PermissionDenied()
+
+        return super(MappingSupplierView, self).dispatch(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        product = super(MappingSupplierView, self).get_object(queryset)
+        permissions.user_can_view(self.request.user, product)
+
+        return product
+
+    def get_product_suppliers(self, product):
+        suppliers = {}
+        for supplier in product.get_suppliers():
+            suppliers[supplier.id] = {
+                'id': supplier.id,
+                'name': supplier.get_name(),
+                'url': supplier.product_url,
+                'source_id': supplier.get_source_id(),
+            }
+
+        return suppliers
+
+    def add_supplier_info(self, variants, suppliers_map):
+        for index, variant in enumerate(variants):
+            default_supplier = {'supplier': self.object.default_supplier.id, 'shipping': {}}
+            supplier = suppliers_map.get(str(variant.id), default_supplier)
+            suppliers_map[str(variant.id)] = supplier
+            variants[index].supplier = supplier['supplier']
+            variants[index].shipping = supplier['shipping']
+
+    def get_context_data(self, **kwargs):
+        context = super(MappingSupplierView, self).get_context_data(**kwargs)
+        product = self.object
+        context['product_variants'] = product_variants = list(product.retrieve_variants())
+        context['product'] = product
+        context['countries'] = get_counrties_list()
+        context['product_suppliers'] = self.get_product_suppliers(product)
+        context['suppliers_map'] = suppliers_map = product.get_suppliers_mapping()
+        context['shipping_map'] = product.get_shipping_mapping()
+        context['variants_map'] = product.get_all_variants_mapping()
+        context['mapping_config'] = product.get_mapping_config()
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('ebay:products_list')},
+            {'title': product.store.title, 'url': f'{reverse("ebay:products_list")}?store={product.store.id}'},
+            {'title': product.title, 'url': reverse('ebay:product_detail', args=[product.store.id, product.id])},
+            'Advanced Mapping'
+        ]
+
+        self.add_supplier_info(product_variants, suppliers_map)
+
+        if not self.request.user.can('suppliers_shipping_mapping.use'):
+            shipping_map, mapping_config, suppliers_map = get_mocked_supplier_variants(context['variants_map'])
+            context['shipping_map'] = shipping_map
+            context['mapping_config'] = mapping_config
+            context['suppliers_map'] = suppliers_map
+            context['product_variants'] = context.get('product_variants', [])[:5]
+            context['upsell'] = True
+
+        return context
+
 
 class MappingBundleView(DetailView):
     model = EbayProduct
-    # template_name = 'ebay/mapping_bundle.html'
+    template_name = 'ebay/mapping_bundle.html'
     context_object_name = 'product'
 
 

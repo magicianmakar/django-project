@@ -336,6 +336,45 @@ class EbayProduct(SureDoneProductBase):
 
         super().save(*args, **kwargs)
 
+    def get_all_variants_mapping(self):
+        all_mapping = {}
+
+        for supplier in self.get_suppliers():
+            variants_map = self.get_variant_mapping(supplier=supplier)
+
+            seen_variants = []
+            for variant in self.retrieve_variants():
+                mapped = variants_map.get(variant.guid)
+                if mapped:
+                    options = mapped
+                else:
+                    var_attributes_keys = [i.get('title').replace(' ', '') for i in self.variants_config_parsed]
+                    options = []
+                    if len(var_attributes_keys):
+                        var_data = variant.parsed_variant_data
+                        options = [{'title': var_data.get(key), 'image': False} for key in var_attributes_keys]
+                        options[0]['image'] = variant.image
+
+                try:
+                    if type(options) not in [list, dict]:
+                        options = json.loads(options)
+
+                        if type(options) is int:
+                            options = str(options)
+                except:
+                    pass
+
+                variants_map[str(variant.guid)] = options
+                seen_variants.append(str(variant.guid))
+
+            for k in list(variants_map.keys()):
+                if k not in seen_variants:
+                    del variants_map[k]
+
+            all_mapping[str(supplier.id)] = variants_map
+
+        return all_mapping
+
 
 class EbayProductVariant(SureDoneProductVariantBase):
     class Meta(SureDoneProductVariantBase.Meta):
