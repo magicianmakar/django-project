@@ -92,6 +92,18 @@ function sendToStore(storeType, storeId, publish) {
                 } else if (storeType === 'bigcommerce') {
                     jqXHR = sendProductToBigCommerce(productId, storeId, publish);
                     jqXHR.done(getPostExportPusherHandler(productId));
+                } else {
+                    getCorrectRef($('#id_send_to_store_confirm'), 'reset');
+                    var store = storeType == 'fb' ? 'Facebook' : 'eBay';
+                    var link = app_base_link + '/' + storeType + '/products?store=n';
+                    var msg = "In order to send this product to " + store + ", You need to add some required fields.<br>";
+                    msg = msg + "Click to see <a href='"+ link +"'>the saved product</a>";
+                    swal({
+                        title: 'Product saved to Non Connected',
+                        text: msg,
+                        type: 'success',
+                        html: true,
+                    });
                 }
             }
         }
