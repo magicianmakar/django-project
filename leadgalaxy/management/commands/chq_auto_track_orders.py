@@ -3,6 +3,7 @@ from django.utils import timezone
 import json
 import arrow
 
+from aliexpress_core.models import AliexpressAccount
 from shopified_core.commands import DropifiedBaseCommand
 from commercehq_core.models import CommerceHQOrderTrack
 
@@ -29,7 +30,10 @@ class Command(DropifiedBaseCommand):
         # uptime = options.get('uptime')
         days = options.get('days')
 
-        orders = CommerceHQOrderTrack.objects.filter(commercehq_status='') \
+        user_ids = AliexpressAccount.objects.all().values_list('user', flat=True)
+
+        orders = CommerceHQOrderTrack.objects.filter(user__in=user_ids) \
+            .filter(commercehq_status='') \
             .filter(source_tracking='') \
             .filter(hidden=False) \
             .filter(created_at__gte=arrow.now().replace(days=-days).datetime) \

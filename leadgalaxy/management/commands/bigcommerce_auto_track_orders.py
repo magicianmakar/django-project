@@ -3,6 +3,7 @@ from django.utils import timezone
 import json
 import arrow
 
+from aliexpress_core.models import AliexpressAccount
 from shopified_core.commands import DropifiedBaseCommand
 from bigcommerce_core.models import BigCommerceOrderTrack
 from bigcommerce_core import utils
@@ -30,7 +31,10 @@ class Command(DropifiedBaseCommand):
         # uptime = options.get('uptime')
         days = options.get('days')
 
-        orders = BigCommerceOrderTrack.objects.filter(bigcommerce_status='') \
+        user_ids = AliexpressAccount.objects.all().values_list('user', flat=True)
+
+        orders = BigCommerceOrderTrack.objects.filter(user__in=user_ids) \
+            .filter(shopify_status='') \
             .filter(source_tracking='') \
             .filter(hidden=False) \
             .filter(created_at__gte=arrow.now().replace(days=-days).datetime) \
