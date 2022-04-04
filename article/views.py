@@ -20,13 +20,36 @@ def index(request, tag=None):
         if not request.user.is_staff:
             raise PermissionDenied()
 
-        articles = Article.objects.all().order_by('-created_at')
+        articles = Article.objects.all()
+        if request.GET.get('q'):
+            articles = articles.filter(title__icontains=request.GET['q'])
+
+        if request.GET.get('author'):
+            articles = articles.filter(author=request.GET['author'])
+
+        if request.GET.get('tags'):
+            articles = articles.filter(Q(tags__in=[request.GET['tags']]))
+
+        if request.GET.get('sort'):
+            if request.GET['sort'] == 'new':
+                articles = articles.order_by('-created_at')
+            elif request.GET['sort'] == 'old':
+                articles = articles.order_by('created_at')
+            elif request.GET['sort'] == 'views':
+                articles = articles.order_by('-views')
+        else:
+            articles = articles.order_by('-created_at')
+
+    authors = set([i.author for i in articles])
+    tags = ArticleTag.objects.all()
 
     if not request.user.is_staff:
         articles = articles.filter(stat=0)
 
     return render(request, 'article/index.html', {
         'articles': articles,
+        'authors': authors,
+        'tags': tags,
         'tag': tag,
         'page': 'acp_pages',
         'breadcrumbs': ['Pages']
