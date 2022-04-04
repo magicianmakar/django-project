@@ -20,7 +20,7 @@ def index(request, tag=None):
         if not request.user.is_staff:
             raise PermissionDenied()
 
-        articles = Article.objects.filter(show_header=True).order_by('-created_at')
+        articles = Article.objects.all().order_by('-created_at')
 
     if not request.user.is_staff:
         articles = articles.filter(stat=0)
