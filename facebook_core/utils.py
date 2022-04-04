@@ -142,7 +142,8 @@ class FBUtils(SureDoneUtils):
             if instance_id is not None and instance_id != '':
                 self.sync_or_create_store_instance(instance_id, all_options_data)
 
-    def sync_or_create_store_instance(self, instance_id: int, all_options_data: dict, instance_title=None):
+    def sync_or_create_store_instance(self, instance_id: int, all_options_data: dict, instance_title=None,
+                                      update_active_status=False):
         fb_prefix = self.get_fb_prefix(instance_id)
         fb_store_data = safe_json(all_options_data.get(f'plugin_settings_{fb_prefix}'))
         if not instance_title:
@@ -151,7 +152,7 @@ class FBUtils(SureDoneUtils):
 
         try:
             store = FBStore.objects.get(store_instance_id=instance_id, user=self.user.models_user)
-            store.sync(instance_title, all_options_data)
+            store.sync(instance_title, all_options_data, update_active_status)
         except FBStore.DoesNotExist:
             # Create a new store to reflect the SureDone's data
 

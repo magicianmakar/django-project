@@ -38,7 +38,7 @@ class FBStore(SureDoneStoreBase):
 
     creds = JSONField(default=dict, verbose_name='Facebook creds')
 
-    def sync(self, instance_title: str, options_data: dict):
+    def sync(self, instance_title: str, options_data: dict, update_active_status=False):
         store_prefix = f"facebook{'' if self.store_instance_id == 1 else self.store_instance_id}"
         fb_store_data = safe_json(options_data.get(f'plugin_settings_{store_prefix}'))
         fb_sets_data = fb_store_data.get('sets', {})
@@ -49,6 +49,11 @@ class FBStore(SureDoneStoreBase):
         self.catalog_id = fb_sets_data.get('catalog_id', {}).get('value')
 
         self.creds = fb_store_data.get('creds', {})
+
+        if update_active_status:
+            system_token = self.creds.get('system_token', {}).get('value')
+            access_token = self.creds.get('access_token', {}).get('value')
+            self.is_active = bool(system_token) and bool(access_token)
 
         # Get facebook account title
         self.title = instance_title

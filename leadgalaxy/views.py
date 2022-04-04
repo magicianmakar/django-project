@@ -1437,7 +1437,7 @@ def user_profile(request):
     stripe_paused_plan = GroupPlan.objects.filter(slug='paused-plan').first()
     shopify_paused_plan = GroupPlan.objects.filter(slug='paused-plan-shopify').first()
     try:
-        if profile.plan.is_plod():
+        if profile.plan.is_plod:
             stripe_downgrade_plan = GroupPlan.objects.filter(slug='plus-monthly').first()
         else:
             stripe_downgrade_plan = GroupPlan.objects.filter(slug='21pro-monthly').first()
