@@ -1,10 +1,21 @@
-from django.contrib.auth.decorators import login_required
-import requests
-from django.conf import settings
-from django.shortcuts import render
-from django.urls import reverse
 import json
+import requests
+from io import BytesIO
+from pdfrw import PageMerge, PdfReader, PdfWriter
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
+
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, render
 from django.template.defaulttags import register
+from django.urls import reverse
+
+from shopified_core import permissions
+
+from .models import InsiderReport
 
 
 @register.filter
@@ -71,6 +82,7 @@ def products_list(request):
                                                                   })
 
 
+@login_required
 def products_details(request, alibaba_product_id):
 
     if not request.user.can('insider_reports.use'):
@@ -135,3 +147,58 @@ def products_details(request, alibaba_product_id):
                                                                          f' Product {alibaba_product_id}'],
                                                                      'alibaba_account_id': alibaba_account_id,
                                                                      })
+
+
+@login_required
+def download_report(request, report_id):
+    if not request.user.can('download_insider_report.use'):
+        raise permissions.PermissionDenied()
+
+    report = get_object_or_404(InsiderReport, pk=report_id)
+    pdf_data = BytesIO(requests.get(report.report_url).content)
+    base_pdf = PdfReader(pdf_data)
+
+    pdfmetrics.registerFont(TTFont('Poppins', 'app/static/fonts/Poppins-Bold.ttf'))
+
+    name_string = 'Exclusively for Dropified Members'
+    if request.user.get_full_name():
+        name_string = f'Exclusively for {request.user.get_full_name()}'
+
+    data = BytesIO()
+    c = canvas.Canvas(data)
+    c.setPageSize((595, 842))
+    c.setFillColorRGB(255, 255, 255)
+    c.setFont('Poppins', 16)
+    c.drawCentredString((c._pagesize[0] / 2) + 15, c._pagesize[1] / 2, name_string)
+    c.save()
+    data.seek(0)
+
+    reader = PdfReader(data)
+    writer = PdfWriter()
+    writer.addpage(reader.pages[0])
+    blank_page = BytesIO()
+    writer.write(blank_page)
+    blank_page.seek(0)
+
+    pdf = PdfReader(blank_page)
+    pdf_pages = PageMerge() + pdf.pages
+
+    pdf_page = pdf_pages[0]
+
+    page_merge = PageMerge(base_pdf.pages[0]).add(pdf_page)
+    pdf_obj = page_merge[-1]
+    pdf_obj.y = 190
+
+    page_merge.render()
+
+    output = BytesIO()
+    PdfWriter().write(output, base_pdf)
+
+    output.seek(0)
+
+    file_name = f'Insiders Report {report.report_name}'
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{file_name}.pdf"'
+    response.write(output.read())
+
+    return response
