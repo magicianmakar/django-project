@@ -6,6 +6,7 @@ from collections import defaultdict
 
 from django.core.cache import cache
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import reverse
 
 from aliexpress_core.models import AliexpressAccount
 from aliexpress_core.settings import API_KEY, API_SECRET
@@ -38,6 +39,8 @@ class AliexpressFulfillHelper():
         self.shipping_address = shipping_address
         self.order_notes = order_notes
         self.order_success_msg = ''
+        self.session_expired_msg = 'Session expired. Please reconnect your AliExpress account'
+        self.aliexpress_settings_link = app_link(f"{reverse('settings')}#aliexpress")
 
         self.reset_errors()
 
@@ -151,7 +154,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['id'])] = item
 
         if not need_fulfill_items:
-            return self.set_order_success_msg('The order has no item that needs processing')
+            return self.set_order_success_msg('No items to order')
 
         self.items = need_fulfill_items
         self.fulfill_aliexpress_order('woo')
@@ -191,7 +194,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['data']['id'])] = item
 
         if not need_fulfill_items:
-            return self.set_order_success_msg('Order have no items that need ordering')
+            return self.set_order_success_msg('No items to order')
 
         self.items = need_fulfill_items
         self.fulfill_aliexpress_order('chq')
@@ -232,7 +235,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['id'])] = item
 
         if not need_fulfill_items:
-            return self.set_order_success_msg('Order have no items that need ordering')
+            return self.set_order_success_msg('No items to order')
 
         self.items = need_fulfill_items
         self.fulfill_aliexpress_order('bigcommerce')
@@ -275,7 +278,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['id'])] = item
 
         if not need_fulfill_items:
-            return self.set_order_success_msg('Order have no items that need ordering')
+            return self.set_order_success_msg('No items to order')
 
         self.items = need_fulfill_items
 
@@ -320,7 +323,7 @@ class AliexpressFulfillHelper():
                 need_fulfill_items[str(el['id'])] = item
 
         if not need_fulfill_items:
-            return self.set_order_success_msg('Order have no items that need ordering')
+            return self.set_order_success_msg('No items to order')
 
         self.items = need_fulfill_items
 
@@ -371,7 +374,8 @@ class AliexpressFulfillHelper():
 
         aliexpress_account = AliexpressAccount.objects.filter(user=self.store.user).first()
         if not aliexpress_account:
-            return self.order_error("No AliExpress account found")
+            settings_link = app_link(f"{reverse('settings')}#aliexpress")
+            return self.order_error(f'<span>No AliExpress account found. Click <a href="{settings_link}" target="_blank">here</a> to connect</span>')
 
         aliexpress_variant_sku_dict = ''
 
@@ -453,7 +457,14 @@ class AliexpressFulfillHelper():
                     else:
                         item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
                 except:
-                    aliexpress_variant_sku_dict = self.ds_product_data(line_item['source_id'], aliexpress_account)
+                    try:
+                        aliexpress_variant_sku_dict = self.ds_product_data(line_item['source_id'], aliexpress_account)
+                    except TopException as e:
+                        if e.errorcode == 27 and e.message.strip().lower() == 'invalid session':
+                            session_msg = self.session_expired_msg
+                            return self.order_error(f'<span>{session_msg} <a href="{self.aliexpress_settings_link}" target="_blank">here</a></span>')
+                        else:
+                            return self.order_error(e.message)
                     if aliexpress_variant_sku_dict is None:
                         self.order_item_error(line_id, 'This item is discontinued in AliExpress.')
                         continue
@@ -481,8 +492,8 @@ class AliexpressFulfillHelper():
                 result = aliexpress_order.getResponse(authrize=aliexpress_account.access_token)
             except TopException as e:
                 if e.errorcode == 27 and e.message.strip().lower() == 'invalid session':
-                    error_message = 'Session expired. Please reconnect your AliExpress account'
-                    return self.order_error(error_message)
+                    session_msg = self.session_expired_msg
+                    return self.order_error(f'<span>{session_msg} <a href="{self.aliexpress_settings_link}" target="_blank">here</a></span>')
                 else:
                     return self.order_error(e.message)
 
