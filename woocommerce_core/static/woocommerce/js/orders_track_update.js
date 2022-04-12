@@ -389,6 +389,7 @@
             }
 
         return new P(function(resolve, reject) {
+            order.sync_method = 'new_page';
             window.extensionSendMessage({
                 subject: 'getOrderStatus',
                 order_details: order,

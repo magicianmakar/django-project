@@ -231,6 +231,7 @@
         var delay = parseFloat($('#update-delay').val(), 10).bound(0.1, 100) * 1000;
 
         return new P(function(resolve, reject) {
+            order.sync_method = 'new_page';
             window.extensionSendMessage({
                 subject: 'getOrderStatus',
                 order_details: order,

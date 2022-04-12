@@ -202,8 +202,7 @@
         var target_id = e.target.id;
         if(target_id === "quick-sync-selected-orders")  {
             $('#quick-api-update').trigger('click');
-        }
-        else {
+        } else {
             $('.start-update-btn').trigger('click');
         }
     });

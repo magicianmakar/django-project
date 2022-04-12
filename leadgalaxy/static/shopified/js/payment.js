@@ -245,8 +245,8 @@
                 swal.close();
 
                 setTimeout(function() {
-                    window.location.href = '/user/profile#plan';
-                }, 1500);
+                    window.location.reload();
+                }, 500);
             },
             error: function(data) {
                 displayAjaxError('Plan Subscription', data);
