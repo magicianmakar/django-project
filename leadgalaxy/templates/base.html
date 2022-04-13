@@ -1,6 +1,7 @@
 {% load static %}
 {% load hijack_tags %}
 {% load perms_helper %}
+{% load url_tools %}
 {% load template_helper %}
 {% load compress %}
 {% load cache %}
@@ -150,6 +151,15 @@
                             </a>
                         </li>
                         {% endif %}
+
+                        {% if request.user|can:"switch_theme.use" and page_name == 'orders' %}
+                            {% if not store_type or store_type == 'shopify' %}
+                            <li class="m-l" style="border-color: #dbdbdb;">
+                                <a href="{% url_replace 'theme' 'old' %}" style="btn btn-block btn-sm">Switch to old view</a>
+                            </li>
+                            {% endif %}
+                        {% endif %}
+
                         <li class="m-l" style="border-color: #dbdbdb;">
                             <a href="{% url 'settings' %}">
                                 <img src="{% static 'img/gear.svg' %}">
