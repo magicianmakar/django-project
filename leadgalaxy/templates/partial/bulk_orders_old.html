@@ -1,0 +1,136 @@
+{% load template_helper perms_helper %}
+
+<div id="bulk-order-button-wrapper" class="row m-t hidden-xs">
+    <div class="col-md-4 col-md-offset-8 text-right">
+        <div class="btn-group pull">
+            <button {% if not orders_count %}disabled{% endif %}
+                    id="bulk-order-btn"
+                    data-store-id="{{ store.id }}"
+                    pages-count="{{paginator.num_pages}}"
+                    orders-count="{{ orders_count }}"
+                    type="button"
+                    class="btn btn-success btn-rounded btn-sm dropdown-toggle"
+                    title="Place orders in bulk"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false">
+                Bulk Order Processing
+                <span class="caret"></span>
+            </button>
+
+            <ul class="dropdown-menu pull-right">
+                {% if use_aliexpress_api %}
+                <li>
+                    <a href="#" class="bulk-order-btn" data-source="aliexpress">
+                        Quick Aliexpress orders
+                    </a>
+                </li>
+                {% endif %}
+                {% if request.user|can:'bulk_order.use' %}
+                <li>
+                    <a href="#" class="bulk-order-btn">
+                        For Aliexpress/eBay orders
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if request.user|can:'pls.use' %}
+                <li>
+                    <a href="#" class="bulk-order-btn" data-source="private-label">
+                        For Private Label orders
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if request.user|can:'alibaba_integration.use' %}
+                <li>
+                    <a href="#" class="bulk-order-btn" data-source="alibaba">
+                        For Alibaba orders
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if show_pod %}
+                <li>
+                    <a href="#" class="bulk-order-btn" data-source="print-on-demand">
+                        For Print on Demand orders
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <div id="bulk-order-modal" class="modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title">
+                            <span class="original-title">Bulk Order Processing</span>
+                            <span class="dropified-print-title hidden">Bulk Dropified Print</span>
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                        <div id="bulk-order-steps">
+                            <h1>Select Pages</h1>
+                            <div class="bulk-order-step">
+                                <h2>Select the pagination range to queue</h2>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>From</label>
+                                            <input type="text" class="form-control" name="queue_page_from" value="1">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>To</label>
+                                            <input type="text" class="form-control" name="queue_page_to" value="{{ paginator.num_pages|min_value:10 }}">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <div id="bulk-order-step-error" class="form-group has-error" style="display: none;">
+                                            <span class="help-block"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <h1>Load Orders</h1>
+                            <div class="bulk-order-step">
+                                <h2>Wait while we load your orders</h2>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="update-progress">
+                                            <div class="progress progress-striped active">
+                                                <div style="width: 0%;" class="progress-bar progress-bar-success"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <button class="btn btn-danger btn-outline stop-bulk-btn" style=""
+                                                data-store="{{store.id}}" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Stopping..."
+                                                data-continue-text="<i class='fa fa-play-circle-o'></i> Continue">
+                                            <i class="fa fa-stop-circle"></i> Stop
+                                        </button>
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <div id="bulk-order-load-error" class="text-right form-group has-error" style="display: none;">
+                                            <span class="help-block">Click on "Stop" button to start fulfilling found orders</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <h1>Send to Queue</h1>
+                            <div class="bulk-order-step">
+                                <h2>You Have <span id="bulk-order-count"></span> that need fulfillment</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

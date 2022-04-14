@@ -1799,6 +1799,17 @@ class OrdersView(AuthenticationMixin, TemplateView):
         self.open_orders = None  # Found orders count
         self.current_page = None  # current Page instance returned by paginator
 
+    # Get temaplte name funcion for TemplateView class
+    def get_template_names(self):
+        theme = self.request.GET.get('theme')
+        if theme:
+            self.request.user.set_config('use_old_theme', theme == 'old')
+
+        if self.request.user.get_config('use_old_theme'):
+            return ['orders_old.html']
+        else:
+            return ['orders_new.html']
+
     def find_orders(self, store, order_id, line_id=None):
         self.store = store
         self.user = store.user

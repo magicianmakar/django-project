@@ -1,0 +1,109 @@
+.logo {
+  text-align: center;
+  margin-top: 22px;
+}
+
+.sidebar .profile {
+  margin: 20px;
+  margin-top: 30px;
+  margin-bottom: 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.sidebar .account {
+  margin: 20px;
+  margin-top: 0;
+  font-family: Lato;
+  font-size: 12px;
+  color: rgb(167, 177, 194);
+  margin-left: 30px;
+}
+
+.sidebar .profile .name {
+  font-family: Lato;
+  font-size: 15px;
+  color: white;
+  margin-left: 10px;
+}
+
+.sidebar .profile .name a,
+.sidebar .account a {
+  color: inherit;
+}
+
+.sidebar .profile .icon {
+  font-family: Lato;
+  font-size: 15px;
+  color: white;
+}
+
+.sidebar ul {
+  list-style: none;
+  margin: 0;
+  margin-top: 20px;
+  padding-left: 20px;
+  font-family: Lato;
+  font-size: 15px;
+  color: rgb(167, 177, 194);
+  line-height: 1.5;
+}
+
+.sidebar ul a {
+  color: inherit;
+  display: block;
+}
+
+.sidebar .section {
+  margin-top: 10px;
+}
+
+.sidebar .section .icon {
+  color: #8bb670;
+}
+
+.sidebar .section span.item-title,
+.sidebar .item,
+.sidebar .section-no-icon {
+  margin-left: 10px;
+  transition: all .15s ease;
+}
+
+.sidebar .item:hover,
+.sidebar span.item-link:hover,
+.sidebar .section-no-icon:hover,
+.sidebar .active,
+.sidebar .active span.item-title {
+  color: white;
+  opacity: 1;
+}
+
+.sidebar .section span.item-title:hover {
+  cursor: default;
+}
+
+.sidebar .spacer {
+  margin-top: 60px;
+}
+
+.sidebar ul li {
+  margin-top: 2px;
+}
+
+.sidebar ul .item {
+  padding-left: 30px;
+  transition: all .15s ease;
+}
+
+.sidebar ul .section .section-header {
+  display: flex;
+}
+
+.sidebar ul .section div {
+  height: 21px;
+  width: 21px;
+}
+
+#academy-span {
+  font-weight: 600;
+}
