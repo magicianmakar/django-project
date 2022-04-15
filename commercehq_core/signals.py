@@ -40,6 +40,8 @@ def chq_send_keen_event_for_product(sender, instance, created, **kwargs):
             'source_url': source_url,
             'store': store.title if store else None,
             'store_type': 'CommerceHQ',
+            'store_id': store.id if store else 0,
+            'user_id': instance.user_id,
             'product_title': instance.title,
             'product_price': instance.price,
             'product_type': instance.product_type,
