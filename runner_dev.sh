@@ -4,7 +4,9 @@ TYPE="$1"
 
 export OAUTHLIB_RELAX_TOKEN_SCOPE='1'
 
-source venv/bin/activate
+if [ -f venv/bin/activate ]; then
+	source venv/bin/activate
+fi
 
 if [ "$TYPE" == "web" ]; then
     python manage.py runserver
