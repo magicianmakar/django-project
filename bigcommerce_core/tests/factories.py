@@ -2,7 +2,7 @@ import factory
 import factory.fuzzy
 
 
-class BigCommerceStoreFactory(factory.DjangoModelFactory):
+class BigCommerceStoreFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
     api_url = factory.fuzzy.FuzzyText(suffix='.mybigcommerce.com')
@@ -13,7 +13,7 @@ class BigCommerceStoreFactory(factory.DjangoModelFactory):
         model = 'bigcommerce_core.BigCommerceStore'
 
 
-class BigCommerceBoardFactory(factory.DjangoModelFactory):
+class BigCommerceBoardFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
     config = '{}'
@@ -22,7 +22,7 @@ class BigCommerceBoardFactory(factory.DjangoModelFactory):
         model = 'bigcommerce_core.BigCommerceBoard'
 
 
-class BigCommerceProductFactory(factory.DjangoModelFactory):
+class BigCommerceProductFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('bigcommerce_core.tests.factories.BigCommerceStoreFactory')
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
@@ -31,7 +31,7 @@ class BigCommerceProductFactory(factory.DjangoModelFactory):
         model = 'bigcommerce_core.BigCommerceProduct'
 
 
-class BigCommerceSupplierFactory(factory.DjangoModelFactory):
+class BigCommerceSupplierFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('bigcommerce_core.tests.factories.BigCommerceStoreFactory')
     product = factory.SubFactory('bigcommerce_core.tests.factories.BigCommerceProductFactory')
 
@@ -39,7 +39,7 @@ class BigCommerceSupplierFactory(factory.DjangoModelFactory):
         model = 'bigcommerce_core.BigCommerceSupplier'
 
 
-class BigCommerceOrderTrackFactory(factory.DjangoModelFactory):
+class BigCommerceOrderTrackFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store = factory.SubFactory('bigcommerce_core.tests.factories.BigCommerceStoreFactory')
     order_id = factory.fuzzy.FuzzyInteger(1000)

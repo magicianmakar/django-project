@@ -2,7 +2,7 @@ import factory
 import factory.fuzzy
 
 
-class VideosListFactory(factory.DjangoModelFactory):
+class VideosListFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
 

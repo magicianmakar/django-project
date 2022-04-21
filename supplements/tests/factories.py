@@ -4,7 +4,7 @@ import factory
 import factory.fuzzy
 
 
-class PLSupplementFactory(factory.DjangoModelFactory):
+class PLSupplementFactory(factory.django.DjangoModelFactory):
     title = factory.fuzzy.FuzzyText()
     description = factory.fuzzy.FuzzyText()
     category = factory.fuzzy.FuzzyText()
@@ -21,12 +21,12 @@ class PLSupplementFactory(factory.DjangoModelFactory):
         model = 'supplements.PLSupplement'
 
 
-class ProductSupplierFactory(factory.DjangoModelFactory):
+class ProductSupplierFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = 'product_common.ProductSupplier'
 
 
-class UserSupplementFactory(factory.DjangoModelFactory):
+class UserSupplementFactory(factory.django.DjangoModelFactory):
     title = factory.fuzzy.FuzzyText()
     description = factory.fuzzy.FuzzyText()
     category = factory.fuzzy.FuzzyText()
@@ -37,19 +37,19 @@ class UserSupplementFactory(factory.DjangoModelFactory):
         model = 'supplements.UserSupplement'
 
 
-class UserSupplementLabelFactory(factory.DjangoModelFactory):
+class UserSupplementLabelFactory(factory.django.DjangoModelFactory):
     url = factory.fuzzy.FuzzyText(prefix="http://", suffix=".com/image.jpeg")
 
     class Meta:
         model = 'supplements.UserSupplementLabel'
 
 
-class LabelCommentFactory(factory.DjangoModelFactory):
+class LabelCommentFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = 'supplements.LabelComment'
 
 
-class PLSOrderFactory(factory.DjangoModelFactory):
+class PLSOrderFactory(factory.django.DjangoModelFactory):
     store_id = factory.fuzzy.FuzzyInteger(999)
     store_order_id = factory.fuzzy.FuzzyText()
     amount = factory.fuzzy.FuzzyInteger(999)
@@ -60,7 +60,7 @@ class PLSOrderFactory(factory.DjangoModelFactory):
         model = 'supplements.PLSOrder'
 
 
-class PLSOrderLineFactory(factory.DjangoModelFactory):
+class PLSOrderLineFactory(factory.django.DjangoModelFactory):
     sku = factory.fuzzy.FuzzyText()
     shipstation_key = factory.fuzzy.FuzzyText()
     line_id = factory.fuzzy.FuzzyInteger(999)
@@ -72,17 +72,17 @@ class PLSOrderLineFactory(factory.DjangoModelFactory):
         model = 'supplements.PLSOrderLine'
 
 
-class LabelSizeFactory(factory.DjangoModelFactory):
+class LabelSizeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = 'supplements.LabelSize'
 
 
-class MockupTypeFactory(factory.DjangoModelFactory):
+class MockupTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = 'supplements.MockupType'
 
 
-class ShippingGroupFactory(factory.DjangoModelFactory):
+class ShippingGroupFactory(factory.django.DjangoModelFactory):
     slug = factory.Iterator(['US', 'GB'])
     name = factory.Iterator(['United States', 'United Kingdom'])
     locations = factory.Iterator(['United States', 'United Kingdom'])
@@ -96,7 +96,7 @@ class ShippingGroupFactory(factory.DjangoModelFactory):
         model = 'supplements.ShippingGroup'
 
 
-class BasketItemFactory(factory.DjangoModelFactory):
+class BasketItemFactory(factory.django.DjangoModelFactory):
     id = factory.fuzzy.FuzzyInteger(9999)
     quantity = 1
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
@@ -105,7 +105,7 @@ class BasketItemFactory(factory.DjangoModelFactory):
         model = 'supplements.BasketItem'
 
 
-class BasketOrderTrackFactory(factory.DjangoModelFactory):
+class BasketOrderTrackFactory(factory.django.DjangoModelFactory):
     id = factory.fuzzy.FuzzyInteger(9999)
     store = factory.fuzzy.FuzzyInteger(999)
     product_id = factory.fuzzy.FuzzyInteger(999)

@@ -2,7 +2,7 @@ import factory
 import factory.fuzzy
 
 
-class StripeCustomerFactory(factory.DjangoModelFactory):
+class StripeCustomerFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     customer_id = factory.fuzzy.FuzzyText()
 
@@ -10,7 +10,7 @@ class StripeCustomerFactory(factory.DjangoModelFactory):
         model = 'stripe_subscription.StripeCustomer'
 
 
-class StripePlanFactory(factory.DjangoModelFactory):
+class StripePlanFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     plan = factory.SubFactory('leadgalaxy.tests.factories.GroupPlanFactory')
     amount = factory.fuzzy.FuzzyDecimal(0.00, 1000.00, 2)

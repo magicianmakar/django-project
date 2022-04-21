@@ -2,7 +2,7 @@ import factory
 import factory.fuzzy
 
 
-class WooStoreFactory(factory.DjangoModelFactory):
+class WooStoreFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
     api_url = factory.fuzzy.FuzzyText(prefix='https://', suffix='.com')
@@ -13,7 +13,7 @@ class WooStoreFactory(factory.DjangoModelFactory):
         model = 'woocommerce_core.WooStore'
 
 
-class WooBoardFactory(factory.DjangoModelFactory):
+class WooBoardFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
     config = '{}'
@@ -22,7 +22,7 @@ class WooBoardFactory(factory.DjangoModelFactory):
         model = 'woocommerce_core.WooBoard'
 
 
-class WooProductFactory(factory.DjangoModelFactory):
+class WooProductFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('woocommerce_core.tests.factories.WooStoreFactory')
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
@@ -31,7 +31,7 @@ class WooProductFactory(factory.DjangoModelFactory):
         model = 'woocommerce_core.WooProduct'
 
 
-class WooSupplierFactory(factory.DjangoModelFactory):
+class WooSupplierFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('woocommerce_core.tests.factories.WooStoreFactory')
     product = factory.SubFactory('woocommerce_core.tests.factories.WooProductFactory')
 
@@ -39,7 +39,7 @@ class WooSupplierFactory(factory.DjangoModelFactory):
         model = 'woocommerce_core.WooSupplier'
 
 
-class WooOrderTrackFactory(factory.DjangoModelFactory):
+class WooOrderTrackFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store = factory.SubFactory('woocommerce_core.tests.factories.WooStoreFactory')
     order_id = factory.fuzzy.FuzzyInteger(1000)

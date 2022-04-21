@@ -32,7 +32,7 @@ NOW = timezone.now()
 YESTERDAY = NOW - timedelta(days=1)
 
 
-class FacebookAccessFactory(factory.DjangoModelFactory):
+class FacebookAccessFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
     access_token = factory.fuzzy.FuzzyText()
@@ -41,7 +41,7 @@ class FacebookAccessFactory(factory.DjangoModelFactory):
         model = 'profit_dashboard.FacebookAccess'
 
 
-class FacebookAccountFactory(factory.DjangoModelFactory):
+class FacebookAccountFactory(factory.django.DjangoModelFactory):
     access = factory.SubFactory('profit_dashboard.tests.FacebookAccessFactory')
     store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
     last_sync = factory.fuzzy.FuzzyDateTime(YESTERDAY, NOW)
@@ -52,7 +52,7 @@ class FacebookAccountFactory(factory.DjangoModelFactory):
         model = 'profit_dashboard.FacebookAccount'
 
 
-class FacebookAdCostFactory(factory.DjangoModelFactory):
+class FacebookAdCostFactory(factory.django.DjangoModelFactory):
     account = factory.SubFactory('profit_dashboard.tests.FacebookAccountFactory')
     spend = factory.fuzzy.FuzzyFloat(100.0)
     created_at = factory.fuzzy.FuzzyDateTime(YESTERDAY, NOW)

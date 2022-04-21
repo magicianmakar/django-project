@@ -2,7 +2,7 @@ import factory
 import factory.fuzzy
 
 
-class ShopifySubscriptionFactory(factory.DjangoModelFactory):
+class ShopifySubscriptionFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
     plan = factory.SubFactory('leadgalaxy.tests.factories.GroupPlanFactory')
