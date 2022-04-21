@@ -49,13 +49,6 @@
                             class="plan-feature {% if current_plan == item %}selected{% endif %}">
                             <p class="plan-feature">
                                 {% plan_limit item 'stores' %}
-
-                                {% if 'elite' in item.slug %}
-                                <p style="padding: 0 !important; margin: 0 !important; ">
-                                    $27/month per additional store
-                                </p>
-                                {% endif %}
-
                             </p>
 
                             <p class="plan-feature">

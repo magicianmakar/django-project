@@ -188,6 +188,19 @@
             </div>
 
             <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <input type="checkbox" class="js-switch" id="compare_at_enabled"
+                            name="compare_at_enabled" {% if config.compare_at_enabled or config.compare_at_enabled is None %}checked="checked"{% endif %}>
+                        <label for="compare_at_enabled" class="control-label">
+                            Enable Compare at Override
+                            {% include 'partial/help_tooltip.html' with help="If enabled, you can set your own compare at price markup. Otherwise, supplier's non-sale price will be used. " qtipstyle="color:#BBB" %}
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
                         <input type="checkbox" class="js-switch" id="initial_inventory_sync"

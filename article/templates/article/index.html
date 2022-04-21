@@ -1,6 +1,7 @@
 {% extends template_config.base|default:'base.html' %}
 
 {% load static %}
+{% load template_helper %}
 
 {% block title %}Dropified{% endblock %}
 
@@ -18,20 +19,49 @@
 
 <div class="ibox-content forum-container">
     <div class="forum-title">
-        <div class="pull-right forum-desc">
-            <samll>Total Pages: {{articles.count}}</samll>
-        </div>
         {% if tag %}
         <h3>{{tag}} Pages</h3>
         {% endif %}
     </div>
 
-    {% if user.is_staff %}
-        <a class="btn btn-sm btn-success" href="{% url template_config.url.namespace|add:'add-page' %}">
-            <i class="fa fa-plus"></i> Add Page
-        </a>
-    {% endif %}
-
+    <div class="row">
+        <form>
+            <div class="col-md-3 form-group">
+                <input class="form-control" name="q" placeholder="Search" value="{{ request.GET.q | default:'' }}">
+            </div>
+            <div class="col-md-2 form-group">
+                <select class="form-control" name="sort" onchange="submit()">
+                    <option value="">Sorting</option>
+                    <option value="new" {% if request.GET.sort  == 'new' %}selected{% endif %}>Newest first</option>
+                    <option value="old" {% if request.GET.sort  == 'old' %}selected{% endif %}>Oldest first</option>
+                    <option value="views" {% if request.GET.sort  == 'views' %}selected{% endif %}>Number of views</option>
+                </select>
+            </div>
+            <div class="col-md-2 form-group">
+                <select class="form-control" name="author" onchange="submit()">
+                    <option value="">Author</option>
+                    {% for item in authors %}
+                    <option value="{{ item.id }}" {% if request.GET.author  == item.id|slugify %}selected{% endif %}>{{ item.frist_name | default:item.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-control" name="tags" onchange="submit()">
+                    <option value="">Tags</option>
+                    {% for item in tags %}
+                    <option value="{{ item.id }}" {% if request.GET.tags  == item.id|slugify %}selected{% endif %}>{{ item.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 text-right">
+                {% if user.is_staff %}
+                <a class="btn btn-sm btn-success" href="{% url template_config.url.namespace|add:'add-page' %}">
+                    <i class="fa fa-plus"></i> Add Page
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
 
     {% for article in articles %}
     <div class="forum-item active">
@@ -51,7 +81,7 @@
                     By <a herf="#">{{ article.author.username }}</a>,
                     {% endif %}
 
-                    Last update: <span class="date">{{ article.updated_at|date:"d/m/Y" }}</span>
+                    Last update: <span class="date">{% date_humanize article.updated_at %}</span>
 
                     {% if user.is_staff %}
                     , Views: <b class="">{{ article.views }}</b>
@@ -67,6 +97,15 @@
             <i class="fa fa-plus"></i> Add Page
         </a>
     {% endif %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="pull-right forum-desc">
+                <samll>Total Pages: {{articles.count}}</samll>
+            </div>
+        </div>
+    </div>
+
 
 </div>
 

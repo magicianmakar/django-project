@@ -31,18 +31,29 @@ class FBStore(SureDoneStoreBase):
                                   verbose_name='Facebook store name')
     commerce_manager_id = models.CharField(default='', null=True, blank=True, max_length=100,
                                            verbose_name='Facebook Commerce Manager ID')
+    business_manager_id = models.CharField(default='', null=True, blank=True, max_length=100,
+                                           verbose_name='Facebook Business Manager ID')
+    catalog_id = models.CharField(default='', null=True, blank=True, max_length=100,
+                                  verbose_name='Facebook Catalog ID')
 
     creds = JSONField(default=dict, verbose_name='Facebook creds')
 
-    def sync(self, instance_title: str, options_data: dict):
+    def sync(self, instance_title: str, options_data: dict, update_active_status=False):
         store_prefix = f"facebook{'' if self.store_instance_id == 1 else self.store_instance_id}"
         fb_store_data = safe_json(options_data.get(f'plugin_settings_{store_prefix}'))
         fb_sets_data = fb_store_data.get('sets', {})
 
         self.store_name = fb_sets_data.get('page_shop_name', {}).get('value')
         self.commerce_manager_id = fb_sets_data.get('commerce_manager_id', {}).get('value')
+        self.business_manager_id = fb_sets_data.get('business_manager_id', {}).get('value')
+        self.catalog_id = fb_sets_data.get('catalog_id', {}).get('value')
 
         self.creds = fb_store_data.get('creds', {})
+
+        if update_active_status:
+            system_token = self.creds.get('system_token', {}).get('value')
+            access_token = self.creds.get('access_token', {}).get('value')
+            self.is_active = bool(system_token) and bool(access_token)
 
         # Get facebook account title
         self.title = instance_title
@@ -142,14 +153,19 @@ class FBProduct(SureDoneProductBase):
 
     @property
     def fb_url(self):
-        """TODO:FB: how do we construct facebook product URL? """
+        catalog_link = f'https://business.facebook.com/commerce/catalogs/{self.store.catalog_id}/products'
         if self.is_connected:
-            return f'https://www.facebook.com/itm/{self.source_id}'
+            if self.source_id:
+                return f'https://www.facebook.com/commerce/products/{self.source_id}'
+            else:
+                return catalog_link
         elif self.some_variants_are_connected:
             connected_variants = self.product_variants.exclude(source_id=0).exclude(source_id=None)
             if connected_variants.count() > 0:
-                connected_variant = connected_variants.first()
-                return f'https://www.facebook.com/itm/{connected_variant.source_id}'
+                for v in connected_variants.all():
+                    if v.source_id:
+                        return f'https://www.facebook.com/commerce/products/{v.source_id}'
+                return catalog_link
 
         return None
 

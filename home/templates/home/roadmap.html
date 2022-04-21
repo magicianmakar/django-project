@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block extracss %}
+<style>
+  .wrapper-content {
+    padding: 0 !important;
+  }
+</style>
+{% endblock %}
+
+{% block breadcrumb-area %}{% endblock breadcrumb-area %}
+
+{% block main-container %}
+  <iframe src="https://roadmap.dropified.com/dropified?token={{ loopedin_token }}" height="900" width="100%" frameborder="0"
+    style="height: calc(100vh - 125px); width: calc(100vw - 228px); margin-left: -15px;">
+  </iframe>
+{% endblock %}

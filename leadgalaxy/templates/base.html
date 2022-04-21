@@ -1,6 +1,7 @@
 {% load static %}
 {% load hijack_tags %}
 {% load perms_helper %}
+{% load url_tools %}
 {% load template_helper %}
 {% load compress %}
 {% load cache %}
@@ -150,6 +151,15 @@
                             </a>
                         </li>
                         {% endif %}
+
+                        {% if request.user|can:"switch_theme.use" and page_name == 'orders' %}
+                            {% if not store_type or store_type == 'shopify' %}
+                            <li class="m-l" style="border-color: #dbdbdb;">
+                                <a href="{% url_replace 'theme' 'old' %}" style="btn btn-block btn-sm">Switch to old view</a>
+                            </li>
+                            {% endif %}
+                        {% endif %}
+
                         <li class="m-l" style="border-color: #dbdbdb;">
                             <a href="{% url 'settings' %}">
                                 <img src="{% static 'img/gear.svg' %}">
@@ -386,7 +396,7 @@
                     <div class="text-center">
                         <img src="{% static 'img/file.png' %}" style="margin: 0 auto;">
                         <h4 class="modal-title">Add New Board</h4>
-                        <p style="padding-top: 5px;">Add new board to your account?</p>
+                        <p style="padding-top: 5px;">Organize your products with Boards</p>
                     </div>
                     <br>
                     <div class="row" style="margin-bottom:10px;">
@@ -454,6 +464,9 @@
     <script type="text/javascript">
         window.app_base_link = '{% app_link %}';
         window.app_base_api = '{% app_link "api" %}';
+        var li_sidebar = {
+            workspace_id : '{% app_setting "LOOPEDIN_WORKSPACE_ID" %}'
+        };
     </script>
 
 

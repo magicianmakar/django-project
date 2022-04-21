@@ -133,8 +133,9 @@ class AlibabaApi(ApiResponseMixin):
 
     def post_import_alibaba_product(self, request, user, data):
         for import_to in data['store_ids']:
-            save_alibaba_products(request, {
+            products = save_alibaba_products(request, {
                 user.id: [int(data.get('pid'))]
             }, import_to=import_to, publish=data['publish'])
-
+            if products.get('errored', []):
+                return self.api_error(products['errored'][0])
         return self.api_success()

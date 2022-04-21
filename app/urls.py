@@ -45,6 +45,7 @@ urlpatterns = [
     url(r'^webhook/', include('webhooks.urls')),
     url(r'^products/', include('product_core.urls')),
     url(r'^insider-reports/', include('insider_reports.urls')),
+    url(r'^loopedin/', include(('loopedin_core.urls', 'loopedin'), 'loopedin')),
 ]
 
 if settings.DEBUG:

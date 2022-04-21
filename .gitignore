@@ -18,3 +18,4 @@ app/static/libs/bower_components
 .coverage
 htmlcov
 __pycache__
+media

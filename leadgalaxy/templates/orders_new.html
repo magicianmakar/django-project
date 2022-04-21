@@ -796,15 +796,6 @@
                                                 {% include 'partial/place_order_btn.html' %}
 
                                                 {% if item.is_bundle and not order.pending_payment and not item.refunded %}
-                                                    {% if use_aliexpress_api %}
-                                                        <button class="pull-right btn btn-success small quick-bundle-order {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
-                                                                store-type="shopify"
-                                                                supplier-type="{{item.supplier_type}}"
-                                                                order-data="{{item.order_data_id}}"
-                                                                order-number="{{order.name}}">
-                                                            Quick Bundle Order
-                                                        </button>
-                                                    {% endif %}
                                                     <button class="pull-right btn btn-success small order-bundle {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
                                                             store-type="shopify"
                                                             supplier-type="{{item.supplier_type}}"
@@ -984,7 +975,7 @@
                     <div class="col-md-12">
                         <label class="m-t control-label" for="remember-variant">
                             <input type="checkbox" name="remember-variant" id="remember-variant" value="">
-                            Remeber for all orders
+                            Remember for all orders
                         </label>
                     </div>
                 </div>

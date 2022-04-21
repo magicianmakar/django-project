@@ -245,8 +245,8 @@
                 swal.close();
 
                 setTimeout(function() {
-                    window.location.href = '/user/profile#plan';
-                }, 1500);
+                    window.location.reload();
+                }, 500);
             },
             error: function(data) {
                 displayAjaxError('Plan Subscription', data);
@@ -310,8 +310,8 @@
     });
 
     $('.choose-shopify-plan').click(function(e) {
-        var parent = $(this).parents('.subsciption-plan');
-        var plan = parent.data('data-plan');
+        var parent = $(this).parents('.plan-wrapper').find('.subsciption-plan');
+        var plan = parent.data('plan');
         var contact_phone = '';
         try {
             contact_phone = parent.find('#contact-phone').val();
@@ -322,7 +322,7 @@
             url: config.shopify_plan,
             type: 'POST',
             data: {
-                plan: parent.data('plan'),
+                plan: plan,
                 contact_phone: contact_phone
             },
             success: function(data) {

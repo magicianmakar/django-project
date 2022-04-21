@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
@@ -15,7 +16,7 @@ from lib.exceptions import capture_message
 from shopified_core import permissions
 from shopified_core.mocks import get_mocked_config_alerts
 from shopified_core.shipping_helper import get_counrties_list
-from shopified_core.utils import last_executed
+from shopified_core.utils import last_executed, jwt_encode
 from aliexpress_core.models import AliexpressAccount
 from profit_dashboard.views import index
 from profits.utils import get_store_from_request
@@ -233,3 +234,19 @@ class GotoPage(View):
         })
 
         return store.get_page_url('index')
+
+
+class RoadMap(HomePageMixing):
+    template_name = 'home/roadmap.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        user = self.request.user.models_user
+        user_data = {
+            'email': user.email,
+            'name': f'{user.first_name} {user.last_name[:1]}',
+        }
+
+        encoded_jwt = jwt_encode(user_data, key=settings.LOOPEDIN_SSO_KEY)
+        context['loopedin_token'] = encoded_jwt
+        return context

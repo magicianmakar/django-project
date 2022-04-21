@@ -3,6 +3,7 @@ from django.utils import timezone
 import json
 import arrow
 
+from aliexpress_core.models import AliexpressAccount
 from shopified_core.commands import DropifiedBaseCommand
 from commercehq_core.models import CommerceHQOrderTrack
 
@@ -29,7 +30,10 @@ class Command(DropifiedBaseCommand):
         # uptime = options.get('uptime')
         days = options.get('days')
 
-        orders = CommerceHQOrderTrack.objects.filter(commercehq_status='') \
+        user_ids = AliexpressAccount.objects.all().values_list('user', flat=True)
+
+        orders = CommerceHQOrderTrack.objects.filter(user__in=user_ids) \
+            .filter(commercehq_status='') \
             .filter(source_tracking='') \
             .filter(hidden=False) \
             .filter(created_at__gte=arrow.now().replace(days=-days).datetime) \
@@ -70,13 +74,14 @@ class Command(DropifiedBaseCommand):
                 counter['need_tracking'] += 1
                 user = order.store.user
                 data = orders_tasks.get_order_info_via_api(order, order.source_id, order.store.id, 'chq', user)
+                if isinstance(data, str):
+                    self.write(f"Skipping tracking orders for user {user}: {data}")
+                    if data == 'Aliexpress Account is not connected':
+                        break
+                    else:
+                        continue
+
                 if data and not data.get('error_msg'):
-                    if isinstance(data, str):
-                        self.write(f"Skipping tracking orders for user {user}: {data}")
-                        if data == 'Aliexpress Account is not connected':
-                            break
-                        else:
-                            continue
                     new_tracking_number = (data.get('tracking_number') and data.get('tracking_number') not in order.source_tracking)
                     if data.get('tracking_number') != '' and new_tracking_number:
                         self.add_tracking_number_to_order(order, user, data)

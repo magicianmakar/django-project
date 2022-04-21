@@ -115,6 +115,7 @@ INSTALLED_APPS = (
     'insider_reports',
     'facebook_core',
     'suredone_core',
+    'loopedin_core',
 )
 
 MIDDLEWARE = (
@@ -713,3 +714,8 @@ SUREDONE_CUSTOM_FIELDS_CONFIG = [
 SUREDONE_DEFAULT_VARIANTS_FIELDS_CONFIG = [
     'material', 'ucfshipsfrom', 'ucfbundle', 'ucfgemcolor', 'ucfringsize', 'ucfmainstonecolor', 'ucfmetalcolor',
     'ucfussize', 'ucftrainlength', 'ucfheight', 'ucfbeltlength', 'ucfplugtype', 'model', 'ucfquantity']
+
+# LoopedIn
+
+LOOPEDIN_SSO_KEY = os.environ.get("LOOPEDIN_SSO_KEY")
+LOOPEDIN_WORKSPACE_ID = os.environ.get("LOOPEDIN_WORKSPACE_ID")

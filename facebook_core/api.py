@@ -173,8 +173,10 @@ class FBStoreApi(ApiBase):
         permissions.user_can_edit(user, store)
 
         result = None
+
+        fb_utils = FBUtils(user)
         try:
-            result = FBUtils(user).onboard_fb_instance(cms_id=cms_id, instance_id=store.filter_instance_id)
+            result = fb_utils.onboard_fb_instance(cms_id=cms_id, instance_id=store.filter_instance_id)
             if result.get('failed'):
                 capture_message(extra={
                     'message': 'Errors when onboarding a Facebook store',
@@ -191,6 +193,12 @@ class FBStoreApi(ApiBase):
             })
             return self.api_error('Error onboarding the Facebook store. Please try again later.')
 
+        options_data = fb_utils.get_all_user_options()
+        fb_utils.sync_or_create_store_instance(
+            instance_id=store.store_instance_id,
+            all_options_data=options_data,
+            update_active_status=True,
+        )
         return self.api_success({'result': 'success'})
 
     def post_advanced_settings(self, request, user, data):

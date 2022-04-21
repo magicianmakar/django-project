@@ -274,4 +274,10 @@ def add_store_type(request):
     except:
         namespace = ''
 
-    return {'store_type': namespace}
+    # get request url without query string
+    page_name = request.build_absolute_uri(request.get_full_path())
+    page_name = page_name.split('?')[0]
+    page_name = page_name.split('#')[0]
+    page_name = page_name.split('/').pop()
+
+    return {'store_type': namespace, 'page_name': page_name}

@@ -43,7 +43,7 @@
                                     </div>
                                 </div>
                             {% endif %}
-                            {% if current_plan_revision != stripe_downgrade_plan and stripe_downgrade_plan %}
+                            {% if current_plan != stripe_downgrade_plan and stripe_downgrade_plan %}
                              <div class="flex-column">
                                     <div class="plan-wrapper ">
                                         <div class="subsciption-plan import-monthly-shopify" data-plan-title="Keep Plan" data-plan="{{ stripe_downgrade_plan.id }}" data-trial-days="">
@@ -299,6 +299,9 @@
 {% block extracss %}
 {% compress css %}
     <style type="text/css">
+        #modal-cancel-plan-options .flex-row {
+           justify-content: center;
+        }
         #modal-cancel-plan-options .plan-wrapper hr {
             width: 100%;
             text-align: center;
@@ -360,7 +363,7 @@
 
         #modal-cancel-plan-options .flex-column {
             display: flex;
-            flex-grow: 1;
+            flex-grow: 0;
             margin: 0 0 0 20px;
         }
 

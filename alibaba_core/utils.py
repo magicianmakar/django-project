@@ -126,7 +126,7 @@ class APIRequest():
                 return self.get_response(api, remaining_tries=remaining_tries - 1)
 
             if e.subcode == 'isv.biz-auth.purchase.invalid':
-                return {'error': 'Please re-connect your alibaba account'}
+                return {'error': 'Please re-connect your Alibaba account'}
 
             # Product prices can change between requests, the first API request will reload cache
             if e.subcode == '430005':
@@ -135,6 +135,9 @@ class APIRequest():
             # User is ordering more than one of the same product with the same variant
             if e.subcode == '4012' and 'repeated' in e.submsg.lower():
                 return {'error': 'Ordering repeated products, please review your suppliers'}
+
+            if e.errorcode == 27 and e.subcode == 'invalid-sessionkey':
+                return {'error': 'Please re-connect your Alibaba account in Settings'}
 
             raise AlibabaUnknownError('Unknown error in Alibaba')
 
@@ -247,6 +250,7 @@ def save_alibaba_products(request, products_data, import_to=None, publish=True):
         ]
     }
     '''
+    result_products = {'saved': [], 'errored': []}
     for user_id, product_ids in products_data.items():
         try:
             user = get_object_or_404(User, id=user_id)
@@ -258,6 +262,9 @@ def save_alibaba_products(request, products_data, import_to=None, publish=True):
 
         products = account.get_products(product_ids)
         for api_product in products:
+            if 'error' in api_product:
+                result_products['errored'].append(api_product['error'])
+                continue
             if import_to is None:
                 # Default - can be {store_type} or {store_type}_{store_id}
                 import_to = user.get_config('alibaba_default_import', 'shopify')
@@ -322,6 +329,8 @@ def save_alibaba_products(request, products_data, import_to=None, publish=True):
                     StoreAPI.target = 'product-export'
                     StoreAPI.post_product_export(request, user, data)
             add_number_metric.apply_async(args=['product', 'alibaba', 1])
+        result_products['saved'].append(api_product)
+    return result_products
 
 
 class AlibabaUnknownError(Exception):

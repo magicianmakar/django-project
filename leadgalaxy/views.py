@@ -1437,7 +1437,7 @@ def user_profile(request):
     stripe_paused_plan = GroupPlan.objects.filter(slug='paused-plan').first()
     shopify_paused_plan = GroupPlan.objects.filter(slug='paused-plan-shopify').first()
     try:
-        if profile.plan.is_plod():
+        if profile.plan.is_plod:
             stripe_downgrade_plan = GroupPlan.objects.filter(slug='plus-monthly').first()
         else:
             stripe_downgrade_plan = GroupPlan.objects.filter(slug='21pro-monthly').first()
@@ -1815,6 +1815,17 @@ class OrdersView(AuthenticationMixin, TemplateView):
         self.paginator = None  # current paginator, can be API, ES or DB paginator
         self.open_orders = None  # Found orders count
         self.current_page = None  # current Page instance returned by paginator
+
+    # Get temaplte name funcion for TemplateView class
+    def get_template_names(self):
+        theme = self.request.GET.get('theme')
+        if theme:
+            self.request.user.set_config('use_old_theme', theme == 'old')
+
+        if self.request.user.get_config('use_old_theme'):
+            return ['orders_old.html']
+        else:
+            return ['orders_new.html']
 
     def find_orders(self, store, order_id, line_id=None):
         self.store = store
@@ -3072,7 +3083,7 @@ def orders_track(request):
     return render(request, 'orders_track.html', {
         'store': store,
         'use_aliexpress_api': request.user.models_user.can('aliexpress_api_integration.use'),
-        'aliexpress_account_count': AliexpressAccount.objects.filter(user=request.user).count(),
+        'aliexpress_account_count': AliexpressAccount.objects.filter(user=request.user.models_user).count(),
         'orders': orders,
         'date': date,
         'order_threshold': order_threshold,
