@@ -933,8 +933,10 @@ def products_supplier_sync(self, store_id, user_id, products, sync_price, price_
 
         try:
             # Fetch supplier variants
-            while True:
+            attempts = 3
+            while attempts:
                 supplier_variants = get_supplier_variants(supplier.supplier_type(), supplier.get_source_id())
+                attempts -= 1
                 if len(supplier_variants) > 0:
                     break
 
@@ -977,7 +979,7 @@ def products_supplier_sync(self, store_id, user_id, products, sync_price, price_
                 # Use one price for all variants
                 for i, variant in enumerate(variants):
                     variant['price'] = round(supplier_max_price * (100 + price_markup) / 100.0, 2)
-                    variant['compareatprice'] = round(supplier_variants[i].get('price') * (100 + compare_markup) / 100.0, 2)
+                    variant['compareatprice'] = round(variant.get('price') * (100 + compare_markup) / 100.0, 2)
                     updated = True
 
             if (sync_price and not same_price) or sync_inventory:
@@ -1006,7 +1008,7 @@ def products_supplier_sync(self, store_id, user_id, products, sync_price, price_
                     # Sync price
                     if sync_price and not same_price:
                         variants[idx]['price'] = round(variant.get('price') * (100 + price_markup) / 100.0, 2)
-                        variants[idx]['compareatprice'] = round(variant.get('price') * (100 + compare_markup) / 100.0, 2)
+                        variants[idx]['compareatprice'] = round(variants[idx].get('price') * (100 + compare_markup) / 100.0, 2)
                         updated = True
 
             # check unmapped variants
