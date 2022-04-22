@@ -282,6 +282,7 @@
     });
 
     $('.order-items').on('click', function(e) {
+        e.preventDefault();
         var order = $(this).parents('.order');
 
         orderItems(order, null, true);
