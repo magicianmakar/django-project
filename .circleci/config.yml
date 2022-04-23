@@ -54,9 +54,9 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - v6-dep-{{ .Branch }}-
-          - v6-dep-master-
-          - v6-dep-
+          - v7-dep-{{ .Branch }}-
+          - v7-dep-master-
+          - v7-dep-
 
       - run:
           name: Install Dependencies
@@ -94,7 +94,7 @@ jobs:
 
       # Save dependency cache
       - save_cache:
-          key: v6-dep-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "bower.json" }}-{{ checksum "package.json" }}
+          key: v7-dep-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "bower.json" }}-{{ checksum "package.json" }}
           paths:
           - app/static/libs/bower_components
           - node_modules
@@ -108,9 +108,9 @@ jobs:
 
       - restore_cache:
           keys:
-          - v6-dep-{{ .Branch }}-
-          - v6-dep-master-
-          - v6-dep-
+          - v7-dep-{{ .Branch }}-
+          - v7-dep-master-
+          - v7-dep-
 
       - run:
           name: Install Codecov
@@ -138,9 +138,9 @@ jobs:
 
       - restore_cache:
           keys:
-          - v6-dep-{{ .Branch }}-
-          - v6-dep-master-
-          - v6-dep-
+          - v7-dep-{{ .Branch }}-
+          - v7-dep-master-
+          - v7-dep-
 
       - run:
           name: Static Files
