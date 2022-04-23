@@ -2,7 +2,7 @@ version: 2
 defaults: &defaults
   working_directory: ~/ShopifiedApp/webapp
   docker:
-    - image: circleci/python:3.8.10-node
+    - image: circleci/python:3.8.13-node
       environment:
         SECRET_KEY: dBEn2nkwPvlKuEwrQtBwMLlOOTm3TObmllyOb0j6ZepIqztLQh28oItsJQCbVsF1
 
@@ -63,7 +63,7 @@ jobs:
           command: |
               ./scripts/prepare_build.sh
               source venv/bin/activate
-              pip install -U pip
+              pip install pip==22.0.4 setuptools==60.10.0 wheel==0.37.1
               pip install -r requirements.txt
               pip install -r requirements-dev.txt
               npm install --dev
