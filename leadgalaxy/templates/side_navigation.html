@@ -10,7 +10,7 @@
     btn-primary
     leftnavbar
     old-layout-hidden
-  {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
+  {% if request.user|can:'black.use' %}
   pls
   {% endif %}
   " href="#"></a>
@@ -197,7 +197,7 @@
 
 
 <nav id="mini-side-menu" class="navbar-default sidebar navbar-static-side icon-navbar
-  {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
+  {% if request.user|can:'black.use' %}
   pls
   {% endif %}
   " role="navigation" style="display: none">

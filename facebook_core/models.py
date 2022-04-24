@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -36,7 +35,7 @@ class FBStore(SureDoneStoreBase):
     catalog_id = models.CharField(default='', null=True, blank=True, max_length=100,
                                   verbose_name='Facebook Catalog ID')
 
-    creds = JSONField(default=dict, verbose_name='Facebook creds')
+    creds = models.JSONField(default=dict, verbose_name='Facebook creds')
 
     def sync(self, instance_title: str, options_data: dict, update_active_status=False):
         store_prefix = f"facebook{'' if self.store_instance_id == 1 else self.store_instance_id}"

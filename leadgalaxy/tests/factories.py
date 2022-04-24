@@ -11,7 +11,7 @@ NOW = timezone.now()
 TOMORROW = NOW + datetime.timedelta(days=1)
 
 
-class UserFactory(factory.DjangoModelFactory):
+class UserFactory(factory.django.DjangoModelFactory):
     id = factory.fuzzy.FuzzyInteger(999)
     username = factory.fuzzy.FuzzyText()
     first_name = factory.fuzzy.FuzzyText()
@@ -23,7 +23,7 @@ class UserFactory(factory.DjangoModelFactory):
         django_get_or_create = ['id']
 
 
-class UserProfileFactory(factory.DjangoModelFactory):
+class UserProfileFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     subuser_parent = None
     stores = factory.fuzzy.FuzzyInteger(999)
@@ -35,7 +35,7 @@ class UserProfileFactory(factory.DjangoModelFactory):
         model = 'leadgalaxy.UserProfile'
 
 
-class ShopifyProductFactory(factory.DjangoModelFactory):
+class ShopifyProductFactory(factory.django.DjangoModelFactory):
     id = factory.fuzzy.FuzzyInteger(9999)
     store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
@@ -50,14 +50,14 @@ class ShopifyProductFactory(factory.DjangoModelFactory):
         django_get_or_create = ['id']
 
 
-class ProductSupplierFactory(factory.DjangoModelFactory):
+class ProductSupplierFactory(factory.django.DjangoModelFactory):
     product = factory.SubFactory('leadgalaxy.tests.factories.ShopifyProduct')
 
     class Meta:
         model = 'leadgalaxy.ProductSupplier'
 
 
-class ShopifyStoreFactory(factory.DjangoModelFactory):
+class ShopifyStoreFactory(factory.django.DjangoModelFactory):
     title = factory.fuzzy.FuzzyText()
     api_url = factory.fuzzy.FuzzyText(prefix='https://:123456789abcdef@', suffix='.myshopify.com')
     shop = factory.fuzzy.FuzzyText()
@@ -74,7 +74,7 @@ class ShopifyStoreFactory(factory.DjangoModelFactory):
         model = 'leadgalaxy.ShopifyStore'
 
 
-class GroupPlanFactory(factory.DjangoModelFactory):
+class GroupPlanFactory(factory.django.DjangoModelFactory):
     stores = factory.fuzzy.FuzzyInteger(999)
     products = factory.fuzzy.FuzzyInteger(999)
     boards = factory.fuzzy.FuzzyInteger(999)
@@ -87,7 +87,7 @@ class GroupPlanFactory(factory.DjangoModelFactory):
         model = 'leadgalaxy.GroupPlan'
 
 
-class ShopifyOrderTrackFactory(factory.DjangoModelFactory):
+class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
     order_id = factory.fuzzy.FuzzyInteger(999)
     line_id = factory.fuzzy.FuzzyInteger(999)
 
@@ -95,7 +95,7 @@ class ShopifyOrderTrackFactory(factory.DjangoModelFactory):
         model = 'leadgalaxy.ShopifyOrderTrack'
 
 
-class AppPermissionFactory(factory.DjangoModelFactory):
+class AppPermissionFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText(length=50)
     description = factory.fuzzy.FuzzyText(length=50)
 
@@ -103,7 +103,7 @@ class AppPermissionFactory(factory.DjangoModelFactory):
         model = 'leadgalaxy.AppPermission'
 
 
-class ShopifyBoardFactory(factory.DjangoModelFactory):
+class ShopifyBoardFactory(factory.django.DjangoModelFactory):
     title = factory.fuzzy.FuzzyText(length=50)
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
 
@@ -111,7 +111,7 @@ class ShopifyBoardFactory(factory.DjangoModelFactory):
         model = 'leadgalaxy.ShopifyBoard'
 
 
-class ShopifyOrderFactory(factory.DjangoModelFactory):
+class ShopifyOrderFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     order_id = factory.fuzzy.FuzzyInteger(99999999)
@@ -127,7 +127,7 @@ class ShopifyOrderFactory(factory.DjangoModelFactory):
         model = 'shopify_orders.ShopifyOrder'
 
 
-class ShopifyOrderLineFactory(factory.DjangoModelFactory):
+class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     order = factory.SubFactory('leadgalaxy.tests.factories.ShopifyOrderFactory')
     line_id = factory.fuzzy.FuzzyInteger(99999999)
     shopify_product = factory.fuzzy.FuzzyInteger(99999999)
@@ -139,7 +139,7 @@ class ShopifyOrderLineFactory(factory.DjangoModelFactory):
         model = 'shopify_orders.ShopifyOrderLine'
 
 
-class ShopifyOrderLogFactory(factory.DjangoModelFactory):
+class ShopifyOrderLogFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
     order_id = factory.fuzzy.FuzzyInteger(99999999)
 
@@ -147,7 +147,7 @@ class ShopifyOrderLogFactory(factory.DjangoModelFactory):
         model = 'shopify_orders.ShopifyOrderLog'
 
 
-class FeatureBundleFactory(factory.DjangoModelFactory):
+class FeatureBundleFactory(factory.django.DjangoModelFactory):
     title = factory.fuzzy.FuzzyText()
     slug = factory.lazy_attribute(lambda b: slugify(b.title))
     register_hash = factory.fuzzy.FuzzyText()
@@ -165,7 +165,7 @@ class FeatureBundleFactory(factory.DjangoModelFactory):
         model = 'leadgalaxy.FeatureBundle'
 
 
-class PlanRegistrationFactory(factory.DjangoModelFactory):
+class PlanRegistrationFactory(factory.django.DjangoModelFactory):
     plan = factory.SubFactory('leadgalaxy.tests.factories.GroupPlanFactory')
     bundle = factory.SubFactory('leadgalaxy.tests.factories.FeatureBundleFactory')
 
@@ -178,7 +178,7 @@ class PlanRegistrationFactory(factory.DjangoModelFactory):
         model = 'leadgalaxy.PlanRegistration'
 
 
-class ProductChangeFactory(factory.DjangoModelFactory):
+class ProductChangeFactory(factory.django.DjangoModelFactory):
     shopify_product = factory.SubFactory('leadgalaxy.tests.factories.ShopifyProductFactory')
 
     class Meta:

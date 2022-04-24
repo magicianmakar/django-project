@@ -4,7 +4,7 @@ import factory.fuzzy
 from goals import step_slugs
 
 
-class GoalFactory(factory.DjangoModelFactory):
+class GoalFactory(factory.django.DjangoModelFactory):
     title = 'Add Products To Dropified Boards'
     # Clashes may occur because `goal_number` has a `unique` contraint
     goal_number = factory.fuzzy.FuzzyInteger(0, 9999)
@@ -14,7 +14,7 @@ class GoalFactory(factory.DjangoModelFactory):
         django_get_or_create = ('title',)
 
 
-class StepFactory(factory.DjangoModelFactory):
+class StepFactory(factory.django.DjangoModelFactory):
     slug = factory.fuzzy.FuzzyText()
 
     class Meta:
@@ -22,7 +22,7 @@ class StepFactory(factory.DjangoModelFactory):
         django_get_or_create = ('slug',)
 
 
-class GoalStepRelationshipFactory(factory.DjangoModelFactory):
+class GoalStepRelationshipFactory(factory.django.DjangoModelFactory):
     goal = factory.SubFactory(GoalFactory)
     step = factory.SubFactory(StepFactory)
     step_number = factory.fuzzy.FuzzyInteger(1, 999999)

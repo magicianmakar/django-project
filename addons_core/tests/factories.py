@@ -8,7 +8,7 @@ from stripe_subscription.models import StripeCustomer, StripeSubscription
 from addons_core.utils import DictAsObject
 
 
-class StripeSubscriptionFactory(factory.DjangoModelFactory):
+class StripeSubscriptionFactory(factory.django.DjangoModelFactory):
     subscription_id = factory.fuzzy.FuzzyText()
     period_start = factory.fuzzy.FuzzyDateTime(arrow.get('2020-01-01').datetime)
 
@@ -16,14 +16,14 @@ class StripeSubscriptionFactory(factory.DjangoModelFactory):
         model = StripeSubscription
 
 
-class StripeCustomerFactory(factory.DjangoModelFactory):
+class StripeCustomerFactory(factory.django.DjangoModelFactory):
     customer_id = factory.fuzzy.FuzzyText()
 
     class Meta:
         model = StripeCustomer
 
 
-class UserFactory(factory.DjangoModelFactory):
+class UserFactory(factory.django.DjangoModelFactory):
     id = factory.fuzzy.FuzzyInteger(999)
     username = factory.fuzzy.FuzzyText()
     first_name = factory.fuzzy.FuzzyText()
@@ -46,21 +46,21 @@ class UserFactory(factory.DjangoModelFactory):
         django_get_or_create = ['id']
 
 
-class AddonFactory(factory.DjangoModelFactory):
+class AddonFactory(factory.django.DjangoModelFactory):
     slug = factory.fuzzy.FuzzyText()
 
     class Meta:
         model = 'addons_core.Addon'
 
 
-class AddonPriceFactory(factory.DjangoModelFactory):
+class AddonPriceFactory(factory.django.DjangoModelFactory):
     price = factory.fuzzy.FuzzyDecimal(0.1)
 
     class Meta:
         model = 'addons_core.AddonPrice'
 
 
-class AddonBillingFactory(factory.DjangoModelFactory):
+class AddonBillingFactory(factory.django.DjangoModelFactory):
     addon = factory.SubFactory('addons_core.tests.factories.AddonFactory')
     prices = factory.RelatedFactory(AddonPriceFactory, factory_related_name='billing')
     interval = 2
@@ -69,7 +69,7 @@ class AddonBillingFactory(factory.DjangoModelFactory):
         model = 'addons_core.AddonBilling'
 
 
-class AddonUsageFactory(factory.DjangoModelFactory):
+class AddonUsageFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('addons_core.tests.factories.UserFactory')
     billing = factory.SubFactory('addons_core.tests.factories.AddonBillingFactory')
 

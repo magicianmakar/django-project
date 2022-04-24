@@ -2,7 +2,7 @@ import factory
 import factory.fuzzy
 
 
-class GrooveKartStoreFactory(factory.DjangoModelFactory):
+class GrooveKartStoreFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
     api_url = factory.fuzzy.FuzzyText()
@@ -14,7 +14,7 @@ class GrooveKartStoreFactory(factory.DjangoModelFactory):
         model = 'groovekart_core.GrooveKartStore'
 
 
-class GrooveKartSupplierFactory(factory.DjangoModelFactory):
+class GrooveKartSupplierFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('groovekart_core.tests.factories.GrooveKartStoreFactory')
     product = factory.SubFactory('groovekart_core.tests.factories.GrooveKartProductFactory')
 
@@ -22,7 +22,7 @@ class GrooveKartSupplierFactory(factory.DjangoModelFactory):
         model = 'groovekart_core.GrooveKartSupplier'
 
 
-class GrooveKartOrderTrackFactory(factory.DjangoModelFactory):
+class GrooveKartOrderTrackFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store = factory.SubFactory('gearbubble_core.tests.factories.GrooveKartStoreFactory')
     order_id = factory.fuzzy.FuzzyInteger(1000)
@@ -32,7 +32,7 @@ class GrooveKartOrderTrackFactory(factory.DjangoModelFactory):
         model = 'groovekart_core.GrooveKartOrderTrack'
 
 
-class GrooveKartProductFactory(factory.DjangoModelFactory):
+class GrooveKartProductFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('groovekart_core.tests.factories.GrooveKartStoreFactory')
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
@@ -42,7 +42,7 @@ class GrooveKartProductFactory(factory.DjangoModelFactory):
         model = 'groovekart_core.GrooveKartProduct'
 
 
-class ProductChangeFactory(factory.DjangoModelFactory):
+class ProductChangeFactory(factory.django.DjangoModelFactory):
     gkart_product = factory.SubFactory('groovekart_core.tests.factories.GrooveKartProductFactory')
 
     class Meta:

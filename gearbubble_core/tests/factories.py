@@ -2,7 +2,7 @@ import factory
 import factory.fuzzy
 
 
-class GearBubbleStoreFactory(factory.DjangoModelFactory):
+class GearBubbleStoreFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
     api_token = factory.fuzzy.FuzzyText()
@@ -12,7 +12,7 @@ class GearBubbleStoreFactory(factory.DjangoModelFactory):
         model = 'gearbubble_core.GearBubbleStore'
 
 
-class GearBubbleBoardFactory(factory.DjangoModelFactory):
+class GearBubbleBoardFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
     config = '{}'
@@ -21,7 +21,7 @@ class GearBubbleBoardFactory(factory.DjangoModelFactory):
         model = 'gearbubble_core.GearBubbleBoard'
 
 
-class GearBubbleProductFactory(factory.DjangoModelFactory):
+class GearBubbleProductFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('gearbubble_core.tests.factories.GearBubbleStoreFactory')
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
@@ -31,7 +31,7 @@ class GearBubbleProductFactory(factory.DjangoModelFactory):
         model = 'gearbubble_core.GearBubbleProduct'
 
 
-class GearBubbleSupplierFactory(factory.DjangoModelFactory):
+class GearBubbleSupplierFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('gearbubble_core.tests.factories.GearBubbleStoreFactory')
     product = factory.SubFactory('gearbubble_core.tests.factories.GearBubbleProductFactory')
 
@@ -39,7 +39,7 @@ class GearBubbleSupplierFactory(factory.DjangoModelFactory):
         model = 'gearbubble_core.GearBubbleSupplier'
 
 
-class GearBubbleOrderTrackFactory(factory.DjangoModelFactory):
+class GearBubbleOrderTrackFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store = factory.SubFactory('gearbubble_core.tests.factories.GearBubbleStoreFactory')
     order_id = factory.fuzzy.FuzzyInteger(1000)

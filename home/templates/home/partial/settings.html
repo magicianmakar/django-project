@@ -504,6 +504,7 @@
                             value="https://alitems.site/g/{{config.admitad_site_id}}/"
                         {% endif %}
                         >
+                        <p class="text-muted">Currently only supported with Chrome Extension order processing</p>
                     </div>
                 </div>
             </div>
@@ -513,7 +514,7 @@
             <div class="row">
                 <div class="col-md-12"><hr /></div>
                 <div class="col-md-12">
-                    <h3 class="pull-left">AliExpress Accounts</h3>
+                    <h4 class="pull-left">AliExpress Quick Order API</h4>
                     <a href="{% url 'aliexpress:aliexpress.oauth' %}" class="btn btn-success btn-small pull-right">Link AliExpress Account <i class="fa fa-plus"></i></a>
                 </div>
             </div>
@@ -564,6 +565,9 @@
                 {% include "home/partial/aliexpress_shipping_options.html" with method_name="aliexpress_shipping_method_3" method_value=config.aliexpress_shipping_method_3 label="Shipping Method 3" %}
 
                 {% include "home/partial/aliexpress_shipping_options.html" with method_name="aliexpress_shipping_method_4" method_value=config.aliexpress_shipping_method_4 label="Shipping Method 4" %}
+            </div>
+            <div class="row"> 
+                <h3 class="col-sm-12 text-muted">This feature currently doesn't support Admitad referral links</h3>
             </div>
             {% endif %}
 

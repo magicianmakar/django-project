@@ -229,6 +229,8 @@ DATABASES = {
     },
 }
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 DATABASE_STATEMENT_TIMEOUT = os.environ.get('DATABASE_STATEMENT_TIMEOUT')
 CELERY_STATEMENT_TIMEOUT = os.environ.get('CELERY_STATEMENT_TIMEOUT')
 COMMAND_STATEMENT_TIMEOUT = os.environ.get('COMMAND_STATEMENT_TIMEOUT')
@@ -385,6 +387,8 @@ SUREDONE_PARTNER_API_USERNAME = os.environ.get('SUREDONE_PARTNER_API_USERNAME')
 SUREDONE_PARTNER_API_TOKEN = os.environ.get('SUREDONE_PARTNER_API_TOKEN')
 
 USE_WHITENOISE = os.environ.get('USE_WHITENOISE')
+if USE_WHITENOISE:
+    MIDDLEWARE = ('whitenoise.middleware.WhiteNoiseMiddleware',) + MIDDLEWARE
 
 # Django Storage
 if not DEBUG:
@@ -394,8 +398,8 @@ if not DEBUG:
     AWS_S3_CUSTOM_DOMAIN = os.environ.get('S3_CUSTOM_DOMAIN', 'cdn.dropified.com')
 
     AWS_IS_GZIPPED = False
-    AWS_HEADERS = {
-        'Cache-Control': 'max-age=604800',
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=604800',
     }
     GZIP_CONTENT_TYPES = (
         'text/css',

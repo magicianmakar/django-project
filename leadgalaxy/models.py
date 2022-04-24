@@ -157,8 +157,8 @@ class UserProfile(models.Model):
     config = models.TextField(default='', blank=True)
     sync_delay_notify = models.IntegerField(default=0, null=True, db_index=True, verbose_name='Notify if no tracking number is found (days)')
     shopify_app_store = models.BooleanField(default=False, verbose_name='User Register from Shopify App Store')
-    private_label = models.NullBooleanField(default=False, verbose_name='Using Private Label App')
-    dropified_private_label = models.NullBooleanField(default=False, verbose_name='PLOD user on Dropified App')
+    private_label = models.BooleanField(null=True, default=False, verbose_name='Using Private Label App')
+    dropified_private_label = models.BooleanField(null=True, default=False, verbose_name='PLOD user on Dropified App')
 
     index_products = models.BooleanField(default=False, null=True, verbose_name='Index user products')
 
@@ -975,7 +975,7 @@ class ShopifyStore(StoreBase):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    private_label = models.NullBooleanField(default=False, verbose_name='Using Private Label App')
+    private_label = models.BooleanField(null=True, default=False, verbose_name='Using Private Label App')
 
     uninstall_reason = models.TextField(null=True, blank=True)
 
@@ -1349,7 +1349,7 @@ class ShopifyProduct(ProductBase):
     original_data_key = models.CharField(max_length=32, null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
-    is_excluded = models.NullBooleanField(null=True)
+    is_excluded = models.BooleanField(null=True)
 
     shopify_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True)
     price_notification_id = models.IntegerField(default=0)

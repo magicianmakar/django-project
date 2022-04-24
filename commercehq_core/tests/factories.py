@@ -2,7 +2,7 @@ import factory
 import factory.fuzzy
 
 
-class CommerceHQStoreFactory(factory.DjangoModelFactory):
+class CommerceHQStoreFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
     api_url = factory.fuzzy.FuzzyText(prefix='https://', suffix='.commercehq.com')
@@ -13,7 +13,7 @@ class CommerceHQStoreFactory(factory.DjangoModelFactory):
         model = 'commercehq_core.CommerceHQStore'
 
 
-class CommerceHQBoardFactory(factory.DjangoModelFactory):
+class CommerceHQBoardFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
     config = '{}'
@@ -22,7 +22,7 @@ class CommerceHQBoardFactory(factory.DjangoModelFactory):
         model = 'commercehq_core.CommerceHQBoard'
 
 
-class CommerceHQProductFactory(factory.DjangoModelFactory):
+class CommerceHQProductFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('commercehq_core.tests.factories.CommerceHQStoreFactory')
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
@@ -32,7 +32,7 @@ class CommerceHQProductFactory(factory.DjangoModelFactory):
         model = 'commercehq_core.CommerceHQProduct'
 
 
-class CommerceHQSupplierFactory(factory.DjangoModelFactory):
+class CommerceHQSupplierFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('commercehq_core.tests.factories.CommerceHQStoreFactory')
     product = factory.SubFactory('commercehq_core.tests.factories.CommerceHQProductFactory')
 
@@ -40,7 +40,7 @@ class CommerceHQSupplierFactory(factory.DjangoModelFactory):
         model = 'commercehq_core.CommerceHQSupplier'
 
 
-class CommerceHQOrderTrackFactory(factory.DjangoModelFactory):
+class CommerceHQOrderTrackFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     order_id = factory.fuzzy.FuzzyInteger(999)
     line_id = factory.fuzzy.FuzzyInteger(999)
@@ -49,7 +49,7 @@ class CommerceHQOrderTrackFactory(factory.DjangoModelFactory):
         model = 'commercehq_core.CommerceHQOrderTrack'
 
 
-class ProductChangeFactory(factory.DjangoModelFactory):
+class ProductChangeFactory(factory.django.DjangoModelFactory):
     chq_product = factory.SubFactory('commercehq_core.tests.factories.CommerceHQProductFactory')
 
     class Meta:

@@ -2,5 +2,5 @@ coverage==4.5.2
 flake8==3.9.2
 PyGithub==1.53
 termcolor==1.1.0
-django-template-check==0.3.1
+django-template-check==0.4.0
 ipython==7.32.0
