@@ -10,20 +10,11 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
-from django.template.defaulttags import register
 from django.urls import reverse
 
 from shopified_core import permissions
 
 from .models import InsiderReport
-
-
-@register.filter
-def get_item(dictionary, key):
-    try:
-        return dictionary.get(str(key))['key_value']
-    except:
-        return False
 
 
 @login_required
