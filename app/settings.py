@@ -416,7 +416,7 @@ if not DEBUG:
         DEFAULT_FILE_STORAGE = 'app.storage.CachedMediaS3BotoStorage'
         STATIC_URL = "//%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, STATICFILES_LOCATION)
 
-        COMPRESS_STORAGE = 'app.storage.CachedS3BotoStorage'
+        COMPRESS_STORAGE = STATICFILES_STORAGE
 
 # Django Compressor
 COMPRESS_ENABLED = not DEBUG

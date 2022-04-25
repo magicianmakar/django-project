@@ -9,6 +9,7 @@ class CachedS3BotoStorage(S3Boto3Storage):
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.location = settings.STATICFILES_LOCATION
         self.local_storage = get_storage_class(
             "compressor.storage.CompressorFileStorage")()
 
