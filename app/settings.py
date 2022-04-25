@@ -392,14 +392,10 @@ if USE_WHITENOISE:
 
 # Django Storage
 if not DEBUG:
-    STATICFILES_LOCATION = 'static'
-    MEDIAFILES_LOCATION = 'media'
-
     AWS_S3_SECURE_URLS = False
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_URL_PROTOCOL = ''
     AWS_S3_CUSTOM_DOMAIN = os.environ.get('S3_CUSTOM_DOMAIN', 'cdn.dropified.com')
-    AWS_LOCATION = STATICFILES_LOCATION
 
     AWS_IS_GZIPPED = False
     AWS_S3_OBJECT_PARAMETERS = {
@@ -411,6 +407,9 @@ if not DEBUG:
         'application/x-javascript',
         'text/javascript'
     )
+
+    STATICFILES_LOCATION = 'static'
+    MEDIAFILES_LOCATION = 'media'
 
     if not USE_WHITENOISE:
         STATICFILES_STORAGE = 'app.storage.CachedS3BotoStorage'
