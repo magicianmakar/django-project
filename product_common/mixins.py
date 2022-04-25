@@ -1,5 +1,3 @@
-from bs4 import BeautifulSoup
-
 from django.db.models import Q
 from django.shortcuts import reverse
 from django.utils.html import format_html
@@ -30,6 +28,8 @@ class ProductMixin:
 
     @property
     def description_short(self):
+        from bs4 import BeautifulSoup
+
         description = BeautifulSoup(self.description, features="lxml")
         words = description.text.split()
         if len(words) > 8:

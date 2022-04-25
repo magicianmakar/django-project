@@ -7,8 +7,6 @@ import requests
 import copy
 
 from math import ceil
-from measurement.measures import Weight
-from decimal import Decimal, ROUND_HALF_UP
 from unidecode import unidecode
 from collections import Counter
 from base64 import b64encode
@@ -134,7 +132,7 @@ def update_product_api_data(api_data, data, store):
     api_data['description'] = data.get('description')
 
     try:
-        api_data['weight'] = str(match_weight(safe_float(data['weight']), data['weight_unit'], store))
+        api_data['weight'] = str(safe_float(data['weight']))
     except:
         pass
 
@@ -592,21 +590,6 @@ def duplicate_product(product, store=None):
             product.set_default_supplier(supplier, commit=True)
 
     return product
-
-
-def match_weight(weight, unit, store):
-    r = store.wcapi.get('settings/products/woocommerce_weight_unit')
-    r.raise_for_status()
-    store_unit = r.json()['value']
-    store_unit = 'lb' if store_unit == 'lbs' else store_unit
-    product_weight = Weight(**{unit: weight})
-    weight_decimal = Decimal(str(weight))
-
-    if not unit == store_unit:
-        converted = str(getattr(product_weight, store_unit))
-        return Decimal(converted).quantize(weight_decimal, rounding=ROUND_HALF_UP)
-
-    return weight_decimal
 
 
 def get_connected_options(product, split_factor):

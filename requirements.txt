@@ -81,8 +81,6 @@ loxun==2.0
 lxml==4.6.5
 Markdown==2.6.11
 MarkupSafe==2.0.1
-measurement==3.2.0
-mpmath==1.2.1
 munch==2.3.2
 ndg-httpsclient==0.5.0
 newrelic==7.10.0.175
@@ -135,7 +133,6 @@ SQLAlchemy==1.4.23
 sqlparse==0.2.4
 stripe==2.50.0
 svglib==1.0.0
-sympy==1.8
 tblib==1.3.2
 tenacity==8.0.1
 text-unidecode==1.2
