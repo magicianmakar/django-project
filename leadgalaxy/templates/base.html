@@ -153,7 +153,7 @@
                         {% endif %}
 
                         {% if request.user|can:"switch_theme.use" and page_name == 'orders' %}
-                            {% if not store_type or store_type == 'shopify' %}
+                            {% if not store_type or store_type == 'shopify' or store_type == 'woo' %}
                             <li class="m-l" style="border-color: #dbdbdb;">
                                 <a href="{% url_replace 'theme' 'old' %}" style="btn btn-block btn-sm">Switch to old view</a>
                             </li>

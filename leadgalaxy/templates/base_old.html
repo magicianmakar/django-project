@@ -205,7 +205,7 @@
                 {% block breadcrumb-right %}{% endblock %}
 
                 {% if page_name == 'orders' %}
-                    {% if not store_type or store_type == 'shopify' %}
+                    {% if not store_type or store_type == 'shopify' or store_type == 'woo' %}
                         <h2></h2>
                         <a href="{% url_replace 'theme' 'new' %}" style="btn btn-sm">Switch to new view</a>
                     {% endif %}

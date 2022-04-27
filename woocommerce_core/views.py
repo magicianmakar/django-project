@@ -711,6 +711,17 @@ class OrdersList(ListView):
 
         return super(OrdersList, self).dispatch(request, *args, **kwargs)
 
+    # Get temaplte name funcion for TemplateView class
+    def get_template_names(self):
+        theme = self.request.GET.get('theme')
+        if theme:
+            self.request.user.set_config('use_old_theme', theme == 'old')
+
+        if self.request.user.get_config('use_old_theme'):
+            return ['woocommerce/orders_list_old.html']
+        else:
+            return ['woocommerce/orders_list.html']
+
     def get_store(self):
         if not hasattr(self, 'store'):
             self.store = get_store_from_request(self.request)
