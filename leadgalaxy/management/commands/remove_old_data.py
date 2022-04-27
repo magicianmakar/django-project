@@ -1,11 +1,12 @@
 from pprint import pprint
 from collections import defaultdict
+import time
 
 from django.utils import timezone
 
 from shopified_core.commands import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyOrderTrack
-from shopify_orders.models import ShopifyOrder, ShopifyOrderLog
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLog, ShopifyOrderRisk
 from profit_dashboard.models import AliexpressFulfillmentCost
 from product_alerts.models import ProductChange
 
@@ -16,23 +17,23 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--max-count', type=int, default=2_000_000, help='Max number of deleted items')
         parser.add_argument('--delete-chunks', type=int, default=5000, help='Number of items to delete at once')
         parser.add_argument('--uptime', action='store', type=int, default=10, help='Maximum task uptime (minutes)')
-        parser.add_argument('--before-years', action='store', type=int, default=3, help='Delete before this many years')
-        parser.add_argument('--before-days', action='store', type=int, default=0, help='Delete before this many days')
-        parser.add_argument('type', type=str, choices=['orders', 'tracks', 'logs', 'costs', 'alerts'], help='Type of data to remove')
+        parser.add_argument('--years', action='store', type=int, default=3, help='Delete before this many years')
+        parser.add_argument('--days', action='store', type=int, default=0, help='Delete before this many days')
+        parser.add_argument('type', type=str, choices=['orders', 'tracks', 'logs', 'costs', 'alerts', 'risks'], help='Type of data to remove')
 
     def start_command(self, *args, **options):
         # two years from now
         self.model_type = options['type']
 
         before_date = None
-        if options['before_days'] and options['before_years']:
-            self.write('You can only specify one of --before-days or --before-years')
-        elif options['before_days']:
-            before_date = timezone.now() - timezone.timedelta(days=options['before_days'])
-        elif options['before_years']:
-            before_date = timezone.now() - timezone.timedelta(days=options['before_years'] * 365)
+        if options['days'] and options['years']:
+            self.write('You can only specify one of --days or --years')
+        elif options['days']:
+            before_date = timezone.now() - timezone.timedelta(days=options['days'])
+        elif options['years']:
+            before_date = timezone.now() - timezone.timedelta(days=options['years'] * 365)
         else:
-            self.write('You must specify one of --before-days or --before-years')
+            self.write('You must specify one of --days or --years')
 
         if not before_date:
             return
@@ -48,6 +49,7 @@ class Command(DropifiedBaseCommand):
         start_time = timezone.now()
         while True:
             try:
+                took = time.time()
                 items = self.get_model().objects.filter(created_at__lt=before_date).only('id', 'created_at').order_by('created_at')
                 first_item = items.first()
                 if first_item:
@@ -72,7 +74,11 @@ class Command(DropifiedBaseCommand):
                 for key, val in details.items():
                     deleted_map[key] += val
 
-                print('Deleted:', ' | '.join(f'{key}: {val:3,}' for key, val in deleted_map.items()), '| Total:', f'{deleted_total:3,}')
+                print('Deleted:', ' | '.join(f'{key.split(".").pop()}: {val:3,}' for key, val in deleted_map.items()),
+                      '| Total:', f'{deleted_total:3,} ', end='')
+
+                took_time = time.time() - took
+                print(f'=> Took: {took_time:.2f}s')
 
                 # check start_time
                 if timezone.now() - start_time > timezone.timedelta(minutes=options['uptime']):
@@ -105,5 +111,7 @@ class Command(DropifiedBaseCommand):
             return AliexpressFulfillmentCost
         elif self.model_type == 'alerts':
             return ProductChange
+        elif self.model_type == 'risks':
+            return ShopifyOrderRisk
         else:
             print(f'Unknown model type: {self.model_type}')
