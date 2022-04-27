@@ -2256,6 +2256,7 @@ class GroupPlan(models.Model):
 
         interval = 'year' if self.payment_interval == 'yearly' else 'month'
 
+        desc = ''
         if self.is_stripe():
             desc = '${:0.2f}/{}'.format(self.stripe_plan.amount, interval)
 
