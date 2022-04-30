@@ -1,7 +1,9 @@
 import time
+from datetime import timedelta
+
+from django.utils import timezone
 
 from lib.exceptions import capture_exception
-
 from shopified_core.commands import DropifiedBaseCommand
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
 from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safe_int, str_max, delete_store_orders
@@ -71,7 +73,7 @@ class Command(DropifiedBaseCommand):
             order_sync.save()
 
             try:
-                count = order_sync.store.get_orders_count(status='any', fulfillment='any', financial='any')
+                count = order_sync.store.get_orders_count(status='any', fulfillment='any', financial='any', days=365 * 2)
                 self.progress_total(count, enable=options['progress'])
 
                 self.fetch_orders(order_sync.store, count)
@@ -121,7 +123,9 @@ class Command(DropifiedBaseCommand):
 
         api = ShopifyAPI(store)
 
-        for orders in api.paginate_orders():
+        # date before 2 years ago in ISO 8601 format
+        date_before = (timezone.now() - timedelta(days=365 * 2)).isoformat()
+        for orders in api.paginate_orders(created_at_min=date_before):
             self.proccess_orders(store, orders)
 
             self.progress_update(len(orders))
