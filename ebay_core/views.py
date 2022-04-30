@@ -31,6 +31,7 @@ from lib.exceptions import capture_exception
 from profits.mixins import ProfitDashboardMixin
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired
+from shopified_core.mocks import get_mocked_bundle_variants, get_mocked_supplier_variants
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.tasks import keen_order_event
@@ -46,10 +47,6 @@ from shopified_core.utils import (
     safe_float,
     safe_int,
     safe_json
-)
-from shopified_core.mocks import (
-    get_mocked_bundle_variants,
-    get_mocked_supplier_variants,
 )
 from suredone_core.utils import get_daterange_filters
 

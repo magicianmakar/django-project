@@ -1,18 +1,18 @@
 import arrow
 import json
-from functools import cmp_to_key
 from celery import chain
+from functools import cmp_to_key
 from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import ObjectDoesNotExist
+from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.forms.models import model_to_dict
 
 import suredone_core.tasks as sd_tasks
 from alibaba_core.models import AlibabaOrderItem

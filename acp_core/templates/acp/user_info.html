@@ -182,6 +182,30 @@
                                     {% endif %}
                                 </td>
                             </tr>
+                        <tr>
+                                <th>eBay</th>
+                                <td>
+                                    <a href="{% url 'admin:ebay_core_ebaystore_changelist' %}?q={{target_user.email|urlencode}}">
+                                            {{target_user.profile.get_ebay_stores.count}} Stores
+                                    </a>
+
+                                    {% if product_count %}
+                                        <span style="float:right">{{target_user.ebayproduct_set.count}} Products</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        <tr>
+                                <th>Facebook</th>
+                                <td>
+                                    <a href="{% url 'admin:facebook_core_fbstore_changelist' %}?q={{target_user.email|urlencode}}">
+                                            {{target_user.profile.get_fb_stores.count}} Stores
+                                    </a>
+
+                                    {% if product_count %}
+                                        <span style="float:right">{{target_user.fbproduct_set.count}} Products</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
                             <tr>
                                 <th>GrooveKart</th>
                                 <td>

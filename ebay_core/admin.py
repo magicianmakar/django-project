@@ -3,9 +3,12 @@ from django.contrib import admin
 
 from .models import EbayBoard, EbayOrderTrack, EbayProduct, EbayProductVariant, EbayStore, EbaySupplier, EbayUserUpload
 
+USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
+
 
 @admin.register(EbayStore)
 class EbayStoreAdmin(admin.ModelAdmin):
+    search_fields = ('title', 'store_hash') + USER_SEARCH_FIELDS
     list_display = (
         'id',
         'list_index',
