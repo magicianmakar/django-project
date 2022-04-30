@@ -1394,10 +1394,10 @@ def user_profile(request):
 
     show_plod_plan = 0
     if profile.private_label or profile.dropified_private_label or profile.plan.private_label:
-        show_plod_plan = 1
+        show_plod_plan = [1, 2]
 
     if request.GET.get('__plod'):
-        show_plod_plan = request.GET['__plod']
+        show_plod_plan = [request.GET['__plod']]
 
     if request.GET.get('__revision'):
         plan_filter = {'revision': request.GET['__revision']}
@@ -1406,28 +1406,28 @@ def user_profile(request):
     else:
         plan_filter = {'hidden': False}
 
-    stripe_plans = GroupPlan.objects.filter(show_in_plod_app=show_plod_plan) \
+    stripe_plans = GroupPlan.objects.filter(show_in_plod_app__in=show_plod_plan) \
                                     .filter(**plan_filter) \
                                     .filter(payment_gateway='stripe') \
                                     .exclude(payment_interval='yearly') \
                                     .annotate(num_permissions=Count('permissions')) \
                                     .order_by('monthly_price', 'num_permissions')
 
-    stripe_plans_yearly = GroupPlan.objects.filter(show_in_plod_app=show_plod_plan) \
+    stripe_plans_yearly = GroupPlan.objects.filter(show_in_plod_app__in=show_plod_plan) \
                                    .filter(**plan_filter) \
                                    .filter(payment_gateway='stripe') \
                                    .filter(payment_interval='yearly') \
                                    .annotate(num_permissions=Count('permissions')) \
                                    .order_by('monthly_price', 'num_permissions')
 
-    shopify_plans = GroupPlan.objects.filter(show_in_plod_app=show_plod_plan) \
+    shopify_plans = GroupPlan.objects.filter(show_in_plod_app__in=show_plod_plan) \
                                      .filter(**plan_filter) \
                                      .filter(payment_gateway='shopify') \
                                      .exclude(payment_interval='yearly') \
                                      .annotate(num_permissions=Count('permissions')) \
                                      .order_by('monthly_price', 'num_permissions')
 
-    shopify_plans_yearly = GroupPlan.objects.filter(show_in_plod_app=show_plod_plan) \
+    shopify_plans_yearly = GroupPlan.objects.filter(show_in_plod_app__in=show_plod_plan) \
                                             .filter(**plan_filter) \
                                             .filter(payment_gateway='shopify') \
                                             .filter(payment_interval='yearly') \

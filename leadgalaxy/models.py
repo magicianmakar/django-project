@@ -37,6 +37,12 @@ YES_NO_CHOICES = (
     (1, 'Yes'),
 )
 
+PLOD_SHOW_CHOICES = (
+    (0, 'Don\'t show for PLOD'),
+    (1, 'Show for PLOD only'),
+    (3, 'Show For All Users'),
+)
+
 PLAN_PAYMENT_GATEWAY = (
     ('jvzoo', 'JVZoo'),
     ('stripe', 'Stripe'),
@@ -2202,7 +2208,7 @@ class GroupPlan(models.Model):
     retail_price_info = models.CharField(max_length=512, blank=True, null=True, verbose_name='Retail Price info in Plans Page')
 
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
-    show_in_plod_app = models.IntegerField(default=0, choices=YES_NO_CHOICES, verbose_name='Show in PLoD App Listing')
+    show_in_plod_app = models.IntegerField(default=0, choices=PLOD_SHOW_CHOICES, verbose_name='Show in PLoD App Listing')
     private_label = models.BooleanField(default=False, verbose_name='Private Label Plan')
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
