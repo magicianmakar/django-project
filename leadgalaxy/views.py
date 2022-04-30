@@ -1392,7 +1392,7 @@ def user_profile(request):
 
     profile = request.user.models_user.profile
 
-    show_plod_plan = 0
+    show_plod_plan = [0, 2]
     if profile.private_label or profile.dropified_private_label or profile.plan.private_label:
         show_plod_plan = [1, 2]
 
