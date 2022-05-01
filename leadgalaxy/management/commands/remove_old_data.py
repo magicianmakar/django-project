@@ -2,6 +2,8 @@ from pprint import pprint
 from collections import defaultdict
 import time
 
+import arrow
+
 from django.utils import timezone
 
 from shopified_core.commands import DropifiedBaseCommand
@@ -54,7 +56,7 @@ class Command(DropifiedBaseCommand):
                 first_item = items.first()
                 if first_item:
                     print(f'{first_item.id} {first_item.created_at:%Y-%m-%d} => '.rjust(44), end='')
-                    if first_item.created_at > before_date:
+                    if arrow.get(first_item.created_at) > arrow.get(before_date):
                         print('>> created_at > before_date - stop deleting')  # should never happen
                         break
                 else:
