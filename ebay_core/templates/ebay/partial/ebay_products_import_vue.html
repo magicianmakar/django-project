@@ -1,0 +1,102 @@
+{% verbatim %}
+<script type="text/x-template" id="ebay-imported-products-table-tpl">
+    <div>
+        <table class="table table-striped table-bordered xdataTables" style="margin-bottom:0;">
+            <thead>
+            <tr>
+                <th style="width:64px">Image</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Variants</th>
+                <th>Supplier</th>
+                <th style="width: 110px">Status</th>
+                <th style="width: 140px">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <product-row v-for="item in products" :product="item"/>
+            <td v-if="products.length === 0 && status !== 'Loading'" colspan="7" style="height: 80px;">
+                <p class="text-center">No products found. Start a new import to sync the latest eBay product updates.</p>
+            </td>
+            </tbody>
+        </table>
+        <div class="row" v-if='prev || next'>
+            <nav style="text-align: center;">
+                <ul class="pagination pagination-lg" style="margin-top: 20px; margin-bottom: 0;">
+                    <li v-if='prev'>
+                        <a :href="replacePageParam(current - 1)" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+
+                    <li v-if='next'>
+                        <a :href="replacePageParam(current + 1)" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</script>
+<script type="text/x-template" id="product-row-tpl">
+    <tr v-if="product.loading" :product-id="product.id">
+        <td colspan="7">
+            <p class="text-center">Loading...</p>
+        </td>
+    </tr>
+    <tr v-else :product-id="product.id">
+        <td><img style="width: 64px; height: 64px;" class="media-object unveil"
+                 :src="product.image ? product.image : ''" alt=""></td>
+        <td>
+            <template v-if="product.product_link">
+                <a :href="product.product_link" target="_blank">{{ product.title }}</a>
+            </template>
+            <template v-else>
+                <a v-if="product.ebay_link && product.ebay_link.length" :href="product.ebay_link" target="_blank">{{ product.title }}</a>
+                <span v-else>{{ product.title }}</span>
+            </template>
+        </td>
+        <td>{{product.product_type}}</td>
+        <td>{{product.variants_count}}</td>
+        <td><a :href="product.original_url" target="_blank">{{product.supplier_name}}</a></td>
+        <td>
+            <template v-if="product.status == 'connected'">
+                <span class="no-wrap"><i class="fa fa-circle text-success"></i> Connected</span>
+            </template>
+            <template v-else>
+                <span class="no-wrap"><i class="fa fa-circle text-danger"></i> Not Connected</span>
+            </template>
+        </td>
+        <td>
+            <div v-if="product.status == 'connected'">
+                <button class="btn btn-rounded btn-xs btn-outline btn-info product-connection-sync" style="margin-bottom: 6px;"
+                        :data-product="product.id"
+                        :data-variants-count="product.variants_count"
+                        :data-csv-index-position="product.csv_index_position">
+                    <i class="fa fa-refresh"></i> SYNC
+                </button>
+                <button class="btn btn-rounded btn-xs btn-outline product-connection-disconnect btn-danger"
+                        :data-product="product.id"
+                        :data-variants-count="product.variants_count"
+                        :data-csv-index-position="product.csv_index_position">
+                    <i class="fa fa-chain-broken"></i> DISCONNECT
+                </button>
+            </div>
+            <button v-else class="btn btn-rounded btn-primary btn-xs btn-outline product-connection-connect"
+                    :data-product="product.id"
+                    :data-variants-count="product.variants_count"
+                    :data-csv-index-position="product.csv_index_position">
+                <i class="fa fa-plug"></i> CONNECT
+            </button>
+        </td>
+    </tr>
+</script>
+
+<script type="text/x-template" id="products-import-status-indicator-tpl">
+    <div>
+        <span v-if="computedStatus === 'Import in Progress' || computedStatus === 'Loading'"
+              class="glyphicon glyphicon-refresh spinning"></span> <span>{{ computedStatus }}</span>
+    </div>
+</script>
+{% endverbatim %}

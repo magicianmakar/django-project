@@ -32,6 +32,10 @@ class EbayStore(SureDoneStoreBase):
                                                       verbose_name='Store legacy authorization token expiration date')
     oauth_token_exp_date = models.DateTimeField(null=True, verbose_name='Store oauth token expiration date')
 
+    @property
+    def instance_prefix(self):
+        return f'ebay{self.instance_prefix_id}'
+
     def sync(self, instance_title: str, options_data: dict):
         store_index_str = '' if self.store_instance_id == 1 else f'{self.store_instance_id}'
         self.store_username = safe_json(options_data.get(f'ebay{store_index_str}_user_data')).get('UserID')

@@ -292,8 +292,8 @@ class SureDoneApiHandler:
     def add_products_bulk(self, variations_data: list, skip_all_channels=False):
         return self.handle_bulk_api('add', variations_data, skip_all_channels)
 
-    def delete_products_bulk(self, guids_to_delete: list):
-        return self.handle_bulk_api('delete', guids_to_delete)
+    def delete_products_bulk(self, guids_to_delete: list, skip_all_channels=False):
+        return self.handle_bulk_api('delete', guids_to_delete, skip_all_channels)
 
     def get_all_account_options(self, option_type: str = None):
         url = f'{self.API_ENDPOINT}/v1/options/{option_type if option_type else "all"}'
@@ -352,6 +352,36 @@ class SureDoneApiHandler:
         headers = {**self.HEADERS, 'Content-Type': 'Application/json'}
 
         return requests.post(url, json=data, headers=headers)
+
+    def get_import_options(self, store_prefix: str):
+        url = f'{self.API_ENDPOINT}/v1/options/{store_prefix}_attribute_mapping'
+
+        return requests.get(url, headers=self.HEADERS)
+
+    def get_import_file_download_link(self, filename: str):
+        url = f'{self.API_ENDPOINT}/v1/bulk/imports/{filename}'
+
+        return requests.get(url, headers=self.HEADERS)
+
+    def post_new_ebay_products_import_job(self, store_prefix: str):
+        url = f'{self.API_ENDPOINT}/v1/settings'
+        data = param({
+            f'{store_prefix}_import': 'true',
+            f'{store_prefix}_import_fileonly': 'true',
+            f'{store_prefix}_import_action': 'match',
+            f'{store_prefix}_import_email': 'suredone@universium.co',
+        })
+        return requests.post(url, data=data, headers=self.HEADERS)
+
+    def post_imported_products(self, bulk_data: list, skip_all_channels=True):
+        url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}'
+        params = {'syncskip': 1} if skip_all_channels else {}
+
+        data = param({
+            'requests': bulk_data
+        })
+
+        return requests.post(url, data=data, params=params, headers=self.HEADERS)
 
 
 class SureDoneAdminApiHandler:

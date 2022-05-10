@@ -1,12 +1,16 @@
 import arrow
+import csv
+import itertools
 import json
 import re
+import requests
 
 from django.contrib.auth.models import User
 from django.core.cache import cache, caches
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 
 import leadgalaxy.utils as leadgalaxy_utils
@@ -570,7 +574,7 @@ class EbayUtils(SureDoneUtils):
         # Get product's eBay ID
         try:
             ebay_product_id = int(sd_product_data.get(f'{ebay_prefix}id'))
-        except ValueError:
+        except (ValueError, TypeError):
             ebay_product_id = sd_product_data.get(f'{ebay_prefix}id')
 
         # Get eBay category ID
@@ -1169,6 +1173,235 @@ class EbayUtils(SureDoneUtils):
             parsed_ebay_errors_list.append(ebay_error)
 
         return parsed_ebay_errors_list
+
+    def start_new_products_import_job(self, store: EbayStore):
+        resp = self.api.post_new_ebay_products_import_job(store.instance_prefix)
+        resp_body = resp.json()
+        resp.raise_for_status()
+
+        return resp_body
+
+    def get_import_products_status(self, store: EbayStore):
+        resp = self.api.get_import_options(store_prefix=store.instance_prefix)
+        resp_body = resp.json()
+        resp.raise_for_status()
+
+        store_options = safe_json(resp_body.get(f'{store.instance_prefix}_attribute_mapping', '{}'), {})
+        last_imported_file = store_options.get('last_import_file_actions')
+        import_products_set = store_options.get('import_products_set')
+
+        if import_products_set == 'on':
+            status = 'Import in Progress'
+        else:
+            status = 'No past imports found. Start a new import job to import and update products.'
+
+        last_updated = None
+        if last_imported_file and import_products_set != 'on':
+            status = 'Finished'
+            # Example filename: 20220418-220226-36-ebay2-match.csv
+            date_parts = last_imported_file.split('-')
+            last_updated = arrow.get(f'{date_parts[0]} {date_parts[1]}', 'YYYYMMDD HHmmss').datetime
+
+        return {'status': status, 'last_updated': last_updated}
+
+    def get_import_file_url(self, store: EbayStore):
+        resp = self.api.get_import_options(store_prefix=store.instance_prefix)
+        resp_body = resp.json()
+        resp.raise_for_status()
+
+        store_options = safe_json(resp_body.get(f'{store.instance_prefix}_attribute_mapping', '{}'), {})
+        last_imported_file = store_options.get('last_import_file_actions')
+
+        # Get the file link
+        resp = self.api.get_import_file_download_link(filename=last_imported_file)
+        resp_body = resp.json()
+        resp.raise_for_status()
+
+        return resp_body.get('url')
+
+    def get_import_products(self, store: EbayStore, user, page: int = 1, limit: int = 20):
+        url = self.get_import_file_url(store)
+        next_page = False
+        result = dict()
+
+        if url:
+            resp = requests.get(url)
+            lines = resp.text.splitlines()
+            reader = csv.reader(lines)
+
+            header = list(next(reader))
+            sku_field_index = header.index('sku')
+
+            current_index = 0  # Index among products with unique sku values
+
+            start_index = limit * (page - 1)
+            limit_index = start_index + limit
+
+            for i, row in enumerate(reader):
+                row_sku = row[sku_field_index]
+                if row_sku in result:
+                    result[row_sku]['variants_count'] += 1
+                    continue
+
+                # If the current index reached the next page
+                if current_index >= limit_index:
+                    next_page = True
+                    break
+
+                # If the current index reached the current page
+                if current_index >= start_index:
+                    value = {header[index]: value for index, value in enumerate(row)}
+                    try:
+                        product_type = value.get(f'{store.instance_prefix}catname', '').split(':')[-1]
+                    except:
+                        product_type = ''
+
+                    result[row_sku] = {
+                        'image': value.get('media1', ''),
+                        'title': value.get('title', ''),
+                        'price': f'{value.get("price", "")}',
+                        'ebay_link': value.get(f'{store.instance_prefix}url', ''),
+                        'csv_index_position': i,
+                        'id': row_sku,
+                        'product_link': None,
+                        'status': 'non-connected',
+                        'variants_count': 1,
+                        'product_type': product_type,
+                    }
+
+                current_index += 1
+
+            products_by_guid = EbayProduct.objects.filter(guid__in=result.keys(), user=user.models_user)
+
+            for product in products_by_guid:
+                supplier_name = ''
+                original_url = ''
+                if product.have_supplier:
+                    supplier_name = product.default_supplier.supplier_name
+                    original_url = product.default_supplier.product_url
+
+                result[product.guid].update({
+                    'product_link': reverse('ebay:product_detail', args=[store.id, product.guid]),
+                    'status': 'connected',
+                    'supplier_name': supplier_name,
+                    'original_url': original_url,
+                })
+
+        return {'products': list(result.values()), 'next': next_page}
+
+    def import_product_base(self, store: EbayStore, action: str, csv_position: int, product_variants_count: int):
+        url = self.get_import_file_url(store)
+        if url:
+            resp = requests.get(url)
+            lines = resp.text.splitlines()
+            reader = list(csv.reader(lines))
+
+            # Pad rows in case some trailing empty column values are missing
+            reader = list(zip(*itertools.zip_longest(*reader, fillvalue='')))
+
+            header = list(reader.pop(0))
+            selected_rows = reader[csv_position:csv_position + product_variants_count]
+            selected_rows = [list(row) for row in selected_rows]
+
+            if len(selected_rows) == 0:
+                raise ValueError('No import data was found for this product.', resp)
+
+            # Handle images
+            media_indices = [header.index(f'media{i}') for i in range(1, 11)]
+            all_images = [selected_rows[0][i] for i in media_indices if selected_rows[0][i]]
+            all_images.extend(selected_rows[0][header.index('mediax')].split('*'))
+
+            # Construct variantsconfig and varianttitle
+            header.append('varianttitle')
+            variants = {}
+            if len(selected_rows) == 1:
+                selected_rows[0].append('')
+            else:
+                variations_index = header.index(f'{store.instance_prefix}variations')
+                for index, row in enumerate(selected_rows):
+                    variations_from_csv = safe_json(row[variations_index], row[variations_index])
+                    if not isinstance(variations_from_csv, dict):
+                        continue
+
+                    row.append(' / '.join(variations_from_csv.get('specifics', {}).values()))
+                    for key, value in variations_from_csv.get('specifics', {}).items():
+                        if key in variants:
+                            variants[key].append(value)
+                        else:
+                            variants[key] = [value]
+
+            variants_config = [{'title': title, 'values': values} for title, values in variants.items()]
+            common_values_to_add = {
+                'dropifiedconnectedstoretype': 'ebay',
+                'dropifiedconnectedstoreid': str(store.store_instance_id),
+                'allimages': json.dumps(all_images),
+                'variantsconfig': json.dumps(variants_config),
+            }
+            header.extend(common_values_to_add.keys())
+            action_index = header.index('action')
+
+            for row in selected_rows:
+                row.extend(common_values_to_add.values())
+                # Update the action type in case it was "Add" initially
+                row[action_index] = action
+
+            selected_rows.insert(0, header)
+            return self.api.post_imported_products(selected_rows)
+        else:
+            raise ValueError('No import data was found.')
+
+    def import_product_from_csv(self, store, product_guid, csv_position, product_variants_count,
+                                supplier_url, vendor_name, vendor_url):
+        resp = self.import_product_base(
+            store=store,
+            action='add',
+            csv_position=csv_position,
+            product_variants_count=product_variants_count,
+        )
+
+        resp_body = resp.json()
+        resp.raise_for_status()
+
+        # Fetch SureDone updates and update the DB
+        updated_product = self.get_ebay_product_details(product_guid, smart_board_sync=True)
+
+        if not updated_product:
+            raise Exception('Failed to get product details.', updated_product)
+
+        product_supplier = EbaySupplier.objects.create(
+            store=store,
+            product=updated_product,
+            product_guid=product_guid,
+            product_url=supplier_url,
+            supplier_name=vendor_name,
+            supplier_url=vendor_url,
+            is_default=True
+        )
+        updated_product.set_default_supplier(product_supplier, commit=True)
+        return resp_body
+
+    def update_product_from_import_csv(self, product, csv_position, product_variants_count):
+        resp = self.import_product_base(
+            store=product.store,
+            action='edit',
+            csv_position=csv_position,
+            product_variants_count=product_variants_count,
+        )
+
+        resp_body = resp.json()
+        resp.raise_for_status()
+
+        for i in range(1, resp_body.get('actions') + 1):
+            if resp_body.get(f'{i}', {}).get('result') != 'success':
+                raise Exception('Failed to sync a product. Please try submitting a new import job.')
+
+        # Fetch SureDone updates and update the DB
+        updated_product = self.get_ebay_product_details(product.guid, smart_board_sync=True)
+
+        if not updated_product:
+            raise Exception('Failed to get product details.', updated_product)
+
+        return resp_body
 
 
 class EbayOrderUpdater:
