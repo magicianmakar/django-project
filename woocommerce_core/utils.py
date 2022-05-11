@@ -1242,6 +1242,16 @@ def replace_problematic_images(data_string):
     return json.dumps(product_data)
 
 
+def set_orders_filter(user, filters, default=None):
+    fields = ['sort', 'status', 'fulfillment', 'financial',
+              'desc', 'connected', 'awaiting_order']
+
+    for name, val in list(filters.items()):
+        if name in fields:
+            key = '_orders_filter_{}'.format(name)
+            user.set_config(key, val)
+
+
 class WooListQuery(object):
     def __init__(self, store, endpoint, params=None):
         self._store = store
