@@ -560,7 +560,7 @@ class ShopifyAppUninstallWebhook(ShopifyWebhookMixing):
             # Switch to free plan and disable trial
             store.user.profile.change_plan(GroupPlan.objects.get(
                 payment_gateway='shopify',
-                slug='shopify-free-plan'))
+                slug='free-shopify-2022'))
 
 
 class ShopifyGDPRDeleteCustomerWebhook(View):
