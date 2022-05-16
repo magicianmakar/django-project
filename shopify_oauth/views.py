@@ -400,7 +400,7 @@ def callback(request):
             else:
                 profile.change_plan(get_plan(
                     payment_gateway='shopify',
-                    plan_slug='shopify-free-plan'))
+                    plan_slug='free-shopify-2022'))
 
             profile.save()
 

@@ -2246,9 +2246,6 @@ class GroupPlan(models.Model):
         if self.is_stripe():
             desc = '{} ($ {:0.2f}/{})'.format(desc, self.stripe_plan.amount, interval)
 
-        elif (not self.monthly_price and self.monthly_price is not None) or self.is_free:
-            desc = '{} (Inactive)'.format(desc)
-
         elif self.monthly_price:
             pricing = float(self.monthly_price) * 12.0 if self.payment_interval == 'yearly' else self.monthly_price
             desc = '{} ($ {:0.2f}/{})'.format(desc, pricing, interval)
