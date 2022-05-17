@@ -3,6 +3,7 @@ import requests
 
 from django.conf import settings
 
+from lib.exceptions import capture_exception
 from suredone_core.models import SureDoneAccount
 from suredone_core.param_encoder import param
 
@@ -297,15 +298,20 @@ class SureDoneApiHandler:
 
     def get_all_account_options(self, option_type: str = None):
         url = f'{self.API_ENDPOINT}/v1/options/{option_type if option_type else "all"}'
-
-        response = requests.get(url, headers=self.HEADERS)
-        if response.ok:
-            try:
-                return response.json()
-            except ValueError:
+        try:
+            response = requests.get(url, headers=self.HEADERS, timeout=25)
+            if response.ok:
+                try:
+                    return response.json()
+                except ValueError:
+                    pass
+            else:
                 pass
-        else:
-            pass
+        except(requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
+            capture_exception(extra={
+                'description': 'Timeout exception when requesting SureDone user options',
+                'suredone_account_username': self.HEADERS['X-Auth-User'],
+            })
 
     def get_platform_statuses(self):
         url = f'{self.API_ENDPOINT}/v3/channel/statuses'
