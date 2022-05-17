@@ -557,7 +557,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         product_data['mediax'] = '*'.join(mediax)
 
         # Fill images into variants
-        for variant in product_data['variants']:
+        for variant in product_data.get('variants', []):
             media1 = variant.pop('image')
             variant['media1'] = media1 if variant['guid'] != variant['sku'] else product_data['media1']
             for i in range(2, 11):
