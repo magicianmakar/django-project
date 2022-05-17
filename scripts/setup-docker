@@ -1,6 +1,23 @@
 #/usr/bin/env bash
+echo 'export DATABASE_URL="postgres://postgres:@db:5432/shopified"
+export REDISCLOUD_URL="redis://redis:6379"
+export REDISCLOUD_CACHE="redis://redis:6379"
+export REDISCLOUD_ORDERS="redis://redis:6379"' > ../.env.dev
+
+echo 'environment:
+  DATABASE_URL: postgres://postgres:@db:5432/shopified
+  REDISCLOUD_URL: redis://redis:6379
+  REDISCLOUD_CACHE: redis://redis:6379
+  REDISCLOUD_ORDERS: redis://redis:6379' > ../env.dev.yaml
+
+mkdir -p ../docker/nginx/ssl
+
+openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
+    -subj "/C=US/ST=/L=/O=Dropified/CN=dev.dropified.com" \
+    -keyout ../docker/nginx/ssl/dev.dropified.com.key  -out ../docker/nginx/ssl/dev.dropified.com.cert
+
 docker-compose run web npm install
 docker-compose run web ./node_modules/bower/bin/bower install --allow-root
 docker-compose run web ./scripts/rebuilddb
 docker-compose run web ./manage.py migrate
-sudo chown -R $USER:$USER .
+docker-compose run web ./manage.py createsuperuser

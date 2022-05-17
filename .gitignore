@@ -19,3 +19,5 @@ app/static/libs/bower_components
 htmlcov
 __pycache__
 media
+*.key
+*.cert

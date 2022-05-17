@@ -33,8 +33,10 @@ services:
     image: nginx
     container_name: dropified_nginx
     volumes:
-      - ../app/config/nginx/docker.dropified.com:/etc/nginx/nginx.conf:ro
+      - ../app/config/nginx/docker.dropified.com:/etc/nginx/conf.d/default.conf
+      - ./nginx/ssl:/etc/ngnix/ssl
     ports:
-      - "9080:80"
+      - "80:80"
+      - "443:443"
     depends_on:
       - web
