@@ -13,10 +13,15 @@
             if (product.fb_category_id === 0 || product.fb_category_id === '0') {
                 product.fb_category_id = ''
             }
+            if (product.fb_category_name === null || product.fb_category_name === undefined) {
+                product.fb_category_name = ''
+            }
             const categorySearchTerm = productDetails?.producttype ?? '';
             const fbCategoryId = product.fb_category_id;
+            const fbCategoryName = product.fb_category_name;
             this.state = {
                 fbCategoryId,
+                fbCategoryName,
                 categorySearchTerm,
                 categoryOptions: [],
                 fieldsToHide: variantsConfig?.map(el => el?.title?.replace(' ', '')?.toLowerCase()),
@@ -37,10 +42,12 @@
             }
         }
 
-        handleCatIdChange(value) {
-            product.fb_category_id = value;
+        handleCatIdChange(category_id, category_name='') {
+            product.fb_category_id = category_id;
+            product.fb_category_name = category_name;
             this.setState({
-                fbCategoryId: value,
+                fbCategoryId: category_id,
+                fbCategoryName: category_name,
             });
         }
 
@@ -73,9 +80,11 @@
                 if (!fbCategoryId && categoryOptions.length) {
                     this.setState({
                         categoryOptions,
-                        fbCategoryId: categoryOptions[0]?.id
+                        fbCategoryId: categoryOptions[0]?.id,
+                        fbCategoryName: categoryOptions[0]?.name,
                     });
                     product.fb_category_id = categoryOptions[0]?.id;
+                    product.fb_category_name = categoryOptions[0]?.name;
                 } else {
                     this.setState({
                         categoryOptions,
@@ -86,11 +95,14 @@
             }
         }
 
-        handleCategorySelectionChange(newCategoryId) {
+        handleCategorySelectionChange(event) {
+            const newCategoryId = event.nativeEvent.target.value;
+            const index = event.nativeEvent.target.selectedIndex;
+            const newCategoryName = event.nativeEvent.target[index].text;
             if (newCategoryId === 'Select a category') {
-                this.handleCatIdChange('');
+                this.handleCatIdChange('', '');
             } else {
-                this.handleCatIdChange(newCategoryId);
+                this.handleCatIdChange(newCategoryId, newCategoryName);
             }
         }
 
@@ -125,9 +137,11 @@
                 categoryOptions,
                 categorySearchTerm,
                 fbCategoryId,
+                fbCategoryName,
                 fieldsToHide,
                 isLoading,
             } = this.state;
+
             return (
                 <React.Fragment>
                     <div className="row">
@@ -138,11 +152,16 @@
                             className='form-control'
                             id='fb-category-id'
                             name='fb-category-id'
-                            onChange={({target: {value}}) => this.handleCatIdChange(value)}
+                            onChange={(event) => this.handleCatIdChange(event)}
                             type='number'
                             value={fbCategoryId}
                             placeholder='Facebook Category ID'
                         />
+
+                        <small className="form-text text-muted">
+                            {fbCategoryName}
+                        </small>
+
                     </div>
                     <div className='form-group col-xs-3'>
                         <label htmlFor='category-search-term'>Search Categories</label>
@@ -176,6 +195,7 @@
                             </small>
                         }
                     </div>
+
                     <div className='form-group col-xs-6'>
                         <label htmlFor='category-select'>Category</label>
                         <select
@@ -183,17 +203,24 @@
                             value={fbCategoryId}
                             className='form-control'
                             placeholder='Select a category'
-                            onChange={({target: {value}}) => this.handleCategorySelectionChange(value)}
+                            onChange={(event) => this.handleCategorySelectionChange(event)}
                         >
                             <option key='default-option'>
                                 Select a category
                             </option>
                             {
+                                categoryOptions && categoryOptions.length !== 0 ?
                                 categoryOptions.map(category => (
                                     <option key={category.id} value={category.id}>
                                         {category.name}
                                     </option>
-                                ))
+                                )) :
+                                    (
+                                        fbCategoryName !== '' &&
+                                        <option key={fbCategoryId} value={fbCategoryId}>
+                                            {fbCategoryName}
+                                        </option>
+                                    )
                             }
                         </select>
                         <small className="form-text text-muted">

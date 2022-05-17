@@ -65,6 +65,7 @@ class FBProductAdmin(admin.ModelAdmin):
         'default_supplier',
         'fb_store_index',
         'fb_category_id',
+        'fb_category_name',
         'brand',
         'page_link',
         'status',
