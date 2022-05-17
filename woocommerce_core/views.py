@@ -1407,6 +1407,16 @@ class BoardsList(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(BoardsList, self).get_context_data(**kwargs)
+
+        user_boards_list = self.request.user.models_user.wooboard_set.all()
+        paginator = SimplePaginator(user_boards_list, 12)
+        page = safe_int(self.request.GET.get('page'), 1)
+        current_page = paginator.page(page)
+
+        for board in current_page.object_list:
+            board.saved = board.saved_count(request=self.request)
+            board.connected = board.connected_count(request=self.request)
+        context['boards'] = current_page
         context['breadcrumbs'] = ['Boards']
 
         return context

@@ -8,6 +8,7 @@ from requests import Session
 from pusher import Pusher
 
 from django.db import models
+from django.db.models import Q
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
@@ -753,6 +754,29 @@ class GrooveKartBoard(BoardBase):
 
     def __str__(self):
         return f'<GrooveKartBoard: {self.id}>'
+
+    def saved_count(self, request=None):
+        # Filter non-connected products
+        products = self.products.filter(source_id=0)
+
+        if request and request.user.is_subuser:
+            # If it's a sub user, only show him products in stores he have access to
+            products = products.filter(Q(store__in=request.user.profile.get_gkart_stores()) | Q(store=None))
+
+        else:
+            # Show the owner product linked to active stores and products with store set to None
+            products = products.filter(Q(store__is_active=True) | Q(store=None))
+
+        return products.count()
+
+    def connected_count(self, request=None):
+        # Only get products linked to a Shopify product and with an active store
+        products = self.products.filter(store__is_active=True).exclude(source_id=0)
+
+        if request and request.user.is_subuser:
+            products = products.filter(store__in=request.user.profile.get_gkart_stores())
+
+        return products.count()
 
 
 class GrooveKartOrderTrack(OrderTrackBase):
