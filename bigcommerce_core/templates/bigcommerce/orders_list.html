@@ -619,7 +619,7 @@
                                                             {% endif %}
                                                             >{{item.supplier.supplier_name|truncatechars:25}}</a>
                                                         {% elif user|can:'product_supplier.use' %}
-                                                        <a class="add-supplier-btn" store-id="{{store.id}}" woo-product="{{item.product_id}}">
+                                                        <a class="add-supplier-btn" store-id="{{store.id}}" bigcommerce-product="{{item.product_id}}">
                                                             Connect Supplier
                                                         </a>
                                                         {% endif %}
