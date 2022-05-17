@@ -220,6 +220,8 @@ Vue.component('ebay-imported-products-table', {
                             success: function(data) {},
                             error: function(data) {
                                 pusher.unsubscribe(channel);
+                                btn.bootstrapBtn('reset');
+                                btn.removeClass('disabled');
                                 displayAjaxError('Disconnect Product', data);
                             }
                         });

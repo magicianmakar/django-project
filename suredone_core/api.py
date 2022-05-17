@@ -381,7 +381,9 @@ class SureDoneApiHandler:
 
     def post_imported_products(self, bulk_data: list, skip_all_channels=True):
         url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}'
-        params = {'syncskip': 1} if skip_all_channels else {}
+        params = {'force': 'true'}
+        if skip_all_channels:
+            params['syncskip'] = 1
 
         data = param({
             'requests': bulk_data
