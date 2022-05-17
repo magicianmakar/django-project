@@ -20,6 +20,7 @@
                 categorySearchTerm,
                 categoryOptions: [],
                 fieldsToHide: variantsConfig?.map(el => el?.title?.replace(' ', '')?.toLowerCase()),
+                isLoading: false,
             };
             this.handleCatIdChange = this.handleCatIdChange.bind(this);
             this.handleCatSearchTermChange = this.handleCatSearchTermChange.bind(this);
@@ -46,6 +47,7 @@
         handleCatSearchTermChange(value) {
             this.setState({
                 categorySearchTerm: value,
+                isLoading: !!value,
             });
             // Add timeout not to get throttled by SureDone API
             clearTimeout(this.searchCategoryTimeout);
@@ -61,6 +63,8 @@
         }
 
         handleSearchCategoriesResponse(response) {
+            this.setState({ isLoading: false });
+
             if ('status' in response && response.status === 'ok') {
                 const { fbCategoryId } = this.state;
                 const categoryOptions = response.data?.categories ?? [];
@@ -91,6 +95,8 @@
         }
 
         getCategoryOptions() {
+            this.setState({ isLoading: true });
+
             const { categorySearchTerm } = this.state;
             const searchTerm = categorySearchTerm?.replace('&', '');
             const data = {
@@ -103,6 +109,7 @@
                 data: data,
                 success: this.handleSearchCategoriesResponse,
                 error: function (data) {
+                    this.setState({ isLoading: false });
                     displayAjaxError('Facebook Category Options', data);
                 }
             });
@@ -114,7 +121,13 @@
         }
 
         render() {
-            const { categoryOptions, categorySearchTerm, fbCategoryId, fieldsToHide } = this.state;
+            const {
+                categoryOptions,
+                categorySearchTerm,
+                fbCategoryId,
+                fieldsToHide,
+                isLoading,
+            } = this.state;
             return (
                 <React.Fragment>
                     <div className="row">
@@ -153,6 +166,15 @@
                                 </button>
                             </span>
                         </div>
+                        {
+                            categorySearchTerm
+                            && !categoryOptions.length
+                            && !isLoading
+                            &&
+                            <small className="form-text text-danger">
+                                No categories found, please try a different/broader keyword
+                            </small>
+                        }
                     </div>
                     <div className='form-group col-xs-6'>
                         <label htmlFor='category-select'>Category</label>
