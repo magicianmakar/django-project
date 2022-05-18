@@ -6,7 +6,7 @@ import time
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_message
 from shopified_core.utils import safe_int, safe_str
 from .models import HubspotAccount
 
@@ -90,7 +90,7 @@ def api_requests(url, data, method='post'):
     )
 
     if not r.ok:
-        capture_exception(extra={'response': r.text})
+        capture_message('Hubspot error', extra={'response': r.text})
 
         if r.status_code == 429:
             time.sleep(1)
