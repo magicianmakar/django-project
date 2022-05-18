@@ -2168,6 +2168,9 @@ class CaptchaCredit(models.Model):
 
 
 class GroupPlan(models.Model):
+    class Meta:
+        ordering = ['title']
+
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")
     register_hash = models.CharField(unique=True, max_length=50, editable=False)
@@ -2225,7 +2228,7 @@ class GroupPlan(models.Model):
     parent_plan = models.ForeignKey('GroupPlan', null=True, on_delete=models.SET_NULL, blank=True, verbose_name='Use permissions from selected plan')
 
     def __str__(self):
-        return f'Plan: {self.title}'
+        return f'{self.title} | {self.slug} | {self.id}'
 
     def save(self, *args, **kwargs):
         if not self.register_hash:
