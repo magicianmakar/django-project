@@ -136,6 +136,8 @@ def generate_create_contact(user: User):
             "dr_gear_count": profile.get_gear_stores().count(),
             "dr_gkart_count": profile.get_gkart_stores().count(),
             "dr_bigcommerce_count": profile.get_bigcommerce_stores().count(),
+            "dr_ebay_count": profile.get_ebay_stores().count(),
+            "dr_fb_count": profile.get_fb_stores().count(),
 
             "plan": clean_plan_name(plan) if plan else '',
             "billing_interval": plan.payment_interval if plan else '',
@@ -171,6 +173,8 @@ def generate_create_contact(user: User):
         data['properties']['dr_gear_count'],
         data['properties']['dr_gkart_count'],
         data['properties']['dr_bigcommerce_count'],
+        data['properties']['dr_ebay_count'],
+        data['properties']['dr_fb_count'],
     ])
 
     data['properties']['number_of_stores'] = data['properties']['dr_stores_count']
