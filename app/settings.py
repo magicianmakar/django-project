@@ -623,6 +623,9 @@ ALIEXPRESS_AFFILIATE_API_SECRET = os.environ.get('ALIEXPRESS_AFFILIATE_API_SECRE
 DROPIFIED_ORDERS_URL = os.environ.get('DROPIFIED_ORDERS_URL', 'https://orders.dropified.com')
 TRELLO_TOKEN = os.environ.get('TRELLO_TOKEN')
 
+# Walmart
+WALMART_AFFILIATE_LINK = 'https://goto.walmart.com/c/1325250/565706/9383?subId1=userID&veh=aff&sourceid=imp_000011112222333344&u='
+
 # ActiveCampaign
 ACTIVECAMPAIGN_URL = os.environ.get('ACTIVECAMPAIGN_URL')
 ACTIVECAMPAIGN_KEY = os.environ.get('ACTIVECAMPAIGN_KEY')

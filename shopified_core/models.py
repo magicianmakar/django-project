@@ -2,6 +2,7 @@ import json
 import re
 
 import arrow
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
@@ -76,6 +77,10 @@ class SupplierBase(models.Model):
         return self.supplier_type() == 'alibaba'
 
     @property
+    def is_walmart(self):
+        return self.supplier_type() == 'walmart'
+
+    @property
     def is_supplement_deleted(self):
         if not self.user_supplement:
             return True
@@ -88,6 +93,12 @@ class SupplierBase(models.Model):
             return False
 
         return self.user_supplement.is_approved
+
+    @cached_property
+    def get_walmart_affiliate_link(self):
+        walmart_affiliate_link = settings.WALMART_AFFILIATE_LINK
+        walmart_p1, walmart_p2 = walmart_affiliate_link.split("userID")
+        return {'p1': walmart_p1, 'p2': walmart_p2}
 
     @cached_property
     def user_supplement(self):

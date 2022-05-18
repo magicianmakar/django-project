@@ -65,7 +65,17 @@
             <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.order_track.source_tracking}}">Mark as Fulfilled</a></li>
             {% endif %}
 
+            {% if item.supplier.is_walmart %}
+                {% with user.id|stringformat:"i" as user_id %}
+                {% with item.supplier.product_url|urlencode:"" as encoded_product_url %}
+                {% with item.supplier.get_walmart_affiliate_link.p1|add:user_id|add:item.supplier.get_walmart_affiliate_link.p2|add:encoded_product_url as walmart_affiliate_link %}
+                    <li><a href="{{ walmart_affiliate_link }}" target="_blank">Manual Order</a></li>
+                {% endwith %}
+                {% endwith %}
+                {% endwith %}
+            {% else %}
             <li><a href="{{item.supplier.short_product_url}}" target="_blank">Manual Order</a></li>
+            {% endif %}
 
             {% if item.order_data_id and item.supplier.support_auto_fulfill %}
             <li class="divider"></li>
