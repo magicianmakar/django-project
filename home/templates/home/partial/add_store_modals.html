@@ -36,6 +36,10 @@
                     {% if request.user|can:'facebook.use' %}
                     <li><a href="#fb-section" data-toggle="tab"></a></li>
                     {% endif %}
+
+                    {% if request.user|can:'fb_marketplace.use' %}
+                    <li><a href="#fb-mp-section" data-toggle="tab"></a></li>
+                    {% endif %}
                 </ul>
                 <div class="tab-content">
                     <div id="select-section" class="tab-pane fade in active">
@@ -87,6 +91,13 @@
                                 <label style="display: block; margin-bottom: 5px;">
                                     <input name="amt" value="#fb-section" type="radio">
                                     <span class="label-text">Facebook</span>
+                                </label>
+                                {% endif %}
+
+                                {% if request.user|can:'fb_marketplace.use' %}
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#fb-mp-section" type="radio">
+                                    <span class="label-text">Facebook Marketplace</span>
                                 </label>
                                 {% endif %}
                             </fieldset>
@@ -351,6 +362,27 @@
                             </div>
                         </div>
                     </div>
+
+                    <div id="fb-mp-section" class="tab-pane fade">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h3 class="m-t-none m-b">Add Facebook Marketplace</h3>
+                                <form id="fb-mp-create-form" method="post" role="form">
+                                    <div class="form-group">
+                                        <label>Title</label>
+                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                            Add store
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>

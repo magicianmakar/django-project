@@ -16,6 +16,7 @@ def all_stores(request):
         'gear': list(user.profile.get_gear_stores()),
         'gkart': list(user.profile.get_gkart_stores()),
         'bigcommerce': list(user.profile.get_bigcommerce_stores()),
+        'fb_marketplace': list(user.profile.get_fb_marketplace_stores()),
         'all': [],
         'grouped': {},
         'type_count': 0,

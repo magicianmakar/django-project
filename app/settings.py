@@ -116,6 +116,7 @@ INSTALLED_APPS = (
     'facebook_core',
     'suredone_core',
     'loopedin_core',
+    'fb_marketplace_core',
 )
 
 MIDDLEWARE = (
@@ -203,6 +204,7 @@ DROPIFIED_API = {
     'fb': 'facebook_core.api.FBStoreApi',
     'gkart': 'groovekart_core.api.GrooveKartApi',
     'bigcommerce': 'bigcommerce_core.api.BigCommerceStoreApi',
+    'fb_marketplace': 'fb_marketplace_core.api.FBMarketplaceStoreApi',
     'tubehunt': 'youtube_ads.api.TubeHuntApi',
     'subusers': 'subusers.api.SubusersApi',
     'goals': 'goals.api.GoalsApi',

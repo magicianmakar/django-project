@@ -8,7 +8,6 @@
 
         {% for item in user_stores.all %}
             {% if item|model_name == 'shopifystore' %}
-
                 <li><a href="{% url 'product' %}{% if 'table' in request.path %}/table{% endif %}?store={{item.id}}">{{item.title}}</a></li>
 
             {% elif item|model_name == 'commercehqstore' %}
@@ -31,6 +30,9 @@
 
             {% elif item|model_name == 'fbstore' %}
                 <li><a href="{% url 'fb:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+
+            {% elif item|model_name == 'fbmarketplacestore' %}
+                <li><a href="{% url 'fb_marketplace:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
             {% endif %}
 
         {% endfor %}
@@ -105,6 +107,13 @@
                     <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
                 {% else %}
                     <li><a href="{% url 'fb:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+                {% endif %}
+
+            {% elif item|model_name == 'fbmarketplacestore' %}
+                {% if item == store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+                {% else %}
+                    <li><a href="{% url 'fb_marketplace:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
                 {% endif %}
 
             {% endif %}

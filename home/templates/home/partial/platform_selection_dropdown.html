@@ -53,6 +53,11 @@
                     <a href="{% url 'fb:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">Facebook</a>
                 </li>
                 {% endif %}
+                {% if section != 'Facebook Marketplace' and request.user|can:'fb_marketplace.use' %}
+                <li>
+                    <a href="{% url 'fb_marketplace:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">Facebook Marketplace</a>
+                </li>
+                {% endif %}
             </ul>
         </div>
 

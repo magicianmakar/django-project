@@ -143,6 +143,8 @@ class UserProfile(models.Model):
     subuser_gkart_stores = models.ManyToManyField('groovekart_core.GrooveKartStore', blank=True, related_name='subuser_gkart_stores')
     subuser_bigcommerce_stores = models.ManyToManyField('bigcommerce_core.BigCommerceStore', blank=True, related_name='subuser_bigcommerce_stores')
     subuser_sd_accounts = models.ManyToManyField('suredone_core.SureDoneAccount', blank=True, related_name='subuser_sd_accounts')
+    subuser_fb_marketplace_stores = models.ManyToManyField('fb_marketplace_core.FBMarketplaceStore',
+                                                           blank=True, related_name='subuser_fb_marketplace_stores')
 
     stores = models.IntegerField(default=-2)
     products = models.IntegerField(default=-2)
@@ -465,6 +467,17 @@ class UserProfile(models.Model):
 
         return stores
 
+    def get_fb_marketplace_stores(self, flat=False):
+        if self.is_subuser:
+            stores = self.subuser_fb_marketplace_stores.filter(is_active=True)
+        else:
+            stores = self.user.fbmarketplacestore_set.filter(is_active=True)
+
+        if flat:
+            stores = stores.values_list('id', flat=True)
+
+        return stores
+
     def get_installed_addon_titles(self):
         return list(self.addons.values_list('title', flat=True))
 
@@ -478,6 +491,7 @@ class UserProfile(models.Model):
             self.get_gear_stores().count(),
             self.get_gkart_stores().count(),
             self.get_bigcommerce_stores().count(),
+            self.get_fb_marketplace_stores().count(),
         ])
 
     def get_sd_accounts(self, flat=False):

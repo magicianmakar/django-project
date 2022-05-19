@@ -1230,6 +1230,14 @@ class ShopifyStoreApi(ApiBase):
                     'url': i.get_admin_url()
                 })
 
+            for i in user.profile.get_fb_marketplace_stores():
+                stores.append({
+                    'id': i.id,
+                    'name': i.title,
+                    'type': 'fb_marketplace',
+                    'url': i.get_admin_url()
+                })
+
             config['stores'] = stores
 
         config['sync'] = {

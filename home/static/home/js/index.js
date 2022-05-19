@@ -1561,6 +1561,108 @@
         }
     });
 
+    $('#fb-mp-create-form').on('submit', function(e) {
+        e.preventDefault();
+        $('#fb-mp-create-form [type=submit]').bootstrapBtn('loading');
+
+        $.ajax({
+            url: api_url('store-add', 'fb_marketplace'),
+            type: 'POST',
+            data: $('#fb-mp-create-form').serialize(),
+            success: function(data) {
+                swal('Add Store', 'The Facebook Marketplace store has been added successfully', 'success');
+                window.location.reload();
+            },
+            error: function(data) {
+                $('#fb-mp-create-form [type=submit]').bootstrapBtn('reset');
+                displayAjaxError('Add Store', data);
+            }
+        });
+
+        return false;
+    });
+
+    // $('.woo-edit-store-btn').click(function(e) {
+    //     e.preventDefault();
+    //     var storeId = $(this).data('store-id');
+    //     $.get(api_url('store', 'woo'), {id: storeId}).done(function(data) {
+    //         $('#woo-store-update-modal').modal('show');
+    //         $('#woo-store-update-form input[name="id"]').val(data.id);
+    //         $('#woo-store-update-form input[name="title"]').val(data.title);
+    //         $('#woo-store-update-form input[name="api_url"]').val(data.api_url);
+    //         $('#woo-store-update-form input[name="api_key"]').val(data.api_key);
+    //         $('#woo-store-update-form input[name="api_password"]').val(data.api_password);
+    //     });
+    // });
+    //
+    // $('#woo-store-update-form').on('submit', function(e) {
+    //     $('#woo-store-update-form [type=submit]').bootstrapBtn('loading');
+    //
+    //     $.ajax({
+    //         url: api_url('store-update', 'woo'),
+    //         type: 'POST',
+    //         data: $('#woo-store-update-form').serialize(),
+    //         success: function(data) {
+    //             setTimeout(function() {
+    //                 window.location.reload(true);
+    //             }, 1000);
+    //         },
+    //         error: function(data) {
+    //             $('#woo-store-update-form [type=submit]').bootstrapBtn('reset');
+    //             displayAjaxError('Add Store', data);
+    //         }
+    //     });
+    //
+    //     return false;
+    // });
+    //
+    // $('.woo-delete-store-btn').click(function(e) {
+    //     e.preventDefault();
+    //     var storeId = $(this).data('store-id');
+    //
+    //     swal({
+    //         title: 'Are you sure?',
+    //         text: 'Please, confirm if you want to delete this store.',
+    //         type: 'warning',
+    //         showCancelButton: true,
+    //         confirmButtonColor: '#DD6B55',
+    //         confirmButtonText: 'Yes, delete it!',
+    //         closeOnConfirm: false
+    //     }, function() {
+    //         $.ajax({
+    //             url: api_url('store', 'woo') + '?' + $.param({id: storeId}),
+    //             method: 'DELETE',
+    //             success: function() {
+    //                 $('#woo-store-row-' + storeId).hide();
+    //                 swal('Deleted!', 'The store has been deleted.', 'success');
+    //             }
+    //         });
+    //     });
+    // });
+    //
+    // $('.woo-verify-api-url').click(function (e) {
+    //     e.preventDefault();
+    //
+    //     $.ajax({
+    //         url: api_url('store-verify', 'woo'),
+    //         type: 'GET',
+    //         data: {
+    //             store: $(this).data('store-id')
+    //         },
+    //         context: {
+    //             btn: $(this)
+    //         },
+    //         success: function (data) {
+    //             swal('API URL', 'The API URL is working properly for WooCommerce store:\n' + data.store, 'success');
+    //         },
+    //         error: function (data) {
+    //             displayAjaxError('API URL', data);
+    //         },
+    //         complete: function () {
+    //         }
+    //     });
+    // });
+
     $('#ebay-store-create-submit-btn').click(function(e) {
         if (typeof(Pusher) === 'undefined') {
             toastr.error('This could be due to using Adblocker extensions<br>' +
