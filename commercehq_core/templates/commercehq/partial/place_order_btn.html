@@ -68,13 +68,7 @@
             {% endif %}
 
             {% if item.supplier.is_walmart %}
-                {% with user.id|stringformat:"i" as user_id %}
-                {% with item.supplier.product_url|urlencode:"" as encoded_product_url %}
-                {% with item.supplier.get_walmart_affiliate_link.p1|add:user_id|add:item.supplier.get_walmart_affiliate_link.p2|add:encoded_product_url as walmart_affiliate_link %}
-                    <li><a href="{{ walmart_affiliate_link }}" target="_blank">Manual Order</a></li>
-                {% endwith %}
-                {% endwith %}
-                {% endwith %}
+            <li><a href="{{item.supplier.product_url|create_walmart_affiliate_link:request.user}}" target="_blank">Manual Order</a></li>
             {% else %}
             <li><a href="{{item.supplier.short_product_url}}" target="_blank">Manual Order</a></li>
             {% endif %}
