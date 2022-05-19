@@ -158,11 +158,11 @@ $('.save-filter-btn').click(function (e) {
     $.ajax({
         url: api_url('save-orders-filter', 'woo'),
         type: 'POST',
-        data: $('.filter-form form').serialize(),
+        data: $('#filter-form form').serialize(),
         success: function (data) {
             toastr.success('Orders Filter', 'Saved');
             setTimeout(function() {
-                $(".filter-form form").trigger('submit');
+                $("#filter-form form").trigger('submit');
             }, 1000);
         },
         error: function (data) {

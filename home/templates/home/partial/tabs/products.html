@@ -28,7 +28,11 @@
 
             {% elif item|model_name == 'ebaystore' %}
                 <li><a href="{% url 'ebay:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+
+            {% elif item|model_name == 'fbstore' %}
+                <li><a href="{% url 'fb:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
             {% endif %}
+
         {% endfor %}
 
     {% else %}

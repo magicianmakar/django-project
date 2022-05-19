@@ -87,6 +87,13 @@ Now you can use git as usual
 You can find more about this tool in here [pre-commit.com](https://pre-commit.com)
 
 ### Docker based dev environment
+There are 5 service in docker-compose file
+1. web (Application)
+2. db (PostgreSQL 9.5)
+3. redis (Redis 6.0)
+4. celery (Celery Workers)
+5. nignx (Nginx)
+
 You will need to install the following dependencies for this:
 - Docker
 - Docker Compose
@@ -97,36 +104,35 @@ cd docker
 docker-compose build
 ```
 
-Add the following lines to `env.dev.yaml`:
-```
-environment:
-  DATABASE_URL: postgres://postgres:@db:5432/shopified
-  REDISCLOUD_URL: redis://redis:6379
-  REDISCLOUD_CACHE: redis://redis:6379
-  REDISCLOUD_ORDERS: redis://redis:6379
-```
-
 Setup Docker docker environment:
 ```
 cd docker
 ../scripts/setup-docker
 ```
 
-Log into the docker image:
+Create and run all containers:
 ```
-cd docker
-docker-compose run --service-ports web
-```
-
-Run the application:
-```
-python manage.py runserver 0.0.0.0:8000
+docker-compose up
 ```
 
-You should be able to access the webapp at http://dev.dropified.com:8000/.
+You should be able to access the webapp at https://dev.dropified.com/.
+
+You will get certificate is not valid as it is self signed certificate, click advance and proceed or type `thisisunsafe` for mac
+
+Afterwards you can use the following command to start or stop all containers or for individual mention its name:
+```
+docker-compose start
+docker-compose stop
+docker-compose start web
+```
 
 Docker runs the Celery worker automatically. You can connect to the log
 output of the Celery worker by:
 ```
 docker-compose logs -f celery
+```
+
+For all services logs
+```
+docker-compose logs
 ```

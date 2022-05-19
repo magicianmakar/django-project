@@ -1,18 +1,18 @@
 import arrow
 import json
-from functools import cmp_to_key
 from celery import chain
+from functools import cmp_to_key
 from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import ObjectDoesNotExist
+from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.forms.models import model_to_dict
 
 import suredone_core.tasks as sd_tasks
 from alibaba_core.models import AlibabaOrderItem
@@ -1180,6 +1180,145 @@ class EbayStoreApi(ApiBase):
             cache.delete(user_store_supplier_sync_key)
             return self.api_success()
         return self.api_error('No Sync in progress', status=404)
+
+    def get_import_product_options(self, request, user, data):
+        # TODO: add filters to imports
+        try:
+            store = EbayStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        page_limit = safe_int(data.get('ppp'), 10)
+        if page_limit < 1:
+            page_limit = 10
+
+        page = safe_int(data.get('current_page'), 1)
+        if page < 1:
+            page = 1
+
+        task = tasks.get_import_product_options.apply_async(kwargs={
+            'store_id': store.id,
+            'user_id': user.id,
+            'page_limit': page_limit,
+            'page': page,
+        })
+
+        return self.api_success({'task': task.id})
+
+    def get_import_products_status(self, request, user, data):
+        try:
+            store = EbayStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        try:
+            result = EbayUtils(user).get_import_products_status(store=store)
+            return self.api_success({'data': result})
+        except:
+            return self.api_error('Something went wrong. Please try again later.')
+
+    def post_new_products_import_job(self, request, user, data):
+        try:
+            store = EbayStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        try:
+            result = EbayUtils(user).start_new_products_import_job(store=store)
+        except:
+            return self.api_error('Something went wrong. Please try again later.')
+
+        if result.get('result') == 'success':
+            return self.api_success({'data': result})
+        else:
+            return self.api_error('Something went wrong. Please try again later.')
+
+    def post_import_product(self, request, user, data):
+        store_id = data.get('store')
+        supplier = data.get('supplier')
+        vendor_name = data.get('vendor_name')
+        vendor_url = data.get('vendor_url')
+        product_guid = data.get('product')
+        product_variants_count = safe_int(data.get('variants_count'), None)
+        csv_position = safe_int(data.get('csv_index_position'), None)
+
+        if any(x is None or x == '' for x in [store_id, supplier, vendor_name, vendor_url, product_guid, csv_position, product_variants_count]):
+            return self.api_error('Missing or invalid required parameters.')
+
+        try:
+            store = EbayStore.objects.get(id=store_id)
+            permissions.user_can_edit(user, store)
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        # Check if a user has reached products limit
+        can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
+
+        if not can_add:
+            return self.api_error("Woohoo! 🎉. You are growing and you've hit your account limit for products. "
+                                  'Upgrade your plan to keep importing new products')
+
+        task = tasks.import_product.apply_async(kwargs={
+            'store_id': store_id,
+            'user_id': user.id,
+            'supplier_url': supplier,
+            'vendor_name': vendor_name,
+            'vendor_url': vendor_url,
+            'product_guid': product_guid,
+            'csv_position': csv_position,
+            'product_variants_count': product_variants_count,
+        })
+
+        return self.api_success({'task': task.id})
+
+    def post_update_product_with_import(self, request, user, data):
+        """
+        Sync an existing product with the imported ebay data
+        """
+        product_guid = data.get('product')
+        product_variants_count = safe_int(data.get('variants_count'), None)
+        csv_position = safe_int(data.get('csv_index_position'), None)
+
+        if any(x is None or x == '' for x in [product_guid, csv_position, product_variants_count]):
+            return self.api_error('Missing or invalid required parameters.')
+
+        try:
+            product = EbayProduct.objects.get(guid=product_guid)
+            permissions.user_can_edit(user, product)
+        except EbayStore.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+
+        task = tasks.sync_product_with_import_file.apply_async(kwargs={
+            'store_id': product.store.id,
+            'user_id': user.id,
+            'product_id': product.id,
+            'csv_position': csv_position,
+            'product_variants_count': product_variants_count,
+        })
+
+        return self.api_success({'task': task.id})
+
+    def delete_disconnect_product(self, request, user, data):
+        store_id = data.get('store')
+        product_guid = data.get('product')
+
+        try:
+            product = EbayProduct.objects.get(guid=product_guid, user=user.models_user)
+            permissions.user_can_delete(user, product)
+        except EbayProduct.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+
+        tasks.product_delete.apply_async(kwargs={
+            'user_id': user.id,
+            'parent_guid': product_guid,
+            'store_id': store_id,
+            'skip_all_channels': True,
+        })
+
+        return self.api_success()
 
     def post_bundles_mapping(self, request, user, data):
         if not user.can('mapping_bundle.use'):

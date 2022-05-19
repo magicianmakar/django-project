@@ -5,7 +5,6 @@ from django.utils.functional import cached_property
 from django.utils.html import format_html
 
 import simplejson as json
-from bs4 import BeautifulSoup
 
 from supplements.lib.authorizenet import (
     charge_customer_profile,
@@ -27,6 +26,8 @@ class PLSupplementMixin:
 
     @property
     def description_short(self):
+        from bs4 import BeautifulSoup
+
         description = BeautifulSoup(self.description, features="lxml")
         words = description.text.split()
         if len(words) > 8:

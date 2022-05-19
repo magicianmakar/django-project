@@ -814,7 +814,7 @@ class ShopifyStoreApi(ApiBase):
         else:
             target_user.profile.change_plan(utils.get_plan(
                 payment_gateway='shopify',
-                plan_slug='shopify-free-plan'))
+                plan_slug='free-shopify-2022'))
 
         return self.api_success()
 

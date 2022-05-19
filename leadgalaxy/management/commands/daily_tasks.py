@@ -84,7 +84,7 @@ class Command(DropifiedBaseCommand):
             self.stdout.write(f'Cancel yearly subscription for {i.user.email} from {i.created_at:%Y-%m-%d}')
             i.user.profile.change_plan(get_plan(
                 payment_gateway='shopify',
-                plan_slug='shopify-free-plan'))
+                plan_slug='free-shopify-2022'))
 
             i.charge_type = 'xexpired'
             i.save()

@@ -13,7 +13,7 @@ from product_alerts.utils import get_supplier_variants, variant_index_from_suppl
 from shopified_core import permissions
 from shopified_core.utils import get_domain, http_exception_response, http_excption_status_code, safe_int, safe_json
 from suredone_core.models import SureDoneAccount
-from suredone_core.utils import SureDonePusher
+from suredone_core.utils import GetSureDoneProductByGuidEmpty, SureDonePusher
 
 from .models import EbayProduct, EbayStore
 from .utils import EbayOrderUpdater, EbayUtils, smart_board_by_product
@@ -152,9 +152,10 @@ def add_new_ebay_store(sd_account_id, pusher_channel, user_id, instance_id=None,
         # Step 4: Get an ebay authorization url
         sd_api_request_data = {'instance': channel_inst_to_use}
         sd_auth_channel_resp = ebay_utils.api.authorize_ebay_channel(sd_api_request_data, legacy=True)
+        resp_data = None
         try:
-            sd_auth_channel_resp.raise_for_status()
             resp_data = sd_auth_channel_resp.json()
+            sd_auth_channel_resp.raise_for_status()
 
             sd_resp_results = resp_data.get('results', {})
             sd_auth_url = sd_resp_results.get('successful', {}).get('auth_url')
@@ -180,6 +181,7 @@ def add_new_ebay_store(sd_account_id, pusher_channel, user_id, instance_id=None,
                 'store_instance_id': channel_inst_to_use,
                 'response_code': sd_auth_channel_resp.status_code,
                 'response_reason': sd_auth_channel_resp.reason,
+                'response_data': resp_data,
             })
             sd_pusher.trigger(default_event, {
                 'success': False,
@@ -192,10 +194,15 @@ def add_new_ebay_store(sd_account_id, pusher_channel, user_id, instance_id=None,
             'auth_url': sd_auth_url
         })
         return sd_account_id
-    except:
+    except Exception as e:
+        capture_exception(extra={
+            'description': 'Error when trying to add a new eBay store.',
+            'suredone_account_id': sd_account_id,
+            'error': e,
+        })
         sd_pusher.trigger(default_event, {
             'success': False,
-            'error': 'Something went wrong. Please contact Dropifed support.'
+            'error': 'Something went wrong. Please contact Dropified support.',
         })
 
 
@@ -550,7 +557,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         product_data['mediax'] = '*'.join(mediax)
 
         # Fill images into variants
-        for variant in product_data['variants']:
+        for variant in product_data.get('variants', []):
             media1 = variant.pop('image')
             variant['media1'] = media1 if variant['guid'] != variant['sku'] else product_data['media1']
             for i in range(2, 11):
@@ -646,7 +653,7 @@ def product_duplicate(user_id, parent_sku, product_data, store_id):
 
 
 @celery_app.task(base=CaptureFailure)
-def product_delete(user_id, parent_guid, store_id):
+def product_delete(user_id, parent_guid, store_id, skip_all_channels=False):
     user = User.objects.get(id=user_id)
     store = EbayStore.objects.get(id=store_id)
     product = EbayProduct.objects.get(guid=parent_guid)
@@ -656,7 +663,20 @@ def product_delete(user_id, parent_guid, store_id):
         permissions.user_can_delete(user, product)
         ebay_utils = EbayUtils(user)
         is_connected = product.is_connected
-        sd_api_resp = ebay_utils.delete_product_with_all_variations(parent_guid)
+        redirect_url = f"{reverse('ebay:products_list')}?store={store.id if is_connected else 'n'}"
+        try:
+            sd_api_resp = ebay_utils.delete_product_with_all_variations(parent_guid, skip_all_channels=skip_all_channels)
+        except GetSureDoneProductByGuidEmpty:
+            # Exception because the product is missing in SureDone
+            # Delete the product and its variants for the product
+            product.delete()
+            store.pusher_trigger(pusher_event, {
+                'success': True,
+                'product': product.guid,
+                'redirect_url': redirect_url,
+            })
+            return
+
         api_error_message = sd_api_resp.get('1', {}).get('errors')
         if api_error_message:
             parsed_ebay_errors_list = ebay_utils.parse_ebay_errors(api_error_message)
@@ -692,8 +712,6 @@ def product_delete(user_id, parent_guid, store_id):
 
         # Delete the product and its variants for the product
         product.delete()
-
-        redirect_url = f"{reverse('ebay:products_list')}?store={store.id if is_connected else 'n'}"
 
         store.pusher_trigger(pusher_event, {
             'success': True,
@@ -1058,3 +1076,108 @@ def products_supplier_sync(self, store_id, user_id, products, sync_price, price_
         store.pusher_trigger('products-supplier-sync', push_data)
 
     cache.delete(cache_key)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def get_import_product_options(self, store_id, user_id, page=1, page_limit=10):
+    user = User.objects.get(id=user_id)
+    store = EbayStore.objects.get(id=store_id)
+    pusher_event = 'ebay-import-products-found'
+
+    try:
+        permissions.user_can_view(user, store)
+
+        utils = EbayUtils(user)
+        result = utils.get_import_products(store, user, page=page, limit=page_limit)
+
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'task': self.request.id,
+            'current': page,
+            'prev': page > 1,
+            'next': result.get('next', False),
+            'products': result.get('products', [])
+        })
+
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'task': self.request.id,
+            'error': http_exception_response(e, json=True).get('message', 'Server Error'),
+            'current': page,
+            'prev': page > 1,
+            'next': False
+        })
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def import_product(self, store_id, user_id, product_guid, csv_position, product_variants_count,
+                   supplier_url, vendor_name, vendor_url):
+    user = User.objects.get(id=user_id)
+    store = EbayStore.objects.get(id=store_id)
+    pusher_event = 'ebay-product-import-completed'
+
+    try:
+        permissions.user_can_edit(user, store)
+
+        EbayUtils(user).import_product_from_csv(
+            store=store,
+            product_guid=product_guid,
+            csv_position=csv_position,
+            product_variants_count=product_variants_count,
+            supplier_url=supplier_url,
+            vendor_name=vendor_name,
+            vendor_url=vendor_url)
+
+        store.pusher_trigger(pusher_event, {
+            'success': True,
+            'task': self.request.id,
+            'product_link': reverse('ebay:product_detail', args=[store.id, product_guid]),
+        })
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+
+        default_error_message = 'Something went wrong. Please try submitting a new import job.'
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'task': self.request.id,
+            'error': http_exception_response(e, json=True).get('message', default_error_message),
+        })
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def sync_product_with_import_file(self, store_id, user_id, product_id, csv_position, product_variants_count):
+    user = User.objects.get(id=user_id)
+    store = EbayStore.objects.get(id=store_id)
+    product = EbayProduct.objects.get(id=product_id)
+    pusher_event = 'ebay-product-sync-completed'
+
+    try:
+        permissions.user_can_view(user, store)
+        permissions.user_can_edit(user, product)
+
+        EbayUtils(user).update_product_from_import_csv(
+            product=product,
+            csv_position=csv_position,
+            product_variants_count=product_variants_count)
+
+        store.pusher_trigger(pusher_event, {
+            'success': True,
+            'task': self.request.id,
+            'product': product.guid,
+        })
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+
+        default_error_message = 'Something went wrong. Please try submitting a new import job.'
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'task': self.request.id,
+            'error': http_exception_response(e, json=True).get('message', default_error_message),
+            'product': product.guid,
+        })

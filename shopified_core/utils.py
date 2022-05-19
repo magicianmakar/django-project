@@ -13,7 +13,6 @@ import time
 from copy import deepcopy
 from decimal import Decimal
 from functools import wraps
-from premailer import transform
 from tld import get_tld
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
@@ -372,6 +371,8 @@ def get_mimetype(url, default=None):
 
 
 def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_email=None, is_async=False):
+    from premailer import transform
+
     template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
 
     try:

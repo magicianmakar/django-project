@@ -110,6 +110,7 @@ class FBProduct(SureDoneProductBase):
                                             verbose_name='Facebook Store Instance Index')
     fb_category_id = models.BigIntegerField(default=0, null=True, blank=True,
                                             verbose_name='Facebook Category ID')
+    fb_category_name = models.CharField(max_length=255, default='', blank=True, null=True, verbose_name='Facebook category name')
     brand = models.CharField(max_length=255, blank=True, default='', verbose_name='Facebook product brand')
     page_link = models.CharField(max_length=510, blank=True, default='', verbose_name='Product page link')
     status = models.CharField(max_length=50, blank=True, null=True, default='',

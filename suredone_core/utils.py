@@ -41,6 +41,11 @@ def parse_suredone_date(date_str: str):
         return None
 
 
+class GetSureDoneProductByGuidEmpty(Exception):
+    def __init__(self):
+        super().__init__('SureDone get products by GUID returned no products.')
+
+
 class SureDoneUtils:
     SUREDONE_DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss'
 
@@ -798,12 +803,12 @@ class SureDoneUtils:
             'parent_guid': main_sku,
         }
 
-    def delete_product_with_all_variations(self, parent_guid: str):
+    def delete_product_with_all_variations(self, parent_guid: str, skip_all_channels: False):
         # Get all products with the matching SKU
         sd_product_data = self.api.get_item_by_guid(parent_guid)
 
         if not (sd_product_data and sd_product_data.get('guid')):
-            return
+            raise GetSureDoneProductByGuidEmpty()
 
         # Extract GUID values from the children variants
         attributes = list(sd_product_data.get('attributes', {}).values())
@@ -813,17 +818,17 @@ class SureDoneUtils:
         # Therefore, add the parent GUID as the last element
         guids_to_delete.append(parent_guid)
 
-        api_response = self.delete_products_by_guid(guids_to_delete)
+        api_response = self.delete_products_by_guid(guids_to_delete, skip_all_channels)
 
         return api_response
 
-    def delete_products_by_guid(self, guids_to_delete: list):
+    def delete_products_by_guid(self, guids_to_delete: list, skip_all_channels=False):
         # Reformat for SureDone API
         reformatted_guids = [[i] for i in guids_to_delete]
         api_request_data = [['guid'], *reformatted_guids]
 
         # Delete the products using SureDone API
-        api_response = self.api.delete_products_bulk(api_request_data)
+        api_response = self.api.delete_products_bulk(api_request_data, skip_all_channels)
 
         return api_response
 

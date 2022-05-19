@@ -15,7 +15,6 @@ class SureDoneAccountAdmin(admin.ModelAdmin):
         'email',
         'password',
         'sd_id',
-        'options_config_data',
         'api_username',
         'api_token',
         'is_active',

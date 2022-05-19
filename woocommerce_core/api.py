@@ -903,3 +903,7 @@ class WooStoreApi(ApiBase):
             cache.delete(user_store_supplier_sync_key)
             return self.api_success()
         return self.api_error('No Sync in progress', status=404)
+
+    def post_save_orders_filter(self, request, user, data):
+        utils.set_orders_filter(user, data)
+        return self.api_success()

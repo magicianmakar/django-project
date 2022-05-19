@@ -332,7 +332,11 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
             return
 
         # Fetch SureDone updates and update the DB
-        updated_product = fb_utils.get_fb_product_details(parent_guid, smart_board_sync=True)
+        updated_product = fb_utils.get_fb_product_details(
+            parent_guid,
+            smart_board_sync=True,
+            add_model_fields={'fb_category_name': product_data.get('fb_category_name', '')}
+        )
 
         # If the SureDone returns no data, then the product did not get imported
         if not updated_product or not isinstance(updated_product, FBProduct):

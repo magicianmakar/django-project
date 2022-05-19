@@ -148,7 +148,7 @@ class ApiBase(ApiResponseMixin, View):
             return self.api_error('Board not found.', status=404)
 
         if board.title != data.get('title') and self.check_board_title_exist(user=user, title=data.get('title')):
-            return self.api_error('Board name is already exist.', status=501)
+            return self.api_error('Board name already exists.', status=501)
         board.title = data.get('title')
         board.config = json.dumps({
             'title': data.get('product_title'),
@@ -163,9 +163,8 @@ class ApiBase(ApiResponseMixin, View):
         return self.api_success()
 
     def check_board_title_exist(self, user, title):
-        for board_model in self.board_models:
-            if board_model.objects.filter(user=user, title=title):
-                return True
+        if self.board_model.objects.filter(user=user, title=title):
+            return True
 
         return False
 

@@ -96,8 +96,10 @@
             <li>
                 {% if ebay_manual_affiliate_link and item.supplier.is_ebay %}
                 <a href="{{item.supplier.get_affiliate_link}}" target="_blank">Manual Order</a>
+                {% elif item.supplier.is_walmart %}
+                <li><a href="{{item.supplier.product_url|create_walmart_affiliate_link:request.user}}" target="_blank">Manual Order</a></li>
                 {% else %}
-                <a href="{{item.supplier.short_product_url}}" target="_blank">Manual Order</a>
+                <li><a href="{{item.supplier.short_product_url}}" target="_blank">Manual Order</a></li>
                 {% endif %}
             </li>
 

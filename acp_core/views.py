@@ -303,10 +303,13 @@ class ACPUserInfoView(BaseTemplateView):
         bundles = FeatureBundle.objects.all().order_by('-id')
         installed_bundles = target_user.profile.bundles.all()
 
+        user_plans = GroupPlan.objects.exclude(id=target_user.profile.plan.id)
         if target_user.profile.private_label or target_user.profile.dropified_private_label:
-            user_plans = GroupPlan.objects.exclude(id=target_user.profile.plan.id).filter(private_label=True, show_in_plod_app=True).order_by('-id')
+            user_plans = user_plans.filter(private_label=True, show_in_plod_app__in=[1, 2])
         else:
-            user_plans = GroupPlan.objects.exclude(id=target_user.profile.plan.id).exclude(private_label=True).order_by('-id')
+            user_plans = user_plans.exclude(private_label=True)
+
+        user_plans = user_plans.order_by('-id')
 
         user_ips = UserIpRecord.objects.filter(user=target_user).order_by('-last_seen_at')[:10]
 

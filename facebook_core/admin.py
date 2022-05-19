@@ -3,9 +3,12 @@ from django.contrib import admin
 
 from .models import FBBoard, FBOrderTrack, FBProduct, FBProductVariant, FBStore, FBSupplier, FBUserUpload
 
+USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
+
 
 @admin.register(FBStore)
 class FBStoreAdmin(admin.ModelAdmin):
+    search_fields = ('title', 'store_hash') + USER_SEARCH_FIELDS
     list_display = (
         'id',
         'list_index',
@@ -62,6 +65,7 @@ class FBProductAdmin(admin.ModelAdmin):
         'default_supplier',
         'fb_store_index',
         'fb_category_id',
+        'fb_category_name',
         'brand',
         'page_link',
         'status',

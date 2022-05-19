@@ -51,6 +51,7 @@ function prepareApiData(productData, variants) {
         tags: $('#product-tag').val(),
         longdescription: $('#product-description').val().trim(),
         fb_category_id: productData.fb_category_id,
+        fb_category_name: productData.fb_category_name,
         vendor: $('#product-vendor').val(),
         published: $('#product-visible').prop('checked'),
         images: productData.images,

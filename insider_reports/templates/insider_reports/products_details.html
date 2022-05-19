@@ -210,7 +210,7 @@
                                                 {% for key, inventory in ranked_product.full_data.globalData.inventory.skuInventory.items %}
                                                     <div class="row">
                                                         <div class="col-md-9">
-                                                            {{ ranked_product.sku_map|get_item:key }}
+                                                            {{ ranked_product.sku_map|key_value2:key }}
                                                         </div>
                                                         <div class="col-md-3">
                                                             {% for warehouse in inventory.warehouseInventoryList %}

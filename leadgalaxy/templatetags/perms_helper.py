@@ -1,4 +1,6 @@
 from django import template
+from django.conf import settings
+from leadgalaxy.utils import set_url_query
 
 register = template.Library()
 
@@ -64,3 +66,12 @@ def is_supplement_seen(user_supplement, user):
         return True
 
     return False
+
+
+@register.filter
+def create_walmart_affiliate_link(product_url, user):
+    user_id = user.id
+    walmart_affiliate_link = settings.WALMART_AFFILIATE_LINK
+    walmart_affiliate_link = set_url_query(walmart_affiliate_link, "subId1", user_id)
+    walmart_affiliate_link = set_url_query(walmart_affiliate_link, "u", product_url)
+    return walmart_affiliate_link

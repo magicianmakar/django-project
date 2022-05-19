@@ -296,5 +296,13 @@
     </script>
 
     <script type="text/javascript" src="https://cdn.productstash.io/js/sidebar.min.js?v=0.1" defer="defer"></script>
+    <script type="text/javascript">
+        var li_sidebar = {
+            workspace_id : '{% app_setting "LOOPEDIN_WORKSPACE_ID" %}',
+            auto_init: true,
+            name: '{{ user.first_name }} {{ user.last_name|slice:":1" }}',
+            email: '{{ user.email }}',
+        };
+    </script>
 
 {% endif %}

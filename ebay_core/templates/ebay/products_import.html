@@ -1,0 +1,124 @@
+{% extends "base_ebay_core.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load compress %}
+{% load template_helper %}
+
+{% block main-container %}
+    <div class="tabs-container">
+        <div class="tab-pane">
+            <div class="panel-body">
+                <div style="display: flex; justify-content: space-between">
+                    <div>
+                        <h3 style="font-size: 18px;">
+                            Import Products
+                        </h3>
+                        <span class="text-muted" id='ebay-import-status-wrapper'>
+                            <ebay-import-status-indicator ref="ebayImportStatusIndicator"></ebay-import-status-indicator>
+                        </span>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" id="start-new-import-button">
+                            <i class="fa fa-plus"></i> Start a New Import
+                        </button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 text-right pull-right">
+                        <label>Items Per Page</label>
+                        {% for value in items_per_page_list %}
+                            {% if value == ppp %}
+                            <span class="btn btn-primary btn-rounded" >{% if value == 'all' %}ALL{% else %}{{ value }}{% endif %}</span>
+                            {% else %}
+                            <a href="?store={{ store.id }}&ppp={{ value }}" class="btn btn-default btn-outline btn-rounded">{% if value == 'all' %}ALL{% else %}{{ value }}{% endif %}</a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="panel-body" style="padding: 20px !important;">
+
+                <div id='ebay-products-wrapper'>
+                    <ebay-imported-products-table ref="ebayImportedProductsTable"></ebay-imported-products-table>
+                </div>
+            </div>
+        </div>
+    </div> <!-- tabs-container -->
+
+    {% include 'ebay/partial/ebay_products_import_vue.html' %}
+
+    {% include "ebay/partial/ebay_product_selector.html" %}
+
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+        .icheckbox_square-blue {
+            position: absolute;
+            margin: 0;
+            background-color: #fff;
+        }
+
+        .filter-row {
+            padding-bottom: 5px;
+        }
+
+        .filter-form {
+            border: 1px solid rgb(215, 218, 215);
+            padding: 15px 0px 20px 15px;
+        }
+
+        .filter-label {
+            padding: 7px 12px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .glyphicon.spinning {
+            animation: spin 1s infinite linear;
+            -webkit-animation: spin2 1s infinite linear;
+        }
+
+        @keyframes spin {
+            from { transform: scale(1) rotate(0deg); }
+            to { transform: scale(1) rotate(360deg); }
+        }
+
+        @-webkit-keyframes spin2 {
+            from { -webkit-transform: rotate(0deg); }
+            to { -webkit-transform: rotate(360deg); }
+        }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        $.fn.bootstrapBtn = $.fn.button.noConflict();
+
+        var user_filter = {
+            title: '{{ title }}',
+            category: '{{ category }}',
+            status: '{{ status }}',
+            ppp: '{{ppp}}',
+            current_page: '{{current_page}}',
+            store: {{store.id}},
+        };
+
+        var sub_conf = {
+            key: "{% app_setting 'PUSHER_KEY' %}",
+            channel: "{{store.pusher_channel}}",
+            store: {{store.id}},
+        };
+
+    </script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
+
+    {% compress js %}
+        <script src="{% static 'libs/bower_components/vue/dist/vue.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'ebay/js/ebay_products_import_status_vue.js' %}"></script>
+        <script type="text/javascript" src="{% static 'ebay/js/ebay_products_import_vue.js' %}"></script>
+    {% endcompress %}
+{% endblock %}

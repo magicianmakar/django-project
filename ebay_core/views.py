@@ -31,6 +31,7 @@ from lib.exceptions import capture_exception
 from profits.mixins import ProfitDashboardMixin
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired
+from shopified_core.mocks import get_mocked_bundle_variants, get_mocked_supplier_variants
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.tasks import keen_order_event
@@ -46,10 +47,6 @@ from shopified_core.utils import (
     safe_float,
     safe_int,
     safe_json
-)
-from shopified_core.mocks import (
-    get_mocked_bundle_variants,
-    get_mocked_supplier_variants,
 )
 from suredone_core.utils import get_daterange_filters
 
@@ -1079,7 +1076,7 @@ class OAuthAcceptRedirectView(RedirectView):
         if not ebay_utils.sd_account.has_business_settings_configured:
             messages.success(self.request, f'{result_msg} Please configure your eBay <b>business country</b> and'
                                            f' <b>zip code</b>.')
-            return f'{reverse("settings")}#ebay-settings'
+            return f'{reverse("settings")}#ebay'
 
         messages.success(self.request, result_msg)
         return reverse('ebay:index')
@@ -1109,3 +1106,62 @@ class ProfitDashboardView(ProfitDashboardMixin, ListView):
     store_type = 'ebay'
     store_model = EbayStore
     base_template = 'base_ebay_core.html'
+
+
+class ProductsImportView(ListView):
+    model = None
+    store = None
+    template_name = 'ebay/products_import.html'
+    context_object_name = 'products'
+    _ebay_utils = None
+
+    @method_decorator(login_required)
+    def dispatch(self, request, store, *args, **kwargs):
+        if not request.user.can('ebay.use'):
+            raise permissions.PermissionDenied()
+
+        self.store = get_object_or_404(EbayStore, id=store)
+
+        permissions.user_can_view(self.request.user, self.store)
+
+        return super().dispatch(request, *args, **kwargs)
+
+    @property
+    def ebay_utils(self):
+        if not hasattr(self, '_ebay_utils') or not self._ebay_utils:
+            self._ebay_utils = EbayUtils(self.request.user)
+
+        return self._ebay_utils
+
+    def get_queryset(self):
+        return []
+
+    def get_context_data(self, **kwargs):
+        api_error = None
+        context = {}
+
+        try:
+            context = super().get_context_data(**kwargs)
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
+            api_error = f'HTTP Error: {http_excption_status_code(e)}'
+        except:
+            api_error = 'Store API Error'
+            capture_exception()
+
+        context['ppp'] = min(safe_int(self.request.GET.get('ppp'), 50), 100)
+        context['items_per_page_list'] = [20, 50, 100]
+        context['current_page'] = self.request.GET.get('page', '1')
+
+        ebay_products_url = reverse('ebay:products_list')
+
+        context['store'] = self.store
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': ebay_products_url},
+            {'title': self.store.title, 'url': f'{ebay_products_url}?store={self.store.id}'}]
+
+        if api_error:
+            messages.error(self.request, f'Error while trying to load your products for import: {api_error}')
+
+        context['api_error'] = api_error
+
+        return context

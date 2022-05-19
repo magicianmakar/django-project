@@ -1,5 +1,4 @@
 import json
-from bs4 import BeautifulSoup
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -159,6 +158,8 @@ def get_store_data(user):
 
 
 def get_description_simplified(description):
+    from bs4 import BeautifulSoup
+
     soup = BeautifulSoup(description, features='html.parser')
     specs = soup.table
 

@@ -3,7 +3,6 @@ import json
 import re
 import requests
 import socket
-from bs4 import BeautifulSoup
 from copy import deepcopy
 from decimal import Decimal
 
@@ -193,6 +192,8 @@ def get_alibaba_account(user):
 
 
 def get_description_simplified(description):
+    from bs4 import BeautifulSoup
+
     soup = BeautifulSoup(description, features='html.parser')
     specs = soup.table
 

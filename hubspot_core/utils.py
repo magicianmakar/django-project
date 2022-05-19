@@ -6,6 +6,7 @@ import time
 from django.contrib.auth.models import User
 from django.conf import settings
 
+from lib.exceptions import capture_message
 from shopified_core.utils import safe_int, safe_str
 from .models import HubspotAccount
 
@@ -88,9 +89,12 @@ def api_requests(url, data, method='post'):
         params={'hapikey': settings.HUPSPOT_API_KEY}
     )
 
-    if not r.ok and r.status_code == 429:
-        time.sleep(1)
-        return api_requests(url=url, data=data, method=method)
+    if not r.ok:
+        capture_message('Hubspot error', extra={'response': r.text})
+
+        if r.status_code == 429:
+            time.sleep(1)
+            return api_requests(url=url, data=data, method=method)
 
     r.raise_for_status()
 
@@ -132,6 +136,8 @@ def generate_create_contact(user: User):
             "dr_gear_count": profile.get_gear_stores().count(),
             "dr_gkart_count": profile.get_gkart_stores().count(),
             "dr_bigcommerce_count": profile.get_bigcommerce_stores().count(),
+            "dr_ebay_count": profile.get_ebay_stores().count(),
+            "dr_fb_count": profile.get_fb_stores().count(),
 
             "plan": clean_plan_name(plan) if plan else '',
             "billing_interval": plan.payment_interval if plan else '',
@@ -167,6 +173,8 @@ def generate_create_contact(user: User):
         data['properties']['dr_gear_count'],
         data['properties']['dr_gkart_count'],
         data['properties']['dr_bigcommerce_count'],
+        data['properties']['dr_ebay_count'],
+        data['properties']['dr_fb_count'],
     ])
 
     data['properties']['number_of_stores'] = data['properties']['dr_stores_count']

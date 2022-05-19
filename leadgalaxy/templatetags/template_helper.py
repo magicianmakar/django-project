@@ -343,6 +343,14 @@ def key_value(dict, key):
     return dict.get(key, '')
 
 
+@register.filter
+def key_value2(dictionary, key):
+    try:
+        return dictionary.get(str(key))['key_value']
+    except:
+        return False
+
+
 @register.simple_tag
 def user_orders_count(user):
     orders_count = 0

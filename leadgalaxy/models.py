@@ -37,6 +37,12 @@ YES_NO_CHOICES = (
     (1, 'Yes'),
 )
 
+PLOD_SHOW_CHOICES = (
+    (0, 'Don\'t show for PLOD'),
+    (1, 'Show for PLOD only'),
+    (3, 'Show For All Users'),
+)
+
 PLAN_PAYMENT_GATEWAY = (
     ('jvzoo', 'JVZoo'),
     ('stripe', 'Stripe'),
@@ -2162,6 +2168,9 @@ class CaptchaCredit(models.Model):
 
 
 class GroupPlan(models.Model):
+    class Meta:
+        ordering = ['title']
+
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")
     register_hash = models.CharField(unique=True, max_length=50, editable=False)
@@ -2202,7 +2211,7 @@ class GroupPlan(models.Model):
     retail_price_info = models.CharField(max_length=512, blank=True, null=True, verbose_name='Retail Price info in Plans Page')
 
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
-    show_in_plod_app = models.IntegerField(default=0, choices=YES_NO_CHOICES, verbose_name='Show in PLoD App Listing')
+    show_in_plod_app = models.IntegerField(default=0, choices=PLOD_SHOW_CHOICES, verbose_name='Show in PLoD App Listing')
     private_label = models.BooleanField(default=False, verbose_name='Private Label Plan')
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
@@ -2219,7 +2228,7 @@ class GroupPlan(models.Model):
     parent_plan = models.ForeignKey('GroupPlan', null=True, on_delete=models.SET_NULL, blank=True, verbose_name='Use permissions from selected plan')
 
     def __str__(self):
-        return f'Plan: {self.title}'
+        return f'{self.title} | {self.slug} | {self.id}'
 
     def save(self, *args, **kwargs):
         if not self.register_hash:
@@ -2228,7 +2237,10 @@ class GroupPlan(models.Model):
         super(GroupPlan, self).save(*args, **kwargs)
 
     def permissions_count(self):
-        return self.permissions.count()
+        if self.parent_plan:
+            return f'{self.parent_plan.permissions.count()} (From: {self.parent_plan.id})'
+        else:
+            return f'{self.permissions.count()}'
 
     def get_description(self):
         if self.plan_description:
@@ -2239,9 +2251,6 @@ class GroupPlan(models.Model):
 
         if self.is_stripe():
             desc = '{} ($ {:0.2f}/{})'.format(desc, self.stripe_plan.amount, interval)
-
-        elif (not self.monthly_price and self.monthly_price is not None) or self.is_free:
-            desc = '{} (Inactive)'.format(desc)
 
         elif self.monthly_price:
             pricing = float(self.monthly_price) * 12.0 if self.payment_interval == 'yearly' else self.monthly_price
@@ -2256,6 +2265,7 @@ class GroupPlan(models.Model):
 
         interval = 'year' if self.payment_interval == 'yearly' else 'month'
 
+        desc = ''
         if self.is_stripe():
             desc = '${:0.2f}/{}'.format(self.stripe_plan.amount, interval)
 

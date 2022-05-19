@@ -711,6 +711,17 @@ class OrdersList(ListView):
 
         return super(OrdersList, self).dispatch(request, *args, **kwargs)
 
+    # Get temaplte name funcion for TemplateView class
+    def get_template_names(self):
+        theme = self.request.GET.get('theme')
+        if theme:
+            self.request.user.set_config('use_old_theme', theme == 'old')
+
+        if self.request.user.get_config('use_old_theme'):
+            return ['woocommerce/orders_list_old.html']
+        else:
+            return ['woocommerce/orders_list.html']
+
     def get_store(self):
         if not hasattr(self, 'store'):
             self.store = get_store_from_request(self.request)
@@ -1396,6 +1407,16 @@ class BoardsList(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(BoardsList, self).get_context_data(**kwargs)
+
+        user_boards_list = self.request.user.models_user.wooboard_set.all()
+        paginator = SimplePaginator(user_boards_list, 12)
+        page = safe_int(self.request.GET.get('page'), 1)
+        current_page = paginator.page(page)
+
+        for board in current_page.object_list:
+            board.saved = board.saved_count(request=self.request)
+            board.connected = board.connected_count(request=self.request)
+        context['boards'] = current_page
         context['breadcrumbs'] = ['Boards']
 
         return context

@@ -76,6 +76,10 @@ class SupplierBase(models.Model):
         return self.supplier_type() == 'alibaba'
 
     @property
+    def is_walmart(self):
+        return self.supplier_type() == 'walmart'
+
+    @property
     def is_supplement_deleted(self):
         if not self.user_supplement:
             return True
