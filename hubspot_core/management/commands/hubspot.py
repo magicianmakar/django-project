@@ -149,6 +149,8 @@ class Command(DropifiedBaseCommand):
         self.create_property('dr_gear_count', 'GearBubble Store Count', 'number', 'number')
         self.create_property('dr_gkart_count', 'Groovekart Store Count', 'number', 'number')
         self.create_property('dr_bigcommerce_count', 'Bigcommerce Store Count', 'number', 'number')
+        self.create_property('dr_ebay_count', 'eBay Store Count', 'number', 'number')
+        self.create_property('dr_fb_count', 'Facebook Store Count', 'number', 'number')
 
         self.create_property('dr_tracks_30_day_count', 'Orders Fulfillement last 30 Days', 'number', 'number')
         self.create_property('dr_tracks_all_count', 'Orders Fulfillement all time', 'number', 'number')
