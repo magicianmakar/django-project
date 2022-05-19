@@ -2237,7 +2237,10 @@ class GroupPlan(models.Model):
         super(GroupPlan, self).save(*args, **kwargs)
 
     def permissions_count(self):
-        return self.permissions.count()
+        if self.parent_plan:
+            return f'{self.parent_plan.permissions.count()} (From: {self.parent_plan.id})'
+        else:
+            return f'{self.permissions.count()}'
 
     def get_description(self):
         if self.plan_description:
