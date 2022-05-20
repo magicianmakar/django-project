@@ -133,8 +133,7 @@ class StripeCustomerTestCase(BaseTestCase):
         subscription.user = user
         subscription.save()
 
-        stripe_customer = f.StripeCustomerFactory()
-        stripe_customer.user = user
+        stripe_customer = f.StripeCustomerFactory(user=user)
         stripe_customer.save()
 
         user.stripe_customer = stripe_customer
