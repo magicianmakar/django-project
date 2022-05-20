@@ -1,10 +1,12 @@
 import json
 
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 
 from lib.exceptions import capture_message
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
+from shopified_core.utils import safe_int
 
 from .api_helper import FBMarketplaceApiHelper
 from .models import FBMarketplaceBoard, FBMarketplaceOrderTrack, FBMarketplaceProduct, FBMarketplaceStore
@@ -82,3 +84,33 @@ class FBMarketplaceStoreApi(ApiBase):
             return self.api_error('Product not found')
 
         return JsonResponse({'product': data}, safe=False)
+
+    def delete_store(self, request, user, data):
+        if user.is_subuser:
+            raise PermissionDenied()
+
+        try:
+            pk = safe_int(data.get('id'))
+            store = FBMarketplaceStore.objects.get(user=user, pk=pk)
+            permissions.user_can_delete(user, store)
+
+            store.is_active = False
+            store.save()
+
+            return self.api_success()
+        except FBMarketplaceStore.DoesNotExist:
+            return self.api_error('Store not found.', status=404)
+
+    def delete_product(self, request, user, data):
+        try:
+            product = FBMarketplaceProduct.objects.get(id=data.get('product'))
+            permissions.user_can_delete(user, product)
+        except FBMarketplaceProduct.DoesNotExist:
+            return self.api_error('Product does not exists', status=404)
+
+        if not user.can('delete_products.sub', product.store):
+            raise PermissionDenied()
+
+        product.delete()
+
+        return self.api_success()

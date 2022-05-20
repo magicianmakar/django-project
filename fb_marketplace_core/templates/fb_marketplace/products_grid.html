@@ -18,14 +18,6 @@
         <span class="dropified-icons di-bolt"></span>
     </button>
     <ul class="dropdown-menu pull-right">
-      {% if request.GET.store != 'c' and user|can:'myshopify_integration.use' %}
-      <li>
-        <a href="#" class="bulk-action" data-bulk-action="edit">Edit</a>
-      </li>
-      {% endif %}
-      <li>
-        <a href="#" class="bulk-action" data-bulk-action="board">Add to Board</a>
-      </li>
       <li>
         <a href="#" class="select-all-btn">Select All</a>
       </li>
@@ -177,18 +169,6 @@
                                             <div class="col-md-4" style="padding-right:0">
                                             <a href="{% url 'fb_marketplace:product_detail' pk=item.id %}" class="btn btn-xs btn-outline btn-primary"> View <i class="fa fa-long-arrow-right"></i> </a>
                                             </div>
-                                            <div class="col-md-8 text-right" style="overflow:hidden;padding-left:5px">
-                                            <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
-                                                {% with board=item.commercehqboard_set.first %}
-                                                    {% if board %}
-                                                    Board: {{board.title}}
-                                                    {% else %}
-                                                    Board
-                                                    {% endif %}
-                                                {% endwith %}
-
-                                            </button>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -299,9 +279,7 @@
 
 {% compress js %}
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'commercehq/js/commercehq_product_selector.js' %}"></script>
-<script type="text/javascript" src="{% static 'commercehq/js/products_grid.js' %}"></script>
-<script type="text/javascript" src="{% static 'commercehq/js/product_supplier_sync.js' %}"></script>
+<script type="text/javascript" src="{% static 'fb_marketplace/js/products_grid.js' %}"></script>
 {% endcompress %}
 
 {% endblock %}

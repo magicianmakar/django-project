@@ -1262,6 +1262,30 @@
         });
     });
 
+    $('.fb-market-delete-store-btn').click(function(e) {
+        e.preventDefault();
+        var storeId = $(this).data('store-id');
+
+        swal({
+            title: 'Are you sure?',
+            text: 'Please, confirm if you want to delete this store.',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: 'Yes, delete it!',
+            closeOnConfirm: false
+        }, function() {
+            $.ajax({
+                url: api_url('store', 'fb_marketplace') + '?' + $.param({id: storeId}),
+                method: 'DELETE',
+                success: function() {
+                    $('#fb-marketplace-store-row-' + storeId).hide();
+                    swal('Deleted!', 'The store has been deleted.', 'success');
+                }
+            });
+        });
+    });
+
     $('#woo-store-create-form').on('submit', function(e) {
         $('#woo-store-create-form [type=submit]').bootstrapBtn('loading');
 
@@ -2187,6 +2211,11 @@
                 }
 
                 items["product-feeds"] = {name: "Products Feed"};
+
+                if (type === "fb-marketplace") {
+                    items = {};
+                    items["saved-products"] = {name: "Saved Products"};
+                }
 
                 return {
                     callback: function(key, options) {

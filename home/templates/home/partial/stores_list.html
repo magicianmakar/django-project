@@ -666,7 +666,7 @@
                 {% endif %}
 
                 {% if item|model_name == 'fbmarketplacestore' %}
-                <tr id="fb_marketplace-store-row-{{item.id}}" class="store-item" store-id="{{item.id}}" store-type="fb-marketplace">
+                <tr id="fb-marketplace-store-row-{{item.id}}" class="store-item" store-id="{{item.id}}" store-type="fb-marketplace">
                     <td class="drag-show">
                         <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
                         <a class="store-link" href="{% url 'fb_marketplace:products_list' %}?store={{item.id}}">{{item.title}}</a>
@@ -696,20 +696,7 @@
                                 <li class="divider"></li>
 
                                 <li>
-                                    <a data-store-id="{{item.id}}" class="fb_marketplace-verify-api-url"
-                                       data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
-                                        <i class="fa fa-check-circle-o"></i> Verify
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a store-id="{{item.id}}" store-type="fb_marketplace" class="change-tracking-url">
-                                        <i class="fa fa-chain"></i> Custom Tracking URL
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a class="fb_marketplace-delete-store-btn btn-danger btn-outline" data-store-id="{{item.id}}">
+                                    <a class="fb-market-delete-store-btn btn-danger btn-outline" data-store-id="{{item.id}}">
                                         <i class="fa fa-times"></i> Delete
                                     </a>
                                 </li>
