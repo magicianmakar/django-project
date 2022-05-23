@@ -1,3 +1,4 @@
+/*jshint esversion: 8 */
 // 'use strict';
 /* global $, toastr, swal, CKEDITOR */
 
@@ -1305,7 +1306,89 @@ $(".copy-text-btn").on("click", function() {
     });
 });
 
-function sendOrdersToVueApp(btn) {
+async function sendOrdersToVueApp(btns) {
+    for (var i in btns) {
+        var btn = btns[i];
+        var msg = {
+            subject: 'add-order',
+            order: {
+                'name': btn.attr('order-name'),
+                'store': btn.attr('store'),
+                'store_type': window.storeType,
+                'order_id': btn.attr('order-id'),
+                'line_id': btn.attr('line-id'),
+                'order_data': JSON.parse(atob(btn.attr('order-data')))
+            },
+        };
+        btn.button('loading');
+        try{
+            var response = await $.ajax({
+                url: api_url('import-shipping-method', 'aliexpress'),
+                type: "POST",
+                data: JSON.stringify(msg),
+                dataType: 'json',
+                contentType: 'application/json'
+            });
+            msg['order']['shipping_services'] = response.data;
+            document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
+        }
+        catch(error) {
+            btn.button('reset');
+            document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
+        }
+        
+    }
+}
+
+$(".quick-order-btn").on("click", function(e) {
+    e.preventDefault();
+    var data_target = $(this).attr("data-target");
+    var elObj = $(this).closest("div.order");
+    var selected = 0;
+    var arr = [];
+    elObj.find('.line-checkbox').each(function (i, el) {
+        var isChecked = true;
+        if (data_target == "selected") {
+            isChecked = el.checked;
+        }
+        if(isChecked) {
+            selected += 1;
+            var obj = $(el).closest('div.line');
+            var btn= '';
+            if ($(obj).hasClass("bundled")) {
+                btn = obj.find('a.quick-bundle-order');
+                btn = $(btn);
+                adddQuickBundleOrders(btn);
+            }
+            else {
+                btn = obj.find('a.place-order');
+                btn = $(btn);
+                arr.push(btn);
+            }
+        }
+    });
+    sendOrdersToVueApp(arr);
+    if (selected) {
+        toastr.success("Items added to Queue");
+    } else {
+        toastr.warning('Please select an item to add to queue');
+    }
+});
+
+$('.place-order').on('click', function(e) {
+    e.preventDefault();
+    var btn = $(e.target);
+    sendOrdersToVueApp([btn]);
+    toastr.success("Item added to Queue");
+});
+
+$('.quick-bundle-order').on("click", function(e) {
+    e.preventDefault();
+    btn = $(this);
+    adddQuickBundleOrders(btn);
+});
+
+function adddQuickBundleOrders(btn) {
     var msg = {
         subject: 'add-order',
         order: {
@@ -1318,52 +1401,8 @@ function sendOrdersToVueApp(btn) {
         },
     };
     document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
-}
-
-$(".quick-order-btn").on("click", function(e) {
-    e.preventDefault();
-    var data_target = $(this).attr("data-target");
-    var elObj = $(this).closest("div.order");
-    var selected = 0;
-    elObj.find('.line-checkbox').each(function (i, el) {
-        var isChecked = true;
-        if (data_target == "selected") {
-            isChecked = el.checked;
-        }
-        if(isChecked) {
-            selected += 1;
-            var obj = $(el).closest('div.line');
-            var btn= '';
-            if ($(obj).hasClass("bundled")) {
-                btn = obj.find('a.quick-bundle-order');
-            }
-            else {
-                btn = obj.find('a.place-order');
-            }
-            btn = $(btn);
-            sendOrdersToVueApp(btn);
-        }
-    });
-    if (selected) {
-        toastr.success("Items added to Queue");
-    } else {
-        toastr.warning('Please select an item to add to queue');
-    }
-});
-
-$('.place-order').on('click', function(e) {
-    e.preventDefault();
-    var btn = $(e.target);
-    sendOrdersToVueApp(btn);
-    toastr.success("Item added to Queue");
-});
-
-$('.quick-bundle-order').on("click", function(e) {
-    e.preventDefault();
-    btn = $(this);
-    sendOrdersToVueApp(btn);
     toastr.success("Items added to Queue");
-});
+}
 
 window.onmessage = function (e) {
     var message;

@@ -425,7 +425,6 @@ class AliexpressFulfillHelper():
                     item.product_count = line_item['quantity']
                     item.product_id = line_item['source_id']
 
-                    product_obj = line_item['product']
                     country_code = self.shipping_address['country_code']
                     if country_code == 'UK':
                         country_code = 'GB'
@@ -443,12 +442,12 @@ class AliexpressFulfillHelper():
                             variant_id = -1
                     else:
                         variant_id = line_item['line']['variant_id']
-
                     # Get Shipping Method from Advanced Variant Mapping
-                    shipping_mapping = product_obj.get_shipping_for_variant(line_item['supplier'].id, variant_id, country_code)
+                    shipping_mapping = line_item['shipping_method']
                     if shipping_mapping is not None:
-                        item.logistics_service_name = shipping_mapping.get('method')
-                    else:  # Get Shipping methods list from Settings under AliExpress tab
+                        if shipping_mapping.get('method') is not None:
+                            item.logistics_service_name = shipping_mapping.get('method')
+                    if not item.logistics_service_name:  # Get Shipping methods list from Settings under AliExpress tab
                         priority_service_list = []  # saves the list of Shipping methods in order of priority from Settings under AliExpress tab
                         service = ''
                         config = json.loads(self.store.user.profile.config)
@@ -704,3 +703,112 @@ class AliexpressApi(ApiResponseMixin):
             return self.api_error(products['errored'])
 
         return self.api_success()
+
+    def post_import_shipping_method(self, request, user, data):
+        try:
+            SHIPPING_DATA = {
+                "CAINIAO_CONSOLIDATION_AE": "Aliexpress Direct (UAE)",
+                "CAINIAO_CONSOLIDATION_BR": "Aliexpress Direct (Brazil)",
+                "CAINIAO_PREMIUM": "AliExpress Premium Shipping",
+                "CAINIAO_ECONOMY": "AliExpress Saver Shipping",
+                "CAINIAO_STANDARD": "AliExpress Standard Shipping",
+                "ARAMEX": "ARAMEX",
+                "ASENDIA_US": "ASENDIA (USA)",
+                "AUSPOST": "Australia Post",
+                "BSC_ECONOMY_SG": "BSC Special Economy",
+                "BSC_STANDARD_SG": "BSC Special Standard",
+                "CAINIAO_EXPEDITED_ECONOMY": "Cainiao Expedited Economy",
+                "AE_CAINIAO_STANDARD": "Cainiao Expedited Standard",
+                "CAINIAO_STANDARD_HEAVY": "Cainiao Heavy Parcel Line",
+                "CAINIAO_ECONOMY_SG": "Cainiao Saver Shipping For Special Goods",
+                "CAINIAO_STANDARD_SG": "Cainiao Standard For Special Goods",
+                "CAINIAO_SUPER_ECONOMY": "Cainiao Super Economy",
+                "CAINIAO_SUPER_ECONOMY_SG": "Cainiao Super Economy for Special Goods",
+                "AE_CN_SUPER_ECONOMY_G": "Cainiao Super Economy Global",
+                "CAINIAO_OVERSEAS_WH_EXPPL": "Cainiao Warehouse Express Shipping",
+                "CPAP": "China Post Air Parcel",
+                "YANWEN_JYT": "China Post Ordinary Small Packet Plus",
+                "CPAM": "China Post Registered Air Mail",
+                "CORREIOS_BR": "Correios Brazil",
+                "DEUTSCHE_POST": "Deutsche Post",
+                "DHL": "DHL",
+                "DHLECOM": "DHL e-commerce",
+                "EMS": "EMS",
+                "E_EMS": "e-EMS",
+                "EMS_ZX_ZX_US": "ePacket",
+                "FEDEX": "Fedex IP",
+                "FEDEX_IE": "Fedex IE",
+                "FLYT": "Flyt Express",
+                "FLYT_ECONOMY_SG": "Flyt Special Economy",
+                "GLS_FR": "GLS France",
+                "GLS_ES": "GLS Spain",
+                "LAPOSTE": "La Poste",
+                "MEEST": "Meest",
+                "POSTKR": "POSTKR",
+                "POST_NL": "PostNL",
+                "RUSSIAN_POST": "Russian Post",
+                "SF_EPARCEL_OM": "SF Economic Air Mail",
+                "SF_EPARCEL": "SF eParcel",
+                "SF": "SF Express",
+                "SGP": "Singapore Post",
+                "SUNYOU_RM": "SunYou",
+                "SUNYOU_ECONOMY": "SunYou Economic Air Mail",
+                "SUNYOU_ECONOMY_SG": "SunYou Special Economy",
+                "SHUNYOU_STANDARD_SG": "SunYou Special Standard",
+                "CHP": "Swiss Post",
+                "TNT": "TNT",
+                "LAOPOST": "TOPYOU",
+                "TOPYOU_ECONOMY_SG": "TOPYOU Special Economy",
+                "PTT": "Turkey Post",
+                "UBI": "UBI",
+                "UPS": "UPS",
+                "UPS_US": "UPS (USA)",
+                "UPSE": "UPS Expedited",
+                "USPS": "USPS",
+                "YANWEN_ECONOMY": "Yanwen Economic Air Mail",
+                "YANWEN_ECONOMY_SG": "Yanwen Special Economy",
+                "YANWEN_AM": "Yanwen Special Standard",
+                "Other": "Sellers Shipping Method"
+            }
+
+            cache_key = f"aliexpress_shipping_method_{data['order']['store']}_{data['order']['order_id']}_{data['order']['order_data']['source_id']}"
+            aliexpress_shipping_result = cache.get(cache_key, {})
+            if aliexpress_shipping_result:
+                return self.api_success({'data': aliexpress_shipping_result})
+
+            aliexpress_account = AliexpressAccount.objects.filter(user=user.models_user).first()
+
+            try:
+                variant_title = "/".join(data['order']['order_data']['variant'])
+            except:
+                title = []
+                for v in data['order']['order_data']['variant']:
+                    title.append(v['title'])
+                variant_title = "/".join(title)
+            line_item = {
+                'source_id': data['order']['order_data']['source_id'],
+                'quantity': data['order']['order_data']['quantity'],
+                'variant': variant_title
+            }
+            shipping_obj = ShippingMethods(line_item, data['order']['order_data']['shipping_address'], aliexpress_account)
+            shipping_data = shipping_obj.get_shipping_data()
+            if shipping_data is None:
+                return self.api_success({'data': {}})
+            shipping_services = [{
+                'amount': '',
+                'service_code': '',
+                'service_name': 'Select Shipping'
+            }]
+            for data in shipping_data:
+                if not data.get('error_code'):
+                    temp = {
+                        'amount': data.get('freight').get('amount'),
+                        'service_code': data.get('service_name'),
+                        'service_name': SHIPPING_DATA.get(data.get('service_name')) or data.get('service_name')
+                    }
+                    shipping_services.append(temp)
+            cache.set(cache_key, shipping_services, timeout=600)
+            return self.api_success({'data': shipping_services})
+        except:
+            shipping_services = {}
+            return self.api_success({'data': shipping_services})
