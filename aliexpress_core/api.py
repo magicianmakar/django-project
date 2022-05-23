@@ -91,8 +91,11 @@ class AliexpressFulfillHelper():
                         sku_attr = ''
                     else:
                         sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in temp_variants])
-                elif temp_variants[0] == 'Default Title':
-                    sku_attr = ''
+                else:
+                    if temp_variants[0] == 'Default Title' or temp_variants[0] == 'Default':
+                        sku_attr = ''
+                    else:
+                        sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in temp_variants])
             elif len(temp_variants) == 0:
                 sku_attr = ''
             else:
@@ -170,7 +173,10 @@ class AliexpressFulfillHelper():
             if str(el['data']['id']) not in self.items:
                 continue
             item = self.items[str(el['data']['id'])]
-            variant_id = el['data']['variant']['id']
+            if el['data'].get('variant'):
+                variant_id = el['data']['variant']['id']
+            else:
+                variant_id = None
             if not el['data']['product_id']:
                 if variant_id:
                     product = CommerceHQProduct.objects.filter(store=self.store, title=el['data']['title'], source_id__gt=0).first()
@@ -378,116 +384,135 @@ class AliexpressFulfillHelper():
             return self.order_error(f'<span>No AliExpress account found. Click <a href="{settings_link}" target="_blank">here</a> to connect</span>')
 
         aliexpress_variant_sku_dict = ''
-
+        product_list = {}
+        temp = []
+        # combine orders with supplier id as key
         for line_id, line_item in self.items.items():
-            aliexpress_variant_sku_dict = ''
-            req.product_items = []
             if line_item['is_bundle']:
-                for i in line_item['products']:
-                    item = ProductBaseItem()
-                    item.product_count = i['quantity']
-                    item.product_id = i['source_id']
-                    sku_attr = self.find_ds_product_sku(i, aliexpress_account)
-                    if sku_attr is not None:
-                        item.sku_attr = sku_attr
-                    else:
-                        return self.order_error('Variant mapping is not set')
-
-                    if i.get('shipping_method') is not None:
-                        item.logistics_service_name = i['shipping_method']['method']
-                    item.order_memo = self.order_notes
-                    req.add_item(item)
+                product_list[line_item['line_id']] = [line_item]
             else:
-                item = ProductBaseItem()
-                item.product_count = line_item['quantity']
-                item.product_id = line_item['source_id']
-
-                product_obj = line_item['product']
-                country_code = self.shipping_address['country_code']
-
-                if store_type == 'chq':
-                    variant_id = line_item['line']['data']['variant']['id']
-                elif store_type == 'woo':
-                    variant_id = line_item['line']['variation_id']
-                elif store_type == 'gkart':
-                    variant_id = line_item['line']['variants']['variant_id']
-                    if safe_int(variant_id) == 0:
-                        variant_id = -1
+                supplier_id = line_item['supplier_id']
+                if str(supplier_id) in product_list:
+                    temp = product_list[str(supplier_id)]
                 else:
-                    variant_id = line_item['line']['variant_id']
+                    temp = []
+                temp.append(line_item)
+                product_list[str(supplier_id)] = temp
 
-                # Get Shipping Method from Advanced Variant Mapping
-                if country_code == 'UK':
-                    country_code = 'GB'
-                shipping_mapping = product_obj.get_shipping_for_variant(line_item['supplier'].id, variant_id, country_code)
-                if shipping_mapping is not None:
-                    item.logistics_service_name = shipping_mapping.get('method')
-                else:  # Get Shipping methods list from Settings under AliExpress tab
-                    priority_service_list = []  # saves the list of Shipping methods in order of priority from Settings under AliExpress tab
-                    service = ''
-                    config = json.loads(self.store.user.profile.config)
-                    for i in range(1, 5):
-                        method_key = f'aliexpress_shipping_method_{i}'
-                        shipping_method = config.get(method_key)
-                        if shipping_method:
-                            priority_service_list.append(shipping_method)
+        for key in product_list:
+            req.product_items = []
+            line_items_array = []
+            for line_item in product_list[key]:
+                line_items_array.append(line_item['line_id'])
+                aliexpress_variant_sku_dict = ''
+                if line_item['is_bundle']:
+                    for i in line_item['products']:
+                        item = ProductBaseItem()
+                        item.product_count = i['quantity']
+                        item.product_id = i['source_id']
+                        sku_attr = self.find_ds_product_sku(i, aliexpress_account)
+                        if sku_attr is not None:
+                            item.sku_attr = sku_attr
+                        else:
+                            return self.order_error('Variant mapping is not set')
 
-                    shipping_obj = ShippingMethods(line_item, self.shipping_address, aliexpress_account)
-                    shipping_data = shipping_obj.get_shipping_data()
+                        if i.get('shipping_method') is not None:
+                            item.logistics_service_name = i['shipping_method']['method']
+                        item.order_memo = self.order_notes
+                        req.add_item(item)
+                else:
+                    item = ProductBaseItem()
+                    item.product_count = line_item['quantity']
+                    item.product_id = line_item['source_id']
 
-                    # Match the Shipping data with the list saved in settings. Exit the loops when the first match is found
-                    # In case no match is found, we don't set the Shipping method & default shipping is assigned.
-                    if shipping_data is not None:
-                        for service_name in priority_service_list:
-                            if service:
-                                break
-                            for data in shipping_data:
-                                if service_name == data['service_name']:
-                                    service = data['service_name']
-                                    item.logistics_service_name = data['service_name']
+                    product_obj = line_item['product']
+                    country_code = self.shipping_address['country_code']
+                    if country_code == 'UK':
+                        country_code = 'GB'
+
+                    if store_type == 'chq':
+                        if line_item['line']['data'].get('variant'):
+                            variant_id = line_item['line']['data']['variant']['id']
+                        else:
+                            variant_id = None
+                    elif store_type == 'woo':
+                        variant_id = line_item['line']['variation_id']
+                    elif store_type == 'gkart':
+                        variant_id = line_item['line']['variants']['variant_id']
+                        if safe_int(variant_id) == 0:
+                            variant_id = -1
+                    else:
+                        variant_id = line_item['line']['variant_id']
+
+                    # Get Shipping Method from Advanced Variant Mapping
+                    shipping_mapping = product_obj.get_shipping_for_variant(line_item['supplier'].id, variant_id, country_code)
+                    if shipping_mapping is not None:
+                        item.logistics_service_name = shipping_mapping.get('method')
+                    else:  # Get Shipping methods list from Settings under AliExpress tab
+                        priority_service_list = []  # saves the list of Shipping methods in order of priority from Settings under AliExpress tab
+                        service = ''
+                        config = json.loads(self.store.user.profile.config)
+                        for i in range(1, 5):
+                            method_key = f'aliexpress_shipping_method_{i}'
+                            shipping_method = config.get(method_key)
+                            if shipping_method:
+                                priority_service_list.append(shipping_method)
+
+                        shipping_obj = ShippingMethods(line_item, self.shipping_address, aliexpress_account)
+                        shipping_data = shipping_obj.get_shipping_data()
+
+                        # Match the Shipping data with the list saved in settings. Exit the loops when the first match is found
+                        # In case no match is found, we don't set the Shipping method & default shipping is assigned.
+                        if shipping_data is not None:
+                            for service_name in priority_service_list:
+                                if service:
                                     break
-                try:
-                    if len(line_item['variant']) == 1:
-                        if line_item['variant'][0]['title'] == 'Default Title':
+                                for data in shipping_data:
+                                    if service_name == data['service_name']:
+                                        service = data['service_name']
+                                        item.logistics_service_name = data['service_name']
+                                        break
+                    try:
+                        if len(line_item['variant']) == 1:
+                            if line_item['variant'][0]['title'] == 'Default Title':
+                                item.sku_attr = ''
+                            else:
+                                item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
+                        elif len(line_item['variant']) == 0:
                             item.sku_attr = ''
                         else:
                             item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
-                    elif len(line_item['variant']) == 0:
-                        item.sku_attr = ''
-                    else:
-                        item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in line_item['variant']])
-                except:
-                    try:
-                        aliexpress_variant_sku_dict = self.ds_product_data(line_item['source_id'], aliexpress_account)
-                    except TopException as e:
-                        if e.errorcode == 27 and e.message.strip().lower() == 'invalid session':
-                            session_msg = self.session_expired_msg
-                            return self.order_error(f'<span>{session_msg} <a href="{self.aliexpress_settings_link}" target="_blank">here</a></span>')
-                        else:
-                            return self.order_error(e.message)
-                    if aliexpress_variant_sku_dict is None:
-                        self.order_item_error(line_id, 'This item is discontinued in AliExpress.')
-                        continue
-
-                    try:
-                        product_variant_title_list = [v['title'] for v in line_item['variant']]
                     except:
-                        variant_title_list = map(lambda title: title.strip(), line_item['variant'])  # if item variant list contain spaces
-                        product_variant_title_list = list(variant_title_list)
+                        try:
+                            aliexpress_variant_sku_dict = self.ds_product_data(line_item['source_id'], aliexpress_account)
+                        except TopException as e:
+                            if e.errorcode == 27 and e.message.strip().lower() == 'invalid session':
+                                sess_msg = self.session_expired_msg
+                                return self.order_error(f'<span>{sess_msg} <a href="{self.aliexpress_settings_link}" target="_blank">here</a></span>')
+                            else:
+                                return self.order_error(e.message)
+                        if aliexpress_variant_sku_dict is None:
+                            self.order_item_error(line_id, 'This item is discontinued in AliExpress.')
+                            continue
 
-                    product_variant_title_list = sorted(product_variant_title_list)
-                    product_variant_title = '/'.join(product_variant_title_list)
-                    if product_variant_title in aliexpress_variant_sku_dict:
-                        item.sku_attr = aliexpress_variant_sku_dict[product_variant_title]
-                    else:
-                        self.order_item_error(line_id, 'Variant mapping is not set for this item')
-                        continue
+                        try:
+                            product_variant_title_list = [v['title'] for v in line_item['variant']]
+                        except:
+                            variant_title_list = map(lambda title: title.strip(), line_item['variant'])  # if item variant list contain spaces
+                            product_variant_title_list = list(variant_title_list)
 
-                item.order_memo = self.order_notes
-                req.add_item(item)
+                        product_variant_title_list = sorted(product_variant_title_list)
+                        product_variant_title = '/'.join(product_variant_title_list)
+                        if product_variant_title in aliexpress_variant_sku_dict:
+                            item.sku_attr = aliexpress_variant_sku_dict[product_variant_title]
+                        else:
+                            self.order_item_error(line_id, 'Variant mapping is not set for this item')
+                            continue
 
-            aliexpress_order.set_info(req)
+                    item.order_memo = self.order_notes
+                    req.add_item(item)
 
+                aliexpress_order.set_info(req)
             try:
                 result = aliexpress_order.getResponse(authrize=aliexpress_account.access_token)
             except TopException as e:
@@ -502,16 +527,17 @@ class AliexpressFulfillHelper():
             if result and result.get('result') and result['result']['is_success']:
                 aliexpress_order_id = ','.join(set([str(i) for i in result['result']['order_list']['number']]))
 
-                try:
-                    result = requests.post(
-                        url=order_fulfill_url,
-                        data=dict(store=self.store.id, order_id=self.order['id'], line_id=line_id,
-                                  aliexpress_order_id=aliexpress_order_id, source_type=''),
-                        headers=dict(Authorization=self.store.user.get_access_token())
-                    )
-                except Exception:
-                    capture_exception()
-                    self.order_item_error(line_id, f'Could not mark as ordered, AliExpress Order ID: {aliexpress_order_id}')
+                for line_id in line_items_array:
+                    try:
+                        result = requests.post(
+                            url=order_fulfill_url,
+                            data=dict(store=self.store.id, order_id=self.order['id'], line_id=line_id,
+                                      aliexpress_order_id=aliexpress_order_id, source_type=''),
+                            headers=dict(Authorization=self.store.user.get_access_token())
+                        )
+                    except Exception:
+                        capture_exception()
+                        self.order_item_error(line_id, f'Could not mark as ordered, AliExpress Order ID: {aliexpress_order_id}')
             else:
                 error_message = 'Could not place order'
                 if result:

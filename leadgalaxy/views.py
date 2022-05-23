@@ -29,7 +29,7 @@ from django.template.defaultfilters import truncatewords
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from django.views.generic.base import TemplateView
@@ -924,6 +924,7 @@ def boards_view(request, board_id):
     })
 
 
+@xframe_options_sameorigin
 def get_shipping_info(request):
     request_url = request.GET.get('url')
     if request_url:

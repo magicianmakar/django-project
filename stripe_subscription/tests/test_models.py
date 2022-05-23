@@ -9,15 +9,12 @@ from django.utils import timezone
 
 from lib.test import BaseTestCase
 
+from leadgalaxy.utils import create_user_without_signals
 from stripe_subscription import utils
 from stripe_subscription.tests import factories as f
 from shopified_core.decorators import add_to_class
-from leadgalaxy.models import (
-    User,
-)
-from stripe_subscription.models import (
-    StripeSubscription,
-)
+from stripe_subscription.models import StripeSubscription
+
 from leadgalaxy.tests.factories import GroupPlanFactory
 
 
@@ -121,12 +118,14 @@ class StripeCustomerTestCase(BaseTestCase):
 
     @patch('leadgalaxy.models.GroupPlan.stripe_plan')
     def test_current_subcription_returns_current_stripe_subscription(self, stripe_plan):
+        user, profile = create_user_without_signals(
+            username='john',
+            email='john.test@gmail.com',
+            password='123456',
+            sub_profile_plan=GroupPlanFactory(payment_gateway='stripe'))
+
         stripe_id = 'SA_TEST'
-        user = User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
-        user.save()
-        user.profile.plan = GroupPlanFactory(payment_gateway='stripe')
         stripe_plan.stripe_id = stripe_id
-        user.profile.save()
 
         subscription = StripeSubscription()
         subscription.subscription_id = stripe_id
@@ -134,8 +133,7 @@ class StripeCustomerTestCase(BaseTestCase):
         subscription.user = user
         subscription.save()
 
-        stripe_customer = f.StripeCustomerFactory()
-        stripe_customer.user = user
+        stripe_customer = f.StripeCustomerFactory(user=user)
         stripe_customer.save()
 
         user.stripe_customer = stripe_customer
