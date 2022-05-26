@@ -1306,9 +1306,9 @@ $(".copy-text-btn").on("click", function() {
     });
 });
 
-async function sendOrdersToVueApp(btns) {
-    for (var i in btns) {
-        var btn = btns[i];
+function sendOrdersToVueApp(btns) {
+    if (btns.length) {
+        var btn = btns.shift();
         var msg = {
             subject: 'add-order',
             order: {
@@ -1321,22 +1321,24 @@ async function sendOrdersToVueApp(btns) {
             },
         };
         btn.button('loading');
-        try{
-            var response = await $.ajax({
-                url: api_url('import-shipping-method', 'aliexpress'),
-                type: "POST",
-                data: JSON.stringify(msg),
-                dataType: 'json',
-                contentType: 'application/json'
-            });
-            msg['order']['shipping_services'] = response.data;
-            document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
-        }
-        catch(error) {
-            btn.button('reset');
-            document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
-        }
-        
+        $.ajax({
+            url: api_url('import-shipping-method', 'aliexpress'),
+            type: "POST",
+            data: JSON.stringify(msg),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (response) {
+                btn.button('reset');
+                msg['order']['shipping_services'] = response.data;
+                document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
+                sendOrdersToVueApp(btns);
+            },
+            error: function (response) {
+                btn.button('reset');
+                document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
+                sendOrdersToVueApp(btns);
+            },
+        });
     }
 }
 
