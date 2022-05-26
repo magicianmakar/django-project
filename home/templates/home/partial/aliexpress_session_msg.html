@@ -1,0 +1,4 @@
+{% if aliexpress_account.first.is_session_expired  %}
+    <p class="ali-session-expired">Your AliExpress Quick Order session has expired. Please <a href="{% url 'settings' %}#aliexpress">link your account</a> again to continue quick ordering & tracking your orders
+    </p>
+{% endif %}

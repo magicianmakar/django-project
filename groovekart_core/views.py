@@ -488,6 +488,7 @@ class OrdersList(ListView):
         context['fulfillment'] = self.request.GET.get('fulfillment', 'any')
         context['countries'] = get_counrties_list()
         context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
+        context['aliexpress_account'] = AliexpressAccount.objects.filter(user=self.request.user.models_user)
 
         product_ids = self.request.GET.getlist('product_ids')
         if len(product_ids):

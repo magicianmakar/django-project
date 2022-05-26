@@ -425,6 +425,9 @@
 {% if user|can:'aliexpress_settings.use' %}
 <div id="aliexpress-settings" class="tab-pane">
     <div class="panel-body">
+        {% if aliexpress_accounts.first.is_session_expired  %}
+        <p class="ali-session-expired"> Your AliExpress Quick Order session has expired. Please link your account again with AliExpress to continue quick ordering & tracking your orders</p>
+        {% endif %}
         <form class="config-form" action="" method="post">
             {% if user|can:'aliexpress_captcha.use' %}
             <div class="row">

@@ -816,6 +816,7 @@ class OrdersList(ListView):
 
         context['created_at_daterange'] = self.request.GET.get('created_at_daterange', 'all')
         context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
+        context['aliexpress_account'] = AliexpressAccount.objects.filter(user=self.request.user.models_user)
         context['api_error'] = api_error
 
         return context
