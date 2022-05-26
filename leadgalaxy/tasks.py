@@ -84,6 +84,12 @@ from order_exports.models import OrderExport
 from order_exports.utils import ShopifyOrderExport, ShopifyTrackOrderExport
 from metrics.statuspage import record_import_metric
 from shopify_orders.models import ShopifyOrder, ShopifyOrderRevenue, ShopifyOrderRisk
+from woocommerce_core.models import (
+    WooStore,
+    WooProduct,
+    WooBoard,
+    WooOrderTrack,
+)
 
 
 @celery_app.task(base=CaptureFailure)
@@ -1549,6 +1555,37 @@ def store_transfer(self, options):
         requests.post(
             url=options['response_url'],
             json={'text': ':heavy_check_mark: Store {} has been transferred to {} account'.format(store.shop, to_user.email)}
+        )
+    except:
+        capture_exception()
+        requests.post(
+            url=options['response_url'],
+            json={'text': ':x: Server Error when transferring {} to {} account'.format(options['shop'], options['to'])}
+        )
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def store_transfer_woo(self, options):
+    try:
+        from_user = User.objects.get(id=options['from']) if safe_int(options['from']) else User.objects.get(email__iexact=options['from'])
+        to_user = User.objects.get(id=options['to']) if safe_int(options['to']) else User.objects.get(email__iexact=options['to'])
+
+        store = WooStore.objects.get(id=options['store'], user=from_user, is_active=True)
+
+        for old_store in WooStore.objects.filter(api_url=store.api_url, user=to_user, is_active=True):
+            old_store.is_active = False
+            old_store.save()
+
+        store.user = to_user
+        store.save()
+
+        WooProduct.objects.filter(store=store, user=from_user).update(user=to_user)
+        WooOrderTrack.objects.filter(store=store, user=from_user).update(user=to_user)
+        WooBoard.objects.filter(user=from_user).update(user=to_user)
+
+        requests.post(
+            url=options['response_url'],
+            json={'text': ':heavy_check_mark: WooCommerce Store {} has been transferred to {} account'.format(store.shop, to_user.email)}
         )
     except:
         capture_exception()

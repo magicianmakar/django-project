@@ -1973,6 +1973,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
             aliexpress_mobile_order=self.models_user.can('aliexpress_mobile_order.use'),
             ebay_manual_affiliate_link=self.models_user.can('ebay_manual_affiliate_link.use'),
             use_aliexpress_api=self.models_user.can('aliexpress_api_integration.use'),
+            aliexpress_account=AliexpressAccount.objects.filter(user=self.models_user),
             aliexpress_order_notes=self.models_user.get_config('aliexpress_order_notes'),
         )
 

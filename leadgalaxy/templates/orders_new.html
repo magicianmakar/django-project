@@ -24,6 +24,7 @@
 
 {% block main-container %}
         {% include 'home/partial/orders_limit_upgrade.html' %}
+        {% include 'home/partial/aliexpress_session_msg.html' with aliexpress_account=aliexpress_account %}
     <div class="tabs-container">
         {% include 'home/partial/tabs/orders.html' %}
 

@@ -1,10 +1,13 @@
+import json
+import time
+
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.db import models
 from django.template.defaultfilters import slugify
 
 from lib.exceptions import capture_exception
-from shopified_core.utils import float_to_str, hash_url_filename
+from shopified_core.utils import float_to_str, hash_url_filename, safe_float
 
 AFFILIATE_SORT_MAP = {
     'order_count': 'LAST_VOLUME_ASC',
@@ -40,6 +43,15 @@ class AliexpressAccount(models.Model):
     def request(self):
         from .aliexpress_api import APIRequest
         return APIRequest(self.access_token)
+
+    def is_session_expired(self):
+        account_data = json.loads(self.data)
+        expire_at = safe_float(account_data.get("expire_time"))
+        current_time = safe_float(time.time() * 1000)
+        aliexpress_session_expiration = False
+        if expire_at - current_time < 0:
+            aliexpress_session_expiration = True
+        return aliexpress_session_expiration
 
     def get_affiliate_products(self, **kwargs):
         page = kwargs.get('page')
