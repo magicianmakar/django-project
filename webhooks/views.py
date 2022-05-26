@@ -37,6 +37,7 @@ from leadgalaxy.models import (
     UserProfile,
     AppPermission
 )
+from woocommerce_core.models import WooStore
 
 from woocommerce_core.tasks import update_woo_order
 
@@ -47,7 +48,7 @@ from product_alerts.utils import delete_product_monitor, unmonitor_store, varian
 from profit_dashboard.models import FacebookAccess
 from shopified_core.models_utils import get_product_model
 from shopified_core.tasks import export_user_activity
-from shopified_core.utils import send_email_from_template, safe_int, base64_encode, app_link, safe_float
+from shopified_core.utils import get_domain, send_email_from_template, safe_int, base64_encode, app_link, safe_float
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import ShopifyOrder
 from stripe_subscription.utils import process_webhook_event
@@ -852,6 +853,55 @@ def slack_webhook(request):
         options['shop'] = store.shop
 
         tasks.store_transfer.delay(options)
+        return HttpResponse(':hourglass_flowing_sand: Transferring {shop} from {from} to {to} is in progress...'.format(**options))
+
+    elif request.POST['command'] == '/store-transfer-woo':
+        try:
+            text = re.split(' +', request.POST['text'])
+            options = {
+                'store': text[0],
+                'from': text[1],
+                'to': text[2],
+                'response_url': request.POST['response_url'],
+            }
+
+        except:
+            return HttpResponse(":x: Invalid Command Format")
+
+        try:
+            from_user = User.objects.get(id=options['from']) if safe_int(options['from']) else User.objects.get(email__iexact=options['from'])
+        except:
+            return HttpResponse(f":x: {options['from']} user not found")
+
+        try:
+            to_user = User.objects.get(id=options['to']) if safe_int(options['to']) else User.objects.get(email__iexact=options['to'])
+        except:
+            return HttpResponse(f":x: {options['to']} user not found")
+
+        shop = get_domain(options['store'], full=True)
+        if not shop:
+            return HttpResponse(':x: Store link is invalid')
+
+        try:
+            store = WooStore.objects.get(api_url__icontains=shop, user=from_user, is_active=True)
+        except WooStore.DoesNotExist:
+            return HttpResponse(f':x: Store {shop} is not found on {from_user.email} account')
+        except WooStore.MultipleObjectsReturned:
+            return HttpResponse(f':x: Multiplle stores found for {shop} on {from_user.email} account')
+
+        if not WooStore.objects.filter(shop=shop, user=to_user).count():
+            return HttpResponse(f':x: Store {shop} is not install on {to_user.email} account')
+
+        AdminEvent.objects.create(
+            user=request_from,
+            target_user=from_user,
+            event_type='store_transfer_woo',
+            data=json.dumps({'to': to_user.email, 'store': shop}))
+
+        options['store'] = store.id
+        options['shop'] = store.api_url
+
+        tasks.store_transfer_woo.delay(options)
         return HttpResponse(':hourglass_flowing_sand: Transferring {shop} from {from} to {to} is in progress...'.format(**options))
 
     elif request.POST['command'] == '/cancel-shopify':
