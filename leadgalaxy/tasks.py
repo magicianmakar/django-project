@@ -1586,13 +1586,13 @@ def store_transfer_woo(self, options):
 
         requests.post(
             url=options['response_url'],
-            json={'text': ':heavy_check_mark: WooCommerce Store {} has been transferred to {} account'.format(store.shop, to_user.email)}
+            json={'text': f':heavy_check_mark: WooCommerce Store {store.api_url} has been transferred to {to_user.email} account'}
         )
     except:
         capture_exception()
         requests.post(
             url=options['response_url'],
-            json={'text': ':x: Server Error when transferring {} to {} account'.format(options['shop'], options['to'])}
+            json={'text': f':x: Server Error when transferring {options["shop"]} to {options["to"]} account'}
         )
 
 
