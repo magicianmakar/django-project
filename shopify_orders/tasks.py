@@ -314,7 +314,6 @@ def get_order_info_via_api(self, order, source_id, store_id, store_type=None, us
         fulfillment_data['order_details'] = order_details
         return fulfillment_data
     except Exception as e:
-        capture_exception()
         return {
             'error_msg': f'AliExpress: {e.message}',
             'error_code': e.errorcode,
