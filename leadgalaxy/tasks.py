@@ -1572,9 +1572,10 @@ def store_transfer_woo(self, options):
 
         store = WooStore.objects.get(id=options['store'], user=from_user, is_active=True)
 
-        for old_store in WooStore.objects.filter(api_url=store.api_url, user=to_user, is_active=True):
-            old_store.is_active = False
-            old_store.save()
+        for old_store in WooStore.objects.filter(user=to_user, is_active=True):
+            if get_domain(old_store.api_url, full=True) == get_domain(store.api_url, full=True):
+                old_store.is_active = False
+                old_store.save()
 
         store.user = to_user
         store.save()

@@ -889,7 +889,7 @@ def slack_webhook(request):
         except WooStore.MultipleObjectsReturned:
             return HttpResponse(f':x: Multiplle stores found for {shop} on {from_user.email} account')
 
-        if not WooStore.objects.filter(shop=shop, user=to_user).count():
+        if not WooStore.objects.filter(api_url__icontains=shop, user=to_user).count():
             return HttpResponse(f':x: Store {shop} is not install on {to_user.email} account')
 
         AdminEvent.objects.create(
