@@ -17,3 +17,6 @@ class FBMarketplaceApiHelper(ApiHelperBase):
 
     def get_product_path(self, pk):
         return reverse('fb_marketplace:product_detail', args=[pk])
+
+    def after_post_product_connect(self, product, source_id):
+        product.sync()

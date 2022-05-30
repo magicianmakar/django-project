@@ -75,13 +75,20 @@ class FBMarketplaceStoreApi(ApiBase):
 
     def get_product(self, request, user, data):
         try:
-            product = FBMarketplaceProduct.objects.get(id=data.get('product_id'))
+            products = FBMarketplaceProduct.objects.all()
+
+            if data.get('product_id'):
+                product = products.get(id=data.get('product_id'))
+            else:
+                product = products.get(source_id=data.get('fb_id'))
+
             permissions.user_can_view(user, product)
             data = json.loads(product.data)
             data['id'] = product.id
+            data['fb_store_id'] = product.store.id
 
         except FBMarketplaceProduct.DoesNotExist:
-            return self.api_error('Product not found')
+            return self.api_error('Product not found', status=404)
 
         return JsonResponse({'product': data}, safe=False)
 

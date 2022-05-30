@@ -174,6 +174,52 @@ class FBMarketplaceProduct(ProductBase):
 
         return variant_images[0] if variant_images else ''
 
+    def sync(self):
+        product = self.save()
+        if not product:
+            return None
+
+        product['tags'] = ','.join(product['tags']) if type(product['tags']) is list else ''
+
+        for idx, img in enumerate(product['images']):
+            product['images'][idx] = img['path']
+
+        for i in product['textareas']:
+            if i['name'] == 'Description':
+                product['description'] = i['text']
+
+        if not product['is_multi']:
+            product['price'] = product.get('price')
+            product['compare_at_price'] = product.get('compare_price')
+        else:
+            prices = []
+            for v in product['variants']:
+                prices.append(v['price'])
+
+            if len(set(prices)) == 1:
+                product['price'] = prices[0]
+            else:
+                product['price_range'] = [min(prices), max(prices)]
+
+        product['weight'] = product['shipping_weight']
+        product['published'] = not product['is_draft']
+        product['textareas'] = []
+        self.update_data(product)
+        self.save()
+
+        product = json.loads(self.data)
+
+        if not product['is_multi']:
+            # CommerceHQ doesn't set this values when product is not a multi variants product
+            product['options'] = []
+            product['variants'] = [{
+                "id": -1,
+                "variant": ["Default"],
+                "images": product['images']
+            }]
+
+        return product
+
 
 class FBMarketplaceSupplier(SupplierBase):
     store = models.ForeignKey('FBMarketplaceStore', null=True, related_name='suppliers', on_delete=models.CASCADE)
