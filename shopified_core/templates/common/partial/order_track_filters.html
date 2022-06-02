@@ -26,7 +26,6 @@
 <div id="filter-form" class="hidden-form {% if request.COOKIES.orders_filter == 'true' %}active{% endif %}" data-hidden-link=".filter-btn">
     <form method="get" class="form" style="position: relative;">
         {% if request.GET.store %}<input type="hidden" name="store" value="{{ request.GET.store }}">{% endif %}
-        {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
         <div class="row">
             {% if show_date_range %}
             <div class="col-md-4">
@@ -120,16 +119,17 @@
                 <label>Sort by:</label>
                 <select name="sort" class="form-control">
                     <option value="">Select an option</option>
-                    <option {% if request.GET.sort in "-order,order" %} selected {% endif %} value="order">{{ platform }} Order</option>
-                    <option {% if request.GET.sort in "-source,source" %} selected {% endif %} value="source">Supplier Order</option>
-                    <option {% if request.GET.sort in "-status,status" %} selected {% endif %} value="status">Supplier Status</option>
-                    <option {% if request.GET.sort in "-tracking,tracking" %} selected {% endif %} value="tracking">Tracking Number</option>
-                    <option {% if request.GET.sort in "-add,add" %} selected {% endif %} value="add">Order Date</option>
-                    <option {% if request.GET.sort|default:"-update" in "-update,update" %} selected {% endif %} value="update">Updated</option>
+                    <option {% if request.GET.sort == "order" %} selected {% endif %} value="order">{{ platform }} Order</option>
+                    <option {% if request.GET.sort == "source" %} selected {% endif %} value="source">Supplier Order</option>
+                    <option {% if request.GET.sort == "status" %} selected {% endif %} value="status">Supplier Status</option>
+                    <option {% if request.GET.sort == "tracking" %} selected {% endif %} value="tracking">Tracking Number</option>
+                    <option {% if request.GET.sort == "add" %} selected {% endif %} value="add">Order Date</option>
+                    <option {% if request.GET.sort|default:"update" == "update" %} selected {% endif %} value="update">Updated</option>
                 </select>
                 <label for="sort-desc" class="control-label">
-                    <input type="checkbox" name="desc" value="true" class="icheck"
-                           {% if '-' in request.GET.sort|default:'-update' or request.GET.desc %}checked{% endif %}>
+                    <input type='hidden' value='false' name='desc'>
+                    <input type="checkbox" name="desc" value="true" class=""
+                           {% if request.GET.desc|default:"true" == "true" %}checked{% endif %}>
                     Descending
                 </label>
             </div>

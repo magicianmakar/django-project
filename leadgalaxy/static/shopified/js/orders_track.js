@@ -348,4 +348,8 @@
     if (Cookies.get('orders_filter') == 'true') {
         $('#filter-form').addClass('active');
     }
+
+    if (Cookies.get('orders_filter') == 'true') {
+        $('#filter-form').addClass('active');
+    }
 })();

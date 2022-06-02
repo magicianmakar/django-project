@@ -124,7 +124,9 @@
     });
 
     $('.filter-btn').click(function(e) {
-        $('.filter-form').toggle('fade');
+        Cookies.set('orders_filter', !$('#filter-form').hasClass('active'));
+
+        $('#filter-form').toggleClass('active');
     });
 
     $('.delete-order-id-btn').click(function(e) {
@@ -279,4 +281,8 @@
         }).attr("disabled", "disabled");
         return true; // ensure form still submits
     });
+
+    if (Cookies.get('orders_filter') == 'true') {
+        $('#filter-form').addClass('active');
+    }
 })();

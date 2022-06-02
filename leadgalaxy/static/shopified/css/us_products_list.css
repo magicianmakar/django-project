@@ -40,7 +40,7 @@ h3.cat-title {
 }
 
 .icheckbox_square-blue {
-    position: initial !important;
+    position: relative !important;
     margin: 0 !important;
 }
 

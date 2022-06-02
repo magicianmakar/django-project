@@ -35,12 +35,17 @@ def query_toggle(context, field, values):
 @register.simple_tag(takes_context=True)
 def sort_icon(context, field, value):
     dict_ = context['request'].GET.copy()
+    order_desc = 'true'
+    order_by = 'update'
+    if 'desc' in dict_:
+        order_desc = dict_['desc']
     if field in dict_:
-        if value in dict_[field]:
-            if dict_[field][0] == '-':
-                return mark_safe('<i class="fa fa-sort-desc"></i>')
-            else:
-                return mark_safe('<i class="fa fa-sort-asc"></i>')
+        order_by = dict_[field]
+    if value in order_by:
+        if order_desc == 'true':
+            return mark_safe('<i class="fa fa-sort-desc"></i>')
+        else:
+            return mark_safe('<i class="fa fa-sort-asc"></i>')
 
     return ''
 
@@ -71,6 +76,15 @@ def url_replace(context, field, value):
     (scheme, netloc, path, params, query, fragment) = urlparse(url)
     query_dict = QueryDict(query).copy()
     query_dict[field] = value
+    query = query_dict.urlencode()
+    return urlunparse((scheme, netloc, path, params, query, fragment))
+
+
+@register.simple_tag(takes_context=True)
+def url_toggle_replace(context, toggle_field, toggle_valuem, replace_field, replace_value):
+    (scheme, netloc, path, params, query, fragment) = urlparse(url_toggle(context, toggle_field, toggle_valuem))
+    query_dict = QueryDict(query).copy()
+    query_dict[replace_field] = replace_value
     query = query_dict.urlencode()
     return urlunparse((scheme, netloc, path, params, query, fragment))
 

@@ -642,7 +642,12 @@ class OrdersTrackList(ListView):
         for k, v in list(order_map.items()):
             order_map['-' + k] = '-' + v
 
-        sorting = self.request.GET.get('sort', '-update')
+        sorting = self.request.GET.get('sort', 'update')
+        order_desc = self.request.GET.get('desc', 'true')
+        if sorting:
+            if order_desc == 'true':
+                sorting = f"-{sorting}"
+
         sorting = order_map.get(sorting, 'status_updated_at')
         query = self.request.GET.get('query')
         tracking_filter = self.request.GET.get('tracking')
