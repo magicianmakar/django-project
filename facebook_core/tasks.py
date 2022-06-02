@@ -295,20 +295,22 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         product_data['dropifiedfbproductlink'] = product_data.pop('page_link', '')
 
         # Reformat images to SureDone conventions
-        media = product_data.pop('images', None)
+        media = list(filter(None, product_data.pop('images', [])))
         mediax = []
-        if media:
-            for i in range(len(media)):
-                if i < 10:
-                    product_data[f'media{i + 1}'] = media[i] if media[i] else ''
-                else:
-                    mediax.append(media[i])
+        for i in range(10):
+            if len(media) > i:
+                product_data[f'media{i + 1}'] = media[i] if media[i] else ''
+            else:
+                product_data[f'media{i + 1}'] = ''
+        if len(media) > 10:
+            mediax = media[10:]
         product_data['mediax'] = '*'.join(mediax)
 
         # Fill images into variants
         for variant in product_data['variants']:
             media1 = variant.pop('image')
-            variant['media1'] = media1 if variant['guid'] != variant['sku'] else product_data['media1']
+            variant['media1'] = (media1 if variant['guid'] != variant['sku'] and media1 in media
+                                 else product_data['media1'])
             for i in range(2, 11):
                 if product_data.get(f'media{i}'):
                     variant[f'media{i}'] = product_data.get(f'media{i}')
