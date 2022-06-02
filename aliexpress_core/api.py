@@ -24,7 +24,7 @@ from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.exceptions import AliexpressFulfillException
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import app_link, safe_int
+from shopified_core.utils import app_link
 from woocommerce_core.models import WooOrderTrack, WooProduct, WooStore
 from woocommerce_core.utils import get_woo_order
 
@@ -425,23 +425,6 @@ class AliexpressFulfillHelper():
                     item.product_count = line_item['quantity']
                     item.product_id = line_item['source_id']
 
-                    country_code = self.shipping_address['country_code']
-                    if country_code == 'UK':
-                        country_code = 'GB'
-
-                    if store_type == 'chq':
-                        if line_item['line']['data'].get('variant'):
-                            variant_id = line_item['line']['data']['variant']['id']
-                        else:
-                            variant_id = None
-                    elif store_type == 'woo':
-                        variant_id = line_item['line']['variation_id']
-                    elif store_type == 'gkart':
-                        variant_id = line_item['line']['variants']['variant_id']
-                        if safe_int(variant_id) == 0:
-                            variant_id = -1
-                    else:
-                        variant_id = line_item['line']['variant_id']
                     # Get Shipping Method from Advanced Variant Mapping
                     shipping_mapping = line_item['shipping_method']
                     if shipping_mapping is not None:
@@ -492,6 +475,7 @@ class AliexpressFulfillHelper():
                                 return self.order_error(e.message)
                         if aliexpress_variant_sku_dict is None:
                             self.order_item_error(line_id, 'This item is discontinued in AliExpress.')
+                            line_items_array.pop()
                             continue
 
                         try:
@@ -506,12 +490,16 @@ class AliexpressFulfillHelper():
                             item.sku_attr = aliexpress_variant_sku_dict[product_variant_title]
                         else:
                             self.order_item_error(line_id, 'Variant mapping is not set for this item')
+                            line_items_array.pop()
                             continue
 
                     item.order_memo = self.order_notes
                     req.add_item(item)
 
                 aliexpress_order.set_info(req)
+
+            if len(req.product_items) == 0:
+                return self.order_error('No valid items to order')
             try:
                 result = aliexpress_order.getResponse(authrize=aliexpress_account.access_token)
             except TopException as e:
