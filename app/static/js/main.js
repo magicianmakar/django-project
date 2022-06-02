@@ -1330,11 +1330,13 @@ function sendOrdersToVueApp(btns) {
             success: function (response) {
                 btn.button('reset');
                 msg['order']['shipping_services'] = response.data;
+                msg['order']['shipping_setting'] = response.shipping_setting;
                 document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
                 sendOrdersToVueApp(btns);
             },
             error: function (response) {
                 btn.button('reset');
+                msg['order']['shipping_setting'] = '';
                 document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
                 sendOrdersToVueApp(btns);
             },

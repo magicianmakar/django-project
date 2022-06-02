@@ -772,8 +772,16 @@ class AliexpressApi(ApiResponseMixin):
             cache_key = f"aliexpress_shipping_method_{data['order']['store']}_{data['order']['order_id']}_{data['order']['order_data']['source_id']}"
             aliexpress_shipping_result = cache.get(cache_key, {})
             if aliexpress_shipping_result:
-                return self.api_success({'data': aliexpress_shipping_result})
+                return self.api_success(aliexpress_shipping_result)
 
+            priority_service_list = []  # saves the list of Shipping methods in order of priority from Settings under AliExpress tab
+            service = ''
+            config = json.loads(user.profile.config)
+            for i in range(1, 5):
+                method_key = f'aliexpress_shipping_method_{i}'
+                shipping_method = config.get(method_key)
+                if shipping_method:
+                    priority_service_list.append(shipping_method)
             aliexpress_account = AliexpressAccount.objects.filter(user=user.models_user).first()
 
             try:
@@ -805,8 +813,17 @@ class AliexpressApi(ApiResponseMixin):
                         'service_name': SHIPPING_DATA.get(data.get('service_name')) or data.get('service_name')
                     }
                     shipping_services.append(temp)
-            cache.set(cache_key, shipping_services, timeout=600)
-            return self.api_success({'data': shipping_services})
+                    if shipping_data is not None:
+                        for service_name in priority_service_list:
+                            if service:
+                                break
+                            for data in shipping_data:
+                                if service_name == data.get('service_name'):
+                                    service = data['service_name']
+                                    break
+                    print(service, " service name ")
+            cache.set(cache_key, {'data': shipping_services, 'shipping_setting': service}, timeout=600)
+            return self.api_success({'data': shipping_services, 'shipping_setting': service})
         except:
             shipping_services = {}
-            return self.api_success({'data': shipping_services})
+            return self.api_success({'data': shipping_services, 'shipping_setting': ''})
