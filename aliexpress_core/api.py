@@ -478,20 +478,23 @@ class AliexpressFulfillHelper():
                             line_items_array.pop()
                             continue
 
-                        try:
-                            product_variant_title_list = [v['title'] for v in line_item['variant']]
-                        except:
-                            variant_title_list = map(lambda title: title.strip(), line_item['variant'])  # if item variant list contain spaces
-                            product_variant_title_list = list(variant_title_list)
-
-                        product_variant_title_list = sorted(product_variant_title_list)
-                        product_variant_title = '/'.join(product_variant_title_list)
-                        if product_variant_title in aliexpress_variant_sku_dict:
-                            item.sku_attr = aliexpress_variant_sku_dict[product_variant_title]
+                        if aliexpress_variant_sku_dict == '<none>':
+                            item.sku_attr = ''
                         else:
-                            self.order_item_error(line_id, 'Variant mapping is not set for this item')
-                            line_items_array.pop()
-                            continue
+                            try:
+                                product_variant_title_list = [v['title'] for v in line_item['variant']]
+                            except:
+                                variant_title_list = map(lambda title: title.strip(), line_item['variant'])  # if item variant list contain spaces
+                                product_variant_title_list = list(variant_title_list)
+
+                            product_variant_title_list = sorted(product_variant_title_list)
+                            product_variant_title = '/'.join(product_variant_title_list)
+                            if product_variant_title in aliexpress_variant_sku_dict:
+                                item.sku_attr = aliexpress_variant_sku_dict[product_variant_title]
+                            else:
+                                self.order_item_error(line_id, 'Variant mapping is not set for this item')
+                                line_items_array.pop()
+                                continue
 
                     item.order_memo = self.order_notes
                     req.add_item(item)
@@ -567,19 +570,26 @@ class AliexpressProduct():
         final_skus = {}
         variant_sku_data = aliexpress_product_data.get('ae_item_sku_info_dtos').get('ae_item_sku_info_d_t_o')
         if variant_sku_data is not None and len(variant_sku_data) > 0:
+            if len(variant_sku_data) == 1:
+                sku_id = variant_sku_data[0].get('id')
+                if sku_id == '<none>':
+                    return sku_id
+
             for data in variant_sku_data:
-                sku_list = data.get("ae_sku_property_dtos").get("ae_sku_property_d_t_o")
-                ali_variant_title_list = [i.get('property_value_definition_name') or i.get('sku_property_value') for i in sku_list]
-                ali_variant_title_list = sorted(ali_variant_title_list)
-                ali_variant_title = '/'.join(ali_variant_title_list)
-                final_skus[ali_variant_title] = data.get('id')
+                try:
+                    sku_list = data.get("ae_sku_property_dtos").get("ae_sku_property_d_t_o")
+                    ali_variant_title_list = [i.get('property_value_definition_name') or i.get('sku_property_value') for i in sku_list]
+                    ali_variant_title_list = sorted(ali_variant_title_list)
+                    ali_variant_title = '/'.join(ali_variant_title_list)
+                    final_skus[ali_variant_title] = data.get('id')
 
-                # for products imported via API
-                alternate_variant_title_list = [i.get('sku_property_value') for i in sku_list]
-                alternate_variant_title_list = sorted(alternate_variant_title_list)
-                alternate_variant_title = '/'.join(alternate_variant_title_list)
-                final_skus[alternate_variant_title] = data.get('id')
-
+                    # for products imported via API
+                    alternate_variant_title_list = [i.get('sku_property_value') for i in sku_list]
+                    alternate_variant_title_list = sorted(alternate_variant_title_list)
+                    alternate_variant_title = '/'.join(alternate_variant_title_list)
+                    final_skus[alternate_variant_title] = data.get('id')
+                except Exception:
+                    continue
         return final_skus
 
 
