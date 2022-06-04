@@ -6,7 +6,6 @@ import arrow
 from aliexpress_core.models import AliexpressAccount
 from shopified_core.commands import DropifiedBaseCommand
 from woocommerce_core.models import WooOrderTrack
-from woocommerce_core import utils
 
 from shopify_orders import tasks as orders_tasks
 from lib.exceptions import capture_exception
@@ -106,7 +105,6 @@ class Command(DropifiedBaseCommand):
         self.write(f"Tracked Orders: {counter['tracked']} / {counter['need_tracking']} - Skipped: {counter['skipped']}")
 
     def add_tracking_number_to_order(self, order, user, data):
-        models_user = user.models_user
         order.source_status = data.get('status')
         order.source_status_details = data.get('orderStatus')
         order.source_tracking = data.get('tracking_number')
@@ -132,9 +130,3 @@ class Command(DropifiedBaseCommand):
             order.save()
         except Exception as e:
             print(e)
-
-        tracking_number_tags = models_user.get_config('tracking_number_tags')
-        if tracking_number_tags:
-            order_updater = utils.WooOrderUpdater(order.store, order.order_id)
-            order_updater.add_tag(tracking_number_tags)
-            order_updater.delay_save()

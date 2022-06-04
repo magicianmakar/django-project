@@ -39,6 +39,7 @@ class EbayStoreAdmin(admin.ModelAdmin):
 
 @admin.register(EbayProduct)
 class EbayProductAdmin(admin.ModelAdmin):
+    search_fields = USER_SEARCH_FIELDS
     list_display = (
         'id',
         'user',

@@ -96,48 +96,6 @@
     padding: 0px 0px 0px 5px;
 }
 
-.note-panel {
-    cursor: pointer !important;
-    position: absolute !important;
-    top: 0px !important;
-    right: 0px !important;
-    width: 300px !important;
-    z-index: 999 !important;
-    padding: 0 !important;
-    margin-top: -11px !important;
-    margin-right: -11px !important;
-    border-bottom: 0px solid #eee !important;
-    border-radius: 0 !important;
-    border-color: #eee !important;
-}
-
-.note-panel .panel-body {
-    border: 0px solid #eee !important;
-}
-
-.note-panel .edit-note {
-    display: none;
-}
-
-.note-panel .edit-note .note {
-    width: 99%;
-    height: 250px;
-    padding-bottom: 35px;
-}
-
-.note-panel .edit-note .note-edit-save {
-    position: absolute;
-    bottom: 7px;
-    right: 25px;
-    z-index: 1300;
-}
-
-.note-panel .edit-note .note-edit-cancel {
-    position: absolute;
-    bottom: 7px;
-    right: 80px;
-}
-
 .order {
     background-color: white !important;
 }

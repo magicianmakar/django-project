@@ -578,16 +578,11 @@ class EbayUtils(SureDoneUtils):
             ebay_product_id = sd_product_data.get(f'{ebay_prefix}id')
 
         # Get eBay category ID
-        try:
-            ebay_category_id = int(sd_product_data.get(f'{ebay_prefix}catid'))
-        except ValueError:
-            ebay_category_id = sd_product_data.get(f'{ebay_prefix}catid')
+        ebay_category_id = safe_int(sd_product_data.get(f'{ebay_prefix}catid'),
+                                    sd_product_data.get(f'{ebay_prefix}catid'))
 
         # Get eBay site ID
-        try:
-            ebay_site_id = int(sd_product_data.get(f'{ebay_prefix}siteid'))
-        except ValueError:
-            ebay_site_id = 0
+        ebay_site_id = safe_int(sd_product_data.get(f'{ebay_prefix}siteid'), 0)
 
         # Get date product created
         product_created_at = sd_product_data.get('dateutc')
@@ -1159,18 +1154,22 @@ class EbayUtils(SureDoneUtils):
         api_ebay_errors_list = [error for error in api_error_message.split('Failure | ') if 'ErrorCode:' in error]
 
         parsed_ebay_errors_list = []
-        for api_ebay_error in api_ebay_errors_list:
-            api_ebay_error = api_ebay_error.replace(' | ', '\n')
-            ebay_error_items = api_ebay_error.split('\n')
-            ebay_error = {}
-            for ebay_error_item in ebay_error_items:
-                if 'ErrorCode:' in ebay_error_item:
-                    ebay_error["error_code"] = ebay_error_item.replace('ErrorCode:', '').strip()
-                if 'ShortMessage:' in ebay_error_item:
-                    ebay_error["short_message"] = ebay_error_item.replace('ShortMessage:', '').strip()
-                if 'LongMessage:' in ebay_error_item:
-                    ebay_error["long_message"] = ebay_error_item.replace('LongMessage:', '').strip()
-            parsed_ebay_errors_list.append(ebay_error)
+
+        if api_ebay_errors_list:
+            for api_ebay_error in api_ebay_errors_list:
+                api_ebay_error = api_ebay_error.replace(' | ', '\n')
+                ebay_error_items = api_ebay_error.split('\n')
+                ebay_error = {}
+                for ebay_error_item in ebay_error_items:
+                    if 'ErrorCode:' in ebay_error_item:
+                        ebay_error["error_code"] = ebay_error_item.replace('ErrorCode:', '').strip()
+                    if 'ShortMessage:' in ebay_error_item:
+                        ebay_error["short_message"] = ebay_error_item.replace('ShortMessage:', '').strip()
+                    if 'LongMessage:' in ebay_error_item:
+                        ebay_error["long_message"] = ebay_error_item.replace('LongMessage:', '').strip()
+                parsed_ebay_errors_list.append(ebay_error)
+        else:
+            parsed_ebay_errors_list.append({'short_message': api_error_message, 'long_message': api_error_message})
 
         return parsed_ebay_errors_list
 

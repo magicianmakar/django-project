@@ -2940,12 +2940,11 @@ def orders_track(request):
     for k, v in list(order_map.items()):
         order_map['-' + k] = '-' + v
 
-    sorting = request.GET.get('sort', '-update')
-    if request.GET.get('sort'):
-        if request.GET.get('desc'):
-            sorting = sorting if sorting.startswith('-') else f"-{sorting}"
-        else:
-            sorting = sorting[1:] if sorting.startswith('-') else sorting
+    sorting = request.GET.get('sort', 'update')
+    order_desc = request.GET.get('desc', 'true')
+    if sorting:
+        if order_desc == 'true':
+            sorting = f"-{sorting}"
     sorting = order_map.get(sorting, 'status_updated_at')
 
     post_per_page = safe_int(request.GET.get('ppp'), 20)

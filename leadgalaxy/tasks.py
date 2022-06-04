@@ -1572,9 +1572,10 @@ def store_transfer_woo(self, options):
 
         store = WooStore.objects.get(id=options['store'], user=from_user, is_active=True)
 
-        for old_store in WooStore.objects.filter(api_url=store.api_url, user=to_user, is_active=True):
-            old_store.is_active = False
-            old_store.save()
+        for old_store in WooStore.objects.filter(user=to_user, is_active=True):
+            if get_domain(old_store.api_url, full=True) == get_domain(store.api_url, full=True):
+                old_store.is_active = False
+                old_store.save()
 
         store.user = to_user
         store.save()
@@ -1585,13 +1586,13 @@ def store_transfer_woo(self, options):
 
         requests.post(
             url=options['response_url'],
-            json={'text': ':heavy_check_mark: WooCommerce Store {} has been transferred to {} account'.format(store.shop, to_user.email)}
+            json={'text': f':heavy_check_mark: WooCommerce Store {store.api_url} has been transferred to {to_user.email} account'}
         )
     except:
         capture_exception()
         requests.post(
             url=options['response_url'],
-            json={'text': ':x: Server Error when transferring {} to {} account'.format(options['shop'], options['to'])}
+            json={'text': f':x: Server Error when transferring {options["shop"]} to {options["to"]} account'}
         )
 
 
