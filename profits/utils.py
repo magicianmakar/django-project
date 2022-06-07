@@ -112,10 +112,7 @@ def get_date_range(request, user_timezone):
         try:
             daterange_list = date_range.split('-')
             # Get timezone from user store, if it doesn't exist, we save it the first time they access PD
-            if user_timezone:
-                tz = timezone.now().astimezone(pytz.timezone(user_timezone)).strftime(' %z')
-            else:
-                tz = timezone.now().strftime(' %z')
+            tz = timezone.now().astimezone(pytz.timezone(user_timezone)).strftime(' %z')
 
             start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z')
 
@@ -155,23 +152,6 @@ def get_order_mappings(order, user_timezone):
         order_date = order_date.to(user_timezone)
     except:
         pass
-
-    if order.store.store_type == 'fb':
-        products = [item.get('title') for item in order.items]
-        return {
-            'date': order_date.datetime,
-            'date_as_string': order_date.format('MM/DD/YYYY'),
-            'order_id': order.order_id,
-            'fb_order_id': order.fb_order_id,
-            'fb_order_url': order.order_url,
-            'total_price': float(order.amount),
-            'total_refund': 0.0,
-            'profit': float(order.amount),
-            'products': products,
-            'refunded_products': [],
-            'aliexpress_track': [],
-            'order_name': order.order_name
-        }
 
     return {
         'date': order_date.datetime,
@@ -295,17 +275,6 @@ def get_profit_details(store, store_type, date_range, limit=20, page=1, orders_m
 
     if not orders_map:
         orders = sync.orders.filter(date__range=(start, end))
-
-        # Get FB orders
-        if store_type == 'fb':
-            filters_config = {}
-            filters_config['after'], filters_config['before'] = start.strftime('%x'), end.strftime('%x')
-            orders = fb_utils.FBOrderListQuery(store.user, store, filters_config).items()
-            for order in orders:
-                order.order_id = order.id
-                order.amount = order.total
-                order.order_name = order.number
-
         orders_map = {order.order_id: get_order_mappings(order, user_timezone) for order in orders}
 
     if not refunds_list:
@@ -390,9 +359,6 @@ def get_profit_details(store, store_type, date_range, limit=20, page=1, orders_m
                 detail['profit'] -= fulfillment_cost
                 detail['fulfillment_cost'] = fulfillment_cost
 
-        if store_type == 'fb':
-            order_id = detail.get('fb_order_id')
-
         detail['admin_order_url'] = store.get_admin_order_details(order_id)
 
     return profit_details, paginator
@@ -428,12 +394,6 @@ def get_profits(store, store_type, start, end, user_timezone):
     # Saved Orders
     orders = sync.orders.filter(date__range=(start, end))
 
-    # Get FB orders
-    if store_type == 'fb':
-        filters_config = {}
-        filters_config['after'], filters_config['before'] = start.strftime('%x'), end.strftime('%x')
-        orders = fb_utils.FBOrderListQuery(store.user, store, filters_config).items()
-
     orders_map = {}
     totals_orders_count = 0
     for order in orders:
@@ -449,12 +409,6 @@ def get_profits(store, store_type, start, end, user_timezone):
             continue
 
         totals_orders_count += 1
-
-        if store_type == 'fb':
-            order.order_id = order.id
-            order.amount = order.total
-            order.order_name = order.number
-
         orders_map[order.order_id] = get_order_mappings(order, user_timezone)
         order_amount = float(order.amount)
 
@@ -487,13 +441,9 @@ def get_profits(store, store_type, start, end, user_timezone):
         profits_data[date_key]['css_empty'] = ''
 
     # Aliexpress/EBay costs
-    if store_type == 'fb':
-        orders_list = [order.order_id for order in orders]
-    else:
-        orders_list = orders.values('order_id')
     shippings = models.FulfillmentCost.objects.filter(store_content_type=store_content_type,
                                                       store_object_id=store.id,
-                                                      order_id__in=orders_list)
+                                                      order_id__in=orders.values('order_id'))
 
     total_fulfillments_count = 0
     for shipping in shippings:
@@ -558,12 +508,8 @@ def get_profits(store, store_type, start, end, user_timezone):
         profits_data[date_key]['css_empty'] = ''
 
     # Totals
-    if store_type == 'fb':
-        revenue = sum([float(order.total) for order in orders]) or 0.0
-    else:
-        revenue = orders.aggregate(total=Sum('amount'))['total'] or 0.0
     totals = {
-        'revenue': revenue,
+        'revenue': orders.aggregate(total=Sum('amount'))['total'] or 0.0,
         'fulfillment_cost': shippings.aggregate(total=Sum('total_cost'))['total'] or 0.0,
         'ads_spend': total_ad_costs,
         'other_costs': other_costs.aggregate(total=Sum('amount__sum'))['total'] or 0.0,
