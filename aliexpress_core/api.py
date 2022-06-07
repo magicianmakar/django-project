@@ -497,6 +497,9 @@ class AliexpressFulfillHelper():
                                 continue
 
                     item.order_memo = self.order_notes
+                    new_line = '\n'
+                    if bool(self.store.user.models_user.get_config('order_custom_line_attr')) and line_item['order'].get('item_note'):
+                        item.order_memo = f"{item.order_memo}{new_line}{line_item['order']['item_note']}"
                     req.add_item(item)
 
                 aliexpress_order.set_info(req)
@@ -533,6 +536,9 @@ class AliexpressFulfillHelper():
                 if result:
                     error_code = result.get('result')
                     error_code = error_code.get('error_code') if error_code else None
+                    if error_code == 'USER_ACCOUNT_DISABLED':
+                        error_message = 'Your AliExpress Account is disabled. Please contact AliExpress support.'
+                        self.order_error(error_message)
                     if error_code == 'B_DROPSHIPPER_DELIVERY_ADDRESS_VALIDATE_FAIL':
                         error_message = 'Customer Shipping Address or Phone Number is not valid'
                     elif error_code == 'INVENTORY_HOLD_ERROR':
@@ -545,6 +551,10 @@ class AliexpressFulfillHelper():
                         continue
                     elif error_code == 'DELIVERY_METHOD_NOT_EXIST':
                         error_message = 'Could not place order. This item does not ship to this area.'
+                        self.order_item_error(line_id, error_message)
+                        continue
+                    elif error_code == 'BLACKLIST_BUYER_IN_LIST':
+                        error_message = 'Your supplier has blacklisted you. Please contact your supplier or find another supplier.'
                         self.order_item_error(line_id, error_message)
                         continue
 
