@@ -1441,7 +1441,7 @@ def user_profile(request):
         if profile.plan.is_plod:
             stripe_downgrade_plan = GroupPlan.objects.filter(slug='plus-monthly').first()
         else:
-            stripe_downgrade_plan = GroupPlan.objects.filter(slug='21pro-monthly').first()
+            stripe_downgrade_plan = GroupPlan.objects.filter(slug='retro-monthly').first()
     except:
         stripe_downgrade_plan = None
     if request.user.get_config('_enable_yearly_60dc_plan'):
