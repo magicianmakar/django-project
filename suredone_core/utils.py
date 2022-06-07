@@ -1254,6 +1254,11 @@ class SureDoneAdminUtils:
                     'sd_response': user_data
                 })
                 return {'error': user_data['message'], 'account': None}
+
+            if not user_data.get('token'):
+                response = self.authorize_user(username=username, password=password)
+                user_data['token'] = response.get('token')
+
         except Exception:
             capture_exception(extra={
                 'description': 'Error when trying to parse SureDone new account creation response',
@@ -1292,6 +1297,36 @@ class SureDoneAdminUtils:
         except Exception as e:
             error = e
         return {'users': users, 'error': error}
+
+    def authorize_user(self, username, password):
+        api_resp = SureDoneAdminApiHandler.authorize_user(username=username, password=password)
+        error = ''
+        token = ''
+
+        try:
+            api_resp.raise_for_status()
+            user_data = api_resp.json()
+            if user_data.get('result') != 'success':
+                capture_message('Request to authorize SureDone user failed.', extra={
+                    'username': username,
+                    'password': password,
+                    'response_code': api_resp.status_code,
+                    'sd_response': user_data
+                })
+                return {'error': user_data['message'], 'token': token}
+
+            token = user_data.get('token')
+        except Exception:
+            capture_exception(extra={
+                'description': 'Error when trying to parse SureDone account auth response',
+                'username': username,
+                'password': password,
+                'response_code': api_resp.status_code,
+                'response_reason': api_resp.reason,
+            })
+            return {'error': 'Something went wrong, please try again.', 'token': token}
+
+        return {'error': error, 'token': token}
 
 
 class SureDonePusher:
