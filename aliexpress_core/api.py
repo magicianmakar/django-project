@@ -657,7 +657,7 @@ class AliexpressApi(ApiResponseMixin):
 
         permissions.user_can_view(user, store)
 
-        order_notes = user.get_config('aliexpress_api_order_notes')
+        order_notes = user.models_user.get_config('aliexpress_api_order_notes')
 
         try:
             helper = AliexpressFulfillHelper(store, data['order_id'], data['items'], data['shipping_address'], order_notes)
@@ -821,7 +821,6 @@ class AliexpressApi(ApiResponseMixin):
                                 if service_name == data.get('service_name'):
                                     service = data['service_name']
                                     break
-                    print(service, " service name ")
             cache.set(cache_key, {'data': shipping_services, 'shipping_setting': service}, timeout=600)
             return self.api_success({'data': shipping_services, 'shipping_setting': service})
         except:
