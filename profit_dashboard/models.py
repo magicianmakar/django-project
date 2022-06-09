@@ -147,8 +147,9 @@ class FacebookAccount(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def _get_last_sync_params(self):
-        since = arrow.get(self.last_sync).replace(days=-1)
-        until = arrow.get() if since.shift(months=36) > arrow.get() else since.shift(months=36)
+        until = arrow.get()
+        since = arrow.get(self.last_sync).shift(days=-1)
+        since = since if since > until.shift(months=-36) else until.shift(months=-36)
         return {
             'since': since.format('YYYY-MM-DD'),
             'until': until.format('YYYY-MM-DD'),
