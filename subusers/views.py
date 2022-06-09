@@ -96,7 +96,7 @@ def subusers_perms(request, user_id):
         if form.is_valid():
             form.save()
 
-            messages.success(request, 'User permissions has been updated')
+            messages.success(request, 'User permissions updated successfully')
         else:
             messages.error(request, 'Error occurred during user permissions update')
 

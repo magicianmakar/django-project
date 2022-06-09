@@ -206,7 +206,6 @@
 
 .tile-label {
   position: absolute;
-  right: 0;
   top: 20px;
   margin: 0 10px 0 0;
 }
@@ -236,9 +235,10 @@
 .delete-product-btn {
   position: absolute;
   top: 5px;
-  right: 20px;
+  right: 5px;
   background-color: #cc6666;
   border: none;
+  display: block !important;
 }
 
 .bg-private {

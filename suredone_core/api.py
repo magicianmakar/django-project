@@ -426,3 +426,14 @@ class SureDoneAdminApiHandler:
                 pass
         else:
             pass
+
+    @classmethod
+    def authorize_user(cls, username: str, password: str):
+        url = f'{cls.API_ENDPOINT}/v1/auth'
+
+        data = {
+            'user': username,
+            'pass': password
+        }
+
+        return requests.post(url, data=data, headers=cls.HEADERS)

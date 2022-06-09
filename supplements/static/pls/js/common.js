@@ -170,14 +170,16 @@ $(document).ready(function(){
         $('.line-checkbox').prop('checked', $(this).prop('checked'));
     });
 
-    $('.delete-product-btn').click(function(e) {
+    $('.delete-pls-btn').click(function(e) {
         var btn = $(this);
-        var product = btn.parents('.product-box').attr('product-id');
-        var data = {'product': product};
-
+        var product_id = btn.parents('.product-box').attr('product-id');
+        if (typeof(product_id) === 'undefined') {
+            product_id = new URL(window.location.href).pathname.split('/').filter(Boolean).pop();
+        }
+        var data = {'product': product_id};
         swal({
                 title: "Delete Supplement",
-                text: "Are you sure you want to delete this supplement?",
+                text: "Are you sure you want to delete this supplement?\nDoing so will also delete your labels",
                 type: "warning",
                 showCancelButton: true,
                 closeOnConfirm: false,
@@ -195,7 +197,7 @@ $(document).ready(function(){
                         success: function(data) {
                             swal.close();
                             toastr.success("The Supplement has been deleted.", "Deleted!");
-                            window.location.reload();
+                            window.location.href = '/supplements/my/supplement/list';
                         },
                         error: function(data) {
                             displayAjaxError('Delete Supplement', data);
