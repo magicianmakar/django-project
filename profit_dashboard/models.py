@@ -257,7 +257,10 @@ class FacebookAccount(models.Model):
             for campaign_id, insights_length in list(campaign_insights_length.items()):
                 print('\t\tCampaigns {} have {} Insights'.format(campaign_id, insights_length))
 
-        self.last_sync = arrow.get(params['until']).date()
+        if 'time_range' in params:
+            self.last_sync = arrow.get(params['time_range']['until']).date()
+        else:
+            self.last_sync = arrow.get().date()
         return list(campaign_insights.values())
 
 
