@@ -8,20 +8,15 @@
 
     <script type="text/javascript" id="hs-script-loader" async defer src="//js-na1.hs-scripts.com/9267974.js"></script>
     <script>
-        var hbLoadedInterval = null;
+        setTimeout(function() {
+            $.post(api_url('verify', 'hubspot')).done(function(data) {
+                window.hsConversationsSettings = {
+                    identificationEmail: data.email,
+                    identificationToken: data.token
+                };
 
-        $.post(api_url('verify', 'hubspot')).done(function(data) {
-            window.hsConversationsSettings = {
-                identificationEmail: data.email,
-                identificationToken: data.token
-            };
-
-            hbLoadedInterval = setInterval(function() {
-                if (window.HubSpotConversations.widget) {
-                    clearInterval(hbLoadedInterval);
-                    window.HubSpotConversations.widget.load();
-                }
-            }, 500);
-        });
+                window.HubSpotConversations.widget.load();
+            });
+        }, 100);
     </script>
 {% endif %}
