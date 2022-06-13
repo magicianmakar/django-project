@@ -35,7 +35,7 @@ from addons_core.utils import (
 )
 from lib.exceptions import capture_exception, capture_message
 from shopified_core.utils import safe_str
-from leadgalaxy.models import GroupPlan, UserProfile
+from leadgalaxy.models import GroupPlan, UserProfile, FeatureBundle
 from leadgalaxy.utils import register_new_user
 from analytic_events.models import SuccessfulPaymentEvent
 from tapfiliate.tasks import commission_from_stripe, successful_payment
@@ -940,6 +940,7 @@ def process_webhook_event(request, event_id):
 
         is_lifetime = request.POST.get('lifetime') or \
             'Lifetime Plan - (one-time fee)' in description or \
+            'Retro Pro Lifetime' in description or \
             charge.metadata.get('products') == 'Lifetime Plan - (one-time fee)'
 
         response_message = "OK"
@@ -970,7 +971,8 @@ def process_webhook_event(request, event_id):
                 if is_unlimited:
                     plan_id = 31
                 elif is_lifetime:
-                    plan_id = 194
+                    base_lifetime_plan = GroupPlan.objects.get(slug='retro-pro-lifetime')
+                    plan_id = base_lifetime_plan.id
 
             if plan_id:
                 plan = GroupPlan.objects.get(id=plan_id)
@@ -1001,6 +1003,16 @@ def process_webhook_event(request, event_id):
                 }))
             else:
                 response_message = f'{response_message},  No Plan ID found'
+
+        # process bundles (CF, Lifetime)
+        if 'Retro Elite Lifetime' in description:
+            bundle = FeatureBundle.objects.get(slug='retro-elite-lifetime')
+            user.profile.bundles.add(bundle)
+
+        if 'Retro Unlimited Pass' in description:
+            # upsell
+            bundle = FeatureBundle.objects.get(slug='retro-unlimited-pass')
+            user.profile.bundles.add(bundle)
 
         commission_from_stripe.apply_async(
             args=[charge.id],
