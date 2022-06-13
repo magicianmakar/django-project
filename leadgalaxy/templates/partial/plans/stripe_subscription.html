@@ -26,7 +26,7 @@
                             {% else %}
                                 ${{item.stripe_plan.amount|stringformat:"i"}}<span>/mo</span></p>
                             {% endif %}
-                        {% if item.sales_fee_config.fee_percent_rounded %}
+                        {% if item.show_fulfillment_fee and item.sales_fee_config.fee_percent_rounded %}
                                 <span>Plus {{ item.sales_fee_config.fee_percent_rounded }}% Fulfillment Fee</span>
                             {% else %}
                                 <span>No Fulfillment Fee</span>
@@ -47,9 +47,12 @@
                     <div class="features">
                         <div data-index="{{forloop.counter0}}" data-plan="{{item.slug}}"
                             class="plan-feature {% if current_plan == item %}selected{% endif %}">
+
+                            {% if item.show_stores_count %}
                             <p class="plan-feature">
                                 {% plan_limit item 'stores' %}
                             </p>
+                            {% endif %}
 
                             <p class="plan-feature">
                             {% if item|plan_have_feature:'orders.use' %}
@@ -151,6 +154,7 @@
                     <div class="features">
                         <div data-index="{{forloop.counter0}}" data-plan="{{item.slug}}"
                             class="plan-feature {% if current_plan == item %}selected{% endif %}">
+                            {% if item.show_stores_count %}
                             <p class="plan-feature">
                                 {% plan_limit item 'stores' %}
 
@@ -159,8 +163,8 @@
                                     $27/month per additional store
                                 </p>
                                 {% endif %}
-
                             </p>
+                            {% endif %}
 
                             <p class="plan-feature">
                             {% if item|plan_have_feature:'orders.use' %}

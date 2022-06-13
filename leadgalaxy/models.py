@@ -2223,6 +2223,8 @@ class GroupPlan(models.Model):
     dashboard_description = models.CharField(max_length=512, blank=True, null=True, verbose_name='Plan description on dashboard page')
     price_info = models.CharField(max_length=512, blank=True, null=True, verbose_name='Price info in Plans Page')
     retail_price_info = models.CharField(max_length=512, blank=True, null=True, verbose_name='Retail Price info in Plans Page')
+    show_stores_count = models.BooleanField(default=True)
+    show_fulfillment_fee = models.BooleanField(default=True)
 
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
     show_in_plod_app = models.IntegerField(default=0, choices=PLOD_SHOW_CHOICES, verbose_name='Show in PLoD App Listing')
