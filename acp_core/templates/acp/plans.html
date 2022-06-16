@@ -43,7 +43,7 @@
                             <td>Visible to Users</td>
                             <td>PLoD Plan</td>
                             <td>Fulfillment Fee %</td>
-                            {% if user.is_superuser %}
+                            {% if user.is_staff %}
                             <th></th>
                             {% endif %}
                             <th>
@@ -68,7 +68,7 @@
                             <td>{{item.hidden|yesno:'No,Yes'}}</td>
                             <td>{{item.private_label|yesno:'Yes,No'}}</td>
                             <td>{{item.sales_fee_config.fee_percent|default:''}}</td>
-                            {% if user.is_superuser or user|has_group:'Plan Inviter' %}
+                            {% if user.is_staff or user|has_group:'Plan Inviter' %}
                             <td>
                                 {% if not item.is_stripe %}
                                     <button class="btn btn-outline btn-success btn-xs gen-link" plan-title="{{item.title}}" plan-id="{{item.id}}">
