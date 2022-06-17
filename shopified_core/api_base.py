@@ -1,47 +1,34 @@
-import simplejson as json
 import arrow
 import itertools
-
-from lib.exceptions import capture_exception
+import simplejson as json
 
 from django.contrib.auth.models import User
-from django.views.generic import View
-from django.utils.decorators import method_decorator
-from django.db.models import ObjectDoesNotExist, F
-from django.http import JsonResponse
 from django.core.cache import cache
-from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import F, ObjectDoesNotExist
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-
-from last_seen.models import LastSeen
-
-from shopified_core import permissions
-from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import (
-    dict_val,
-    safe_int,
-    safe_float,
-    order_data_cache,
-    orders_update_limit,
-    serializers_orders_track,
-    using_replica,
-)
-from shopified_core.models_utils import get_store_model, get_user_upload_model
-from shopified_core.decorators import HasSubuserPermission
-from product_core.models import ProductBoard
-
-from stripe_subscription.models import ExtraSubUser
-from stripe_subscription.signals import get_extra_model_from_store
-
-from product_alerts.models import ProductChange
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.generic import View
 
 from bigcommerce_core.models import BigCommerceBoard
 from commercehq_core.models import CommerceHQBoard
 from gearbubble_core.models import GearBubbleBoard
 from groovekart_core.models import GrooveKartBoard
+from last_seen.models import LastSeen
 from leadgalaxy.models import ShopifyBoard
+from lib.exceptions import capture_exception
+from product_alerts.models import ProductChange
+from product_core.models import ProductBoard
+from shopified_core import permissions
+from shopified_core.decorators import HasSubuserPermission
+from shopified_core.mixins import ApiResponseMixin
+from shopified_core.models_utils import get_store_model, get_user_upload_model
+from shopified_core.utils import dict_val, order_data_cache, orders_update_limit, safe_float, safe_int, serializers_orders_track, using_replica
+from stripe_subscription.models import ExtraSubUser
+from stripe_subscription.signals import get_extra_model_from_store
 from woocommerce_core.models import WooBoard
 
 
@@ -84,7 +71,6 @@ class ApiBase(ApiResponseMixin, View):
         board_name = data.get('title', '').strip()
 
         if not len(board_name):
-
             return self.api_error('Board name is required', status=501)
 
         if self.board_model.objects.filter(user=user, title=board_name).exists():
@@ -356,11 +342,13 @@ class ApiBase(ApiResponseMixin, View):
                 order['order']['telephone_workarround'] = True
 
             try:
-                track = self.order_track_model.objects.get(store=store, order_id=order['order_id'], line_id=order['line_id'])
+                track = self.order_track_model.objects.get(store=store, order_id=order['order_id'],
+                                                           line_id=order['line_id'])
 
                 order['ordered'] = {
                     'time': arrow.get(track.created_at).humanize(),
-                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id'])) if request else ''
+                    'link': request.build_absolute_uri(
+                        '/orders/track?hidden=2&query={}'.format(order['order_id'])) if request else ''
                 }
 
             except ObjectDoesNotExist:
@@ -422,7 +410,8 @@ class ApiBase(ApiResponseMixin, View):
 
             if created_at_end:
                 created_at_end = arrow.get(created_at_end + tz, r'MM/DD/YYYY Z')
-                created_at_end = created_at_end.span('day')[1].datetime  # Ensure end date is set to last hour in the day
+                created_at_end = created_at_end.span('day')[
+                    1].datetime  # Ensure end date is set to last hour in the day
 
             created_at_max = created_at_start
 
@@ -472,7 +461,7 @@ class ApiBase(ApiResponseMixin, View):
 
         if not data.get('order_id') and not data.get('line_id'):
             self.order_track_model.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
-                                  .update(check_count=F('check_count') + 1, updated_at=timezone.now())
+                .update(check_count=F('check_count') + 1, updated_at=timezone.now())
 
         return self.api_success(orders, safe=False)
 
@@ -521,7 +510,6 @@ class ApiBase(ApiResponseMixin, View):
         # TODO: Change use of data['shopify'] to data['commercehq'] in CommerceHQ
         source_id = safe_int(dict_val(data, ['shopify', 'woocommerce', 'groovekart', 'gearbubble', 'bigcommerce',
                                              'fb_marketplace']))
-
         if source_id != product.source_id or product.store != store:
             connected_to = self.helper.get_connected_products(self.product_model, store, source_id)
 
@@ -547,7 +535,6 @@ class ApiBase(ApiResponseMixin, View):
                 product.source_id = source_id
 
             product.save()
-
             self.helper.after_post_product_connect(product, source_id)
 
         return self.api_success()
@@ -844,7 +831,6 @@ class ApiBase(ApiResponseMixin, View):
                 and not user.profile.plan.is_paused \
                 and total_allowed > -1 \
                 and total_allowed < stores_count:
-
             extra_store_model = get_extra_model_from_store(store)
             extra_store_model.objects.create(
                 user=user,
@@ -874,7 +860,6 @@ class ApiBase(ApiResponseMixin, View):
                 and not user.profile.plan.is_paused \
                 and total_allowed > -1 \
                 and total_allowed < subusers_count:
-
             ExtraSubUser.objects.create(
                 user=user,
                 period_start=timezone.now(),

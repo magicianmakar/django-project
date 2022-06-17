@@ -1,4 +1,4 @@
-{% extends "base_commercehq_core.html" %}
+{% extends "base_fb_marketplace_core.html" %}
 
 {% load static %}
 {% load perms_helper %}
@@ -63,7 +63,7 @@
                     </div>
                 </div>
                 <div class=" row" {% if fb_marketplace_product and fb_marketplace_product.is_multi %}style="display:none"{% endif %}>
-                    <div class="form-group col-xs-3">
+                    <div class="form-group col-xs-3 itooltip" title="Facebook will round the price to the nearest whole number">
                         <label for="product-price">Price</label>
                         <div class="input-group">
                             <span class="input-group-addon">{% money_format None product.store  %}</span>
@@ -109,6 +109,86 @@
                 <div class="row">
                     <div id="more-options" class="col-xs-12">
                         <div class="childs" style="">
+                            {% if fb_marketplace_product and fb_marketplace_product.is_multi %}
+                                <div class="panel panel-default m-b-lg">
+                                    <div class="panel-heading" style="height: 40px;">
+                                        <div class="col-xs-6"> Variants </div>
+                                        {% if request.user|can:'aliextractor.use' %}
+                                            {% include 'aliextractor/get_pricing_data.html' %}
+                                        {% endif %}
+                                    </div>
+                                    <div class="panel-body" style="padding-bottom:0">
+                                <table id="fb_marketplace-variants" class="table table-condensed no-border" style="margin-bottom:0">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Price</th>
+                                            <th>Compare Price</th>
+                                            <th>SKU</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in fb_marketplace_product.variants %}
+                                        <tr class="fb_marketplace-variant" variant-id="{{item.id}}">
+                                            <td style="white-space:nowrap">
+                                                <span>{{item.variant|join:" / "}}</span>
+                                            </td>
+
+                                            <td>
+                                                <div class="input-group" style="width:120px">
+                                                   <span class="input-group-addon input-sm">{% money_format None product.store %}</span>
+                                                   <input type="number" name="price" value="{{item.price|default:''}}" min="0" step="0.1"
+                                                          data-number-to-fixed="2" data-number-stepfactor="100"
+                                                          class="form-control currency" />
+                                                </div>
+                                            </td>
+
+                                            <td>
+                                                <div class="input-group" style="width:120px">
+                                                   <span class="input-group-addon input-sm">{% money_format None product.store %}</span>
+                                                   <input type="number" name="compare_price" value="{{item.compare_price|default:''}}"
+                                                          min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100"
+                                                          class="form-control currency" />
+                                                </div>
+                                            </td>
+
+                                            <td>
+                                                <input class="var-input form-control" type="text" name="sku"
+                                                       value="{{item.sku|default:''}}"
+                                                       style="border-right:1px solid #ddd;width:120px"/>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="row" {% if fb_marketplace_product %}style="display:none"{% endif %}>
+                                <div class="form-group col-xs-6">
+                                    <label for="">Variants</label>
+                                </div>
+                                {% if request.user|can:'aliextractor.use' %}
+                                    {% include 'aliextractor/get_pricing_data.html' %}
+                                {% endif %}
+                            </div>
+
+                            <div id="variants" class="row well"
+                                 style="margin:5px 0 10px 0;padding: 20px 0 0; {% if fb_marketplace_product %}display:none{% endif %}">
+
+                                <div class="variant-simple form-group col-xs-10" style="display:none">
+                                    <input type="text" class="form-control" id="product-variant-name" style="width: 150px" placeholder="Title">
+                                    <input type="text" class="form-control" id="product-variant-values" style="margin: 10px 0;" placeholder="Values (separated by comma)">
+                                    <a href="#" class="btn btn-danger btn-xs remove-variant">Remove</a>
+                                </div>
+                                <div class="area col-xs-12">
+                                </div>
+                                <div class="col-xs-12" style="margin: 10px 0;text-align: right">
+                                    <a href="#" class="btn btn-success btn-xs add-variant">Add Variant</a>
+                                </div>
+                            </div>
+
 
                             <div class="form-group col-xs-12" style="padding:0">
                                 <textarea name="product-description" class="form-control"></textarea>
@@ -193,8 +273,8 @@
                                 {% endif %}
 
                                 {% if fb_marketplace_product %}
-                                <button id="product-update-btn" target="product-update" type="button"
-                                        class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Updating">Update in Facebook Marketplace</button>
+                                <a href="{{product.fb_marketplace_url}}" target="_blank" type="button"
+                                        class="btn btn-primary">Update in FB Marketplace</a>
                                 {% endif %}
 
                                 <button id="product-save-btn" target="save-for-later"
@@ -208,10 +288,11 @@
                                 <ul class="dropdown-menu">
                                 {% if product.fb_marketplace_url %}
                                     <li><a href="{{product.fb_marketplace_url}}" target="_blank" >
-                                        <i class="fa fa-file-o"></i> View in Facebook Marketplace</a>
+                                        <i class="fa fa-file-o"></i> Update in FB Marketplace</a>
                                     </li>
+
                                 {% else %}
-                                    <li><a id="view-btn" type="button" style="display:none">View in Facebook Marketplace</a></li>
+                                    <li><a id="view-btn" type="button" style="display:none">Update in FB Marketplace</a></li>
                                 {% endif %}
 
                                 <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
@@ -260,7 +341,7 @@
                                              src="{{ fb_marketplace_product.images|first}}">
                                     </div>
                                     <div class="col-md-10">
-                                        <a href="{{product.shopify_link}}" target="_blank">{{fb_marketplace_product.title}}</a>
+                                        <a href="{{product.fb_marketplace_url}}" target="_blank">{{fb_marketplace_product.title}}</a>
                                     </div>
                                 </div>
 
@@ -300,14 +381,6 @@
                         </a>
                     </div>
 
-                    {% if product.is_connected %}
-                        <div class="col-xs-5 text-right" style="padding: 0">
-                        <a class="btn btn-success btn-outline" href="{% url 'chq:product_mapping' product.id %}" target="_blank">
-                            Variants Mapping
-                            <i class="fa fa-external-link"></i>
-                        </a>
-                        </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -363,7 +436,7 @@
     </div>
 </div>
 
-{% include "commercehq/partial/commercehq_product_selector.html" %}
+{% include "fb_marketplace/partial/fb_marketplace_product_selector.html" %}
 
 {% if request.user|can:'image_uploader.use' %}
 <div id="modal-upload-image" class="modal fade" aria-hidden="true">
@@ -492,7 +565,7 @@
 
 {% compress css %}
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
-<link href="{% static 'commercehq/css/product_detail.css' %}" rel="stylesheet">
+<link href="{% static 'fb_marketplace/css/product_detail.css' %}" rel="stylesheet">
 <link href="{% static 'css/trix.css' %}" rel="stylesheet">
 <link href="{% static 'aliextractor/css/ae-tab.css' %}" rel="stylesheet">
 {% endcompress %}
@@ -520,11 +593,11 @@ var config = {
     product_id: {{product.id}},
     product_notes: '{{product.notes|default:''|escapejs}}',
 
-{% if commercehq_product %}
+{% if fb_marketplace_product %}
     connected: true,
-    commercehq_options: {% json_dumps commercehq_product.options %},
+    fb_marketplace_options: {% json_dumps fb_marketplace_product.options %},
 {% else %}
-    commercehq_options: null,
+    fb_marketplace_options: null,
 {% endif %}
 
     image_uploader: {{ request.user|can:'image_uploader.use'|lower }},
@@ -558,8 +631,8 @@ var config = {
             original: {
                 url: '{{item.product_url|escapejs}}'
             },
-            shopify: {
-                id: {{item.shopify_id|default:'0'}},
+            fb_marketplace: {
+                id: {{item.fb_marketplace_id|default:'0'}},
                 url: '{{item.fb_marketplace_url|escapejs}}',
             },
             supplier: {
@@ -652,14 +725,14 @@ $(function() {
     <script type="text/javascript" src="{% static 'js/trix.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/photopea.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/aviary.js' %}"></script>
-    <script type="text/javascript" src="{% static 'commercehq/js/clippingmagic.js' %}"></script>
-    <script type="text/javascript" src="{% static 'commercehq/js/commercehq_product_selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'fb_marketplace/js/clippingmagic.js' %}"></script>
+    <script type="text/javascript" src="{% static 'fb_marketplace/js/fb_marketplace_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'fb_marketplace/js/product_detail.js' %}"></script>
     {% endcompress %}
 
 {% if request.user|can:'image_uploader.use' %}
     {% compress js %}
-    <script type="text/javascript" src="{% static 'commercehq/js/uploader.js' %}"></script>
+    <script type="text/javascript" src="{% static 'fb_marketplace/js/uploader.js' %}"></script>
     {% endcompress %}
 {% endif %}
 

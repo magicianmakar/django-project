@@ -61,6 +61,14 @@ def template_config(request):
                 'prefix': '/bigcommerce'
             }
         }
+    elif namespace == 'fb_marketplace':
+        template_config = {
+            'base': 'base_fb_marketplace_core.html',
+            'url': {
+                'namespace': 'fb_marketplace:',
+                'prefix': '/fb_marketplace'
+            }
+        }
     else:
         template_config = {
             'base': 'base.html',

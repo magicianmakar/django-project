@@ -124,7 +124,7 @@ $('#product-update-btn').click(function (e) {
     };
 
     if (product.is_multi) {
-        $('#commercehq-variants tr.commercehq-variant').each(function(j, tr) {
+        $('#fb_marketplace-variants tr.fb_marketplace-variant').each(function(j, tr) {
 
             var variant_data = {
                 id: parseInt($(tr).attr('variant-id'))
@@ -152,7 +152,7 @@ $('#product-update-btn').click(function (e) {
     }
 
     $.ajax({
-        url: api_url('product-update', 'chq'),
+        url: api_url('product-update', 'fb_marketplace'),
         type: 'POST',
         data: JSON.stringify ({
             'product': config.product_id,
@@ -177,12 +177,12 @@ $('#product-update-btn').click(function (e) {
                     pusher.unsubscribe(config.sub_conf.channel);
 
                     if (data.success) {
-                        toastr.success('Product Updated.','CommerceHQ Update');
+                        toastr.success('Product Updated.','FB Marketplace Update');
                         setTimeout(function () {
                             window.location.reload();
                         }, 1500);
                     } else {
-                        displayAjaxError('CommerceHQ Update', data);
+                        displayAjaxError('FB Marketplace Update', data);
                     }
                 }
             });
@@ -206,14 +206,14 @@ $('#modal-pick-variant .dropdown-menu li a').click(function(e) {
     $('#pick-variant-btn').val(val);
     var targetVariants = [];
 
-    if (config.commercehq_options === null) {
+    if (config.fb_marketplace_options === null) {
         targetVariants = product.variants.filter(function(v) { return v.title === val; });
         if (targetVariants.length > 0) {
             $('#split-variants-count').text(targetVariants[0].values.length);
             $('#split-variants-values').text(targetVariants[0].values.join(', '));
         }
     } else {
-        targetVariants = config.commercehq_options.filter(function(o) { return o.title === val; });
+        targetVariants = config.fb_marketplace_options.filter(function(o) { return o.title === val; });
         if (targetVariants.length > 0) {
             $('#split-variants-count').text(targetVariants[0].values.length);
             $('#split-variants-values').html(targetVariants[0].values.join('<br />'));
@@ -242,7 +242,7 @@ $('#modal-pick-variant .btn-submit').click(function(e) {
     $(this).bootstrapBtn('loading');
 
     $.ajax({
-        url: api_url('product-split-variants', 'chq'),
+        url: api_url('product-split-variants', 'fb_marketplace'),
         type: 'POST',
         data: {
             product: product_id,
@@ -261,7 +261,7 @@ $('#modal-pick-variant .btn-submit').click(function(e) {
                 } else {
                   toastr.success('The variants are now split into new products.', 'Product Split!');
                 }
-                setTimeout(function() { window.location.href = '/chq/products'; }, 500);
+                setTimeout(function() { window.location.href = '/fb_marketplace/products'; }, 500);
             }
         },
         error: function (data) {
@@ -430,7 +430,7 @@ $('#save-product-notes').click(function (e) {
 
     $.ajax({
         type: 'POST',
-        url: api_url('product-notes', 'chq'),
+        url: api_url('product-notes', 'fb_marketplace'),
         context: btn,
         data: {
             'notes': $('#product-notes').val(),
@@ -483,7 +483,7 @@ function bindExportEvents(target) {
 
         $.ajax({
             type: 'POST',
-            url: api_url('supplier', 'chq'),
+            url: api_url('supplier', 'fb_marketplace'),
             context: btn,
             data: {
                 'original-link': $('.product-original-link', form).val(),
@@ -522,7 +522,7 @@ function bindExportEvents(target) {
 
         $.ajax({
             type: 'POST',
-            url: api_url('supplier-default', 'chq'),
+            url: api_url('supplier-default', 'fb_marketplace'),
             context: btn,
             data: {
                 'product': form.data('product-id'),
@@ -573,7 +573,7 @@ function bindExportEvents(target) {
 
                 $.ajax({
                     type: 'DELETE',
-                    url: api_url('supplier', 'chq') + '?' + $.param({
+                    url: api_url('supplier', 'fb_marketplace') + '?' + $.param({
                         'product': form.data('product-id'),
                         'supplier': form.data('export-id'),
                     }),
@@ -705,7 +705,7 @@ $('form#product-config-form').submit(function (e) {
     var data = $(this).serialize();
 
     $.ajax({
-        url: '/api/chq/product-config',
+        url: '/api/fb_marketplace/product-config',
         type: 'POST',
         data: data,
         context: {form: $(this)},
@@ -888,17 +888,20 @@ Handlebars.registerHelper('urlencode', function(text) {
 });
 
 // Product Shopify Connect
-window.commercehqProductSelected = function (store, chq_id) {
+$('#connect-fbmp-product').on('click', function (e) {
+    e.preventDefault();
+    var url=$("#fbmp-product-url").val();
+    var fb_marketplace_id = url.match(/\/([^\/]+)\/?$/)[1];
     $.ajax({
-        url: api_url('product-connect', 'chq'),
+        url: api_url('product-connect', 'fb_marketplace'),
         type: 'POST',
         data: {
             product: config.product_id,
-            shopify: chq_id,
-            store: store
+            fb_marketplace: fb_marketplace_id,
+            store: $("#store-select").val(),
         },
         success: function (data) {
-            $('#modal-commercehq-product').modal('hide');
+            $('#modal-fb_marketplace-product').modal('hide');
             window.location.hash = 'connections';
             window.location.reload();
         },
@@ -906,12 +909,12 @@ window.commercehqProductSelected = function (store, chq_id) {
             displayAjaxError('Connect Product', data);
         }
     });
-};
+});
 
 $('.product-connection-change').click(function (e) {
     e.preventDefault();
 
-    $('#modal-commercehq-product').modal('show');
+    $('#modal-fb_marketplace-product').modal('show');
 });
 
 $('.product-connection-disconnect').click(function (e) {
@@ -931,7 +934,7 @@ $('.product-connection-disconnect').click(function (e) {
     function(isConfirmed) {
         if (isConfirmed) {
             $.ajax({
-                url: api_url('product-connect', 'chq') + '?' + $.param({
+                url: api_url('product-connect', 'fb_marketplace') + '?' + $.param({
                     product: config.product_id,
                 }),
                 type: 'DELETE',
@@ -1038,7 +1041,7 @@ function clippingmagicEditImage(data, image) {
                         url: data.image_url,
                         old_url: image.attr('src'),
                         clippingmagic: true,
-                        chq: 1
+                        fb_marketplace: 1
                     }
                 }).done(function(data) {
                     image.attr('src', data.url).siblings(".loader").hide();

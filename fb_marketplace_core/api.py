@@ -121,3 +121,9 @@ class FBMarketplaceStoreApi(ApiBase):
         product.delete()
 
         return self.api_success()
+
+    def get_permission_check(self, request, user, data):
+        if request.user.can('fb_marketplace.use'):
+            return self.api_success()
+        else:
+            return self.api_error('FB Marketplace permissions not found')
