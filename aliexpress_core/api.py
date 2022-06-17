@@ -578,6 +578,10 @@ class AliexpressProduct():
 
     def get_product_sku_data(self, aliexpress_product_data):
         final_skus = {}
+
+        if not aliexpress_product_data:
+            return final_skus
+
         variant_sku_data = aliexpress_product_data.get('ae_item_sku_info_dtos').get('ae_item_sku_info_d_t_o')
         if variant_sku_data is not None and len(variant_sku_data) > 0:
             if len(variant_sku_data) == 1:
