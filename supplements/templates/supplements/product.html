@@ -267,6 +267,27 @@
       </div>
     </div>
 
+    <div class="form-group">
+      <label class="col-sm-2 control-label">Discontinued:</label>
+      <div class="col-sm-5" style="padding-top: 7px;">
+        {{ form.is_discontinued }}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="col-sm-2 control-label">On Sale:</label>
+      <div class="col-sm-5" style="padding-top: 7px;">
+        {{ form.on_sale }}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="col-sm-2 control-label">New:</label>
+      <div class="col-sm-5" style="padding-top: 7px;">
+        {{ form.is_new }}
+      </div>
+    </div>
+
     <div class="form-group {{ form.authenticity_certificate.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Authenticity Certificate:</label>
       <div class='col-sm-7'>

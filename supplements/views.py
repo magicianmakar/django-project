@@ -121,6 +121,14 @@ class Index(common_views.IndexView):
             if product_type:
                 queryset = queryset.filter(category__iexact=product_type)
 
+            availability = form.cleaned_data['availability']
+            if availability == 'New':
+                queryset = queryset.filter(is_new=True)
+            elif availability == 'Sale':
+                queryset = queryset.filter(on_sale=True)
+            elif availability != 'All Products':
+                queryset = queryset.filter(inventory__gt=0)
+
         if not self.request.user.can('pls_admin.use') \
                 and not self.request.user.can('pls_staff.use'):
             return queryset.filter(is_active=True)

@@ -3,7 +3,7 @@
 
 {% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' %}
 <form role="form" method="GET">
-  <div class="col-sm-8 col-md-4 col-xs-12 padding-zero-right">
+  <div class="col-sm-6 col-md-3 col-xs-12 padding-zero-right">
     <div class="form-group {% if form.title.errors %}has-error{% endif %}">
       {% render_field form.title class="form-control" placeholder='Search...' %}
       {% for error in form.title.errors %}
@@ -12,7 +12,7 @@
     </div>
   </div>
 
-  <div class="col-sm-4 col-md-3 col-xs-12 padding-zero-right padding-zero-left">
+  <div class="col-sm-6 col-md-3 col-xs-12 padding-zero-right padding-zero-left">
     <div class="form-group customSelect {% if form.tags.errors %}has-error{% endif %}">
       {{ form.tags|add_class:"form-control" }}
       {% for error in form.tags.errors %}
@@ -21,7 +21,7 @@
     </div>
   </div>
 
-  <div class="col-sm-8 col-md-3 col-xs-12 padding-zero-left">
+  <div class="col-sm-6 col-md-3 col-xs-12 padding-zero-right padding-zero-left">
     <div class="form-group customSelect {% if form.product_type.errors %}has-error{% endif %}">
         {{ form.product_type|add_class:"form-control" }}
         {% for error in form.product_type.errors %}
@@ -29,8 +29,17 @@
         {% endfor %}
     </div>
   </div>
-  
-  <div class="col-sm-4 col-md-2 col-xs-12">
+
+  <div class="col-sm-4 col-md-2 col-xs-12 padding-zero-left">
+    <div class="form-group customSelect {% if form.availability.errors %}has-error{% endif %}">
+        {{ form.availability|add_class:"form-control" }}
+        {% for error in form.availability.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
+    </div>
+  </div>
+
+  <div class="col-sm-2 col-md-1 col-xs-12">
     <div class="form-group">
         <input type="submit" class="btn btn-primary test" value="Filter" />
     </div>

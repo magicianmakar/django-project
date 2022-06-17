@@ -13,6 +13,17 @@
       <small class="text-muted">{{ item.category }}</small>
       <a href="{{ item.get_url }}" class="product-name limit-reached">{{ item.title }}</a>
       <div class="small m-t-xs truncate">{{ item.description }}</div>
+        {% if item.is_discontinued %}
+          <span class='label tile-label'>Discontinued</span>
+        {% elif item.on_sale %}
+          <span class='label tile-label label-warning'>Sale</span>
+        {% elif item.is_new %}
+          <span class='label tile-label label-primary'>New</span>
+        {% elif item.inventory == 0 %}
+          <span class='label tile-label label-danger'>Out of Stock</span>
+        {% elif item.inventory < 50 %}
+          <span class='label tile-label label-warning'>Low Stock</span>
+        {% endif %}
       <div class="m-t row">
         <div class="col-md-6">
           <a href="{{ item.get_url }}" class="btn btn-xs btn-outline btn-primary limit-reached"> Customize <i class="fa fa-long-arrow-right"></i> </a>

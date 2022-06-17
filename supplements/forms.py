@@ -80,6 +80,9 @@ class PLSupplementForm(forms.ModelForm):
                   'msrp',
                   'mockup_type',
                   'is_active',
+                  'is_discontinued',
+                  'is_new',
+                  'on_sale',
                   'inventory',
                   'supplier',
                   ]
@@ -132,10 +135,12 @@ class PLSupplementFilterForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields['tags'].choices = [("", "Tagged with")] + list(PLSupplement.objects.values_list('tags', 'tags').distinct())
         self.fields['product_type'].choices = [("", "Product Type")] + list(PLSupplement.objects.values_list('category', 'category').distinct())
+        self.fields['availability'].choices = [("In Stock", "In Stock"), ("All Products", "All Products"), ("New", "New"), ("Sale", "Sale")]
 
     title = forms.CharField(required=False)
     tags = forms.ChoiceField(required=False, choices=[])
     product_type = forms.ChoiceField(required=False, choices=[])
+    availability = forms.ChoiceField(required=False, choices=[])
 
 
 class OrderFilterForm(forms.Form):

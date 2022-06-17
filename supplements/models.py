@@ -58,6 +58,9 @@ class PLSupplement(PLSupplementMixin, model_base.Product):
     weight = models.DecimalField(max_digits=10, decimal_places=4, default=0)
     msrp = models.CharField(max_length=100, null=True, blank=True, verbose_name='MSRP')
     is_active = models.BooleanField(default=True)
+    is_discontinued = models.BooleanField(default=False)
+    is_new = models.BooleanField(default=False)
+    on_sale = models.BooleanField(default=False)
     inventory = models.PositiveIntegerField(default=9999)
     hs_code = models.CharField(max_length=255,
                                null=True,

@@ -50,7 +50,7 @@ class PLSupplementAdmin(admin.ModelAdmin):
         'approved_label_url',
     )
     search_fields = ('title', 'shipstation_sku')
-    list_filter = ('is_active', 'label_size', 'mockup_type')
+    list_filter = ('is_active', 'is_discontinued', 'label_size', 'mockup_type')
 
 
 @admin.register(UserSupplement)
