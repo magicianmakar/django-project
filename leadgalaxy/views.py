@@ -1511,7 +1511,7 @@ def user_profile(request):
     if not request.user.is_subuser and stripe_customer:
         subscription = None
         while subscription is None:
-            sub = request.user.stripesubscription_set.first()
+            sub = request.user.stripesubscription_set.last()
             if sub is None:
                 break
 

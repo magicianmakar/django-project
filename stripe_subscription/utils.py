@@ -550,7 +550,7 @@ def process_webhook_event(request, event_id):
 
         elif not customer.have_source():
             # Let Stripe handle re-tries and subscription status.
-            sub = customer.user.stripesubscription_set.first()
+            sub = customer.user.stripesubscription_set.last()
             if not sub:
                 return HttpResponse('Subscription Not found')
 
