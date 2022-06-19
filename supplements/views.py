@@ -920,7 +920,7 @@ class MySupplements(LoginRequiredMixin, View):
             {'title': 'My Products', 'url': reverse('pls:my_supplements')},
         ]
         form = UserSupplementFilterForm(self.request.GET)
-        queryset = request.user.models_user.pl_supplements.filter(pl_supplement__is_active=True)
+        queryset = request.user.models_user.pl_supplements
 
         if form.is_valid():
             queryset = self.add_filters(queryset, form)
