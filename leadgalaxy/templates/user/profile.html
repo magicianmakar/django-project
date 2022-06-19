@@ -496,6 +496,7 @@
         'shopify_callflex_subscription': '{% url "shopify_subscription.views.subscription_callflex" %}',
         'subscription_apply_cancellation_coupon': '{% url "stripe_subscription.views.subscription_apply_cancellation_coupon" %}',
         'stripe': '{% app_setting "STRIPE_PUBLIC_KEY" %}',
+        'shopify_admin_url': '{{ shopify_admin_url }}',
     };
 
     var UNSET_OPTION = {},
