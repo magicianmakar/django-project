@@ -26,11 +26,15 @@
                             {% else %}
                                 ${{item.stripe_plan.amount|stringformat:"i"}}<span>/mo</span></p>
                             {% endif %}
-                        {% if item.show_fulfillment_fee and item.sales_fee_config.fee_percent_rounded %}
+
+                        {% if item.show_fulfillment_fee %}
+                            {% if item.sales_fee_config.fee_percent_rounded %}
                                 <span>Plus {{ item.sales_fee_config.fee_percent_rounded }}% Fulfillment Fee</span>
                             {% else %}
                                 <span>No Fulfillment Fee</span>
                             {% endif %}
+                        {% endif %}
+
                         {% if item.stripe_plan.retail_amount or item.retail_price_info %}
                             {% if item.retail_price_info %}
                                 {{item.retail_price_info|safe}}
@@ -142,11 +146,13 @@
                         {% else %}
                             <p class="retail-price"></p>
                         {% endif %}
-                        {% if item.sales_fee_config.fee_percent_rounded %}
+                        {% if item.show_fulfillment_fee %}
+                            {% if item.sales_fee_config.fee_percent_rounded %}
                                 <span>Plus {{ item.sales_fee_config.fee_percent_rounded }}% Fulfillment Fee</span>
                             {% else %}
                                 <span>No Fulfillment Fee</span>
                             {% endif %}
+                        {% endif %}
 
                         <p class="retail-price"></p>
                     </div>
