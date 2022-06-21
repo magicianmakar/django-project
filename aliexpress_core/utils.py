@@ -145,6 +145,7 @@ def get_store_data(user):
     big_stores = user.profile.get_bigcommerce_stores()
     ebay_stores = user.profile.get_ebay_stores(do_sync=True)
     fb_stores = user.profile.get_fb_stores()
+    google_stores = user.profile.get_google_stores()
 
     return dict(
         shopify=[{'id': s.id, 'value': s.title} for s in shopify_stores],
@@ -153,6 +154,7 @@ def get_store_data(user):
         woo=[{'id': s.id, 'value': s.title} for s in woo_stores],
         ebay=[{'id': s.id, 'value': s.title} for s in ebay_stores],
         fb=[{'id': s.id, 'value': s.title} for s in fb_stores],
+        google=[{'id': s.id, 'value': s.title} for s in google_stores],
         bigcommerce=[{'id': s.id, 'value': s.title} for s in big_stores],
     )
 

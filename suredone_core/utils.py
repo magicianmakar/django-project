@@ -105,6 +105,16 @@ class SureDoneUtils:
                         facebook_instances.append(instance_id)
                 self._account_stores_config['facebook'] = facebook_instances
 
+            # 2.2.1. Google  channels
+            if 'google' in register_data.get('context', {}):
+                google_instances = [1]
+                addnl_google_channels = list(register_data.get('instance', {}).get('google', {}).values())
+                for channel in addnl_google_channels:
+                    instance_id = channel.get('instance')
+                    if instance_id is not None and instance_id != '':
+                        google_instances.append(instance_id)
+                self._account_stores_config['google'] = google_instances
+
     def get_all_user_options(self, update_db=True, verify_custom_fields=False):
         all_options_data = self.api.get_all_account_options()
 
@@ -115,7 +125,8 @@ class SureDoneUtils:
                 failed_sets = self.sd_account.verify_custom_fields_created(all_options_data)
                 failed_variant_fields = self.sd_account.verify_variation_fields(all_options_data)
                 missing_fb_field_mappings = self.sd_account.verify_fb_fields_mapping(all_options_data)
-                if failed_sets or failed_variant_fields or missing_fb_field_mappings:
+                missing_google_field_mappings = self.sd_account.verify_google_fields_mapping(all_options_data)
+                if failed_sets or failed_variant_fields or missing_fb_field_mappings or missing_google_field_mappings:
                     from .tasks import configure_user_custom_fields
                     configure_user_custom_fields.apply_async(kwargs={
                         'sd_account_id': self.sd_account.id,
@@ -315,7 +326,7 @@ class SureDoneUtils:
 
         :param updated_product_data:
         :type updated_product_data:
-        :param store_type: can be one of: ['ebay', 'amzn', 'facebook']
+        :param store_type: can be one of: ['ebay', 'amzn', 'facebook', 'google']
         :type store_type: str
         :param store_instance_id:
         :type store_instance_id:
@@ -715,7 +726,7 @@ class SureDoneUtils:
         :type ext_formatted_product_data: dict
         :param store_instance_id:
         :type store_instance_id:
-        :param store_type: can be one of: ['ebay', 'fb']
+        :param store_type: can be one of: ['ebay', 'fb', 'google']
         :type store_type: str
         :return: SureDone's API response
         :rtype: JsonResponse

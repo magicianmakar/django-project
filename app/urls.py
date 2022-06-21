@@ -14,6 +14,7 @@ urlpatterns = [
     url(r'^woo/', include(('woocommerce_core.urls', 'woocommerce_core'), 'woo')),
     url(r'^ebay/', include(('ebay_core.urls', 'ebay_core'), 'ebay')),
     url(r'^fb/', include(('facebook_core.urls', 'facebook_core'), 'fb')),
+    url(r'^google/', include(('google_core.urls', 'google_core'), 'google')),
     url(r'^gear/', include(('gearbubble_core.urls', 'gearbubble_core'), 'gear')),
     url(r'^gkart/', include(('groovekart_core.urls', 'groovekart_core'), 'gkart')),
     url(r'^bigcommerce/', include(('bigcommerce_core.urls', 'bigcommerce_core'), 'bigcommerce')),

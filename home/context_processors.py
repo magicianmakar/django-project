@@ -6,13 +6,14 @@ def all_stores(request):
     if not user.is_authenticated:
         return {}
 
-    platforms = ['shopify', 'woo', 'chq', 'bigcommerce', 'gear', 'gkart', 'ebay', 'fb']
+    platforms = ['shopify', 'woo', 'chq', 'bigcommerce', 'gear', 'gkart', 'ebay', 'fb', 'google']
     stores = {
         'shopify': list(user.profile.get_shopify_stores()),
         'chq': list(user.profile.get_chq_stores()),
         'woo': list(user.profile.get_woo_stores()),
         'ebay': list(user.profile.get_ebay_stores(do_sync=True)),
         'fb': list(user.profile.get_fb_stores(do_sync=True)),
+        'google': list(user.profile.get_google_stores(do_sync=True)),
         'gear': list(user.profile.get_gear_stores()),
         'gkart': list(user.profile.get_gkart_stores()),
         'bigcommerce': list(user.profile.get_bigcommerce_stores()),

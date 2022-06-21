@@ -18,6 +18,7 @@ from bigcommerce_core.models import BigCommerceOrderTrack
 from commercehq_core.models import CommerceHQOrderTrack
 from ebay_core.models import EbayOrderTrack
 from facebook_core.models import FBOrderTrack
+from google_core.models import GoogleOrderTrack
 from groovekart_core.models import GrooveKartOrderTrack
 from leadgalaxy.models import ShopifyOrderTrack
 from my_basket.models import BasketOrderTrack
@@ -30,6 +31,7 @@ track_types = [
     {'model': WooOrderTrack, 'status_column': 'woocommerce_status'},
     {'model': EbayOrderTrack, 'status_column': 'ebay_status'},
     {'model': FBOrderTrack, 'status_column': 'fb_status'},
+    {'model': GoogleOrderTrack, 'status_column': 'google_status'},
     {'model': CommerceHQOrderTrack, 'status_column': 'commercehq_status'},
     {'model': BasketOrderTrack, 'status_column': 'basket_order_status'},
 ]

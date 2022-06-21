@@ -26,6 +26,7 @@ STORE_TYPES = (
     ('bigcommerce', 'BigCommerce'),
     ('ebay', 'eBay'),
     ('fb', 'Facebook'),
+    ('google', 'Google'),
 )
 
 

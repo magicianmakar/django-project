@@ -61,6 +61,15 @@
         {% else %}
             <li><a href="{% url 'fb:profits' %}?store={{item.id}}">{{item.title}}</a></li>
         {% endif %}
+    {% elif item|model_name == 'googlestore' %}
+        {% if store == item %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% elif from_dashboard %}
+            <li><a href="{% url 'dashboard' store_type='google' %}?store={{item.id}}">{{item.title}}</a></li>
+        {% else %}
+            <li><a href="{% url 'google:profits' %}?store={{item.id}}">{{item.title}}</a></li>
+        {% endif %}    
+    
     {% endif %}
 {% endfor %}
 </ul>

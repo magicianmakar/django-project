@@ -1206,6 +1206,14 @@ class ShopifyStoreApi(ApiBase):
                     'url': i.get_admin_url()
                 })
 
+            for i in user.profile.get_google_stores(do_sync=True):
+                stores.append({
+                    'id': i.id,
+                    'name': i.title,
+                    'type': 'google',
+                    'url': i.get_admin_url()
+                })
+
             for i in user.profile.get_gear_stores():
                 stores.append({
                     'id': i.id,

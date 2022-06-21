@@ -189,6 +189,45 @@ class SureDoneApiHandler:
 
         return requests.post(url, data=data, headers=self.HEADERS)
 
+    def get_google_channel_auth_url(self, instance_id):
+        url = f'{self.API_ENDPOINT}/v3/authorize/google/url'
+        request_data = {'instance': instance_id}
+
+        return requests.get(url, params=request_data, headers=self.HEADERS)
+
+    def post_google_onboard_instance(self, cms_id: str, instance_id: int):
+        url = f'{self.API_ENDPOINT}/v3/authorize/google/onboard'
+        data = param({
+            'cms_id': cms_id,
+            'instance': instance_id,
+        })
+
+        return requests.post(url, data=data, headers=self.HEADERS)
+
+    def add_new_google_instance(self, instance_id: int):
+        url = f'{self.API_ENDPOINT}/v3/authorize/google/create'
+        data = param({'instance': instance_id})
+
+        return requests.post(url, data=data, headers=self.HEADERS)
+
+    def remove_google_channel_auth(self, instance_id):
+        url = f'{self.API_ENDPOINT}/v3/authorize/google/revoke'
+        request_data = {'instance': instance_id}
+
+        return requests.get(url, params=request_data, headers=self.HEADERS)
+
+    def authorize_google_complete(self, instance, code, granted_scopes, denied_scopes, state):
+        url = f'{self.API_ENDPOINT}/v3/authorize/google/complete'
+        data = param({
+            'instance': instance,
+            'code': code,
+            'granted_scopes': granted_scopes,
+            'denied_scopes': denied_scopes,
+            'state': state,
+        })
+
+        return requests.post(url, data=data, headers=self.HEADERS)
+
     def get_products(self, params=None):
         url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}'
 
@@ -236,6 +275,19 @@ class SureDoneApiHandler:
 
     def search_fb_categories(self, search_term: str):
         url = f'{self.API_ENDPOINT}/v1/internal/facebook/categories'
+        params = {'search': search_term}
+
+        response = requests.get(url, params=params, headers=self.HEADERS)
+        if response.ok:
+            try:
+                return response.json()
+            except ValueError:
+                pass
+        else:
+            pass
+
+    def search_google_categories(self, search_term: str):
+        url = f'{self.API_ENDPOINT}/v1/internal/google/categories'
         params = {'search': search_term}
 
         response = requests.get(url, params=params, headers=self.HEADERS)

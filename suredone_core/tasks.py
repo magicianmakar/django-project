@@ -100,14 +100,14 @@ def configure_user_custom_fields(sd_account_id, user_id):
                 tries_left -= 1
 
         # Verify facebook fields mapping
-        missing_fields_per_store = sd_utils.sd_account.verify_fb_fields_mapping(all_options_data)
+        missing_fb_fields_per_store = sd_utils.sd_account.verify_fb_fields_mapping(all_options_data)
         request_data = {'plugin_settings': [
             {
                 'name': 'facebook',
                 'instance': key,
                 'set': 'custom_field_mappings',
                 'value': value,
-            } for key, value in missing_fields_per_store.items()
+            } for key, value in missing_fb_fields_per_store.items()
         ]}
         api_resp = sd_utils.api.update_plugin_settings(request_data)
         try:
@@ -115,6 +115,28 @@ def configure_user_custom_fields(sd_account_id, user_id):
         except HTTPError:
             capture_exception(extra={
                 'description': 'API error when trying to set facebook fields mapping.',
+                'suredone_account_id': sd_account_id,
+                'response_code': api_resp.status_code,
+                'response_reason': api_resp.reason,
+                'failed_variant_fields': failed_variant_fields
+            })
+
+        # Verify Google fields mapping
+        missing_google_fields_per_store = sd_utils.sd_account.verify_google_fields_mapping(all_options_data)
+        request_data = {'plugin_settings': [
+            {
+                'name': 'google',
+                'instance': key,
+                'set': 'custom_field_mappings',
+                'value': value,
+            } for key, value in missing_google_fields_per_store.items()
+        ]}
+        api_resp = sd_utils.api.update_plugin_settings(request_data)
+        try:
+            api_resp.raise_for_status()
+        except HTTPError:
+            capture_exception(extra={
+                'description': 'API error when trying to set Google fields mapping.',
                 'suredone_account_id': sd_account_id,
                 'response_code': api_resp.status_code,
                 'response_reason': api_resp.reason,

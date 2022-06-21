@@ -1,0 +1,141 @@
+<div id="modal-product-supplier-sync" class="modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Sync With Supplier</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div>
+                            <p>Sync your products with the supplier products</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="update-progress" style="display:none">
+                            <p class="pending-msg">
+                                <i class="fa fa-refresh fa-spin"></i> Syncing with Supplier...
+                            </p>
+                            <p class="complete-msg text-success">
+                                <i class="fa fa-check-circle"></i> Completed Syncing with Supplier
+                            </p>
+                            <div class="progress progress-striped active">
+                                <div style="width: 0%" class="progress-bar progress-bar-danger"></div>
+                                <div style="width: 0%;" class="progress-bar progress-bar-success"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <div class="col-lg-9">
+                                    <div class="i-checks">
+                                        <label>
+                                            <input class="icheck sync_price" type="checkbox" checked="checked">
+                                            <i></i> Update Products Price
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group sync_price_option">
+                                <label class="col-lg-3 control-label">Price Markup</label>
+
+                                <div class="col-lg-2">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">%</span>
+                                        <input class="form-control text-center price_markup" type="number" value="2" min="1" max="10">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group sync_price_option">
+                                <label class="col-lg-3 control-label">Compare At Markup</label>
+
+                                <div class="col-lg-2">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">%</span>
+                                        <input class="form-control text-center compare_markup" type="number" value="0.1" min="0.1" max="100" step="0.1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-9">
+                                    <div class="i-checks">
+                                        <label>
+                                            <input class="icheck sync_inventory" type="checkbox" checked="checked">
+                                            <i></i> Update Products Inventory
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12 progress-table-row" style=";height:300px;max-height:300px;overflow:auto;">
+                        <table class="table progress-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Product</th>
+                                    <th>Status</th>
+                                    <th>Google</th>
+                                    <th>Supplier</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary pull-left start-update-btn"
+                    data-store="{{store.id}}">Start Update</button>
+
+                <button class="btn btn-danger btn-outline pull-left stop-update-btn" style="display:none"
+                    data-store="{{store.id}}">Stop Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% verbatim %}
+<script id="product-sync-update-template" type="text/x-handlebars-template">
+    <tr>
+        <td>
+            {{#if error}}
+                <i class="fa fa-times-circle text-danger"></i>
+            {{else}}
+                {{#if warning}}
+                <i class="fa fa-times-circle text-warning"></i>
+                {{else}}
+                <i class="fa fa-check-circle text-success"></i>
+                {{/if}}
+            {{/if}}
+        </td>
+        <td>{{title}}</td>
+        <td>
+            {{#if error}}
+                <span class="text-danger">{{error}}</span>
+            {{else}}
+                {{#if warning}}
+                <span class="text-warning">{{warning}}</span>
+                {{else}}
+                <span class="text-success">OK</span>
+                {{/if}}
+            {{/if}}
+        </td>
+        <td><a href="{{google_link}}" target="_blank">View</a></td>
+        <td><a href="{{supplier_link}}" target="_blank">View</a></td>
+    </tr>
+</script>
+{% endverbatim %}

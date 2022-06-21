@@ -6,6 +6,7 @@ import bigcommerce_core
 import commercehq_core
 import ebay_core
 import facebook_core
+import google_core
 import gearbubble_core
 import leadgalaxy
 import woocommerce_core
@@ -123,6 +124,7 @@ class OrderMixin:
         WooStore = woocommerce_core.models.WooStore
         EbayStore = ebay_core.models.EbayStore
         FBStore = facebook_core.models.FBStore
+        GoogleStore = google_core.models.GoogleStore
         GearBubbleStore = gearbubble_core.models.GearBubbleStore
         BigCommerceStore = bigcommerce_core.models.BigCommerceStore
 
@@ -140,6 +142,8 @@ class OrderMixin:
             return cls.EBAY
         elif isinstance(store, FBStore):
             return cls.FB
+        elif isinstance(store, GoogleStore):
+            return cls.GOOGLE
 
         raise Exception("Invalid Store")
 

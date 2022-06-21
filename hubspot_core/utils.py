@@ -135,6 +135,7 @@ def generate_create_contact(user: User):
             "dr_bigcommerce_count": profile.get_bigcommerce_stores().count(),
             "dr_ebay_count": profile.get_ebay_stores().count(),
             "dr_fb_count": profile.get_fb_stores().count(),
+            "dr_google_count": profile.get_google_stores().count(),
 
             "plan": clean_plan_name(plan) if plan else '',
             "billing_interval": plan.payment_interval if plan else '',
@@ -172,6 +173,7 @@ def generate_create_contact(user: User):
         data['properties']['dr_bigcommerce_count'],
         data['properties']['dr_ebay_count'],
         data['properties']['dr_fb_count'],
+        data['properties']['dr_google_count'],
     ])
 
     data['properties']['number_of_stores'] = data['properties']['dr_stores_count']

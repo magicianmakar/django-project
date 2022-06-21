@@ -206,6 +206,18 @@
                                     {% endif %}
                                 </td>
                             </tr>
+                        <tr>
+                                <th>Google</th>
+                                <td>
+                                    <a href="{% url 'admin:google_core_googlestore_changelist' %}?q={{target_user.email|urlencode}}">
+                                            {{target_user.profile.get_google_stores.count}} Stores
+                                    </a>
+
+                                    {% if product_count %}
+                                        <span style="float:right">{{target_user.googleproduct_set.count}} Products</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
                             <tr>
                                 <th>GrooveKart</th>
                                 <td>

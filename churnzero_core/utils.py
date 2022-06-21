@@ -78,6 +78,9 @@ class SetAccountActionBuilder:
     def add_fb_stores_count(self):
         self._action['attr_Facebook Stores Count'] = self._profile.get_fb_stores().count()
 
+    def add_google_stores_count(self):
+        self._action['attr_Google Stores Count'] = self._profile.get_google_stores().count()
+
     def add_chq_stores_count(self):
         self._action['attr_CommerceHQ Stores Count'] = self._profile.get_chq_stores().count()
 
@@ -126,6 +129,7 @@ class SetAccountActionBuilder:
         self.add_woo_stores_count()
         self.add_ebay_stores_count()
         self.add_fb_stores_count()
+        self.add_google_stores_count()
         self.add_chq_stores_count()
         self.add_gear_stores_count()
         self.add_gkart_stores_count()
