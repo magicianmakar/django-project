@@ -182,7 +182,7 @@
       {% for item in section.items %}
 
       <li class="item {{ item.classes }}">
-        <a href="{{ item.url }}">
+        <a href="{{ item.url }}" {% if not item.fa_icon %}style="padding:10px 5px"{% endif %}>
           {% if item.fa_icon %}<i class="fa {{ item.fa_icon }} item-icon"></i>{% endif %}
           {{ item.title | safe }}
         </a>

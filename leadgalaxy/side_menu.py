@@ -58,7 +58,7 @@ def get_menu_structure(namespace, request):
         else:
             footer = [('help', ['help'])]
     else:
-        footer = []
+        footer = [('help', ['swipebox-headline-generator'])]
 
     named = [
         ('account', ['account']),
@@ -304,8 +304,15 @@ def get_menu_item_data(request):
         },
         'insiders-report-article': get_article_link(
             'insiders-report',
-            hidden=lambda a: not user or (not user.is_staff and user.profile.plan not in a.display_plans.all())
+            hidden=user.profile.bundles.filter(slug='retro-elite-lifetime').exists()
         ),
+        'swipebox-headline-generator': {
+            'title': 'Swipebox Headline Generator',
+            'url': 'https://app.dropified.com/pages/headline-generator',
+            'match': r'^/headline-generator',
+            'is_ns_aware': False,
+            'hidden': not user.profile.bundles.filter(slug='retro-elite-lifetime').exists(),
+        },
     }
 
 
