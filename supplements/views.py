@@ -241,6 +241,7 @@ class ProductEdit(Product):
         form_data = self.supplement.to_dict()
 
         form_data['shipping_countries'] = self.supplement.shipping_countries.all()
+        form_data['shipstation_account'] = self.supplement.shipstation_account
         form_data['label_size'] = self.supplement.label_size
         form_data['weight'] = self.supplement.weight
         form_data['inventory'] = self.supplement.inventory

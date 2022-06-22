@@ -1,12 +1,11 @@
 from celery.exceptions import SoftTimeLimitExceeded
-from django.conf import settings
 
 from app.celery_base import celery_app, CaptureFailure
 from lib.exceptions import capture_exception
 from shopified_core.models_utils import get_store_model
 from shopified_core.utils import hash_text
 from .lib.shipstation import LimitExceededError, prepare_shipping_data, create_shipstation_order, get_orders_lock
-from .models import PLSOrder
+from .models import PLSOrder, PLSOrderLine
 
 
 @celery_app.task(base=CaptureFailure)
@@ -21,7 +20,8 @@ def update_shipstation_address(pls_order_id, store_id, store_type):
         pls_order.shipping_address = ship_to
         pls_order.billing_address = bill_to
 
-        create_shipstation_order(pls_order)
+        shipstation_acc = PLSOrderLine.objects.filter(pls_order=pls_order_id).first().label.user_supplement.pl_supplement.shipstation_account
+        create_shipstation_order(pls_order, shipstation_acc)
 
         # Persisting changes will prevent triggering a later address change
         pls_order.save()
@@ -30,7 +30,7 @@ def update_shipstation_address(pls_order_id, store_id, store_type):
         capture_exception(level='warning')
 
 
-@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=settings.SEND_SHIPSTATION_TIMEOUT)
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def create_shipstation_orders(self, token):
     """Send all paid orders to shipstation while respecting any http 429 responses"""
 
@@ -43,11 +43,14 @@ def create_shipstation_orders(self, token):
         order = PLSOrder.objects.filter(
             shipstation_key='',
             status__in=[PLSOrder.PAID, PLSOrder.SHIPPING_ERROR],
-            shipstation_retries__lt=settings.SHIPSTATION_MAX_RETRIES
         ).first()
+
+        orderline = PLSOrderLine.objects.filter(pls_order=order.id).first()
+
         while order:
             try:
-                create_shipstation_order(order)
+                shipstation_acc = orderline.label.user_supplement.pl_supplement.shipstation_account
+                create_shipstation_order(order, shipstation_acc)
 
             except LimitExceededError as e:
                 lock.release()
@@ -62,7 +65,6 @@ def create_shipstation_orders(self, token):
             order = PLSOrder.objects.filter(
                 shipstation_key='',
                 status__in=[PLSOrder.PAID, PLSOrder.SHIPPING_ERROR],
-                shipstation_retries__lt=settings.SHIPSTATION_MAX_RETRIES
             ).first()
 
     except SoftTimeLimitExceeded:

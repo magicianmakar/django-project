@@ -85,6 +85,7 @@ class PLSupplementForm(forms.ModelForm):
                   'on_sale',
                   'inventory',
                   'supplier',
+                  'shipstation_account',
                   ]
 
         widgets = {
@@ -100,6 +101,7 @@ class PLSupplementForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['shipping_countries'].required = False
+        self.fields['shipstation_account'].required = True
         self.fields['supplier'].choices = [('', '---------')] + list(ProductSupplier.get_suppliers(shipping=False).values_list('id', 'title'))
 
     def clean_template(self):

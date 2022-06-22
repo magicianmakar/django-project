@@ -38,7 +38,7 @@
         e.preventDefault();
         var orderID = $(this).data('order-id');
 
-        var shipstationUrl = 'https://ssapi11.shipstation.com/shipments?storeID=171654&includeShipmentItems=False';
+        var shipstationUrl = 'https://ssapi11.shipstation.com/shipments?includeShipmentItems=False';
         $.ajax({
             url: '/supplements/shipstation/webhook/order_shipped',
             type: 'POST',

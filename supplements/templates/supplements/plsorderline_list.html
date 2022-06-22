@@ -146,6 +146,7 @@
     <th><input id="select-all-lines" type="checkbox" title="Select all" /></th>
     <th>Order ID</th>
     <th>Line Item SKU</th>
+    <th>ShipStation Account</th>
     <th>Label SKU</th>
     <th>Tracking</th>
     <th>Label Size</th>
@@ -170,6 +171,7 @@
         {{ line_item.pls_order.shipstation_order_number }}
       </td>
       <td>{{ line_item.label.user_supplement.pl_supplement.shipstation_sku }}</td>
+      <td>{{ line_item.label.user_supplement.pl_supplement.shipstation_account }}</td>
       <td>
         <a href="{% url 'pls:admin_label_history' line_item.label.user_supplement.id %}"
             title="View History">

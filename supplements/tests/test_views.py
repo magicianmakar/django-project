@@ -18,6 +18,7 @@ from .factories import (
     PLSOrderLineFactory,
     PLSupplementFactory,
     ProductSupplierFactory,
+    ShipStationAccountFactory,
     UserSupplementFactory,
     UserSupplementLabelFactory,
     BasketItemFactory
@@ -56,9 +57,19 @@ class PLSBaseTestCase(BaseTestCase):
             profit_percentage='10',
         )
 
+        self.shipstation_account = ShipStationAccountFactory.create(
+            name='Test Account',
+            api_key='hasvbdjkhasdsahvdkjsa',
+            api_secret='hsabjdkbasjhbdjkahsvdkjhavsdk',
+            api_url='http://example.com',
+            max_retries='5',
+            send_timeout='60',
+        )
+
         self.supplement = PLSupplementFactory.create(
             title='Fish Oil',
             description='Fish oil is great',
+            shipstation_account=self.shipstation_account,
             category='supplement',
             tags='supplement',
             cost_price='15.99',
@@ -609,6 +620,7 @@ class ProductTestCase(PLSBaseTestCase):
             shipstation_sku='test-sku',
             cost_price='20.00',
             wholesale_price='10.00',
+            shipstation_account=self.user_supplement.pl_supplement.shipstation_account.id,
             weight=self.user_supplement.pl_supplement.weight,
             inventory=99,
             label_size=self.label_size.id,
@@ -657,6 +669,7 @@ class ProductEditTestCase(PLSBaseTestCase):
             category=self.user_supplement.category,
             tags=self.user_supplement.tags,
             shipstation_sku='test-sku',
+            shipstation_account=self.user_supplement.pl_supplement.shipstation_account.id,
             cost_price='20.00',
             wholesale_price='10.00',
             weight=self.user_supplement.pl_supplement.weight,

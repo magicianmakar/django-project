@@ -659,7 +659,8 @@ class SupplementsApi(ApiResponseMixin, View):
             # clear basket items
             user.basket_items.all().delete()
 
-            create_shipstation_order(pls_order)
+            shipstation_acc = order_line['label'].user_supplement.pl_supplement.shipstation_account
+            create_shipstation_order(pls_order, shipstation_acc)
             basket_order.set_paid(True)
             basket_order.save()
 

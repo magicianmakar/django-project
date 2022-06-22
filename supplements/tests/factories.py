@@ -116,3 +116,15 @@ class BasketOrderTrackFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'my_basket.BasketOrderTrack'
+
+
+class ShipStationAccountFactory(factory.django.DjangoModelFactory):
+    name = factory.fuzzy.FuzzyText()
+    api_key = factory.fuzzy.FuzzyText()
+    api_secret = factory.fuzzy.FuzzyText()
+    api_url = factory.fuzzy.FuzzyText()
+    max_retries = factory.fuzzy.FuzzyInteger(9999)
+    send_timeout = factory.fuzzy.FuzzyInteger(9999)
+
+    class Meta:
+        model = 'supplements.ShipStationAccount'

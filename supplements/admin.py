@@ -26,6 +26,7 @@ from .models import (
     PLSupplement,
     RefundPayments,
     ShippingGroup,
+    ShipStationAccount,
     UserSupplement,
     UserSupplementImage,
     UserSupplementLabel,
@@ -50,7 +51,7 @@ class PLSupplementAdmin(admin.ModelAdmin):
         'approved_label_url',
     )
     search_fields = ('title', 'shipstation_sku')
-    list_filter = ('is_active', 'is_discontinued', 'label_size', 'mockup_type')
+    list_filter = ('is_active', 'is_discontinued', 'label_size', 'mockup_type', 'shipstation_account')
 
 
 @admin.register(UserSupplement)
@@ -179,7 +180,8 @@ class PLSOrderAdmin(admin.ModelAdmin):
         if pls_order.order_items.count() == 0:
             return HttpResponse('There are no items in that order')
 
-        shipstation_order = get_shipstation_order(pls_order.shipstation_order_number)
+        shipstation_acc = PLSOrderLine.objects.filter(pls_order=pls_order.id).first().label.user_supplement.pl_supplement.shipstation_account
+        shipstation_order = get_shipstation_order(pls_order.shipstation_order_number, shipstation_acc)
         if shipstation_order:
             pls_order.shipstation_key = shipstation_order['orderKey']
             pls_order.save()
@@ -189,7 +191,7 @@ class PLSOrderAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(reverse('admin:supplements_plsorder_changelist'))
 
         try:
-            create_shipstation_order(pls_order)
+            create_shipstation_order(pls_order, shipstation_acc)
         except:
             capture_exception()
             return HttpResponse(status=500)
@@ -448,3 +450,13 @@ class UserUnpaidOrderAdmin(admin.ModelAdmin):
         else:
             self.message_user(request, f'Error trying to charge customer {user.email}', level=messages.ERROR)
         return HttpResponseRedirect(reverse('admin:supplements_userunpaidorder_changelist'))
+
+
+@admin.register(ShipStationAccount)
+class ShipStationAccountAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'name',
+        'created_at',
+        'updated_at'
+    )

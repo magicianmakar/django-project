@@ -52,7 +52,7 @@ from shopified_core.utils import get_domain, send_email_from_template, safe_int,
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import ShopifyOrder
 from stripe_subscription.utils import process_webhook_event
-from supplements.models import PLSOrder
+from supplements.models import PLSOrder, ShipStationAccount
 from webhooks.tasks import setup_free_account
 from webhooks.utils import ShopifyWebhookMixing, WooWebhookProcessing
 
@@ -1387,6 +1387,13 @@ def slack_webhook(request):
         from product_common.lib.shipstation import get_shipstation_shipments
         url = f'{settings.SHIPSTATION_API_URL}/shipments?includeShipmentItems=True&orderNumber={order_number}'
         shipments = get_shipstation_shipments(url)
+        shipstation_accounts = ShipStationAccount.objects.all()
+        shipments = []
+        for shipstation_acc in shipstation_accounts:
+            shipstation_url = shipstation_acc.api_url
+
+            url = f'{shipstation_url}/shipments?includeShipmentItems=True&orderNumber={order_number}'
+            shipments = get_shipstation_shipments(url)
 
         result = []
         for shipment in shipments:
