@@ -308,7 +308,7 @@ def get_menu_item_data(request):
         ),
         'swipebox-headline-generator': {
             'title': 'Retro Elite Bonuses',
-            'url': 'https://app.dropified.com/pages/headline-generator',
+            'url': 'https://app.dropified.com/pages/retro-elite-bonuses',
             'match': r'^/headline-generator',
             'is_ns_aware': False,
             'hidden': not user.profile.bundles.filter(slug='retro-elite-lifetime').exists(),
