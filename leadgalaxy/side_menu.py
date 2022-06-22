@@ -304,7 +304,7 @@ def get_menu_item_data(request):
         },
         'insiders-report-article': get_article_link(
             'insiders-report',
-            hidden=user.profile.bundles.filter(slug='retro-elite-lifetime').exists()
+            hidden=lambda a: not user or (not user.is_staff and user.profile.plan not in a.display_plans.all())
         ),
         'swipebox-headline-generator': {
             'title': 'Retro Elite Bonuses',
