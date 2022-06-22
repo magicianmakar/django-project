@@ -7,6 +7,18 @@ import arrow
 from leadgalaxy.models import ShopifyStore
 from shopified_core.commands import DropifiedBaseCommand
 
+SHOPIFY_FEE = 0.03
+
+
+def format_money(first, second=None):
+    r = []
+    r.append(f'$ {first:.0f}')
+
+    if second is not None:
+        r.append(f'($ {second:.0f})')
+
+    return ' '.join(r)
+
 
 class Command(DropifiedBaseCommand):
     help = 'Check Shopify Store Status'
@@ -63,7 +75,7 @@ class Command(DropifiedBaseCommand):
                 success += 1
 
                 if not len(charges):
-                    if not store.user.profile.plan.is_free:
+                    if not store.user.profile.plan.is_free and 'free' not in store.user.profile.plan.slug:
                         self.write(f'>>> Store {store.shop} have {len(charges)} charges but on {store.user.profile.plan.title} | https://app.dropified.com/acp/users/list?q={store.shop}') # noqa
                 else:
                     charge = charges[0]
@@ -93,15 +105,14 @@ class Command(DropifiedBaseCommand):
                         # store.save()
 
             else:
-                # trial_ends_on = arrow.get(store.trial_ends_on).humanize() if store.trial_ends_on else ''
+                self.progress_write(f'{r.status_code}\t{store.shop}\t{store_info.get("plan_name")}\t{store_created_at}')
                 errors_list.append(f'{r.status_code}\t{store.shop}\t{store_info.get("plan_name")}\t{store_created_at}')
                 errors += 1
 
-                # if store.is_active and r.status_code in [401, 402, 403, 404]:
-                #     if not store.user.profile.plan.is_free:
-                #         self.write(f'Should be disabled {store.shop}')
-                #         store.is_active = False
-                #         store.save()
+                if store.is_active and r.status_code in [401, 402, 403, 404]:
+                    if not store.user.profile.plan.is_free:
+                        store.is_active = False
+                        store.save()
 
         self.progress_close()
 
@@ -111,12 +122,12 @@ class Command(DropifiedBaseCommand):
 
         lines = ['\n']
         if mrr:
-            net_mrr = mrr - (mrr * 0.2)
-            net_trial_mrr = trial_mrr - (trial_mrr * 0.2)
+            net_mrr = mrr - (mrr * SHOPIFY_FEE)
+            net_trial_mrr = trial_mrr - (trial_mrr * SHOPIFY_FEE)
             net_revenue = net_mrr - net_trial_mrr
-            lines.append(f'MRR:     ${net_mrr:.2f} (${mrr:.2f})')
-            lines.append(f'Trial:   ${net_trial_mrr:.2f} (${trial_mrr:.2f})')
-            lines.append(f'Net MRR: ${net_revenue:.2f} (${mrr - trial_mrr:.2f})')
+            lines.append(f'MRR:     {format_money(net_mrr, mrr)}')
+            lines.append(f'Trial:   {format_money(net_trial_mrr, trial_mrr)}')
+            lines.append(f'Net MRR: {format_money(net_revenue, mrr - trial_mrr)}')
 
         lines.append(f'\nStores {success}\n\tActive: {success - trial}\n\tTrial: {trial}\n\tErrors: {errors}')
 
