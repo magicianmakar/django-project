@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.template.defaultfilters import slugify
 
-from leadgalaxy.models import GroupPlan
+from leadgalaxy.models import GroupPlan, FeatureBundle
 
 PUBLISH_STAT = (
     (0, 'Published'),
@@ -122,6 +122,7 @@ class SidebarLink(models.Model):
     store_type = models.CharField(choices=STORE_TYPES, max_length=50, default='default')
 
     display_plans = models.ManyToManyField(GroupPlan, blank=True)
+    display_bundles = models.ManyToManyField(FeatureBundle, blank=True)
 
     def __str__(self):
         return self.title

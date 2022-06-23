@@ -95,6 +95,7 @@ def get_menu_item_data(request):
     hide_profit_dashboard = False
     hide_dashboard = True
     user = None
+    bunles_ids = []
 
     try:
         if request.user.is_authenticated:
@@ -104,6 +105,7 @@ def get_menu_item_data(request):
             hide_dashboard = not is_research and not request.user.can('dashboard.view')
             hide_profit_dashboard = 'profit_dashboard.view' not in request.user.profile.get_perms
             user = request.user
+            bunles_ids = request.user.profile.bundles.values_list('id', flat=True)
     except:
         pass
 
@@ -304,7 +306,8 @@ def get_menu_item_data(request):
         },
         'insiders-report-article': get_article_link(
             'insiders-report',
-            hidden=lambda a: not user or (not user.is_staff and user.profile.plan not in a.display_plans.all())
+            hidden=lambda a: not user or (not user.is_staff and user.profile.plan not in a.display_plans.all()
+                                          and not a.display_plans.filter(id__in=bunles_ids).exists()),
         ),
         'swipebox-headline-generator': {
             'title': 'Retro Elite Bonuses',

@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -33,7 +32,7 @@ class GoogleStore(SureDoneStoreBase):
     # commerce_manager_id = models.CharField(default='', null=True, blank=True, max_length=100,
     #                                        verbose_name='Google Merchant Manager ID')
 
-    creds = JSONField(default=dict, verbose_name='Google creds')
+    creds = models.JSONField(default=dict, verbose_name='Google creds')
 
     def sync(self, instance_title: str, options_data: dict):
         store_prefix = f"google{'' if self.store_instance_id == 1 else self.store_instance_id}"
