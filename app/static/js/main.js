@@ -1322,7 +1322,7 @@ function sendOrdersToVueApp(btns) {
         };
         btn.button('loading');
         $.ajax({
-            url: api_url('import-shipping-method', 'aliexpress'),
+            url: api_url('import-aliexpress-data', 'aliexpress'),
             type: "POST",
             data: JSON.stringify(msg),
             dataType: 'json',
@@ -1331,12 +1331,19 @@ function sendOrdersToVueApp(btns) {
                 btn.button('reset');
                 msg['order']['shipping_services'] = response.data;
                 msg['order']['shipping_setting'] = response.shipping_setting;
+                msg['order']['order_data']['variant_price'] = response.price;
+                msg['order']['order_data']['sku'] = response.sku;
+                msg['order']['order_data']['stock'] = response.stock;
                 document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
                 sendOrdersToVueApp(btns);
+                
             },
             error: function (response) {
                 btn.button('reset');
                 msg['order']['shipping_setting'] = '';
+                msg['order']['order_data']['variant_price'] = '';
+                msg['order']['order_data']['sku'] = '';
+                msg['order']['order_data']['stock'] = '';
                 document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
                 sendOrdersToVueApp(btns);
             },
