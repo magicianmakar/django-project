@@ -5,6 +5,7 @@ from bigcommerce_core.models import BigCommerceOrderTrack
 from commercehq_core.models import CommerceHQOrderTrack
 from ebay_core.models import EbayOrderTrack
 from facebook_core.models import FBOrderTrack
+from google_core.models import GoogleOrderTrack
 from fulfilment_fee.utils import process_sale_transaction_fee
 from groovekart_core.models import GrooveKartOrderTrack
 from leadgalaxy.models import ShopifyOrderTrack
@@ -52,6 +53,7 @@ class Command(DropifiedBaseCommand):
                            WooOrderTrack,
                            EbayOrderTrack,
                            FBOrderTrack,
+                           GoogleOrderTrack,
                            CommerceHQOrderTrack,
                            BasketOrderTrack]
             for track_type in track_types:

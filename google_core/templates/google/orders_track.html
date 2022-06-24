@@ -1,0 +1,162 @@
+{% extends "base_google_core.html" %}
+
+{% load static %}
+{% load template_helper %}
+{% load perms_helper %}
+{% load url_tools %}
+{% load compress %}
+{% load cache %}
+
+{% block breadcrumb-right %}
+    {% include 'common/partial/order_track_actions.html' %}
+{% endblock %}
+
+{% block main-container %}
+    <div class="tabs-container">
+        {% include 'home/partial/tabs/orders_track.html' %}
+
+        <ul class="actions">
+            {% include 'common/partial/order_track_filters.html' with platform='Google' %}
+
+            {% if not paginator.is_infinte %}
+            <li class="pull-right border-right">
+                <span class="text-default">{{paginator.count}} Item(s)</span>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                    <table class="table table-condensed xtable-hover">
+                      <thead>
+                        <tr>
+                          <th style="width:64px">
+                              <div class="row">
+                                  <div class="col-md-12">
+                                    <input type="checkbox" class="icheck check-all" name="check-all">
+                                  </div>
+                              </div>
+                          </th>
+                          <th style="width:26%">
+                              <a href="{% url_toggle 'sort' '-order,order' %}">Google Order {% sort_icon 'sort' 'order' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-source,source' %}">Supplier Order {% sort_icon 'sort' 'source' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-status,status' %}">Supplier Status {% sort_icon 'sort' 'status' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-tracking,tracking' %}">Tracking Number {% sort_icon 'sort' 'tracking' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-add,add' %}">Order Date {% sort_icon 'sort' 'add' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-update,update' %}">Updated {% sort_icon 'sort' 'update' %}</a></th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for item in orders %}
+                        <tr id="{{item.id}}"
+                            {% if item.errors > 0 %}style="background-color:#ffcfd4"{% endif %}
+                            {% if order_threshold and item.created_at < order_threshold and not item.source_tracking %}class="highlight"{% endif %}
+                        >
+                            <td style="min-width:30px">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <img class="no-img no-img-sm unveil visible-md-inline visible-lg-inline"
+                                            src="{% static 'img/blank.gif' %}"
+                                            data-src="{{item.line.image}}"
+                                            style="width:64px" />
+                                            <input type="checkbox" class="icheck order-track" name="track" value="{{item.id}}"
+                                                   track-id="{{item.id}}" order-id="{{item.order_id}}" line-id="{{item.line_id}}">
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <a class="itooltip font-common" href="{{item.get_google_link}}" target="_blank" title="{{item.line.title}}">
+                                    <span class="badge badge-primary">#{{item.order.ordernumber}}</span>
+                                    {{item.line.title|truncatewords:10}}
+                                </a>
+                            </td>
+                            <td><a href="{{item.get_source_url}}" target="_blank">#{{item.source_id}}</a></td>
+                            <td>{% order_track_status item %}</td>
+                            <td>
+                                {% if item.source_tracking %}
+                                <a href="{{item.get_tracking_link}}" target="_blank">
+                                    {{item.source_tracking}}
+                                </a>
+                                {% endif %}
+                            </td>
+
+                            <td class="no-wrap">{% date_humanize item.created_at %}</td>
+                            <td class="no-wrap">{% date_humanize item.updated_at %}</td>
+                            <td class="no-wrap">
+                                {% include 'common/partial/order_track_item_actions.html' with platform="Google" %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td class="text-center" colspan="7">
+                                {% if request.GET.query %}
+                                    No tracked orders found for: <b>{{request.GET.query}}</b>
+                                {% else %}
+                                    No tracked orders found.
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                  </table>
+
+                  {% include "partial/paginator.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% cache 600 google_shipping_carriers2 store.id %}
+{% include 'google/partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
+{% endcache %}
+
+{% include 'partial/tracking_update_modal.html' with store=store only %}
+
+{% endblock %}
+
+{% block extracss %}
+{% compress css %}
+<link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
+<style type="text/css">
+    .icheckbox_square-blue {
+        position: initial !important;
+        margin: 0 !important;
+    }
+    table tbody .icheckbox_square-blue {
+        position: absolute !important;
+        top: 0;
+        left: 15px;
+    }
+    .highlight {
+        background-color: rgb(230, 213, 213);
+    }
+    .filter-form .row {
+        padding-bottom: 5px;
+        display: flex;
+        align-items: center;
+    }
+</style>
+{% endcompress %}
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+    window.store = {
+        type: 'google',
+        id: '{{ store.id }}',
+    }
+</script>
+
+{% compress js %}
+    <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
+    <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
+    <script src="{% static 'js/daterangepicker.js' %}" type="text/javascript"></script>
+    <script src="{% static 'prints/js/track_orders.js' %}" type="text/javascript"></script>
+    <script src="{% static 'google/js/orders_track.js' %}" type="text/javascript"></script>
+    <script src="{% static 'google/js/orders_track_update.js' %}" type="text/javascript"></script>
+{% endcompress %}
+
+{% endblock %}

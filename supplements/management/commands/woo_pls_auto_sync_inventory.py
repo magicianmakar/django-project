@@ -12,16 +12,15 @@ class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
         store = options.get('store')
-        woo_products = WooProduct.objects.filter(store=store)
         try:
-            # woo_products = WooProduct.objects.filter(user_supplement__isnull=False, user_supplement__is_deleted=False,
-            #                                          user_supplement__pl_supplement__is_active=True)
-            woo_products = WooProduct.objects.filter(woosupplier__product_url__contains='supplement').distinct()
+            products = WooProduct.objects.filter(woosupplier__product_url__contains='supplement', store__is_active=True).distinct()
+            products = products.filter(user_supplement__isnull=False, user_supplement__is_deleted=False,
+                                       user_supplement__pl_supplement__is_active=True)
             if store is not None:
-                woo_products = woo_products.filter(store=store)
+                products = products.filter(store=store)
 
-            if woo_products:
-                for product in woo_products:
+            if products:
+                for product in products:
                     self.sync_woo_product_quantities(product)
         except Exception:
             capture_exception()

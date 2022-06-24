@@ -83,7 +83,7 @@ def invalidate_acp_users(sender, instance, created, **kwargs):
 
     if not created and not instance.is_subuser:
         auto_fulfill = instance.get_config_value('auto_shopify_fulfill', 'enable')
-        for store_type in ['shopify', 'chq', 'woo', 'bigcommerce', 'ebay', 'fb']:
+        for store_type in ['shopify', 'chq', 'woo', 'bigcommerce', 'ebay', 'fb', 'google']:
             stores = getattr(instance, f'get_{store_type}_stores')()
             stores.update(auto_fulfill=auto_fulfill)
 

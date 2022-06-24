@@ -371,6 +371,7 @@ class AlibabaOrder(models.Model):
     WOO = 'woo'
     EBAY = 'ebay'
     FB = 'fb'
+    GOOGLE = 'google'
     GEAR = 'gear'
     GKART = 'gkart'
     BIGCOMMERCE = 'bigcommerce'
@@ -380,6 +381,7 @@ class AlibabaOrder(models.Model):
         (WOO, 'WooCommerce'),
         (EBAY, 'eBay'),
         (FB, 'Facebook'),
+        (GOOGLE, 'Google'),
         (GEAR, 'GearBubble'),
         (GKART, 'GrooveKart'),
         (BIGCOMMERCE, 'BigCommerce')

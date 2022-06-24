@@ -145,6 +145,7 @@ def get_store_data(user):
     big_stores = user.profile.get_bigcommerce_stores()
     ebay_stores = user.profile.get_ebay_stores(do_sync=True)
     fb_stores = user.profile.get_fb_stores()
+    google_stores = user.profile.get_google_stores()
 
     return dict(
         shopify=[{'id': s.id, 'value': s.title} for s in shopify_stores],
@@ -153,6 +154,7 @@ def get_store_data(user):
         woo=[{'id': s.id, 'value': s.title} for s in woo_stores],
         ebay=[{'id': s.id, 'value': s.title} for s in ebay_stores],
         fb=[{'id': s.id, 'value': s.title} for s in fb_stores],
+        google=[{'id': s.id, 'value': s.title} for s in google_stores],
         bigcommerce=[{'id': s.id, 'value': s.title} for s in big_stores],
     )
 
@@ -223,6 +225,11 @@ def save_aliexpress_products(request, products_data):
         if api_product.get('error', None):
             result_products['errored'].append(api_product['error'])
             continue
+
+        elif 'result' in api_product:
+            if api_product['result']['current_record_count'] == 0:
+                result_products['errored'] = 'No product found for the given URL.'
+                return result_products
 
         api_product = apply_user_config(user, api_product)
 

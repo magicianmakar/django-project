@@ -58,7 +58,7 @@ def get_menu_structure(namespace, request):
         else:
             footer = [('help', ['help'])]
     else:
-        footer = []
+        footer = [('help', ['swipebox-headline-generator'])]
 
     named = [
         ('account', ['account']),
@@ -95,6 +95,7 @@ def get_menu_item_data(request):
     hide_profit_dashboard = False
     hide_dashboard = True
     user = None
+    bunles_ids = []
 
     try:
         if request.user.is_authenticated:
@@ -104,6 +105,7 @@ def get_menu_item_data(request):
             hide_dashboard = not is_research and not request.user.can('dashboard.view')
             hide_profit_dashboard = 'profit_dashboard.view' not in request.user.profile.get_perms
             user = request.user
+            bunles_ids = request.user.profile.bundles.values_list('id', flat=True)
     except:
         pass
 
@@ -134,7 +136,7 @@ def get_menu_item_data(request):
         'all-products': {
             'title': 'Saved Products',
             'url_name': 'products_list',
-            'match': r'(/chq|/gear|/gkart|/woo|/ebay|/fb|/bigcommerce)?/products?($|\?\w+)',
+            'match': r'(/chq|/gear|/gkart|/woo|/ebay|/fb|/google|/bigcommerce)?/products?($|\?\w+)',
             'icon': 'img/saved-product.svg',
         },
         'import-products': {
@@ -304,8 +306,16 @@ def get_menu_item_data(request):
         },
         'insiders-report-article': get_article_link(
             'insiders-report',
-            hidden=lambda a: not user or (not user.is_staff and user.profile.plan not in a.display_plans.all())
+            hidden=lambda a: not user or (not user.is_staff and user.profile.plan not in a.display_plans.all()
+                                          and not a.display_bundles.filter(id__in=bunles_ids).exists()),
         ),
+        'swipebox-headline-generator': {
+            'title': 'Retro Elite Bonuses',
+            'url': 'https://app.dropified.com/pages/retro-elite-bonuses',
+            'match': r'^/headline-generator',
+            'is_ns_aware': False,
+            'hidden': not user or not user.profile.bundles.filter(slug='retro-elite-lifetime').exists(),
+        },
     }
 
 

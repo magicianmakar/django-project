@@ -40,6 +40,7 @@ from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier, Big
 from commercehq_core.models import CommerceHQOrderTrack, CommerceHQProduct, CommerceHQSupplier, CommerceHQUserUpload
 from ebay_core.models import EbayProduct, EbaySupplier, EbayUserUpload
 from facebook_core.models import FBProduct, FBSupplier, FBUserUpload
+from google_core.models import GoogleProduct, GoogleSupplier, GoogleUserUpload
 from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier, GearUserUpload
 from groovekart_core.models import GrooveKartProduct, GrooveKartSupplier, GrooveKartUserUpload
 from infinite_pagination.paginator import InfinitePaginator
@@ -996,6 +997,15 @@ def get_shipping_info(request):
             else:
                 supplier = FBSupplier.objects.get(id=supplier)
 
+        elif request.GET.get('google'):
+
+            if int(supplier) == 0:
+                product = GoogleProduct.objects.get(guid=product)
+                permissions.user_can_view(request.user, product)
+                supplier = product.default_supplier
+            else:
+                supplier = GoogleSupplier.objects.get(id=supplier)
+
         elif request.GET.get('gear'):
 
             if int(supplier) == 0:
@@ -1078,6 +1088,8 @@ def get_shipping_info(request):
         product = get_object_or_404(EbayProduct, guid=request.GET.get('product'))
     elif request.GET.get('fb'):
         product = get_object_or_404(FBProduct, guid=request.GET.get('product'))
+    elif request.GET.get('google'):
+        product = get_object_or_404(GoogleProduct, guid=request.GET.get('product'))
     else:
         product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
 
@@ -1511,7 +1523,7 @@ def user_profile(request):
     if not request.user.is_subuser and stripe_customer:
         subscription = None
         while subscription is None:
-            sub = request.user.stripesubscription_set.first()
+            sub = request.user.stripesubscription_set.last()
             if sub is None:
                 break
 
@@ -1719,6 +1731,23 @@ def save_image_s3(request):
         permissions.user_can_edit(user, product)
 
         FBUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
+
+        if old_url and not old_url == upload_url:
+            sd_utils = SureDoneUtils(user=user.models_user, account_id=product.sd_account_id)
+            data = sd_utils.update_suredone_product_data_images(product, old_url, upload_url)
+            data = json.dumps(data)
+            return JsonResponse({
+                'status': 'ok',
+                'url': upload_url,
+                'data': data
+            })
+
+    elif request.GET.get('google') or request.POST.get('google'):
+        product = GoogleProduct.objects.get(id=product_id)
+
+        permissions.user_can_edit(user, product)
+
+        GoogleUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
 
         if old_url and not old_url == upload_url:
             sd_utils = SureDoneUtils(user=user.models_user, account_id=product.sd_account_id)

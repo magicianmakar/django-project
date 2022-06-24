@@ -447,6 +447,10 @@
         }
     });
 
+    $('.shopify-open-appspage').on('click', function(e) {
+       window.open(config.shopify_admin_url, '_blank');
+    });
+
     $('.cancel-shopify-sub-btn').on('click', function(e) {
         // Canceling paused plan will use different steps
         var cancelationSteps = $(this).data('steps') || '';

@@ -1,0 +1,1264 @@
+{% extends "base_google_core.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <div class="tabs-container">
+                <ul class="nav nav-tabs">
+                    <li class="active tab-nav-edit">
+                        <a data-auto-click="#edit" data-toggle="tab" href="#tab-1">
+                            <i class="fa fa-edit"></i> Edit
+                        </a>
+                    </li>
+                    {% if request.user|can:'notes.view' %}
+                        <li class="tab-nav-notes"><a
+                                data-auto-click="#notes"
+                                {% if request.user|can:'notes.use' %}
+                                data-toggle="tab" href="#tab-4"
+                                {% else %}
+                                href="{% url 'upgrade_required' %}"
+                                {% endif %}
+                        ><i class="fa fa-file-o"></i>Notes</a></li>
+                    {% endif %}
+                    {% if request.user|can:'product_metadata.view' %}
+                        <li class="connections-tab"><a
+                                data-auto-click="#connections"
+                                {% if request.user|can:'product_metadata.use' %}
+                                data-toggle="tab" href="#tab-5"
+                                {% else %}
+                                href="{% url 'upgrade_required' %}"
+                                {% endif %}
+                        ><i class="fa fa-cogs"></i> Connections</a></li>
+                    {% endif %}
+                    {% if product.some_variants_are_connected %}
+                        <li class="tab-nav-reviews"><a
+                                data-auto-click="#reviews"
+                                data-toggle="tab" href="#tab-6"
+                        ><i class="fa fa-file-o"></i> Reviews</a></li>
+                    {% endif %}
+                    <li class="tab-nav-alerts">
+                        <a data-toggle="tab" href="#tab-7"
+                           data-auto-click="#alerts"
+                           data-auto-click-onload="true"
+                           class="product-alerts-tab"
+                           product-id="{{ product.guid }}"
+                        >
+                            <i class="fa fa-line-chart"></i> Alerts
+                        </a>
+                    </li>
+                    {% if request.user|can:'youtube_ads.use' %}
+                        <li>
+                            <a href="{% url 'youtube_ads.views.index' %}?type=all&q={{ product.title }}" target="_blank">
+                                <i class="fa fa-video-camera"></i> Find Videos <i class="fa fa-external-link-top"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% if request.user|can:'aliextractor.use' %}
+                        <li>
+                            <a data-toggle="tab" href="#tab-ae"
+                               data-auto-click="#ae"
+                               data-auto-click-onload="true"
+                               class="product-ae-tab"
+                               product-id="{{ product.guid }}"
+                            >
+                                <img src="{% static 'img/ae_small.png' %}" class="ae-tab-icon"> AliExtractor
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <div class="tab-content">
+                    <div id="tab-1" class="tab-pane active">
+                        <form class="panel-body" id="product-edit-form">
+                            <!-- Product view -->
+                            <div class="row">
+                                <div class="form-group col-xs-12 required" required>
+                                    <label class="control-label" for="product-title">Title</label>
+                                    <textarea required class="form-control" id="product-title" placeholder="Product Title" data-handle="{{ product.title }}">
+                                    </textarea>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="form-group col-xs-3">
+                                    <label for="product-type">Type</label>
+                                    <input type="text" class="form-control" id="product-type"
+                                           value="{{ product.product_type|default:'' }}" placeholder="Product Type">
+                                </div>
+                                <div class="form-group col-xs-6">
+                                    <label for="product-tag">Tags</label>
+                                    <input type="text" class="form-control tag-it" value="{{ product.tags|default:'' }}"
+                                           id="product-tag" placeholder="Product Tags">
+                                </div>
+                                <div class="form-group col-xs-3">
+                                    <label for="product-vendor">Vendor</label>
+                                    <input type="text" class="form-control" id="product-vendor"
+                                           placeholder="{{ product.default_supplier.supplier_name|default:'' }}" disabled/>
+                                </div>
+                            </div>
+                            {# Element to render the GoogleCategorySelector react component into #}
+                            <div id="google-category-container"></div>
+
+                            <div class="row">
+                                <div id="more-options" class="col-xs-12">
+                                    <div class="childs">
+                                        {% if product and product.variants_for_details_view %}
+                                            <div class="panel panel-default m-b-lg">
+                                                <div class="panel-heading" style="height: 40px; display: flex; flex-direction: row; align-items: stretch;">
+
+                                                    <div class="col-xs-6" style="flex: 1;">
+                                                        Variants&nbsp;
+                                                        ({{ product.variants_for_details_view|length }})
+                                                    </div>
+
+                                                    <div>
+                                                        <button class="btn-outline btn btn-default btn-xs" id="bulk-edit-variants-btn">
+                                                            <i class="fa fa-edit"></i> Bulk Edit
+                                                        </button>
+                                                    </div>
+
+                                                    {% if request.user|can:'aliextractor.use' %}
+                                                        {% include 'aliextractor/get_pricing_data.html' %}
+                                                    {% endif %}
+
+                                                    {% comment %}<div class="advanced" style="{% if product.some_variants_are_connected %}display:none;{% endif %}">
+                                                        <input type="checkbox" name="advanced_variants" id="advanced_variants" class="js-switch"
+                                                            {% if product.variants_for_details_view|length < 2 %}checked="checked"{% endif %}>
+                                                        <label for="advanced_variants">Advanced</label>
+                                                    </div>{% endcomment %}
+
+
+                                                </div>
+                                                <div id="google-variants-panel-container" class="panel-body" style="padding-bottom:0; overflow: scroll; max-height: 600px;
+                                                        {% if not product.some_variants_are_connected %}display:none;{% endif %}">
+                                                    <table id="google-variants" class="table table-condensed no-border" style="margin-bottom:0;
+                                                            {% if not product.some_variants_are_connected %}display:none; {% endif %}">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>
+                                                                <input type="checkbox" name="all-variants-selected" id="all-variants-select-checkbox">
+                                                            </th>
+                                                            <th>Image</th>
+                                                            <th>Title</th>
+                                                            <th>Price</th>
+                                                            <th>Compare Price</th>
+                                                            <th>SKU</th>
+                                                            <th>Stock</th>
+                                                            <th>Weight</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        {% for variant_item in product.variants_for_details_view %}
+                                                            <tr class="google-variant" variant-id="{{ variant_item.guid }}">
+                                                                <td>
+                                                                    <input class="variant-checkbox" type="checkbox" name="variant-selected">
+                                                                </td>
+
+                                                                <td>
+                                                                    {% if variant_item.image %}
+                                                                        <img class="unveil"
+                                                                             src="{% shopify_image_thumb variant_item.image %}"
+                                                                             data-src="{% shopify_image_thumb variant_item.image %}"
+                                                                             product="{{ variant_item.guid }}"
+                                                                             variant="{{ variant_item.id }}"
+                                                                             style="width:64px"/>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td style="white-space:nowrap">
+                                                                    <span>{{ variant_item.varianttitle|safe|truncatechars:60 }}</span>
+                                                                </td>
+
+                                                                <td>
+                                                                    <div class="input-group" style="width:120px">
+                                                                        <span class="input-group-addon input-sm">{% money_format None product.store %}</span>
+                                                                        <input type="number" name="price"
+                                                                               value="{{ variant_item.price|default:'' }}"
+                                                                               min="0" step="0.1"
+                                                                               data-number-to-fixed="2"
+                                                                               data-number-stepfactor="100"
+                                                                               class="form-control currency"/>
+                                                                    </div>
+                                                                </td>
+
+                                                                <td>
+                                                                    <div class="input-group" style="width:120px">
+                                                                        <span class="input-group-addon input-sm">{% money_format None product.store %}</span>
+
+                                                                        <input type="number" name="compareatprice"
+                                                                               value="{% compareatprice variant_item.compareatprice %}"
+                                                                               min="0" step="0.1"
+                                                                               data-number-to-fixed="2"
+                                                                               data-number-stepfactor="100"
+                                                                               class="form-control currency"/>
+                                                                    </div>
+                                                                </td>
+
+                                                                <td>
+                                                                    <input type="text" name="suppliersku"
+                                                                           value="{{ variant_item.suppliersku|default:'' }}"
+                                                                           class="form-control"/>
+                                                                </td>
+
+                                                                <td>
+                                                                    <input class="form-control" type="number"
+                                                                           name="stock" value="{{ variant_item.stock }}"
+                                                                           min="0" step="1"
+                                                                           style="min-width: 50px; max-width: 80px;"/>
+                                                                </td>
+
+
+                                                                <td style="white-space:nowrap">
+                                                                    <input class="form-control" type="number"
+                                                                           name="weight" value="{{ variant_item.weight }}"
+                                                                           min="0" step="0.1" data-number-to-fixed="2"
+                                                                           data-number-stepfactor="100"
+                                                                           style="display:inline-block;width:80px;"/>
+
+                                                                    <select class="form-control" name="weightunit"
+                                                                            style="width:65px;display:inline-block;">
+                                                                        <option value="g" {% if variant_item.weightunit == 'g' %}selected="selected"{% endif %}>
+                                                                            g
+                                                                        </option>
+                                                                        <option value="kg" {% if variant_item.weightunit == 'kg' %}selected="selected"{% endif %}>
+                                                                            kg
+                                                                        </option>
+                                                                        <option value="oz" {% if variant_item.weightunit == 'oz' %}selected="selected"{% endif %}>
+                                                                            oz
+                                                                        </option>
+                                                                        <option value="lb" {% if variant_item.weightunit == 'lb' %}selected="selected"{% endif %}>
+                                                                            lb
+                                                                        </option>
+                                                                    </select>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div id="variants" class="row" style="margin:5px 0 10px 0;padding: 20px 0 0; {% if product.some_variants_are_connected %}display:none{% endif %}">
+
+                                                    <div class="variant-simple form-group col-xs-10" style="display:none">
+                                                        <input type="text" class="form-control" id="product-variant-name" style="width: 150px" placeholder="Title">
+                                                        <input type="text" class="form-control" id="product-variant-values" style="margin: 10px 0;" placeholder="Values (separated by comma)">
+                                                        <a href="#" class="btn btn-danger btn-xs remove-variant">Remove</a>
+                                                    </div>
+                                                    <div class="area col-xs-12">
+                                                    </div>
+                                                    <div class="col-xs-12" style="margin: 10px 0;text-align: right">
+                                                        <a href="#" class="btn btn-success btn-xs add-variant">Add Variant</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+
+                                        <div class="form-group col-xs-12 required" style="padding:0">
+                                            <label for="product-description">Product Description</label>
+                                            <textarea name="product-description" id="product-description" required
+                                                      class="form-control required"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="buttons col-xs-12">
+                                    <div class="row text-center" id="var-images">
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-xs-12 text-right" style="margin-top: 15px;">
+                                            {% if product.store %}
+                                                <a id="download-google-images"
+                                                   class="btn btn-success btn-xs"
+                                                   href="#"
+                                                   product="{{ product.guid }}"
+                                                   data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Downloading">
+                                                    <i class="fa fa-download"></i> Download Images
+                                                </a>
+                                            {% endif %}
+
+                                            {% if aws_available and request.user|can:'image_uploader.view' %}
+                                                <a class="btn btn-success btn-xs"
+                                                        {% if request.user|can:'image_uploader.use' %}
+                                                   data-toggle="modal" data-target="#modal-upload-image"
+                                                        {% else %}
+                                                   href="{% url 'upgrade_required' %}"
+                                                        {% endif %}
+                                                >
+                                                    <i class="fa fa-upload"></i> Upload Image
+                                                </a>
+                                            {% endif %}
+
+                                            <button class="btn btn-success btn-xs add-images-btn"
+                                                    original-product="{{ product.parsed.originalurl }}">More images
+                                            </button>
+
+                                            {% if request.user|can:'youtube_ads.use' %}
+                                                <a class="btn btn-primary btn-xs"
+                                                   href="{% url 'youtube_ads.views.index' %}?type=all&q={{ product.title }}"
+                                                   target="_blank">
+                                                    <i class="fa fa-video-camera"></i> Find Product Videos
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group col-xs-12">
+                                    <label for="product-visible">
+                                        <input type="checkbox" id="product-visible"
+                                                {% if not product.some_variants_are_connected %}
+                                                    {% if config.make_visisble is None or config.make_visisble %}
+                                               checked="checked"{% endif %}
+                                                {% else %}
+                                                    {% if product.some_variants_are_connected %}
+                                               checked="checked"
+                                                    {% endif %}
+                                                {% endif %}
+                                        >
+                                        Publish in Store
+                                    </label>
+                                </div>
+
+                                {% if not product.some_variants_are_connected %}
+                                    <div class="form-group col-xs-12">
+                                        <label for="store-select">Export to:</label>
+                                        <select id="store-select" class="form-control"
+                                                style="width: 200px; display: inline-block; margin-left: 10px;">
+                                            {% for i in request.user.profile.get_google_stores %}
+                                                <option value="{{ i.id }}"
+                                                        {% if i == product.store %}selected{% endif %}>{{ i.title }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                {% else %}
+                                    <input type="hidden" id="store-select" name="store-select"
+                                           value="{{ product.store.id }}">
+                                {% endif %}
+
+                                <div class="buttons col-xs-12">
+                                    <div class="row">
+                                        <div class="col-md-4 col-xs-12">
+                                            {% if product.is_pending %}
+                                                <div class="alert alert-info" role="alert">
+                                                    <i class="fa fa-info-circle"></i>&nbsp;
+                                                    A product export has been queued and is pending.
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-xs-12">
+                                            {% if not product.some_variants_are_connected %}
+                                                <button id="product-export-btn" target="product-export" type="submit"
+                                                        {% if not request.user|can:'send_to_store.use' %}disabled{% endif %}
+                                                        class="btn btn-primary"
+                                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">
+                                                    Send To My Store
+                                                </button>
+                                            {% endif %}
+
+                                            {% if product and product.some_variants_are_connected %}
+                                                <button id="product-update-btn" target="product-update" type="submit"
+                                                        class="btn btn-primary"
+                                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Updating">
+                                                    Update on Google
+                                                </button>
+                                            {% endif %}
+
+                                            <button id="product-save-btn" target="save-for-later"
+                                                    type="button" class="btn btn-primary"
+                                                    data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Saving"
+                                                    {% if product.some_variants_are_connected %}style="display:none"{% endif %}>Save
+                                                for later
+                                            </button>
+
+                                            <div class="btn-group dropup">
+                                                <button id="more-options-btn" data-toggle="dropdown"
+                                                        class="btn btn-success dropdown-toggle" aria-expanded="false">
+                                                    More Options<span class="caret" style="margin-left:10px"></span>
+                                                </button>
+
+                                                <ul class="dropdown-menu">
+                                                    {% if product.google_url %}
+                                                        <li><a href="{{ product.google_url }}" target="_blank">
+                                                            <i class="fa fa-file-o"></i> View on Google</a>
+                                                        </li>
+                                                    {% else %}
+                                                        <li><a id="view-btn" type="button" style="display:none">View in
+                                                            Google</a></li>
+                                                    {% endif %}
+                                                    {% if request.user|can:'product_variant_setup.view' %}
+                                                        <li><a href="{{ product.variant_edit }}" target="_blank">
+                                                            <i class="fa fa-file-image-o"></i> Set Up Variant Images</a>
+                                                        </li>
+                                                        {% endif %}
+                                                    {% if product.some_variants_are_connected %}
+                                                        <li><a href="{% url 'google:product_mapping' product.store.id product.guid %}"
+                                                               target="_blank">
+                                                            <i class="fa fa-chain"></i> Variants Mapping</a>
+                                                        </li>
+                                                    {% endif %}
+
+                                                    <li><a id="duplicate-btn" href="#" product-id="{{ product.guid }}"
+                                                           target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
+
+                                                    {% comment %}<li><a id="btn-split-variants" product-id="{{ product.guid }}"
+                                                           shopify-id="{{ product.get_shopify_id }}"
+                                                           type="button" target="_blank" class="itooltip"
+                                                           title="Split Variants into Separate Products"
+                                                           data-placement="right">
+                                                        <i class="fa fa-code-fork"></i> Split Variants</a>
+                                                    </li>{% endcomment %}
+
+                                                    {% if product.default_supplier or product.parsed.originalurl %}
+                                                        <li>
+                                                            <a href="{{ product.default_supplier.product_url|default:product.parsed.originalurl }}"
+                                                               target="_blank"><i class="fa fa-external-link"></i>
+                                                                Original Product</a></li>
+                                                    {% endif %}
+
+                                                    <li class="text-danger">
+                                                        <a href="#" class="itooltip delete-product-btn"
+                                                           title="Delete product from your Dropified account"
+                                                           data-placement="right" product-id="{{ product.guid }}">
+                                                            <i class="fa fa-times"></i> Delete Product</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- / Product view -->
+                        </form> <!-- / #tab-1 -->
+                    </div>
+
+                    <div id="tab-4" class="tab-pane">
+                        <div class="panel-body" style="min-height:300px">
+                            <div class="row">
+                                <div class="form-group col-xs-12">
+                                    <input id="product-notes" type="hidden" name="content-notes">
+                                    <trix-editor id="trix-notes" input="product-notes"
+                                                 style="min-height: 250px"></trix-editor>
+                                </div>
+                                <div class="form-group col-xs-12">
+                                    <button id="save-product-notes" class="btn btn-success"><i class="fa fa-save"></i>
+                                        Save Notes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-5" class="tab-pane">
+                        <div class="panel-body" style="min-height:300px">
+                            <div class="row">
+                                <div class="col-md-10 col-md-offset-1" style="padding-left:0;padding-right:0">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            Google Product
+                                        </div>
+                                        <div class="panel-body">
+                                            {% if product and product.some_variants_are_connected %}
+                                                <div class="row" style="display: flex; align-items: center; ">
+                                                    <div class="col-md-1">
+                                                        <img class="no-img no-img-sm" no-img-width="45px"
+                                                             style="width:50px"
+                                                             src="{{ product.thumbnail_image }}">
+                                                    </div>
+                                                    <div class="col-md-10">
+                                                        <a href="{{ product.google_url }}"
+                                                           target="_blank">{{ product.title }}</a>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row text-right">
+                                                    <div class="col-md-12">
+                                                        <a href="#"
+                                                           class="btn btn-success btn-xs product-connection-change"><i
+                                                                class="fa fa-refresh"></i> Change</a>
+                                                        <a href="#"
+                                                           class="btn btn-danger btn-xs product-connection-disconnect"><i
+                                                                class="fa fa-chain-broken"></i> Disconnect</a>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <div class="row m-t-xs">
+                                                    <div class="col-md-12">
+                                                        <p>The product is not connected</p>
+                                                    </div>
+
+                                                    <div class="col-md-12">
+                                                        <a href="#"
+                                                           class="btn btn-success btn-xs product-connection-change">
+                                                            <i class="fa fa-chain"></i> Connect To Google
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div id="export-container" class="col-xs-10 col-xs-offset-1">
+                                </div>
+
+                                <div class="col-xs-5 col-xs-offset-1" style="padding: 0">
+                                    <a class="btn btn-success export-add-btn" href="#" target="_blank">
+                                        <i class="fa fa-plus"></i>
+                                        Add Supplier
+                                    </a>
+                                </div>
+                                {% if product.some_variants_are_connected %}
+                                    <div class="col-xs-5 text-right" style="padding: 0">
+                                        <a class="btn btn-success btn-outline"
+                                           href="{% url 'google:product_mapping' product.store.id product.guid %}" target="_blank">
+                                            Variants Mapping
+                                            <i class="fa fa-external-link"></i>
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-6" class="tab-pane">
+                        {% if request.user|can:'import_reviews.use' %}
+                            <div class="panel-body" style="min-height:300px">
+                                <div class="alert alert-info alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                            aria-hidden="true">&times;</span></button>
+                                    Import reviews from AliExpress, then download or send to store.
+                                </div>
+                                <form id="review-form" method="get">
+                                    <input type="hidden" id="reviews_product" value={{ product.guid }}/>
+                                    <input type="hidden" id="reviews_product_source_id" value={{ product.source_id }}/>
+                                    <input type="hidden" id="reviews_product_url" value={{product.parsed.originalurl}} />
+                                    <div class="row">
+                                        <div class="form-group col-xs-6">
+                                            <select id="reviews_star" class="form-control">
+                                                <option value="all">All Stars</option>
+                                                <option value="5">5 Stars</option>
+                                                <option value="4">4 Stars</option>
+                                                <option value="3">3 Stars</option>
+                                                <option value="2">2 Stars</option>
+                                                <option value="1">1 Star</option>
+                                                <option value="positive">All Positive</option>
+                                                <option value="critical">All Negative</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="form-group col-xs-6">
+                                            <select id="reviews_sort" class="form-control">
+                                                <option value="default">Sort by default</option>
+                                                <option value="latest">Sort by latest</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="form-group">
+                                            <div class="form-control"
+                                                 style="border:none;box-shadow:0 0;background-color:inherit;">
+                                                <input type="checkbox" id="reviews_with_images"/>
+                                                <label for="reviews_with_images">With pictures</label>
+                                            </div>
+
+                                            <div class="form-control"
+                                                 style="border:none;box-shadow:0 0;background-color:inherit;">
+                                                <input type="checkbox" id="reviews_personal_info"/>
+                                                <label for="reviews_personal_info">With personal information</label>
+                                            </div>
+
+                                            <div class="form-control"
+                                                 style="border:none;box-shadow:0 0;background-color:inherit;">
+                                                <input type="checkbox" id="reviews_my_country"/>
+                                                <label for="reviews_my_country">Reviews from my country</label>
+                                            </div>
+
+                                            <div class="form-control"
+                                                 style="border:none;box-shadow:0 0;background-color:inherit;">
+                                                <input type="checkbox" id="only_text_reviews"/>
+                                                <label for="only_text_reviews">Keep text only (reviews body without html
+                                                    tags and images)</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="form-group col-xs-12">
+                                            <label for="reviews_pages">Pages:</label>
+                                            <input type="number" id="reviews_pages" class="text-center" value="1"
+                                                   min="1"/>
+                                        </div>
+                                    </div>
+
+                                    <button id="import-reviews-btn" type="submit" class="btn btn-success">
+                                        <i class="fa fa-plus"></i>
+                                        Import
+                                    </button>
+                                    <div class="btn-group dropup">
+                                        <button id="download-reviews" class="btn btn-success dropdown-toggle disabled"
+                                                type="button" data-toggle="dropdown" aria-haspopup="true"
+                                                aria-expanded="false">
+                                            <i class='fa fa-download'></i>
+                                            Download
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li class="dropdown-header">
+                                                Choose format
+                                            </li>
+                                            <li role="separator" class="divider">
+                                            </li>
+                                            <li>
+                                                <a href="" id="download-normal-reviews">Normal</a>
+                                            </li>
+                                            <li>
+                                                <a href="" id="download-reviews-for-google">Google</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <button id="send-reviews-to-store" type="button" class="btn btn-danger disabled"
+                                            data-loading-text="<i class='fa fa-arrow-circle-right'></i> Sending reviews to store..."
+                                            data-store-id="{{ product.store.id }}"
+                                            data-product-id="{{ product.source_id }}"
+                                            data-reviews-sent-text="<i class='fa fa-arrow-circle-right'></i> Sent reviews to store">
+                                        <i class="fa fa-arrow-circle-right"></i>
+                                        Send reviews to store
+                                    </button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <div class="panel-body" style="min-height:300px">
+                                {% if request.user.profile.plan.support_addons %}
+                                    {% include "common/partial/upsell.html" with addon_id=11 message="Add Reviews to your Plan" only %}
+                                {% else %}
+                                    {% include "common/partial/upsell.html" with addon_id='' message="Please upgrade your Plan to add Reviews" only %}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if request.user|can:'price_change_options.use' %}
+                        <div id="tab-7" class="tab-pane">
+                            <div class="panel-body" style="min-height:300px">
+                                {% if upsell_alerts %}
+                                    {% if request.user.profile.plan.support_addons %}
+                                        {% include "common/partial/upsell.html" with addon_id=20 message="Add Alerts to your Plan" only %}
+                                    {% else %}
+                                        {% include "common/partial/upsell.html" with addon_id='' message="Please upgrade your Plan to add Alerts" only %}
+                                    {% endif %}
+                                {% endif %}
+                                <form id="product-config-form" role="form">
+                                    <input type="hidden" name="product" value="{{ product.guid }}"/>
+                                    <div class="setting-section">
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <h3 class="setting-title">Alert Settings</h3>
+                                            </div>
+                                            <div class="col-sm-6 text-right">
+                                                Last Check:
+                                                <span class="badge badge-default">
+                                {% if not product.monitor_id > 0 %}
+                                    Not Monitored
+                                {% elif last_check %}
+                                    {% date_humanize last_check %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row m-t">
+                                        <div class="col-sm-11">
+                                            <div class="form-group">
+                                                <label for="alert_price_change"
+                                                       class="col-sm-2 text-right control-label">When the price
+                                                    changes</label>
+                                                <div class="col-sm-3">
+                                                    <select id="alert_price_change" name="alert_price_change"
+                                                            class="form-control">
+                                                        <option value="">Use Global Default</option>
+                                                        <option value="notify"
+                                                                {% if alert_config.alert_price_change == 'notify' %}
+                                                                selected="selected"{% endif %}>Notify me
+                                                        </option>
+                                                        <option value="update"
+                                                                {% if alert_config.alert_price_change == 'update' %}
+                                                                selected="selected"{% endif %}>Update Price on Google
+                                                        </option>
+                                                        <option value="none"
+                                                                {% if alert_config.alert_price_change == 'none' %}
+                                                                selected="selected"{% endif %}>Do nothing
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row m-t price-update-option" data-value="update">
+                                        <div class="col-sm-11">
+                                            <div class="form-group">
+                                                <label for="price_update_method"
+                                                       class="col-sm-2 text-right control-label">Price Update
+                                                    Method</label>
+                                                <div class="col-sm-3">
+                                                    <select id="price_update_method" name="price_update_method"
+                                                            class="form-control">
+                                                        <option value="global_markup"
+                                                                {% if alert_config.price_update_method == 'global_markup' %}
+                                                                selected="selected"{% endif %}>Update with Global "Price
+                                                            Markup"
+                                                        </option>
+                                                        <option value="custom_markup"
+                                                                {% if alert_config.price_update_method == 'custom_markup' %}
+                                                                selected="selected"{% endif %}>Update with Advanced
+                                                            Markup Rules
+                                                        </option>
+                                                        <option value="same_margin"
+                                                                {% if not alert_config.price_update_method or alert_config.price_update_method == 'same_margin' %}
+                                                                selected="selected"{% endif %}>Update with same margins
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row m-t price-update-option" data-value="update">
+                                        <div class="col-sm-11">
+                                            <div class="form-group">
+                                                <label for="price_update_for_increase"
+                                                       class="col-sm-2 text-right control-label">
+                                                    Update only when price goes up
+                                                </label>
+                                                <div class="col-sm-3">
+                                                    <input type="checkbox" class="js-switch"
+                                                           id="price_update_for_increase"
+                                                           name="price_update_for_increase"
+                                                           {% if alert_config.price_update_for_increase %}checked="checked"{% endif %}>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-sm-11">
+                                            <div class="form-group">
+                                                <label for="alert_quantity_change"
+                                                       class="col-sm-2 text-right control-label">When inventory
+                                                    changes</label>
+                                                <div class="col-sm-3">
+                                                    <select id="alert_quantity_change" name="alert_quantity_change"
+                                                            class="form-control">
+                                                        <option value="">Use Global Default</option>
+                                                        <option value="notify"
+                                                                {% if alert_config.alert_quantity_change == 'notify' %}
+                                                                selected="selected"{% endif %}>Notify me
+                                                        </option>
+                                                        <option value="update"
+                                                                {% if alert_config.alert_quantity_change == 'update' %}
+                                                                selected="selected"{% endif %}>Update automatically
+                                                        </option>
+                                                        <option value="none"
+                                                                {% if alert_config.alert_quantity_change == 'none' %}
+                                                                selected="selected"{% endif %}>Do nothing
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-sm-11">
+                                            <div class="form-group">
+                                                <label for="alert_product_disappears"
+                                                       class="col-sm-2 text-right control-label">When a product
+                                                    disappears</label>
+                                                <div class="col-sm-3">
+                                                    <select id="alert_product_disappears"
+                                                            name="alert_product_disappears" class="form-control">
+                                                        <option value="">Use Global Default</option>
+                                                        <option value="notify"
+                                                                {% if alert_config.alert_product_disappears == 'notify' %}
+                                                                selected="selected"{% endif %}>Notify me
+                                                        </option>
+                                                        <option value="unpublish"
+                                                                {% if alert_config.alert_product_disappears == 'unpublish' %}
+                                                                selected="selected"{% endif %}>Unpublish product
+                                                        </option>
+                                                        <option value="zero_quantity"
+                                                                {% if alert_config.alert_product_disappears == 'zero_quantity' %}
+                                                                selected="selected"{% endif %}>Set the quantity to zero
+                                                        </option>
+                                                        <option value="none"
+                                                                {% if alert_config.alert_product_disappears == 'none' %}
+                                                                selected="selected"{% endif %}>Do nothing
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-sm-11">
+                                            <div class="form-group">
+                                                <label for="alert_variant_disappears"
+                                                       class="col-sm-2 text-right control-label">When a variant
+                                                    disappears</label>
+                                                <div class="col-sm-3">
+                                                    <select id="alert_variant_disappears"
+                                                            name="alert_variant_disappears" class="form-control">
+                                                        <option value="">Use Global Default</option>
+                                                        <option value="notify"
+                                                                {% if alert_config.alert_variant_disappears == 'notify' %}
+                                                                selected="selected"{% endif %}>Notify me
+                                                        </option>
+                                                        <option value="remove"
+                                                                {% if alert_config.alert_variant_disappears == 'remove' %}
+                                                                selected="selected"{% endif %}>Remove the variant
+                                                        </option>
+                                                        <option value="zero_quantity"
+                                                                {% if alert_config.alert_variant_disappears == 'zero_quantity' %}
+                                                                selected="selected"{% endif %}>Set the quantity to zero
+                                                        </option>
+                                                        <option value="none"
+                                                                {% if alert_config.alert_variant_disappears == 'none' %}
+                                                                selected="selected"{% endif %}>Do nothing
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-sm-9 text-right">
+                                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i>
+                                                Save
+                                            </button>
+                                            {% comment %}<a href="{% url 'google:product_alerts' %}?store={{product.store.id}}&product={{product.guid}}" class="btn btn-success filter-col-item" target="_blank"><i class="fa fa-line-chart"></i> View Alerts</a>{% endcomment %}
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if request.user|can:'aliextractor.use' %}
+                        <div id="tab-ae" class="tab-pane">
+                            <div class="panel-body">
+                                <div class=" row">
+                                    <div class="col-md-12 ae-extension-check">
+                                        {% include "partial/ae-tab-default.html" %}
+                                    </div>
+
+                                    <div class="col-md-12 ae-extension-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-image" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Select Image to add</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="row" id="images-row">
+                                {% for item in original.extra_images %}
+                                    {% if forloop.counter0|divisibleby:"4" %}
+                                        <div class="col-xs-12"></div>
+                                    {% endif %}
+
+                                    <div class="col-xs-3 add-var-image-block">
+                                        <img src="{% static 'img/blank.gif' %}" data-src="{{ item }}"
+                                             class="add-var-image unveil"/>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="description-images-add" class="row">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include "google/partial/google_product_selector.html" %}
+    {% if request.user|can:'image_uploader.use' %}
+        <div id="modal-upload-image" class="modal fade" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Image upload</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div id="uploader"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% verbatim %}
+    <script id="product-export-template" type="text/x-handlebars-template">
+        <div class="row well export" style="padding: 10px 0">
+            <form class="product-export-form" method="post" data-export-id="{{id}}" data-product-id="{{product.guid}}">
+                <div class="form-group col-xs-12">
+                    <label>Supplier Product link: <i class="fa fa-fw fa-question-circle"
+                                                     qtip-tooltip="Enter a link to the product that you want to use for auto ordering"
+                                                     style="font-size:16px;color:#BBB"
+                    ></i></label>
+                    <input type="text" class="form-control product-original-link" value="{{original.url}}">
+                    <i class="fa fa-spinner fa-spin product-original-link-loading"></i>
+                </div>
+                <div class="form-group col-xs-12 col-md-5">
+                    <label>Supplier Name:</label>
+                    <input type="text" class="form-control product-supplier-name" value="{{supplier.name}}">
+                </div>
+                <div class="form-group col-xs-12">
+                    <label>
+                        Supplier Store Link (optional):
+                        <i class="fa fa-fw fa-question-circle"
+                           qtip-tooltip="Add a link to the Suppliers store"
+                           style="font-size:16px;color:#BBB"
+                        ></i>
+                    </label>
+                    <input type="text" class="form-control product-supplier-link" value="{{supplier.url}}"
+                           style="width:350px">
+                </div>
+                <div class="form-group col-xs-12 text-right">
+                    <button class="btn btn-success btn-xs export-save-btn">
+                        <i class="fa fa-save"></i> Save Changes
+                    </button>
+
+                    {{#if id}}
+                        {{#if is_default}}
+                            <a class="btn btn-default btn-xs is-default-btn" href="#">
+                                <i class="fa fa-check"></i> Default
+                            </a>
+                        {{else}}
+                        <button class="btn btn-primary btn-xs export-default-btn">
+                            <i class="fa fa-check"></i> Make Default
+                        </button>
+                        {{/if}}
+                    {{/if}}
+
+                    <button class="btn btn-danger btn-xs export-delete-btn">
+                        <i class="fa fa-times"></i> Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </script>
+
+    {% endverbatim %}
+    {% include 'partial/ae_product_info_modal.html' %}
+
+    <div id="modal-pick-variant" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Select Variant Type to Split By</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="dropdown m-b-sm">
+                        <button id="pick-variant-btn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
+                                aria-expanded="false" value="">
+                            Select Variant Type<span class="caret" style="margin-left:10px"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            {% if variants_config %}
+                                {% for attribute in variants_config %}
+                                    <li>
+                                        <a type="button">{{ attribute.title }}</a>
+                                    </li>
+                                {% endfor %}
+                            {% else %}
+                                {% for v in product.variants_for_details_view %}
+                                    <li>
+                                        <a type="button">{{ v.varianttitle }}</a>
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="m-b-sm">
+                            <strong>Products that will be split: </strong>
+                            <span id="split-variants-count">0</span>
+                        </p>
+                        <p class="font-bold">Variant Values: </p>
+                        <p id="split-variants-values"></p>
+                    </div>
+                    <div class="text-center">
+                        <button class="btn btn-success btn-submit full-width" type="button">Split</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% include "google/partial/variant_edit_modal.html" %}
+
+{% endblock %}
+
+{% block extracss %}
+    <link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.3.6/jquery.ui.plupload/css/jquery.ui.plupload.css"
+          rel="stylesheet">
+
+    {% compress css %}
+        <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+        <link href="{% static 'css/trix.css' %}" rel="stylesheet">
+        <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
+        <link href="{% static 'google/css/product_detail.css' %}" rel="stylesheet">
+        <link href="{% static 'aliextractor/css/ae-tab.css' %}" rel="stylesheet">
+    {% endcompress %}
+{% endblock %}
+
+
+{% block extrajs %}
+    <script type="text/javascript">
+        $.fn.bootstrapBtn = $.fn.button.noConflict();
+        $.fn.bootstrapTooltip = $.fn.tooltip.noConflict();
+    </script>
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.3.6/plupload.full.min.js"></script>
+    <script type="text/javascript"
+            src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.3.6/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
+
+    <script type="text/javascript">
+
+        var product = {{ product_data|safe }};
+        product.media_links = JSON.parse(product.media_links_data);
+
+        let variants = {{ variants|safe }};
+        let variantsConfig = {{ variants_config|safe }};
+
+        // Find all images (parent + variants images)
+        var variantsImages = variants.map(function(variant) {
+            return variant.image;
+        });
+
+        product.allImages = Array.from(new Set(product.media_links.concat(variantsImages)));
+        product.images = product.allImages;
+
+        let productDetailsTemp;
+        try {
+            productDetailsTemp = JSON.parse(product.data);
+        } catch (e) {
+            productDetailsTemp = {}
+        }
+        const productDetails = productDetailsTemp;
+
+        let config = {
+            token: '{{ token }}',
+            user_id: {{user.id}},
+            product_id: '{{product.id}}',
+            product_guid: '{{product.guid}}',
+            product_notes: '{{product.notes|default:''|escapejs}}',
+
+            {% if product.some_variants_are_connected %}
+                connected: true,
+                google_options: {% json_dumps product.attributes %},
+            {% else %}
+                connected: false,
+                google_options: null,
+            {% endif %}
+
+            image_uploader: {{ request.user|can:'image_uploader.use'|lower }},
+            photo_editor: {{ request.user|can:'aviary_photo_editor.view'|lower }},
+            advanced_photo_editor: {{ request.user|can:'pixlr_photo_editor.view'|lower }},
+            feather_editor: null,
+
+            product_extra_images: [
+                {% for item in original.extra_images %}
+                    '{{ item | remove_url_query | escapejs }}',
+                {% endfor %}
+            ],
+
+            default_export: {
+                product: '{{product.guid}}',
+                supplier: {
+                    name: product.store && product.store.name ? product.store.name : '',
+                    url: product.store && product.store.url ? product.store.url : '',
+                },
+                original: {
+                    url: product.original_url
+                }
+            },
+            exports: [
+                {% for item in product.get_suppliers %}
+                    {
+                        id: {{item.id}},
+                        product: '{{product.guid}}',
+                        is_default: {% if item.id == product.default_supplier_id %}true{% else %}false{% endif %},
+                        is_aliexpress: {% if item.is_aliexpress %}true{% else %}false{% endif %},
+                        is_ebay: {% if item.is_ebay %}true{% else %}false{% endif %},
+                        original: {
+                            url: '{{item.product_url|escapejs}}'
+                        },
+                        google: {
+                            id: {{item.source_id|default:'0'}},
+                            url: '{{item.google_url|escapejs}}',
+                        },
+                        supplier: {
+                            name: '{{item.supplier_name|escapejs}}',
+                            url: '{{item.supplier_url|escapejs}}',
+                        },
+                    },
+                {% endfor %}
+            ],
+
+            clipping_magic: {
+                api_id: '{{user.clippingmagic.api_id|default:""}}',
+                clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},
+            },
+
+            sub_conf: {
+                key: "{% app_setting 'PUSHER_KEY' %}",
+                channel: "{{product.store.pusher_channel}}",
+                channelUser: 'user_{{user.id}}',
+            }
+        };
+
+        $(function () {
+            {% if aws_available and request.user|can:'image_uploader.use' %}
+
+                $("#uploader").plupload({
+                    runtimes: 'html5',
+                    url: "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/",
+                    file_name_name: false,
+                    multipart: true,
+                    multipart_params: {
+                        filename: 'filename',
+                        utf8: true,
+                        AWSAccessKeyId: "{% app_setting 'AWS_ACCESS_KEY_ID' %}",
+                        acl: "public-read",
+                        policy: "{{aws_policy|escapejs}}",
+                        signature: "{{aws_signature|escapejs}}",
+                        key: "uploads/u{{user.id}}/${filename}",
+                        'Content-Type': 'image/jpeg',
+                    },
+                    filters: {
+                        max_file_size: '3mb',
+                        mime_types: [
+                            {title: "Image files", extensions: "png,jpg,jpeg,gif"}
+                        ]
+                    },
+                    views: {
+                        list: true,
+                        thumbs: true,
+                        active: 'thumbs'
+                    },
+                    sortable: true,
+                    dragdrop: true,
+                    init: {
+                        BeforeUpload: function (up, file) {
+                            var params = up.settings.multipart_params;
+                            params['Content-Type'] = file.type;
+
+                            var name = Math.round(Math.random() * 100) + file.name;
+                            params.key = "uploads/u{{user.id}}/" + name;
+                        },
+                        FileUploaded: function (up, file, info) {
+                            var key = up.settings.multipart_params.key;
+                            var url = "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/" + key;
+                            document.file_uploaded(url);
+                        },
+                        UploadComplete: function (up, files) {
+                            $('#modal-upload-image').modal('hide');
+                        }
+                    }
+                });
+            {% endif %}
+
+            $('.original-description').css('overflow', 'auto');
+        });
+
+    </script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jszip/3.2.2/jszip.min.js"
+            integrity="sha256-gy5W5/rXWluWXFRvMWFFMVhocfpBe7Tf4SW2WMfjs4E=" crossorigin="anonymous"></script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jszip-utils/0.1.0/jszip-utils.min.js"
+            integrity="sha256-5GhqDpPB1bpRluB0hmS7EJkMH+EVyqUP00CvFEksTVw=" crossorigin="anonymous"></script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"
+            integrity="sha256-FPJJt8nA+xL4RU6/gsriA8p8xAeLGatoyTjldvQKGdE=" crossorigin="anonymous"></script>
+
+    <!-- React support-->
+
+    <script src="//unpkg.com/react@17.0.1/umd/react.production.min.js"></script>
+    <script src="//unpkg.com/react-dom@17.0.1/umd/react-dom.production.min.js"></script>
+    <script src="//unpkg.com/@babel/standalone@7.15.2/babel.min.js"></script>
+
+    {% compress js %}
+        <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'libs/csdk/4.x/js/editor.js' %}"></script>
+        <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'libs/bower_components/uuid-js/lib/uuid.js' %}"></script>
+        <script type="text/javascript" src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
+
+        <script type="text/javascript" src="{% static 'js/trix.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/photopea.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/aviary.js' %}"></script>
+        <script type="text/javascript" src="{% static 'google/js/clippingmagic.js' %}"></script>
+        <script type="text/javascript" src="{% static 'google/js/google_product_selector.js' %}"></script>
+        <script type="text/javascript" src="{% static 'google/js/product_detail.js' %}"></script>
+
+    {% endcompress %}
+
+    <!-- React compnents -->
+    <script type="text/babel" src="{% static 'google/js/react/google_category_specifics_container.jsx' %}"></script>
+    <script type="text/babel" src="{% static 'google/js/react/google_category_container.jsx' %}"></script>
+
+    {% comment %}{% if request.user|can:'import_reviews.use' %}
+        {% compress js %}
+        <script type="text/javascript" src="{% static 'google/js/reviews.js' %}"></script>
+        {% endcompress %}
+    {% endif %}{% endcomment %}
+
+    {% if request.user|can:'image_uploader.use' %}
+        {% compress js %}
+        <script type="text/javascript" src="{% static 'google/js/uploader.js' %}"></script>
+        {% endcompress %}
+    {% endif %}
+
+    {% if request.user|can:'aliextractor.use' %}
+        <script src="{% static 'libs/bower_components/chart.js/dist/Chart.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'aliextractor/js/ae-tab.js' %}"></script>
+
+    {% endif %}
+
+{% endblock %}

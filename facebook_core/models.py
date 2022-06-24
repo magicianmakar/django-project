@@ -97,6 +97,9 @@ class FBStore(SureDoneStoreBase):
 
         pusher.trigger(self.pusher_channel(), event, data)
 
+    def get_admin_order_details(self, order_id):
+        return f'{self.get_admin_url()}/orders/{order_id}'
+
 
 class FBProduct(SureDoneProductBase):
     class Meta(SureDoneProductBase.Meta):

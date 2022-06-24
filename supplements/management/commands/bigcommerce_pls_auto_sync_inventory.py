@@ -15,9 +15,9 @@ class Command(DropifiedBaseCommand):
         store = options.get('store')
         products = BigCommerceProduct.objects.filter(store=store)
         try:
-            # products = BigCommerceProduct.objects.filter(user_supplement__isnull=False, user_supplement__is_deleted=False,
-            #                                              user_supplement__pl_supplement__is_active=True)
-            products = BigCommerceProduct.objects.filter(bigcommercesupplier__product_url__contains='supplement').distinct()
+            products = BigCommerceProduct.objects.filter(bigcommercesupplier__product_url__contains='supplement', store__is_active=True).distinct()
+            products = products.filter(user_supplement__isnull=False, user_supplement__is_deleted=False,
+                                       user_supplement__pl_supplement__is_active=True)
             if store is not None:
                 products = products.filter(store=store)
 

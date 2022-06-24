@@ -16,10 +16,9 @@ class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
         store = options.get('store')
         try:
-            # products = ShopifyProduct.objects.filter(user_supplement__isnull=False, user_supplement__is_deleted=False,
-            #                                          user_supplement__pl_supplement__is_active=True)
-
-            products = ShopifyProduct.objects.filter(productsupplier__product_url__contains='supplement').distinct()
+            products = ShopifyProduct.objects.filter(productsupplier__product_url__contains='supplement', store__is_active=True).distinct()
+            products = products.filter(user_supplement__isnull=False, user_supplement__is_deleted=False,
+                                       user_supplement__pl_supplement__is_active=True)
             if store is not None:
                 products = products.filter(store=store)
             if products:

@@ -569,6 +569,17 @@ function sendProductToFacebook(productId, storeId, publish, callback) {
     return $.post(api_url('product-export', 'fb'), data, callback);
 }
 
+function sendProductToGoogle(productId, storeId, publish, callback) {
+    callback = typeof(callback) === 'undefined' ? function() {} : callback;
+    var data = {
+        product: productId,
+        store: storeId,
+        publish: publish
+    };
+
+    return $.post(api_url('product-export', 'google'), data, callback);
+}
+
 
 function sendProductToBigCommerce(productId, storeId, publish, callback) {
     callback = typeof(callback) === 'undefined' ? function() {} : callback;

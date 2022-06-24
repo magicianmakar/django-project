@@ -114,6 +114,7 @@ INSTALLED_APPS = (
     'aliexpress_core',
     'insider_reports',
     'facebook_core',
+    'google_core',
     'suredone_core',
     'loopedin_core',
     'fb_marketplace_core',
@@ -202,6 +203,7 @@ DROPIFIED_API = {
     'woo': 'woocommerce_core.api.WooStoreApi',
     'ebay': 'ebay_core.api.EbayStoreApi',
     'fb': 'facebook_core.api.FBStoreApi',
+    'google': 'google_core.api.GoogleStoreApi',
     'gkart': 'groovekart_core.api.GrooveKartApi',
     'bigcommerce': 'bigcommerce_core.api.BigCommerceStoreApi',
     'fb_marketplace': 'fb_marketplace_core.api.FBMarketplaceStoreApi',
@@ -714,8 +716,15 @@ SUREDONE_CUSTOM_FIELDS_CONFIG = [
     },
     # Facebook Product Page URL
     {
-        'label': ['Product Page Link'],
+        'label': ['Facebook Product Page Link'],
         'name': ['dropifiedfbproductlink'],
+        'type': 'varchar',
+        'length': 510,
+    },
+    # Google Product Page URL
+    {
+        'label': ['Google Product Page Link'],
+        'name': ['dropifiedgoogleproductlink'],
         'type': 'varchar',
         'length': 510,
     }

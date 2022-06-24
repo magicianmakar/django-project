@@ -16,7 +16,7 @@ from suredone_core.models import SureDoneAccount
 from suredone_core.utils import GetSureDoneProductByGuidEmpty, SureDonePusher
 
 from .models import EbayProduct, EbayStore
-from .utils import EbayOrderUpdater, EbayUtils, smart_board_by_product
+from .utils import EbayOrderUpdater, EbayUtils, smart_board_by_product, get_ebay_currencies_list, get_ebay_store_specific_currency_options
 
 EBAY_API_TIMEOUT = 120
 
@@ -372,6 +372,53 @@ def product_save(req_data, user_id, pusher_channel):
                     'error': f'Importing from this store ({import_store}) is not included in your current plan.'
                 })
                 return
+
+        ebay_utils = EbayUtils(user, account_id=store.sd_account_id)
+
+        # 4. Check currency settings
+        original_data = req_data.get('original')
+        if original_data:
+            original_data = safe_json(original_data)
+            original_currency = original_data.get('currency_code')
+            ebay_currencies = [currency[0] for currency in get_ebay_currencies_list()]
+            if store.currency_format and '{{ amount }}' in store.currency_format:
+                store_currency = store.currency_format.replace('{{ amount }}', '')
+                store_currency = [currency[0] for currency in get_ebay_store_specific_currency_options() if currency[2] == store_currency]
+                if len(store_currency):
+                    store_currency = store_currency[0]
+            else:
+                store_currency = ebay_utils.get_ebay_user_settings_config().get('site_currency')
+
+            if store_currency and store_currency != original_currency:
+                error = f'The current AliExpress currency ({original_currency}) and your eBay store currency ({store_currency}) are different!'
+                sd_pusher.trigger(default_event, {
+                    'success': False,
+                    'error': error
+                })
+                return
+
+            if original_currency not in ebay_currencies:
+                ebay_currencies = ', '.join(ebay_currencies)
+                error = f'{original_currency} is invalid currency for eBay, valid currencies are: {ebay_currencies}'
+                sd_pusher.trigger(default_event, {
+                    'success': False,
+                    'error': error
+                })
+                return
+
+            sd_account = SureDoneAccount.objects.get(id=store.sd_account_id)
+            site_currency = sd_account.parsed_options_config.get('site_currency')
+
+            if original_currency != site_currency:
+                # Update currency settings on SureDone
+                try:
+                    ebay_utils.update_user_business_settings({'site_currency': original_currency})
+                except:
+                    sd_pusher.trigger(default_event, {
+                        'success': False,
+                        'error': 'Something went wrong, please try again.'
+                    })
+                    return
 
         # TODO: Add modifying an existing product
         can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)

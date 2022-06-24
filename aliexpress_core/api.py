@@ -501,8 +501,28 @@ class AliexpressFulfillHelper():
 
                 aliexpress_order.set_info(req)
 
+            # check for duplicate line items
+            items_sku = []
+            duplicate_item = False
+            for i, obj in enumerate(req.product_items):
+                if obj.sku_attr in items_sku or obj.product_id in items_sku:
+                    duplicate_item = True
+                    try:
+                        index = items_sku.index(obj.sku_attr)
+                    except:
+                        index = items_sku.index(obj.product_id)
+                    popped = req.product_items.pop()
+                    req.product_items[index].product_count = req.product_items[index].product_count + popped.product_count
+                if obj.sku_attr:
+                    items_sku.append(obj.sku_attr)
+                else:
+                    items_sku.append(obj.product_id)
+            if duplicate_item:
+                aliexpress_order.set_info(req)
+            # #######End of check########
+
             if len(req.product_items) == 0:
-                return self.order_error('No valid items to order')
+                return self.order_error('No items to order')
             try:
                 result = aliexpress_order.getResponse(authrize=aliexpress_account.access_token)
             except TopException as e:

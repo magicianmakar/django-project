@@ -1789,6 +1789,58 @@
         });
     });
 
+
+    $('#google-store-create-submit-btn').click(function(e) {
+        if (typeof(Pusher) === 'undefined') {
+            toastr.error('This could be due to using Adblocker extensions<br>' +
+                'Please whitelist Dropified website and reload the page<br>' +
+                'Contact us for further assistance',
+                'Pusher service is not loaded', {timeOut: 0});
+            return;
+        }
+
+        var buttonEl = $(this);
+        buttonEl.bootstrapBtn('loading');
+        var pusher = new Pusher(sub_conf.key);
+        var channel = pusher.subscribe(sub_conf.channel);
+
+        channel.bind('google-store-add', function(data) {
+            buttonEl.bootstrapBtn('reset');
+            pusher.unsubscribe(channel);
+
+            if (data.success) {
+                window.location.href = data.auth_url;
+            } else {
+                displayAjaxError('Add Google Store', data);
+            }
+        });
+
+        channel.bind('sd-config-setup', function(data) {
+            if (!data.success) {
+                buttonEl.bootstrapBtn('reset');
+                pusher.unsubscribe(channel);
+                displayAjaxError('Add Google Store', data);
+            }
+        });
+
+        channel.bind('pusher:subscription_succeeded', function() {
+            $.ajax({
+                url: api_url('store-add', 'google'),
+                type: 'GET',
+                success: function(data) {},
+                error: function(data, status) {
+                    buttonEl.bootstrapBtn('reset');
+                    pusher.unsubscribe(channel);
+                    if (status === 'timeout') {
+                        displayAjaxError('Add Google Store', 'Request timed out. Please try again');
+                    } else {
+                        displayAjaxError('Add Google Store', data);
+                    }
+                },
+            });
+        });
+    });
+
     $('.ebay-delete-store-btn').click(function(e) {
         e.preventDefault();
         var storeId = $(this).data('store-id');
@@ -2078,6 +2130,35 @@
                 method: 'DELETE',
                 success: function() {
                     $('#fb-store-row-' + storeId).hide();
+                    swal('Deleted!', 'The store has been deleted.', 'success');
+                },
+                error: function(data) {
+                    displayAjaxError('Delete Store', data);
+                }
+            });
+        });
+    });
+
+
+    $('.google-delete-store-btn').click(function(e) {
+        e.preventDefault();
+        var storeId = $(this).data('store-id');
+
+        swal({
+            title: 'Are you sure?',
+            text: 'Please, confirm that you want to delete this store. This action cannot be undone.',
+            type: 'warning',
+            showCancelButton: true,
+            showLoaderOnConfirm: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: 'Yes, delete it!',
+            closeOnConfirm: false
+        }, function() {
+            $.ajax({
+                url: api_url('store', 'google') + '?' + $.param({id: storeId}),
+                method: 'DELETE',
+                success: function() {
+                    $('#google-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
                 },
                 error: function(data) {

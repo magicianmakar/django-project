@@ -139,6 +139,7 @@ class UserProfile(models.Model):
     subuser_woo_stores = models.ManyToManyField('woocommerce_core.WooStore', blank=True, related_name='subuser_woo_stores')
     subuser_ebay_stores = models.ManyToManyField('ebay_core.EbayStore', blank=True, related_name='subuser_ebay_stores')
     subuser_fb_stores = models.ManyToManyField('facebook_core.FBStore', blank=True, related_name='subuser_fb_stores')
+    subuser_google_stores = models.ManyToManyField('google_core.GoogleStore', blank=True, related_name='subuser_google_stores')
     subuser_gear_stores = models.ManyToManyField('gearbubble_core.GearBubbleStore', blank=True, related_name='subuser_gear_stores')
     subuser_gkart_stores = models.ManyToManyField('groovekart_core.GrooveKartStore', blank=True, related_name='subuser_gkart_stores')
     subuser_bigcommerce_stores = models.ManyToManyField('bigcommerce_core.BigCommerceStore', blank=True, related_name='subuser_bigcommerce_stores')
@@ -199,6 +200,7 @@ class UserProfile(models.Model):
             self.user.wooproduct_set.exists(),
             self.user.ebayproduct_set.exists(),
             self.user.fbproduct_set.exists(),
+            self.user.googleproduct_set.exists(),
             self.user.gearbubbleproduct_set.exists(),
             self.user.groovekartproduct_set.exists(),
             self.user.bigcommerceproduct_set.exists(),
@@ -434,6 +436,20 @@ class UserProfile(models.Model):
 
         return stores
 
+    def get_google_stores(self, flat=False, do_sync=False):
+        if do_sync:
+            # The function is defined in facebook_core.utils.py
+            self.sync_google_stores()
+        if self.is_subuser:
+            stores = self.subuser_google_stores.filter(is_active=True)
+        else:
+            stores = self.user.googlestore_set.filter(is_active=True)
+
+        if flat:
+            stores = stores.values_list('id', flat=True)
+
+        return stores
+
     def get_gear_stores(self, flat=False):
         if self.is_subuser:
             stores = self.subuser_gear_stores.filter(is_active=True)
@@ -488,6 +504,7 @@ class UserProfile(models.Model):
             self.get_woo_stores().count(),
             self.get_ebay_stores().count(),
             self.get_fb_stores().count(),
+            self.get_google_stores().count(),
             self.get_gear_stores().count(),
             self.get_gkart_stores().count(),
             self.get_bigcommerce_stores().count(),

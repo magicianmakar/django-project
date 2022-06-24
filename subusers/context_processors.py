@@ -37,6 +37,14 @@ def template_config(request):
                 'prefix': '/fb'
             }
         }
+    elif namespace == 'google':
+        template_config = {
+            'base': 'base_google_core.html',
+            'url': {
+                'namespace': 'google:',
+                'prefix': '/google'
+            }
+        }
     elif namespace == 'gear':
         template_config = {
             'base': 'base_gearbubble_core.html',

@@ -58,6 +58,11 @@
                     <a href="{% url 'fb_marketplace:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">Facebook Marketplace</a>
                 </li>
                 {% endif %}
+                {% if section != 'Google' and request.user|can:'google.use' %}
+                <li>
+                    <a href="{% url 'google:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">Google</a>
+                </li>
+                {% endif %}
             </ul>
         </div>
 

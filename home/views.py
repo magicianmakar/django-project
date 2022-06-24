@@ -26,6 +26,7 @@ from groovekart_core.views import ProfitDashboardView as GKartProfitDashboardVie
 from bigcommerce_core.views import ProfitDashboardView as BigCommerceProfitDashboardView
 from ebay_core.views import ProfitDashboardView as EBayProfitDashboardView
 from facebook_core.views import ProfitDashboardView as FBProfitDashboardView
+from google_core.views import ProfitDashboardView as GoogleProfitDashboardView
 
 from .context_processors import all_stores
 
@@ -186,6 +187,8 @@ class DashboardView(HomePageMixing):
                 view = EBayProfitDashboardView.as_view()(request, *args, from_dashboard=True, **kwargs)
             elif store_type == 'fb':
                 view = FBProfitDashboardView.as_view()(request, *args, from_dashboard=True, **kwargs)
+            elif store_type == 'google':
+                view = GoogleProfitDashboardView.as_view()(request, *args, from_dashboard=True, **kwargs)
             else:
                 view = index(request, from_dashboard=True)
 

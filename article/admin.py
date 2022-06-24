@@ -34,7 +34,7 @@ class ArticleAdmin(admin.ModelAdmin):
 class SidebarLinkAdmin(FormWithRequestMixin, admin.ModelAdmin):
     list_display = ('title', 'order', 'link')
     search_fields = ('title', 'link')
-    filter_horizontal = ('display_plans',)
+    filter_horizontal = ('display_plans', 'display_bundles')
     form = SidebarLinkAdminForm
 
 

@@ -55,6 +55,7 @@ class Command(DropifiedBaseCommand):
                 'woo_count': len(profile.get_woo_stores()),
                 'ebay_count': len(profile.get_ebay_stores()),
                 'fb_count': len(profile.get_fb_stores()),
+                'google_count': len(profile.get_google_stores()),
                 'gkart_count': len(profile.get_gkart_stores()),
                 'gear_count': len(profile.get_gear_stores()),
                 'bigcommerce_count': len(profile.get_bigcommerce_stores()),
@@ -64,7 +65,7 @@ class Command(DropifiedBaseCommand):
 
         data['custom_attributes']['stores_count'] = sum(
             data['custom_attributes'][i] for i in ['shopify_count', 'chq_count', 'woo_count', 'gkart_count',
-                                                   'gear_count', 'bigcommerce_count', 'ebay_count', 'fb_count']
+                                                   'gear_count', 'bigcommerce_count', 'ebay_count', 'fb_count', 'google_count']
         )
 
         try:

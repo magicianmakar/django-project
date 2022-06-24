@@ -184,6 +184,40 @@ class SureDoneAccount(StoreBase):
 
         return missing_fields_per_store
 
+    def verify_google_fields_mapping(self, options: dict):
+        stores = self.google_core_stores.all()
+        missing_fields_per_store = {}
+        required_field_mappings = {
+            'link': 'dropifiedgoogleproductlink',
+            'description': 'longdescription'
+        }
+        for store in stores:
+            prefix = store.instance_prefix
+            plugin_settings = safe_json(options.get(f'plugin_settings_{prefix}')).get('sets', {})
+            fields_mapping = plugin_settings.get('custom_field_mappings', {}).get('value', {})
+
+            # If there are 0 field mappings, SureDone returns a list for custom_field_mappings.value
+            if not isinstance(fields_mapping, dict):
+                missing_fields_per_store[store.filter_instance_id] = required_field_mappings
+
+            # If there are some field mappings, verify each mapping pair separately
+            else:
+                current_missing_pairs = {}
+                for key, value in required_field_mappings.items():
+                    if fields_mapping.get(key) != value:
+                        current_missing_pairs[key] = value
+
+                if current_missing_pairs:
+                    # It's important to include the existing field mappings in the request body to update settings
+                    # because otherwise they will be erased, i.e. a request to update field mappings overwrites a
+                    # list of field mappings that already exists with a new one removing anything that was not included
+                    missing_fields_per_store[store.filter_instance_id] = {
+                        **fields_mapping,
+                        **current_missing_pairs,
+                    }
+
+        return missing_fields_per_store
+
 
 class SureDoneStoreBase(StoreBase):
     class Meta(StoreBase.Meta):
