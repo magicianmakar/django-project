@@ -1351,6 +1351,31 @@ function sendOrdersToVueApp(btns) {
     }
 }
 
+$("#single-click-add-queue").on("click" ,function() {
+    var arr = [];
+    $(".quick-order-btn").each(function (i, el) {
+        var data_target = $(this).attr("data-target");
+        if (data_target == "all") {
+            var elObj = $(this).closest("div.order");
+            elObj.find('.line-checkbox').each(function (i, el) {
+                var obj = $(el).closest('div.line');
+                var btn= '';
+                if ($(obj).hasClass("bundled")) {
+                    btn = obj.find('a.quick-bundle-order');
+                    btn = $(btn);
+                    adddQuickBundleOrders(btn);
+                }
+                else {
+                    btn = obj.find('a.place-order');
+                    btn = $(btn);
+                    arr.push(btn);
+                }
+            });
+        }
+    });
+    sendOrdersToVueApp(arr);
+});
+
 $(".quick-order-btn").on("click", function(e) {
     e.preventDefault();
     var data_target = $(this).attr("data-target");
