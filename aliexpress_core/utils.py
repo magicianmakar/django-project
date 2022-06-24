@@ -226,6 +226,11 @@ def save_aliexpress_products(request, products_data):
             result_products['errored'].append(api_product['error'])
             continue
 
+        elif 'result' in api_product:
+            if api_product['result']['current_record_count'] == 0:
+                result_products['errored'] = 'No product found for the given URL.'
+                return result_products
+
         api_product = apply_user_config(user, api_product)
 
         # will be {store_type}_{store_id}

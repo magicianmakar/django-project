@@ -247,6 +247,9 @@ class AliexpressAccount(models.Model):
             if affiliate_result.get('error', None):
                 return affiliate_result
 
+            if affiliate_result['result']['current_record_count'] == 0:
+                return affiliate_result
+
             if use_cache:
                 cache.set(affiliate_cache_key, affiliate_result, timeout=300)
 
