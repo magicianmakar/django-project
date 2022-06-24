@@ -931,7 +931,7 @@ class AuthAcceptRedirectView(RedirectView):
                 is_active=True,
             )
 
-        messages.success(self.request, 'Your Google store has been added! Please complete the onboarding process below to complete authorization.')
+        messages.success(self.request, 'Your Google store has been added!')
         return reverse('google:index')
         # no need onboarding for Google
         # return reverse('google:onboard', kwargs={'pk': store.id})

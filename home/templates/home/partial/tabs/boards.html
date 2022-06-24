@@ -65,9 +65,9 @@
 
     {% if user_stores.google %}
         {% if 'google' in request.path %}
-            <li class="active"><a data-toggle="tab" href="#tab-1">Facebook</a></li>
+            <li class="active"><a data-toggle="tab" href="#tab-1">Google</a></li>
         {% else %}
-            <li><a href="{% url 'google:boards_list' %}">Facebook</a></li>
+            <li><a href="{% url 'google:boards_list' %}">Google</a></li>
         {% endif %}
     {% endif %}
 </ul>
