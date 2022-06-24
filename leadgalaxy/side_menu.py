@@ -307,7 +307,7 @@ def get_menu_item_data(request):
         'insiders-report-article': get_article_link(
             'insiders-report',
             hidden=lambda a: not user or (not user.is_staff and user.profile.plan not in a.display_plans.all()
-                                          and not a.display_plans.filter(id__in=bunles_ids).exists()),
+                                          and not a.display_bundles.filter(id__in=bunles_ids).exists()),
         ),
         'swipebox-headline-generator': {
             'title': 'Retro Elite Bonuses',
