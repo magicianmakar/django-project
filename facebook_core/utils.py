@@ -667,11 +667,14 @@ class FBUtils(SureDoneUtils):
         new_tracker_orders = []
         for tracked in tracker_orders:
             tracked.order = orders.get(f'{tracked.order_id}')
+            tracked.order['id'] = tracked.order.get('oid')
             tracked.line = lines.get(f'{tracked.order_id}-{tracked.line_id}')
 
             if tracked.line:
                 fulfillment_status = (self.get_item_fulfillment_status(tracked.order, tracked.line_id) or '').lower()
                 tracked.line['fulfillment_status'] = fulfillment_status
+                tracked.line['id'] = tracked.line_id
+                tracked.line['product_id'] = tracked.line.get('itemdetails').get('product-id')
 
                 if tracked.fb_status != fulfillment_status:
                     tracked.fb_status = fulfillment_status
