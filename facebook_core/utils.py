@@ -14,6 +14,7 @@ from shopified_core import permissions
 from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import fix_order_data, products_filter, safe_float, safe_int, safe_json, safe_str
+from suredone_core.models import SureDoneAccount
 from suredone_core.utils import SureDoneOrderUpdater, SureDoneUtils, parse_suredone_date, sd_customer_address
 
 
@@ -1064,7 +1065,8 @@ class FBOrderItem:
             return mapped
 
         variants = []
-        var_attributes_keys = self.get_attribute_keys_from_var_config(product_variant)
+        var_attributes_keys = [SureDoneAccount.minimize_custom_field_name(i)
+                               for i in self.get_attribute_keys_from_var_config(product_variant)]
         sku_values = product_variant.supplier_sku.split(';')
         for i, var_key in enumerate(var_attributes_keys):
             var_data = product_variant.parsed_variant_data

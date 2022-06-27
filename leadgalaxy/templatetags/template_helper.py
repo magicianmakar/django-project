@@ -462,6 +462,8 @@ def variant_names(variants, join=' / '):
                 names.append(variant)
             else:
                 if 'title' in variant and variant['title'] != 'Default Title':
+                    if not variant['title']:
+                        variant['title'] = ''
                     names.append(variant['title'])
     else:
         return variant_names([variants])

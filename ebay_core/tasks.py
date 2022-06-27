@@ -16,7 +16,7 @@ from suredone_core.models import SureDoneAccount
 from suredone_core.utils import GetSureDoneProductByGuidEmpty, SureDonePusher
 
 from .models import EbayProduct, EbayStore
-from .utils import EbayOrderUpdater, EbayUtils, smart_board_by_product, get_ebay_currencies_list, get_ebay_store_specific_currency_options
+from .utils import EbayOrderUpdater, EbayUtils, get_ebay_currencies_list, get_ebay_store_specific_currency_options, smart_board_by_product
 
 EBAY_API_TIMEOUT = 120
 
