@@ -814,7 +814,7 @@ class SureDoneUtils:
             'parent_guid': main_sku,
         }
 
-    def delete_product_with_all_variations(self, parent_guid: str, skip_all_channels: False):
+    def delete_product_with_all_variations(self, parent_guid: str, skip_all_channels=False):
         # Get all products with the matching SKU
         sd_product_data = self.api.get_item_by_guid(parent_guid)
 

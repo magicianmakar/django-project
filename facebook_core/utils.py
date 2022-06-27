@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404
 
 from facebook_core.models import FBBoard, FBOrderTrack, FBProduct, FBProductVariant, FBStore, FBSupplier
 from leadgalaxy.models import UserProfile
+from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
@@ -758,6 +759,44 @@ class FBUtils(SureDoneUtils):
 
     def disable_plugin_store(self, instance: int):
         return self.update_plugin_store_status('facebook', instance, 'off')
+
+    def move_product_to_store(self, product: FBProduct, store: FBStore, skip_all_channels: bool = False):
+        """
+        Move FB product to passed FB store instance.
+
+        :param product:
+        :type product: FBProduct
+        :param store:
+        :type store: FBStore
+        :param skip_all_channels:
+        :type skip_all_channels: bool
+        :return:
+        :rtype:
+        """
+        updated_product = None
+        try:
+            sd_product_data = self.api.get_item_by_guid(product.guid)
+            if sd_product_data and sd_product_data.get('guid'):
+                variants = list(product.retrieve_variants())
+
+                index_of_parent_variant = 0
+                for i, variant in enumerate(variants):
+                    if variant.parent_product and variant.parent_product.guid == variant.guid:
+                        index_of_parent_variant = i
+                    variants[i] = {
+                        'guid': variant.guid,
+                        'dropifiedconnectedstoreid': store.store_instance_id,
+                    }
+
+                updated_product_data = variants[index_of_parent_variant]
+                updated_product_data['variants'] = variants
+                self.update_product_details(updated_product_data, 'facebook', store.store_instance_id,
+                                            skip_all_channels=skip_all_channels)
+
+                updated_product = self.get_fb_product_details(product.guid, smart_board_sync=True)
+        except Exception:
+            capture_exception()
+        return updated_product
 
 
 class FBOrderUpdater(SureDoneOrderUpdater):
