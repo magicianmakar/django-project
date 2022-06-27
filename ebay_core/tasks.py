@@ -389,8 +389,12 @@ def product_save(req_data, user_id, pusher_channel):
             else:
                 store_currency = ebay_utils.get_ebay_user_settings_config().get('site_currency')
 
+            # We assume the product currency is the same as the store currency since we can't find the product currency
+            if original_currency is None:
+                original_currency = store_currency
+
             if store_currency and store_currency != original_currency:
-                error = f'The current AliExpress currency ({original_currency}) and your eBay store currency ({store_currency}) are different!'
+                error = f'The current product currency ({original_currency}) and your eBay store currency ({store_currency}) are different!'
                 sd_pusher.trigger(default_event, {
                     'success': False,
                     'error': error
