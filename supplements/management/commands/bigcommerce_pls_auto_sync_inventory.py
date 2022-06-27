@@ -55,8 +55,12 @@ class Command(DropifiedBaseCommand):
                                 inv = UserSupplement.objects.get(id=variant_source_id).pl_supplement.inventory
                                 product_data['variants'][i]['inventory_level'] = inv
                 else:
+                    try:
+                        qty = product.default_supplier.user_supplement.pl_supplement.inventory
+                    except AttributeError:
+                        return
+
                     product_data['inventory_tracking'] = 'product'
-                    qty = product.default_supplier.user_supplement.pl_supplement.inventory
                     product_data['inventory_level'] = qty
                     product_data['variants'][0]['inventory_level'] = qty
                     product_data['inventory_tracking'] = 'product'

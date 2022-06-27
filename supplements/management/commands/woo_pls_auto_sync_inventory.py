@@ -58,10 +58,14 @@ class Command(DropifiedBaseCommand):
                         })
                         r.raise_for_status()
                 else:
-                    product_data['stock_quantity'] = product.default_supplier.user_supplement.pl_supplement.inventory
-                    product_data['manage_stock'] = True
-                    update_endpoint = 'products/{}'.format(product.source_id)
-                    r = product.store.wcapi.put(update_endpoint, product_data)
-                    r.raise_for_status()
+                    try:
+                        product_data['stock_quantity'] = product.default_supplier.user_supplement.pl_supplement.inventory
+                        product_data['manage_stock'] = True
+                        update_endpoint = 'products/{}'.format(product.source_id)
+                        r = product.store.wcapi.put(update_endpoint, product_data)
+                        r.raise_for_status()
+                    except AttributeError:
+                        return
+
         except Exception:
             capture_exception()

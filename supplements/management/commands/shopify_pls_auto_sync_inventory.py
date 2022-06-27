@@ -55,8 +55,12 @@ class Command(DropifiedBaseCommand):
                                 product.set_variant_quantity(quantity=inv, variant_id=v_id)
                                 time.sleep(0.5)
                 else:
-                    qty = product.default_supplier.user_supplement.pl_supplement.inventory
-                    product.set_variant_quantity(quantity=qty, variant=product_data['variants'][0])
-                    time.sleep(0.5)
+                    try:
+                        qty = product.default_supplier.user_supplement.pl_supplement.inventory
+                        product.set_variant_quantity(quantity=qty, variant=product_data['variants'][0])
+                        time.sleep(0.5)
+                    except AttributeError:
+                        pass
+
         except Exception:
             capture_exception()
