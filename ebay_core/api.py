@@ -561,9 +561,11 @@ class EbayStoreApi(ApiBase):
         if not original_link:
             return self.api_error('Original Link is not set', status=404)
 
-        supplier_url = remove_link_query(data.get('supplier-link'))
-        if not supplier_url:
-            return self.api_error('Supplier URL is missing', status=422)
+        supplier_name = data.get('supplier-name')
+        if not supplier_name:
+            return self.api_error('Supplier Name is missing', status=422)
+
+        supplier_url = remove_link_query(data.get('supplier-link', 'http://www.aliexpress.com/'))
 
         product_guid = data.get('product')
 
@@ -643,7 +645,7 @@ class EbayStoreApi(ApiBase):
 
             product_supplier.product = product
             product_supplier.product_url = original_link
-            product_supplier.supplier_name = data.get('supplier-name')
+            product_supplier.supplier_name = supplier_name
             product_supplier.supplier_url = supplier_url
             product_supplier.save()
 
@@ -656,7 +658,7 @@ class EbayStoreApi(ApiBase):
                 product=product,
                 product_guid=product_guid,
                 product_url=original_link,
-                supplier_name=data.get('supplier-name'),
+                supplier_name=supplier_name,
                 supplier_url=supplier_url,
                 is_default=is_default
             )
@@ -1240,7 +1242,7 @@ class EbayStoreApi(ApiBase):
         store_id = data.get('store')
         supplier = data.get('supplier')
         vendor_name = data.get('vendor_name')
-        vendor_url = data.get('vendor_url')
+        vendor_url = data.get('vendor_url', 'http://www.aliexpress.com/')
         product_guid = data.get('product')
         product_variants_count = safe_int(data.get('variants_count'), None)
         csv_position = safe_int(data.get('csv_index_position'), None)

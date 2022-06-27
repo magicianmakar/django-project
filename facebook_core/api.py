@@ -528,9 +528,11 @@ class FBStoreApi(ApiBase):
         if not original_link:
             return self.api_error('Original Link is not set', status=500)
 
-        supplier_url = remove_link_query(data.get('supplier-link'))
-        if not supplier_url:
-            return self.api_error('Supplier URL is missing', status=422)
+        supplier_name = data.get('supplier-name')
+        if not supplier_name:
+            return self.api_error('Supplier Name is missing', status=422)
+
+        supplier_url = remove_link_query(data.get('supplier-link', 'http://www.aliexpress.com/'))
 
         product_guid = data.get('product')
 
@@ -613,7 +615,7 @@ class FBStoreApi(ApiBase):
 
             product_supplier.product = product
             product_supplier.product_url = original_link
-            product_supplier.supplier_name = data.get('supplier-name')
+            product_supplier.supplier_name = supplier_name
             product_supplier.supplier_url = supplier_url
             product_supplier.save()
 
@@ -626,7 +628,7 @@ class FBStoreApi(ApiBase):
                 product=product,
                 product_guid=product_guid,
                 product_url=original_link,
-                supplier_name=data.get('supplier-name'),
+                supplier_name=supplier_name,
                 supplier_url=supplier_url,
                 is_default=is_default
             )
