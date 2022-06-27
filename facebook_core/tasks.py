@@ -31,6 +31,8 @@ def add_new_fb_store(sd_account_id, pusher_channel, user_id, instance_id=None, e
         default_error_message = 'Failed to add a new Facebook channel. ' \
                                 'Please try again or contact support@dropified.com'
 
+    next_instance_id = None
+    created_instance_id = None
     try:
         sd_account = SureDoneAccount.objects.get(id=sd_account_id)
 
@@ -54,6 +56,12 @@ def add_new_fb_store(sd_account_id, pusher_channel, user_id, instance_id=None, e
 
         return sd_account_id
     except Exception:
+        capture_exception(extra={
+            'suredone_account_id': sd_account_id,
+            'user': user.id,
+            'next_instance_id': next_instance_id,
+            'created_instance_id': created_instance_id,
+        })
         sd_pusher.trigger(default_event, {
             'success': False,
             'error': default_error_message,
