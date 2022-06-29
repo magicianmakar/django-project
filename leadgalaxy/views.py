@@ -1413,9 +1413,9 @@ def user_profile(request):
         show_plod_plan = [request.GET['__plod']]
 
     if request.GET.get('__revision'):
-        plan_filter = {'revision': request.GET['__revision']}
+        plan_filter = {'revision': request.GET['__revision'], 'hidden': False}
     elif settings.PLAN_REVISION:
-        plan_filter = {'revision': settings.PLAN_REVISION}
+        plan_filter = {'revision': settings.PLAN_REVISION, 'hidden': False}
     else:
         plan_filter = {'hidden': False}
 

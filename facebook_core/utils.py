@@ -10,10 +10,12 @@ from django.shortcuts import get_object_or_404
 
 from facebook_core.models import FBBoard, FBOrderTrack, FBProduct, FBProductVariant, FBStore, FBSupplier
 from leadgalaxy.models import UserProfile
+from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import fix_order_data, products_filter, safe_float, safe_int, safe_json, safe_str
+from suredone_core.models import SureDoneAccount
 from suredone_core.utils import SureDoneOrderUpdater, SureDoneUtils, parse_suredone_date, sd_customer_address
 
 
@@ -667,11 +669,14 @@ class FBUtils(SureDoneUtils):
         new_tracker_orders = []
         for tracked in tracker_orders:
             tracked.order = orders.get(f'{tracked.order_id}')
+            tracked.order['id'] = tracked.order.get('oid')
             tracked.line = lines.get(f'{tracked.order_id}-{tracked.line_id}')
 
             if tracked.line:
                 fulfillment_status = (self.get_item_fulfillment_status(tracked.order, tracked.line_id) or '').lower()
                 tracked.line['fulfillment_status'] = fulfillment_status
+                tracked.line['id'] = tracked.line_id
+                tracked.line['product_id'] = tracked.line.get('itemdetails').get('product-id')
 
                 if tracked.fb_status != fulfillment_status:
                     tracked.fb_status = fulfillment_status
@@ -754,6 +759,44 @@ class FBUtils(SureDoneUtils):
 
     def disable_plugin_store(self, instance: int):
         return self.update_plugin_store_status('facebook', instance, 'off')
+
+    def move_product_to_store(self, product: FBProduct, store: FBStore, skip_all_channels: bool = False):
+        """
+        Move FB product to passed FB store instance.
+
+        :param product:
+        :type product: FBProduct
+        :param store:
+        :type store: FBStore
+        :param skip_all_channels:
+        :type skip_all_channels: bool
+        :return:
+        :rtype:
+        """
+        updated_product = None
+        try:
+            sd_product_data = self.api.get_item_by_guid(product.guid)
+            if sd_product_data and sd_product_data.get('guid'):
+                variants = list(product.retrieve_variants())
+
+                index_of_parent_variant = 0
+                for i, variant in enumerate(variants):
+                    if variant.parent_product and variant.parent_product.guid == variant.guid:
+                        index_of_parent_variant = i
+                    variants[i] = {
+                        'guid': variant.guid,
+                        'dropifiedconnectedstoreid': store.store_instance_id,
+                    }
+
+                updated_product_data = variants[index_of_parent_variant]
+                updated_product_data['variants'] = variants
+                self.update_product_details(updated_product_data, 'facebook', store.store_instance_id,
+                                            skip_all_channels=skip_all_channels)
+
+                updated_product = self.get_fb_product_details(product.guid, smart_board_sync=True)
+        except Exception:
+            capture_exception()
+        return updated_product
 
 
 class FBOrderUpdater(SureDoneOrderUpdater):
@@ -1061,7 +1104,8 @@ class FBOrderItem:
             return mapped
 
         variants = []
-        var_attributes_keys = self.get_attribute_keys_from_var_config(product_variant)
+        var_attributes_keys = [SureDoneAccount.minimize_custom_field_name(i)
+                               for i in self.get_attribute_keys_from_var_config(product_variant)]
         sku_values = product_variant.supplier_sku.split(';')
         for i, var_key in enumerate(var_attributes_keys):
             var_data = product_variant.parsed_variant_data
