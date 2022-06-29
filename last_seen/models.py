@@ -71,6 +71,7 @@ class LastSeen(models.Model):
 
     class Meta:
         ordering = ('-last_seen',)
+        index_together = ('user', 'module')
 
     def __str__(self):
         return "%s on %s" % (self.user, self.last_seen)
