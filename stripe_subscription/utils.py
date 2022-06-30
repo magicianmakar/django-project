@@ -1006,13 +1006,26 @@ def process_webhook_event(request, event_id):
 
         # process bundles (CF, Lifetime)
         if 'Retro Elite Lifetime' in description:
-            bundle = FeatureBundle.objects.get(slug='retro-elite-lifetime')
-            user.profile.bundles.add(bundle)
+            try:
+                bundle = FeatureBundle.objects.get(slug='retro-elite-lifetime')
+                user.profile.bundles.add(bundle)
+            except:
+                capture_message("Error adding bundle")
 
         if 'Retro Unlimited Pass' in description:
             # upsell
-            bundle = FeatureBundle.objects.get(slug='retro-unlimited-pass')
-            user.profile.bundles.add(bundle)
+            try:
+                bundle = FeatureBundle.objects.get(slug='retro-unlimited-pass')
+                user.profile.bundles.add(bundle)
+            except:
+                capture_message("Error adding bundle")
+
+        # process 3-pay charges
+        for product_to_process in settings.LIFETIME3PAY_PRODUCTS:
+            if product_to_process['title'] in description.lower():
+                user.profile.set_config_value(f'{product_to_process["config_prefix"]}-lastcharge-timestamp', charge.created)
+                user.profile.set_config_value(f'{product_to_process["config_prefix"]}-amount', charge.amount)
+                user.profile.set_config_value(f'{product_to_process["config_prefix"]}-charges', 1)
 
         commission_from_stripe.apply_async(
             args=[charge.id],
