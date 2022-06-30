@@ -5,6 +5,7 @@ import time
 
 from django.contrib.auth.models import User
 from django.conf import settings
+from leadgalaxy.models import GroupPlan
 
 from shopified_core.utils import safe_int, safe_str
 from .models import HubspotAccount
@@ -218,3 +219,29 @@ def generate_create_contact(user: User):
         data['properties']['store_revenue'] = admitad_revenue['sum']
 
     return data
+
+
+def update_plan_property_options(self):
+    plans = set([clean_plan_name(i) for i in GroupPlan.objects.all()])
+    options = []
+    for plan in plans:
+        options.append({
+            "label": plan,
+            "value": plan,
+            "hidden": False
+        })
+
+    data = {
+        "name": "plan",
+        "label": "Plan",
+        "type": "enumeration",
+        "fieldType": "select",
+        "description": "Dropified Plan",
+        "groupName": "subscription",
+        "formField": True,
+        "options": options
+    }
+
+    url = 'https://api.hubapi.com/crm/v3/properties/0-1/plan'
+
+    return api_requests(url, data, 'PATCH')
