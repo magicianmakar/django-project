@@ -352,7 +352,9 @@ class AliexpressFulfillHelper():
         address.address = self.shipping_address['address1']
         address.address2 = self.shipping_address['address2']
         address.city = self.shipping_address['city']
-        address.province = self.shipping_address['province']
+        address.province = self.shipping_address['province'].strip()
+        if address.province.lower() == 'n/a' or not address.province:
+            address.province = 'Other'
         address.zip = self.shipping_address['zip']
         address.country = self.shipping_address['country_code']
 
@@ -518,7 +520,7 @@ class AliexpressFulfillHelper():
                         index = items_sku.index(obj.product_id)
                     popped = req.product_items.pop()
                     req.product_items[index].product_count = req.product_items[index].product_count + popped.product_count
-                    items_sku.append(sku_str)
+                items_sku.append(sku_str)
             if duplicate_item:
                 aliexpress_order.set_info(req)
             # #######End of check########
