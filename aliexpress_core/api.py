@@ -505,7 +505,12 @@ class AliexpressFulfillHelper():
             items_sku = []
             duplicate_item = False
             for i, obj in enumerate(req.product_items):
-                if obj.sku_attr in items_sku or obj.product_id in items_sku:
+                if obj.sku_attr:
+                    sku_str = f"{obj.sku_attr}#{obj.product_id}"
+                else:
+                    sku_str = obj.product_id
+
+                if sku_str in items_sku:
                     duplicate_item = True
                     try:
                         index = items_sku.index(obj.sku_attr)
@@ -513,10 +518,7 @@ class AliexpressFulfillHelper():
                         index = items_sku.index(obj.product_id)
                     popped = req.product_items.pop()
                     req.product_items[index].product_count = req.product_items[index].product_count + popped.product_count
-                if obj.sku_attr:
-                    items_sku.append(obj.sku_attr)
-                else:
-                    items_sku.append(obj.product_id)
+                    items_sku.append(sku_str)
             if duplicate_item:
                 aliexpress_order.set_info(req)
             # #######End of check########
