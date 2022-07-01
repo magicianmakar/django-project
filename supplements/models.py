@@ -376,7 +376,7 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
                 'billTo': get_address(json.loads(self.billing_address)),
             }
 
-    def to_shipstation_order(self):
+    def to_shipstation_order(self, shipstation_acc):
         status = {
             'pending': 'awaiting_payment',
             'paid': 'awaiting_shipment',
@@ -400,7 +400,9 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
             extra_info['requestedShippingService'] = self.shipping_service_id
 
         for item in self.order_items.all():
-            extra_info['items'] += item.to_shipstation_item()
+            item_pl_shipstation_acc = item.label.user_supplement.pl_supplement.shipstation_account
+            if item_pl_shipstation_acc == shipstation_acc:
+                extra_info['items'] += item.to_shipstation_item()
 
         return {
             **self.shipstation_address,

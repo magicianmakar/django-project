@@ -58,7 +58,7 @@ def create_shipstation_order(pls_order, shipstation_acc, raw_request=False):
     headers.update(get_auth_header(shipstation_acc))
     shipstation_url = shipstation_acc.api_url
     url = f'{shipstation_url}/orders/createOrder'
-    data = pls_order.to_shipstation_order()
+    data = pls_order.to_shipstation_order(shipstation_acc)
     r = requests.post(url, data=json.dumps(data), headers=headers)
 
     if r.status_code == 429:

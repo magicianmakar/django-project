@@ -34,7 +34,7 @@ def update_shipstation_address(pls_order_id, store_id, store_type):
 def create_shipstation_orders(self, token):
     """Send all paid orders to shipstation while respecting any http 429 responses"""
 
-    # Prevent running twice
+    # # Prevent running twice
     lock = get_orders_lock(token)
     if not lock:
         return False
@@ -44,23 +44,23 @@ def create_shipstation_orders(self, token):
             shipstation_key='',
             status__in=[PLSOrder.PAID, PLSOrder.SHIPPING_ERROR],
         ).first()
-
-        orderline = PLSOrderLine.objects.filter(pls_order=order.id).first()
+        orderlines = PLSOrderLine.objects.filter(pls_order=order.id)
 
         while order:
-            try:
-                shipstation_acc = orderline.label.user_supplement.pl_supplement.shipstation_account
-                create_shipstation_order(order, shipstation_acc)
+            for orderline in orderlines:
+                try:
+                    shipstation_acc = orderline.label.user_supplement.pl_supplement.shipstation_account
+                    create_shipstation_order(order, shipstation_acc)
 
-            except LimitExceededError as e:
-                lock.release()
-                raise self.retry(exc=e, countdown=e.retry_after)
+                except LimitExceededError as e:
+                    lock.release()
+                    raise self.retry(exc=e, countdown=e.retry_after)
 
-            except:
-                capture_exception()
-                order.shipstation_retries += 1
-                order.status = PLSOrder.SHIPPING_ERROR
-                order.save()
+                except:
+                    capture_exception()
+                    order.shipstation_retries += 1
+                    order.status = PLSOrder.SHIPPING_ERROR
+                    order.save()
 
             order = PLSOrder.objects.filter(
                 shipstation_key='',

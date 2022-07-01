@@ -504,9 +504,9 @@ class SupplementsApi(ApiResponseMixin, View):
         province_code = province_code_from_name(country_code, province)
 
         basket_items = user.basket_items.all()
-        total_weight = 0
+        total_weight = []
         for basket_item in basket_items:
-            total_weight += basket_item.user_supplement.pl_supplement.weight * basket_item.quantity
+            total_weight.append(basket_item.user_supplement.pl_supplement.weight * basket_item.quantity)
 
         shippings = get_shipping_costs(
             country_code,
@@ -553,7 +553,7 @@ class SupplementsApi(ApiResponseMixin, View):
         except Exception:
             pass
 
-        total_weight = 0
+        total_weight = []
         order_line_items = []
         pl_supplement_inventory = {}
         basket_items = user.basket_items.select_related('user_supplement__pl_supplement').all()
@@ -597,7 +597,7 @@ class SupplementsApi(ApiResponseMixin, View):
             order_line['title'] = basket_item.user_supplement.title
             order_line['sku'] = basket_item.user_supplement.pl_supplement.shipstation_sku
 
-            total_weight += basket_item.user_supplement.pl_supplement.weight * basket_item.quantity
+            total_weight.append(basket_item.user_supplement.pl_supplement.weight * basket_item.quantity)
             order_line_items.append(order_line)
 
         util = Util()
@@ -614,7 +614,6 @@ class SupplementsApi(ApiResponseMixin, View):
             total_weight,
             shipping_service,
         )
-
         total_amount = 0
         country = order.get('shipping_address').get('country')
         country_code = order.get('shipping_address').get('country_code')
