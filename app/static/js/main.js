@@ -1328,7 +1328,9 @@ function sendOrdersToVueApp(btns) {
                 'store_type': window.storeType,
                 'order_id': btn.attr('order-id'),
                 'line_id': btn.attr('line-id'),
-                'order_data': JSON.parse(atob(btn.attr('order-data')))
+                'order_data': JSON.parse(atob(btn.attr('order-data'))),
+                'order_store_url': window.location.href,
+                'store_name': $('.nav-tabs li.active').text()
             },
         };
         btn.button('loading');
