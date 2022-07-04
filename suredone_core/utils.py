@@ -277,6 +277,13 @@ class SureDoneUtils:
         # Extract products from the SD response,
         all_orders = res.get('orders', [])
 
+        for order in all_orders:
+            for index, item in enumerate(order.get('items')):
+                if not item.get('title'):
+                    item['title'] = f'Item {index + 1}'
+                if not item.get('media'):
+                    item['media'] = 'https://cdn.dropified.com/static/img/no-image.png'
+
         return all_orders, total_products_count
 
     def format_filters(self, filter_map: dict) -> str:
