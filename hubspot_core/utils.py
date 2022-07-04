@@ -221,7 +221,7 @@ def generate_create_contact(user: User):
     return data
 
 
-def update_plan_property_options(self):
+def update_plan_property_options():
     plans = set([clean_plan_name(i) for i in GroupPlan.objects.all()])
     options = []
     for plan in plans:
