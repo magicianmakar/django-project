@@ -854,7 +854,7 @@ class AliexpressApi(ApiResponseMixin):
                 "YANWEN_ECONOMY": "Yanwen Economic Air Mail",
                 "YANWEN_ECONOMY_SG": "Yanwen Special Economy",
                 "YANWEN_AM": "Yanwen Special Standard",
-                "Other": "Sellers Shipping Method"
+                "Other": "Seller's Shipping Method"
             }
 
             cache_key = f"aliexpress_shipping_method_{data['order']['store']}_{data['order']['order_id']}_{data['order']['order_data']['source_id']}"
