@@ -24,7 +24,7 @@ from shopified_core.shipping_helper import (
     support_other_in_province,
     valide_aliexpress_province
 )
-from shopified_core.utils import hash_url_filename, safe_int, safe_json, safe_str
+from shopified_core.utils import hash_url_filename, safe_float, safe_int, safe_json, safe_str
 from supplements.utils import supplement_customer_address
 
 from .api import SureDoneAdminApiHandler, SureDoneApiHandler
@@ -418,7 +418,15 @@ class SureDoneUtils:
         return '\n\n'.join([f'<b>Variant #{i}</b>: {m}' for i, m in errors.items()])
 
     def transform_variant_data_into_sd_list_format(self, data_per_variant: list, identifier_type='guid',
-                                                   keys_to_exclude=None):
+                                                   keys_to_exclude=None, convert_prices_to_suredone=False):
+
+        if convert_prices_to_suredone:
+            # Transform Dropified format of prices to SureDone format
+            for variant in data_per_variant:
+                if safe_float(variant.get('compareatprice')):
+                    variant['discountprice'] = variant.get('price')
+                    variant['price'] = variant.get('compareatprice')
+
         if not keys_to_exclude:
             keys_to_exclude = []
         # Get all possible keys across all variants
