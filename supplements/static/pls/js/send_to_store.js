@@ -94,7 +94,14 @@ function sendToStore(storeType, storeId, publish) {
                     jqXHR.done(getPostExportPusherHandler(productId));
                 } else {
                     getCorrectRef($('#id_send_to_store_confirm'), 'reset');
-                    var store = storeType == 'fb' ? 'Facebook' : 'eBay';
+                    var store = 'eBay';
+                    if (storeType == 'fb') {
+                        store = 'Facebook';
+                    }
+                    else if (storeType == 'google') {
+                        store = 'Google';
+                    }
+                                        
                     var link = app_base_link + '/' + storeType + '/products?store=n';
                     var msg = "In order to send this product to " + store + ", You need to add some required fields.<br>";
                     msg = msg + "Click to see <a href='"+ link +"'>the saved product</a>";
