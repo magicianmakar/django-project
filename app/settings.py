@@ -737,3 +737,11 @@ SUREDONE_DEFAULT_VARIANTS_FIELDS_CONFIG = [
 
 LOOPEDIN_SSO_KEY = os.environ.get("LOOPEDIN_SSO_KEY")
 LOOPEDIN_WORKSPACE_ID = os.environ.get("LOOPEDIN_WORKSPACE_ID")
+
+
+# Lifetime multipay-products
+
+LIFETIME3PAY_PRODUCTS = [
+    {"title": "retro elite lifetime 3-pay", "charges": 3, "config_prefix": "3pay-elite"},
+    {"title": "retro unlimited pass 3-pay", "charges": 3, "config_prefix": "3pay-unlimited"},
+]

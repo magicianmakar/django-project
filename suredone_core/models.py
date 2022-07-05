@@ -107,8 +107,12 @@ class SureDoneAccount(StoreBase):
         current_variant_fields = options.get('site_cart_variants', '').split('*')
         return [x for x in settings.SUREDONE_DEFAULT_VARIANTS_FIELDS_CONFIG if x not in current_variant_fields]
 
+    @staticmethod
+    def minimize_custom_field_name(field_name: str):
+        return ''.join(c for c in field_name if c.isalnum()).lower()
+
     def format_custom_field(self, field_name):
-        minified_key = ''.join(c for c in field_name if c.isalnum()).lower()
+        minified_key = SureDoneAccount.minimize_custom_field_name(field_name)
         return f'ucf{minified_key}'
 
     def is_default_field(self, field_name: str) -> bool:

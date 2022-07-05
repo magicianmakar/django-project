@@ -24,7 +24,7 @@ from shopified_core.shipping_helper import (
     support_other_in_province,
     valide_aliexpress_province
 )
-from shopified_core.utils import hash_url_filename, safe_int, safe_json, safe_str
+from shopified_core.utils import hash_url_filename, safe_float, safe_int, safe_json, safe_str
 from supplements.utils import supplement_customer_address
 
 from .api import SureDoneAdminApiHandler, SureDoneApiHandler
@@ -277,6 +277,13 @@ class SureDoneUtils:
         # Extract products from the SD response,
         all_orders = res.get('orders', [])
 
+        for order in all_orders:
+            for index, item in enumerate(order.get('items')):
+                if not item.get('title'):
+                    item['title'] = f'Item {index + 1}'
+                if not item.get('media'):
+                    item['media'] = 'https://cdn.dropified.com/static/img/no-image.png'
+
         return all_orders, total_products_count
 
     def format_filters(self, filter_map: dict) -> str:
@@ -418,7 +425,15 @@ class SureDoneUtils:
         return '\n\n'.join([f'<b>Variant #{i}</b>: {m}' for i, m in errors.items()])
 
     def transform_variant_data_into_sd_list_format(self, data_per_variant: list, identifier_type='guid',
-                                                   keys_to_exclude=None):
+                                                   keys_to_exclude=None, convert_prices_to_suredone=False):
+
+        if convert_prices_to_suredone:
+            # Transform Dropified format of prices to SureDone format
+            for variant in data_per_variant:
+                if safe_float(variant.get('compareatprice')):
+                    variant['discountprice'] = variant.get('price')
+                    variant['price'] = variant.get('compareatprice')
+
         if not keys_to_exclude:
             keys_to_exclude = []
         # Get all possible keys across all variants
@@ -814,7 +829,7 @@ class SureDoneUtils:
             'parent_guid': main_sku,
         }
 
-    def delete_product_with_all_variations(self, parent_guid: str, skip_all_channels: False):
+    def delete_product_with_all_variations(self, parent_guid: str, skip_all_channels=False):
         # Get all products with the matching SKU
         sd_product_data = self.api.get_item_by_guid(parent_guid)
 

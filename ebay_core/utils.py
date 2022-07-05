@@ -30,7 +30,7 @@ from shopified_core.utils import (
     safe_json,
     safe_str
 )
-from suredone_core.models import InvalidSureDoneStoreInstanceId
+from suredone_core.models import InvalidSureDoneStoreInstanceId, SureDoneAccount
 from suredone_core.utils import SureDoneUtils, get_or_create_suredone_account, parse_suredone_date, sd_customer_address
 
 
@@ -1787,7 +1787,8 @@ class EbayOrderItem:
             return mapped
 
         variants = []
-        var_attributes_keys = self.get_attribute_keys_from_var_config(product_variant)
+        var_attributes_keys = [SureDoneAccount.minimize_custom_field_name(i)
+                               for i in self.get_attribute_keys_from_var_config(product_variant)]
         sku_values = product_variant.supplier_sku.split(';')
         for i, var_key in enumerate(var_attributes_keys):
             var_data = product_variant.parsed_variant_data

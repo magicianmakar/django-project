@@ -13,9 +13,9 @@ from django.contrib.auth.models import User
 from django.db.models import Sum
 
 from hubspot_core.models import HubspotAccount
-from hubspot_core.utils import api_requests, clean_plan_name, create_contact, update_contact
+from hubspot_core.utils import api_requests, create_contact, update_contact, update_plan_property_options
 from last_seen.models import LastSeen
-from leadgalaxy.models import GroupPlan, UserProfile
+from leadgalaxy.models import UserProfile
 from lib.exceptions import capture_exception
 from shopified_core.commands import DropifiedBaseCommand
 from shopify_orders.models import ShopifyOrderRevenue
@@ -165,7 +165,7 @@ class Command(DropifiedBaseCommand):
         self.create_property('dr_mrr', 'Users MRR', 'number', 'number')
         self.create_property('dr_ltv', 'Users LTV', 'number', 'number')
 
-        self.update_plan_property_options()
+        update_plan_property_options()
 
     def create_property(self, name, label, ptype, field, is_bool=False):
         self.write(f'> {name}')
@@ -204,31 +204,6 @@ class Command(DropifiedBaseCommand):
             return api_requests(url, data, 'POST')
         except:
             self.write(f'Add Property error: {name}')
-
-    def update_plan_property_options(self):
-        plans = set([clean_plan_name(i) for i in GroupPlan.objects.all()])
-        options = []
-        for plan in plans:
-            options.append({
-                "label": plan,
-                "value": plan,
-                "hidden": False
-            })
-
-        data = {
-            "name": "plan",
-            "label": "Plan",
-            "type": "enumeration",
-            "fieldType": "select",
-            "description": "Dropified Plan",
-            "groupName": "subscription",
-            "formField": True,
-            "options": options
-        }
-
-        url = 'https://api.hubapi.com/crm/v3/properties/0-1/plan'
-
-        return api_requests(url, data, 'PATCH')
 
     def find_orders(self):
         date_limit = arrow.utcnow().replace(days=-30).datetime

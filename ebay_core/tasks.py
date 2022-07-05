@@ -16,7 +16,7 @@ from suredone_core.models import SureDoneAccount
 from suredone_core.utils import GetSureDoneProductByGuidEmpty, SureDonePusher
 
 from .models import EbayProduct, EbayStore
-from .utils import EbayOrderUpdater, EbayUtils, smart_board_by_product, get_ebay_currencies_list, get_ebay_store_specific_currency_options
+from .utils import EbayOrderUpdater, EbayUtils, get_ebay_currencies_list, get_ebay_store_specific_currency_options, smart_board_by_product
 
 EBAY_API_TIMEOUT = 120
 
@@ -389,8 +389,12 @@ def product_save(req_data, user_id, pusher_channel):
             else:
                 store_currency = ebay_utils.get_ebay_user_settings_config().get('site_currency')
 
+            # We assume the product currency is the same as the store currency since we can't find the product currency
+            if original_currency is None:
+                original_currency = store_currency
+
             if store_currency and store_currency != original_currency:
-                error = f'The current AliExpress currency ({original_currency}) and your eBay store currency ({store_currency}) are different!'
+                error = f'The current product currency ({original_currency}) and your eBay store currency ({store_currency}) are different!'
                 sd_pusher.trigger(default_event, {
                     'success': False,
                     'error': error

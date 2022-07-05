@@ -439,6 +439,10 @@
             $(cancelationSteps[0]).modal('show');
         }
 
+        // set clicked current subscription ID as 'active' to properly use in last modal confirmation step then (important for multi-subscription cases)
+        $('.cancel-sub-btn').removeClass('selected');
+        $(this).addClass('selected');
+
         // Last step is Baremetrics Cancel Modal
         if ($(this).data('baremetrics') === 'True') {
             $(cancelationStep).find('.continue-cancel').attr('id', 'barecancel-trigger');
@@ -475,7 +479,7 @@
 
     $('.stripe-cancel-step, .subscription-item').on('click', '.direct-cancel', function(e) {
         $(this).button('loading');
-        cancelStripeSubscription().done(function(data) {
+        cancelStripeSubscription(subscription_id).done(function(data) {
             toastr.success("Your Subscription has been canceled.", "Cancel Subscription");
             $('#modal-subscription-cancel-or-pause').modal('hide');
 
@@ -700,7 +704,9 @@
 
 function cancelStripeSubscription() {
     var apiURL;
-    var subscriptionId = $('.cancel-sub-btn').data('subscription');
+
+    subscriptionId = $('.cancel-sub-btn.selected').data('subscription');
+    
     var subscriptionType = $('.cancel-sub-btn').data('subscription-type');
     if (subscriptionType === "custom"){
         apiURL = config.custom_subscription_cancel;

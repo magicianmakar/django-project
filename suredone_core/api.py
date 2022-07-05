@@ -4,6 +4,7 @@ import requests
 from django.conf import settings
 
 from lib.exceptions import capture_exception
+from shopified_core.utils import safe_float
 from suredone_core.models import SureDoneAccount
 from suredone_core.param_encoder import param
 
@@ -299,7 +300,7 @@ class SureDoneApiHandler:
         else:
             pass
 
-    def get_item_by_guid(self, guid):
+    def get_item_by_guid(self, guid, convert_prices_from_suredone=False):
         url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}/edit'
         params = {
             'guid': guid,
@@ -308,7 +309,19 @@ class SureDoneApiHandler:
         response = requests.get(url, params=params, headers=self.HEADERS)
         if response.ok:
             try:
-                return response.json()
+                response = response.json()
+
+                if convert_prices_from_suredone:
+                    # Transform SureDone format of prices to Dropified format
+                    if safe_float(response.get('discountprice')):
+                        response['price'] = response.get('discountprice')
+                    if response.get('attributes'):
+                        for variant_index in range(len(response.get('attributes'))):
+                            discountprice = response.get('attributes').get(f'{variant_index + 1}', {}).get('discountprice')
+                            if safe_float(discountprice):
+                                response['attributes'][f'{variant_index + 1}']['price'] = discountprice
+
+                return response
             except ValueError:
                 pass
         else:

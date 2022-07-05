@@ -284,6 +284,12 @@ class FBStoreApi(ApiBase):
         store.is_active = False
         store.save()
 
+        tasks.delete_all_store_products.apply_async(kwargs={
+            'user_id': user.id,
+            'store_id': store_id,
+            'skip_all_channels': True,
+        })
+
         return self.api_success()
 
     def get_store_verify(self, request, user, data):
@@ -528,9 +534,11 @@ class FBStoreApi(ApiBase):
         if not original_link:
             return self.api_error('Original Link is not set', status=500)
 
-        supplier_url = remove_link_query(data.get('supplier-link'))
-        if not supplier_url:
-            return self.api_error('Supplier URL is missing', status=422)
+        supplier_name = data.get('supplier-name')
+        if not supplier_name:
+            return self.api_error('Supplier Name is missing', status=422)
+
+        supplier_url = remove_link_query(data.get('supplier-link', 'http://www.aliexpress.com/'))
 
         product_guid = data.get('product')
 
@@ -540,14 +548,18 @@ class FBStoreApi(ApiBase):
         supplier_id = data.get('export', None)
 
         try:
-            product = FBProduct.objects.get(guid=product_guid)
+            product = FBProduct.objects.filter(guid=product_guid).first()
+            if not product:
+                product_variant = FBProductVariant.objects.get(guid=product_guid)
+                product = product_variant.parent_product
+
             permissions.user_can_edit(user, product)
             store = product.store
 
             if not store:
                 return self.api_error('Facebook store not found', status=404)
-        except FBProduct.DoesNotExist:
-            product_title = data.get('product-title')
+        except (FBProduct.DoesNotExist, FBProductVariant.DoesNotExist):
+            product_title = data.get('product-title') or 'Facebook Product'
             product_image = data.get('product-image')
             product_price = data.get('product-price')
             product_attributes = data.get('product-attributes')
@@ -607,13 +619,23 @@ class FBStoreApi(ApiBase):
         if not original_link:
             return self.api_error('Original Link is not set', status=500)
 
+        # move product to the new store if its current one is inactive
+        store_id = data.get('fb-store')
+        current_store = FBStore.objects.filter(id=store_id).first()
+        if not store.is_active and current_store and current_store.is_active:
+            fb_utils = FBUtils(user)
+            updated_product = fb_utils.move_product_to_store(product, current_store, skip_all_channels=True)
+            if updated_product:
+                product = updated_product
+                store = current_store
+
         reload = False
         try:
             product_supplier = FBSupplier.objects.get(id=supplier_id, store__in=user.profile.get_fb_stores())
 
             product_supplier.product = product
             product_supplier.product_url = original_link
-            product_supplier.supplier_name = data.get('supplier-name')
+            product_supplier.supplier_name = supplier_name
             product_supplier.supplier_url = supplier_url
             product_supplier.save()
 
@@ -626,7 +648,7 @@ class FBStoreApi(ApiBase):
                 product=product,
                 product_guid=product_guid,
                 product_url=original_link,
-                supplier_name=data.get('supplier-name'),
+                supplier_name=supplier_name,
                 supplier_url=supplier_url,
                 is_default=is_default
             )
