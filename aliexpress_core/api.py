@@ -518,7 +518,7 @@ class AliexpressFulfillHelper():
                         index = items_sku.index(obj.sku_attr)
                     except:
                         index = items_sku.index(obj.product_id)
-                    req.product_items[index].product_count = req.product_items[index].product_count + req.product_items[i].product_count
+                    req.product_items[index].product_count += req.product_items[i].product_count
                 items_sku.append(sku_str)
             if duplicate_item:
                 aliexpress_order.set_info(req)
