@@ -352,7 +352,9 @@ class AliexpressFulfillHelper():
         address.address = self.shipping_address['address1']
         address.address2 = self.shipping_address['address2']
         address.city = self.shipping_address['city']
-        address.province = self.shipping_address['province']
+        address.province = self.shipping_address['province'].strip()
+        if address.province.lower() == 'n/a' or not address.province:
+            address.province = 'Other'
         address.zip = self.shipping_address['zip']
         address.country = self.shipping_address['country_code']
 
@@ -505,18 +507,19 @@ class AliexpressFulfillHelper():
             items_sku = []
             duplicate_item = False
             for i, obj in enumerate(req.product_items):
-                if obj.sku_attr in items_sku or obj.product_id in items_sku:
+                if obj.sku_attr:
+                    sku_str = f"{obj.sku_attr}#{obj.product_id}"
+                else:
+                    sku_str = obj.product_id
+
+                if sku_str in items_sku:
                     duplicate_item = True
                     try:
                         index = items_sku.index(obj.sku_attr)
                     except:
                         index = items_sku.index(obj.product_id)
-                    popped = req.product_items.pop()
-                    req.product_items[index].product_count = req.product_items[index].product_count + popped.product_count
-                if obj.sku_attr:
-                    items_sku.append(obj.sku_attr)
-                else:
-                    items_sku.append(obj.product_id)
+                    req.product_items[index].product_count += req.product_items[i].product_count
+                items_sku.append(sku_str)
             if duplicate_item:
                 aliexpress_order.set_info(req)
             # #######End of check########
@@ -851,7 +854,7 @@ class AliexpressApi(ApiResponseMixin):
                 "YANWEN_ECONOMY": "Yanwen Economic Air Mail",
                 "YANWEN_ECONOMY_SG": "Yanwen Special Economy",
                 "YANWEN_AM": "Yanwen Special Standard",
-                "Other": "Sellers Shipping Method"
+                "Other": "Seller's Shipping Method"
             }
 
             cache_key = f"aliexpress_shipping_method_{data['order']['store']}_{data['order']['order_id']}_{data['order']['order_data']['source_id']}"
