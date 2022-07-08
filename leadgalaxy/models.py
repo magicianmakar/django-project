@@ -2203,7 +2203,7 @@ class GroupPlan(models.Model):
         ordering = ['title']
 
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
-    slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")
+    slug = models.SlugField(unique=True, max_length=512, verbose_name="Plan Slug")
     register_hash = models.CharField(unique=True, max_length=50, editable=False)
 
     hubspot_title = models.CharField(max_length=512, blank=True, default='')
