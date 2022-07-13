@@ -47,7 +47,7 @@ class Command(DropifiedBaseCommand):
                     count_charges = 0
                     first_multicharge = None
                     for charge in charges:
-                        if charge.paid and product_to_process["title"] in charge.description.lower():
+                        if charge.paid and not charge.refunded and product_to_process["title"] in charge.description.lower():
                             print(charge.description.lower())
                             first_multicharge = charge
                             count_charges = count_charges + 1
