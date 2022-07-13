@@ -597,13 +597,14 @@ def process_webhook_event(request, event_id):
                                     stripe_plan__stripe_id=plan_autoswitch_json['switch_to_plan'])
                                 if plan.is_stripe():
                                     # adding trial (from metadata)
-                                    trial_end = arrow.now().timestamp + 86400 * int(
-                                        plan_autoswitch_json['trial_days_add'])
-                                    stripe.Subscription.modify(
-                                        stripe_sub.subscription_id,
-                                        trial_end=trial_end,
-                                        proration_behavior='none'
-                                    )
+                                    if safe_int(plan_autoswitch_json['trial_days_add']) > 0:
+                                        trial_end = arrow.now().timestamp + 86400 * int(
+                                            plan_autoswitch_json['trial_days_add'])
+                                        stripe.Subscription.modify(
+                                            stripe_sub.subscription_id,
+                                            trial_end=trial_end,
+                                            proration_behavior='none'
+                                        )
                                     # updating subscription item (switching plan)
                                     stripe.SubscriptionItem.modify(
                                         item['subscription_item'],
