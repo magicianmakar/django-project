@@ -1,6 +1,6 @@
 {% load perms_helper %}
 
-{% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' %}
+{% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' pls_supplier=request.user|can:'pls_supplier.use'%}
 
 <div class="ibox ">
   <div class="ibox-title">
@@ -11,7 +11,7 @@
       <embed alt="image" class="img-fluid" src="{{ label.url }}" type='application/pdf' height="400px" width="100%" />
     </div>
     <div class="ibox-content profile-content">
-      {% if pls_admin or pls_staff %}
+      {% if pls_admin or pls_staff or pls_supplier%}
       This product belongs to {{ label.user_supplement.user.get_full_name }}
       <a href="{% url 'acp_search_view' %}?user={{ label.user_supplement.user.id }}"> {{ label.user_supplement.user.email }} </a>
       {% endif %}

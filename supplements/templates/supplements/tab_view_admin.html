@@ -15,10 +15,10 @@
 {% url 'pls:reports' as pls_reports %}
 
 
-{% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' %}
+{% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' pls_supplier=request.user|can:'pls_supplier.use' %}
 <div class="tabs-container">
   <ul class="nav nav-tabs scrolling-tabs">
-  {% if pls_staff or pls_admin %}
+  {% if pls_staff or pls_admin or pls_supplier %}
     {% if request.path ==  pls_all_user_supplements %}
     <li class="active"><a data-toggle="tab" href="#tab-1">User Products</a></li>
     {% else %}
@@ -30,7 +30,8 @@
     {% else %}
     <li><a href="{% url 'pls:orderitem_list' %}?cancelled=on">Order Items</a></li>
     {% endif %}
-
+  {% endif %}
+  {% if pls_staff or pls_admin %}
     {% if request.path == pls_payouts %}
     <li class="active"><a data-toggle="tab" href="#tab-1">Payouts</a></li>
     {% else %}
@@ -38,13 +39,15 @@
     {% endif %}
   {% endif %}
 
-  {% if pls_admin %}
+  {% if pls_admin or pls_supplier %}
     {% if request.path == pls_product %}
     <li class="active"><a data-toggle="tab" href="#tab-1">Add New Product</a></li>
     {% else %}
     <li><a href="{% url 'pls:product' %}">Add New Product</a></li>
     {% endif %}
+  {% endif %}
 
+  {% if pls_admin %}
     {% if request.path == pls_orders %}
     <li class="active"><a data-toggle="tab" href="#tab-1">Payments</a></li>
     {% else %}

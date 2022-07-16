@@ -98,9 +98,13 @@ class PLSupplementForm(forms.ModelForm):
     authenticity_certificate = forms.FileField(required=False)
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         self.fields['shipping_countries'].required = False
-        self.fields['supplier'].choices = [('', '---------')] + list(ProductSupplier.get_suppliers(shipping=False).values_list('id', 'title'))
+        if self.user.can('pls_admin.use'):
+            self.fields['supplier'].choices = [('', '---------')] + list(ProductSupplier.get_suppliers(shipping=False).values_list('id', 'title'))
+        elif self.user.can('pls_supplier.use'):
+            self.fields['supplier'].choices = [(self.user.profile.supplier.id, self.user.profile.supplier)]
 
     def clean_template(self):
         template = self.cleaned_data['template']
@@ -243,6 +247,7 @@ class AllLabelFilterForm(forms.Form):
     supplier = forms.ModelChoiceField(required=False, queryset=ProductSupplier.get_suppliers())
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         try:
             self.fields['product_sku'].choices = [(p.shipstation_sku, f"{p.shipstation_sku} {p.title}")

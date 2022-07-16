@@ -189,6 +189,13 @@ class UserProfile(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
+    supplier = models.ForeignKey('product_common.ProductSupplier',
+                                 related_name='linked_supplier',
+                                 null=True,
+                                 blank=True,
+                                 on_delete=models.SET_NULL,
+                                 verbose_name="Linked Supplier")
+
     def __str__(self):
         return f'<UserProfile: {self.id}>'
 
@@ -568,6 +575,11 @@ class UserProfile(models.Model):
                 stores.append(name)
 
         return stores
+
+    def supplies(self, item):
+        if self.supplier is not None:
+            return self.supplier == item.supplier
+        return False
 
     def can(self, perm_name, store=None):
         if perm_name[-4:] == '.sub':
@@ -2697,6 +2709,11 @@ def user_get_jwt_access_token(self):
 @add_to_class(User, 'can')
 def user_can(self, perms, store_id=None):
     return self.profile.can(perms, store_id)
+
+
+@add_to_class(User, 'supplies')
+def supplies(self, item):
+    return self.profile.supplies(item)
 
 
 @add_to_class(User, 'get_config')

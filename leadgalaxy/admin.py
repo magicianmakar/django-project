@@ -180,7 +180,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('user', 'status', 'plan', 'bundles', 'addons', 'country', 'timezone', 'shopify_app_store', 'private_label')
+            'fields': ('user', 'status', 'plan', 'bundles', 'addons', 'country', 'timezone', 'shopify_app_store', 'private_label', 'supplier')
         }),
 
         ('User Settings', {

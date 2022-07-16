@@ -163,7 +163,8 @@ class Product(common_views.ProductAddView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('pls_admin.use'):
+        if request.user.can('pls_admin.use') \
+           or request.user.can('pls_supplier.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -220,7 +221,9 @@ class ProductEdit(Product):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('pls_admin.use'):
+        self.supplement = self.get_supplement(kwargs.get('supplement_id', None))
+        user = request.user
+        if user.can('pls_admin.use') or user.supplies(self.supplement):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -249,7 +252,7 @@ class ProductEdit(Product):
 
         context = {
             'breadcrumbs': self.get_breadcrumbs(supplement_id),
-            'form': self.form(initial=form_data, instance=self.supplement),
+            'form': self.form(initial=form_data, instance=self.supplement, user=request.user),
         }
         context['supplement'] = self.supplement
 
@@ -257,7 +260,7 @@ class ProductEdit(Product):
 
     def post(self, request, supplement_id):
         self.supplement = self.get_supplement(supplement_id)
-        form = self.form(request.POST, request.FILES, instance=self.supplement)
+        form = self.form(request.POST, request.FILES, instance=self.supplement, user=request.user)
         if form.is_valid():
             self.process_valid_form(form, self.supplement)
             return redirect(self.get_redirect_url())
@@ -794,7 +797,9 @@ class LabelHistory(UserSupplementView):
         user_supplement = self.get_supplement(request.user, supplement_id)
         label_id = user_supplement.current_label.id
 
-        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+        if request.user.can('pls_admin.use') \
+           or request.user.can('pls_staff.use') \
+           or request.user.can('pls_supplier.use'):
             self.label = label = get_object_or_404(UserSupplementLabel, id=label_id)
         else:
             self.label = label = get_object_or_404(UserSupplementLabel, id=label_id, user_supplement__user=request.user.models_user)
@@ -849,7 +854,11 @@ class AdminLabelHistory(LabelHistory):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+        user = request.user
+        self.supplement = self.get_supplement(user, kwargs.get('supplement_id', None))
+        if request.user.can('pls_admin.use') \
+           or request.user.can('pls_staff.use') \
+           or user.supplies(self.supplement.pl_supplement):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1014,7 +1023,9 @@ class AllUserSupplements(MyLabels, ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+        if request.user.can('pls_admin.use') \
+           or request.user.can('pls_staff.use') \
+           or request.user.can('pls_supplier.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1043,8 +1054,8 @@ class AllUserSupplements(MyLabels, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-
-        form = AllLabelFilterForm(self.request.GET)
+        user = self.request.user
+        form = AllLabelFilterForm(self.request.GET, user=user)
         if form.is_valid():
             label_user_name = form.cleaned_data['label_user_name']
             if label_user_name:
@@ -1081,12 +1092,14 @@ class AllUserSupplements(MyLabels, ListView):
             supplier = form.cleaned_data['supplier']
             if supplier:
                 queryset = queryset.filter(pl_supplement__supplier_id=supplier)
+            elif user.can('pls_supplier.use') and user.profile.supplier is not None:
+                queryset = queryset.filter(pl_supplement__supplier_id=user.profile.supplier)
 
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['all_label_form'] = AllLabelFilterForm(self.request.GET)
+        context['all_label_form'] = AllLabelFilterForm(self.request.GET, user=self.request.user)
         return context
 
 
@@ -1596,7 +1609,9 @@ class OrderItemListView(common_views.OrderItemListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+        if request.user.can('pls_admin.use') \
+           or request.user.can('pls_staff.use') \
+           or request.user.can('pls_supplier.use'):
             if request.GET.get('send_shipstation'):
                 if send_shipstation_orders():
                     messages.success(request, 'Sending shipstation missing orders, this can take a few moments')
@@ -1682,6 +1697,11 @@ class GenerateLabel(LoginRequiredMixin, View):
     def get(self, request, line_id):
         use_latest = request.GET.get('use_latest', False)
         line_item = get_object_or_404(PLSOrderLine, id=line_id)
+        user_is_supplier = request.user.supplies(line_item.label.user_supplement.pl_supplement)
+        if not (request.user.can('pls_admin.use')
+           or request.user.can('pls_staff.use')
+           or user_is_supplier):
+            raise permissions.PermissionDenied()
 
         if request.GET.get('validate'):
             new_pdf_label = self.add_clean_barcode_to_label(self.get_label(line_item))

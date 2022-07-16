@@ -97,12 +97,12 @@ class ProductAddView(LoginRequiredMixin, View, BaseMixin):
     def get(self, request):
         context = {
             'breadcrumbs': self.get_breadcrumbs(),
-            'form': self.form(),
+            'form': self.form(user=request.user),
         }
         return render(request, self.get_template(), context)
 
     def post(self, request):
-        form = self.form(request.POST, request.FILES)
+        form = self.form(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             self.process_valid_form(form)
             return redirect(self.get_redirect_url())
@@ -500,11 +500,14 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                 cancelled_order_ids = self.get_cancelled_order_ids()
                 for id, number in cancelled_order_ids.items():
                     queryset = queryset.exclude(pls_order_id=id, pls_order__order_number=number)
+
             supplier = form.cleaned_data['supplier']
             if supplier:
                 queryset = queryset.filter(
                     label__user_supplement__pl_supplement__supplier_id=supplier
                 )
+            elif self.request.user.can('pls_supplier.use') and self.request.user.profile.supplier is not None:
+                queryset = queryset.filter(label__user_supplement__pl_supplement__supplier_id=self.request.user.profile.supplier)
 
             date = self.request.GET.get('date', None)
             self.paginate_by = self.request.GET.get('paginate_by', 20)
