@@ -1,6 +1,6 @@
 **JIRA Ticket**
 
-> DROP-
+DROP-
 
 **What problem does this Pull Request solve?**
 
