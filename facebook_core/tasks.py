@@ -1,3 +1,4 @@
+import json
 from json import JSONDecodeError
 from math import ceil
 
@@ -755,6 +756,46 @@ def products_supplier_sync(self, store_id, user_id, products, sync_price, price_
         store.pusher_trigger('products-supplier-sync', push_data)
 
     cache.delete(cache_key)
+
+
+@celery_app.task(base=CaptureFailure)
+def product_latest_relist_log(user_id, parent_guid, store_id, pusher_channel):
+    user = User.objects.get(id=user_id)
+    product = FBProduct.objects.get(guid=parent_guid)
+    sd_pusher = SureDonePusher(pusher_channel)
+    pusher_event = 'fb-product-latest-relist-log'
+
+    try:
+        fb_utils = FBUtils(user)
+        latest_relist_log = fb_utils.api.get_last_log(identifier=parent_guid, context='facebook', action='relist')
+
+        if latest_relist_log and latest_relist_log.get('result') in ['failure', 'error']:
+            sd_pusher.trigger(pusher_event, {
+                'error': True,
+                'product': parent_guid,
+                'log': json.dumps(latest_relist_log.get('message')),
+                'product_url': reverse('fb:product_detail', kwargs={'pk': parent_guid, 'store_index': store_id}),
+            })
+        elif latest_relist_log and latest_relist_log.get('result') == 'warning':
+            sd_pusher.trigger(pusher_event, {
+                'warning': True,
+                'product': parent_guid,
+                'log': json.dumps(latest_relist_log.get('message')),
+                'product_url': reverse('fb:product_detail', kwargs={'pk': parent_guid, 'store_index': store_id}),
+            })
+        else:
+            sd_pusher.trigger(pusher_event, {
+                'error': False,
+                'product': parent_guid,
+                'product_url': reverse('fb:product_detail', kwargs={'pk': parent_guid, 'store_index': store_id}),
+            })
+
+    except Exception as e:
+        capture_exception(extra={
+            'message': 'Failed to fetch product latest relist log',
+            'product_id': product.id,
+            'error': e
+        })
 
 
 @celery_app.task(base=CaptureFailure)

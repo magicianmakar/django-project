@@ -456,6 +456,26 @@ class SureDoneApiHandler:
 
         return requests.post(url, data=data, params=params, headers=self.HEADERS)
 
+    def get_last_log(self, identifier: str, context: str, action: str):
+        url = f'{self.API_ENDPOINT}/v3/logs'
+        headers = {**self.HEADERS, 'Content-Type': 'Application/json'}
+        data = {
+            'identifier': identifier,
+            'context': context,
+            'action': action,
+            'records': 1,
+            'sort': 'created_at:desc',
+        }
+
+        response = requests.post(url, json=data, headers=headers)
+        if response.ok:
+            try:
+                logs = response.json().get('results', {}).get('logs', [])
+                if logs:
+                    return logs[0]
+            except ValueError:
+                pass
+
 
 class SureDoneAdminApiHandler:
     API_ENDPOINT = 'https://api.suredone.com'
