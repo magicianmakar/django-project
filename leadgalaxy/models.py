@@ -422,7 +422,7 @@ class UserProfile(models.Model):
 
         return stores
 
-    def get_fb_stores(self, flat=False, do_sync=False):
+    def get_fb_stores(self, flat=False, do_sync=False, include_non_onboarded=False):
         if do_sync:
             # The function is defined in facebook_core.utils.py
             self.sync_fb_stores()
@@ -430,6 +430,9 @@ class UserProfile(models.Model):
             stores = self.subuser_fb_stores.filter(is_active=True)
         else:
             stores = self.user.fbstore_set.filter(is_active=True)
+
+        if not include_non_onboarded:
+            stores = stores.exclude(creds__system_token__value=False)
 
         if flat:
             stores = stores.values_list('id', flat=True)
