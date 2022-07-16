@@ -404,12 +404,12 @@
                                     </div>
                                     {% endif %}
 
-                                    <!-- <div class="note-panel">
+                                    <div class="note-panel">
                                         <div class="note-preview">
-                                            <span class="note-text multi-line-text-overflow">{{order.notes|default:'' }}</span>
+                                            <span class="note-text multi-line-text-overflow">{{order.last_note|default:'' }}</span>
                                         </div>
                                         <div class="edit-note hidden">
-                                            <textarea class="note form-control">{{order.notes|default:''}}</textarea>
+                                            <textarea class="note form-control">{{order.last_note|default:''}}</textarea>
                                             <div style="flex-shrink: 2; display: flex; flex-direction: column-reverse;">
                                                 <button class="btn btn-primary btn-xs note-edit-save"
                                                         order-id="{{order.id}}" store-id="{{store.id}}">
@@ -422,7 +422,7 @@
                                                 </button>
                                             </div>
                                         </div>
-                                    </div> -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
