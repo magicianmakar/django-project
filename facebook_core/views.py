@@ -930,7 +930,8 @@ class AuthAcceptRedirectView(RedirectView):
                 is_active=True,
             )
 
-        messages.success(self.request, 'Your Facebook store has been added! Please complete the onboarding process below to complete authorization.')
+        messages.success(self.request, 'Your Facebook account has been added! '
+                                       'Please complete the onboarding process below to complete authorization.')
         return reverse('fb:onboard', kwargs={'pk': store.id})
 
 
@@ -959,6 +960,10 @@ class CompleteAuthView(DetailView):
         fb_utils = FBUtils(self.request.user)
         try:
             context['fb_shops'] = fb_utils.get_fb_shop_options(self.object.filter_instance_id)
+            if len(context['fb_shops']) == 0:
+                error = 'No stores to onboard. Please make sure your Facebook account has permissions ' \
+                        'to view your Facebook shop.'
+                messages.error(self.request, error)
         except HTTPError:
             error = 'Failed to load Facebook commerce managers. Please try again later.'
             messages.error(self.request, error)
