@@ -1,11 +1,11 @@
-from django.utils import timezone
-
+import re
 import time
 
-import arrow
 import requests
-
+import arrow
 from simplejson import JSONDecodeError
+
+from django.utils import timezone
 
 from metrics.tasks import add_number_metric
 from shopified_core.utils import http_exception_response, using_replica, last_executed
@@ -249,6 +249,15 @@ class Command(DropifiedBaseCommand):
                         order.save()
 
                         self.log_fulfill_error(order, 'Invalid for this fulfillment service')
+
+                        return False
+
+                    elif re.search(r'Line item [0-9]+ does not exist', rep.text, re.IGNORECASE):
+                        self.write(f'Line item not found #{order.order_id} line: {order.line_id}')
+                        order.hidden = True
+                        order.save()
+
+                        self.log_fulfill_error(order, 'Line Item Not Found')
 
                         return False
 
