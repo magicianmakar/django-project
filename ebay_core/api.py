@@ -1052,7 +1052,7 @@ class EbayStoreApi(ApiBase):
             return self.api_success()
         else:
             try:
-                resp = EbayOrderUpdater(user, store, order_id).add_order_note(order_id, note)
+                resp = EbayOrderUpdater(user, store, order_id).add_ebay_order_note(order_id, note)
                 if resp.get('results', {}).get('successful'):
                     return self.api_success()
                 else:

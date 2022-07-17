@@ -60,7 +60,7 @@
         </div>
       </div>
     </div>
-
+    {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
     <div class="row">
       <div class="col-sm-3">
         <div class="form-group {% if all_label_form.sort.errors %}has-error{% endif %}">
@@ -72,7 +72,7 @@
         </div>
       </div>
     </div>
-
+    {% endif %}
     <input type="submit" class="btn btn-primary" value="Filter & Sort" />
     <input type="button" class="btn btn-default pls-reset-btn" value="Clear" />
   </form>

@@ -75,3 +75,8 @@ def create_walmart_affiliate_link(product_url, user):
     walmart_affiliate_link = set_url_query(walmart_affiliate_link, "subId1", user_id)
     walmart_affiliate_link = set_url_query(walmart_affiliate_link, "u", product_url)
     return walmart_affiliate_link
+
+
+@register.filter(name='supplies')
+def supplies(user, item):
+    return user.supplies(item)

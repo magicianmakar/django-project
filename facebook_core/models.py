@@ -64,8 +64,16 @@ class FBStore(SureDoneStoreBase):
         return self.creds.get('system_token', {}).get('value')
 
     @property
+    def access_token(self):
+        return self.creds.get('access_token', {}).get('value')
+
+    @property
     def auth_completed(self):
         return self.system_token
+
+    @property
+    def is_unauthorized(self):
+        return not bool(self.system_token) and not bool(self.access_token)
 
     @property
     def instance_prefix(self):

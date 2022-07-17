@@ -174,9 +174,17 @@ class SureDoneApiHandler:
 
     def remove_fb_channel_auth(self, instance_id):
         url = f'{self.API_ENDPOINT}/v3/authorize/facebook/revoke'
+        headers = {**self.HEADERS, 'Content-Type': 'Application/json'}
         request_data = {'instance': instance_id}
 
-        return requests.get(url, params=request_data, headers=self.HEADERS)
+        response = requests.post(url, json=request_data, headers=headers)
+        if response.ok:
+            try:
+                return response.json()
+            except ValueError:
+                pass
+        else:
+            pass
 
     def authorize_fb_complete(self, instance, code, granted_scopes, denied_scopes, state):
         url = f'{self.API_ENDPOINT}/v3/authorize/facebook/complete'
@@ -455,6 +463,26 @@ class SureDoneApiHandler:
         })
 
         return requests.post(url, data=data, params=params, headers=self.HEADERS)
+
+    def get_last_log(self, identifier: str, context: str, action: str):
+        url = f'{self.API_ENDPOINT}/v3/logs'
+        headers = {**self.HEADERS, 'Content-Type': 'Application/json'}
+        data = {
+            'identifier': identifier,
+            'context': context,
+            'action': action,
+            'records': 1,
+            'sort': 'created_at:desc',
+        }
+
+        response = requests.post(url, json=data, headers=headers)
+        if response.ok:
+            try:
+                logs = response.json().get('results', {}).get('logs', [])
+                if logs:
+                    return logs[0]
+            except ValueError:
+                pass
 
 
 class SureDoneAdminApiHandler:

@@ -56,7 +56,8 @@ def aws_s3_context():
 
 def user_can_download_label(user, label):
     user_is_owner = user.models_user == label.user_supplement.user.models_user
-    if user.can('pls_admin.use') or user.can('pls_staff.use') or user_is_owner:
+    user_is_supplier = user.supplies(label.user_supplement.pl_supplement)
+    if user.can('pls_admin.use') or user.can('pls_staff.use') or user_is_owner or user_is_supplier:
         return True
     return False
 

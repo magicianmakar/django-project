@@ -118,7 +118,7 @@
             Updates
           </a>
         </li>
-        {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
+        {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' or request.user|can:'pls_supplier.use' %}
         <li class="item">
           <a href="{% url 'pls:all_user_supplements' %}">
             <img src="{% static 'img/private-label.svg' %}" class="item-icon"/>
@@ -285,7 +285,7 @@
             <img src="{% static 'img/private-label.svg' %}" class="item-icon"/>
           </a>
       </li>
-      {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
+      {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' or request.user|can:'pls_supplier.use'%}
       <li class="item">
           <a href="{% url 'pls:all_user_supplements' %}" title="Private Label Admin">
             <img src="{% static 'img/private-label.svg' %}" class="item-icon"/>

@@ -189,6 +189,13 @@ class UserProfile(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
+    supplier = models.ForeignKey('product_common.ProductSupplier',
+                                 related_name='linked_supplier',
+                                 null=True,
+                                 blank=True,
+                                 on_delete=models.SET_NULL,
+                                 verbose_name="Linked Supplier")
+
     def __str__(self):
         return f'<UserProfile: {self.id}>'
 
@@ -422,7 +429,7 @@ class UserProfile(models.Model):
 
         return stores
 
-    def get_fb_stores(self, flat=False, do_sync=False):
+    def get_fb_stores(self, flat=False, do_sync=False, include_non_onboarded=False):
         if do_sync:
             # The function is defined in facebook_core.utils.py
             self.sync_fb_stores()
@@ -430,6 +437,9 @@ class UserProfile(models.Model):
             stores = self.subuser_fb_stores.filter(is_active=True)
         else:
             stores = self.user.fbstore_set.filter(is_active=True)
+
+        if not include_non_onboarded:
+            stores = stores.exclude(creds__system_token__value=False)
 
         if flat:
             stores = stores.values_list('id', flat=True)
@@ -565,6 +575,11 @@ class UserProfile(models.Model):
                 stores.append(name)
 
         return stores
+
+    def supplies(self, item):
+        if self.supplier is not None:
+            return self.supplier == item.supplier
+        return False
 
     def can(self, perm_name, store=None):
         if perm_name[-4:] == '.sub':
@@ -2694,6 +2709,11 @@ def user_get_jwt_access_token(self):
 @add_to_class(User, 'can')
 def user_can(self, perms, store_id=None):
     return self.profile.can(perms, store_id)
+
+
+@add_to_class(User, 'supplies')
+def supplies(self, item):
+    return self.profile.supplies(item)
 
 
 @add_to_class(User, 'get_config')

@@ -1,5 +1,5 @@
 {% extends "supplements/tab_view_admin.html" %}
-{% load static compress template_helper widget_tweaks %}
+{% load static compress template_helper widget_tweaks perms_helper %}
 
 {% block extra_pls_css %}
 <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
@@ -84,6 +84,8 @@
         </div>
       </div>
     </div>
+
+    {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
     <div class="row">
       <div class="col-sm-4">
         <div class="form-group">
@@ -93,6 +95,7 @@
         </div>
       </div>
     </div>
+    {% endif %}
 
     <div class="row">
       <div class="col-sm-4">

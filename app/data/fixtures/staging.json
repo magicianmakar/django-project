@@ -1272,6 +1272,14 @@
   }
 },
 {
+  "model": "leadgalaxy.apppermission",
+  "pk": 204,
+  "fields": {
+    "name": "pls_supplier.use",
+    "description": "PLS Supplier"
+  }
+},
+{
   "model": "leadgalaxy.groupplan",
   "pk": 1,
   "fields": {

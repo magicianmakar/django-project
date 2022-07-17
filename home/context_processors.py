@@ -1,3 +1,4 @@
+import re
 from operator import attrgetter
 
 
@@ -7,12 +8,13 @@ def all_stores(request):
         return {}
 
     platforms = ['shopify', 'woo', 'chq', 'bigcommerce', 'gear', 'gkart', 'ebay', 'fb', 'google']
+    include_non_onboarded = bool(re.match(f"/({'|'.join(platforms)})?/?$", request.path))
     stores = {
         'shopify': list(user.profile.get_shopify_stores()),
         'chq': list(user.profile.get_chq_stores()),
         'woo': list(user.profile.get_woo_stores()),
         'ebay': list(user.profile.get_ebay_stores(do_sync=True)),
-        'fb': list(user.profile.get_fb_stores(do_sync=True)),
+        'fb': list(user.profile.get_fb_stores(do_sync=True, include_non_onboarded=include_non_onboarded)),
         'google': list(user.profile.get_google_stores(do_sync=True)),
         'gear': list(user.profile.get_gear_stores()),
         'gkart': list(user.profile.get_gkart_stores()),

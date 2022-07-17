@@ -1118,3 +1118,23 @@ class FBStoreApi(ApiBase):
             cache.delete(user_store_supplier_sync_key)
             return self.api_success()
         return self.api_error('No Sync in progress', status=404)
+
+    def get_product_latest_relist_log(self, request, user, data):
+        parent_guid = data.get('product')
+        if not parent_guid:
+            return self.api_error('Product ID cannot be empty.')
+
+        store_id = data.get('store')
+        if not store_id:
+            return self.api_error('Store ID cannot be empty.')
+
+        pusher_channel = f'user_{user.id}'
+        tasks.product_latest_relist_log.apply_async(kwargs={
+            'user_id': user.id,
+            'parent_guid': parent_guid,
+            'store_id': store_id,
+            'pusher_channel': pusher_channel,
+        }, countdown=0, expires=120)
+
+        pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
+        return self.api_success({'pusher': pusher})
