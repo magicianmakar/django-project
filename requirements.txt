@@ -78,7 +78,7 @@ kombu==4.6.11
 lockfile==0.12.2
 logfmt==0.4
 loxun==2.0
-lxml==4.6.5
+lxml==4.9.1
 Markdown==2.6.11
 MarkupSafe==2.0.1
 munch==2.3.2
