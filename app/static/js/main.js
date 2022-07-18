@@ -1317,6 +1317,22 @@ $(".copy-text-btn").on("click", function() {
     });
 });
 
+// this function generates CORB warning, but still track the click and handle cookies
+// should be run BEFORE placing an order
+function generate_admitad_click(ulp,subid) {
+    var helperImg = document.createElement('img');
+    helperImg.style.display = 'none';
+    helperImg.addEventListener('load', () => {
+        document.body.removeChild(helperImg);
+      });
+      helperImg.addEventListener('error', () => {
+        document.body.removeChild(helperImg);
+      });
+    helperImg.src='https://ad.admitad.com/goto/'+window.admitad_site_id+'/?ulp='+encodeURIComponent(ulp)+'&subid='+encodeURIComponent(subid);
+    document.body.appendChild(helperImg);
+
+}
+
 function sendOrdersToVueApp(btns) {
     if (btns.length) {
         var btn = btns.shift();
@@ -1334,6 +1350,9 @@ function sendOrdersToVueApp(btns) {
             },
         };
         btn.button('loading');
+        if (window.admitad_site_id && msg.order.order_data.source_id){
+            generate_admitad_click('https://www.aliexpress.com/item/' + msg.order.order_data.source_id + '.html',window.app_base_link);
+        }
         $.ajax({
             url: api_url('import-aliexpress-data', 'aliexpress'),
             type: "POST",

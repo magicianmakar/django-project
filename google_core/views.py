@@ -436,6 +436,9 @@ class OrdersList(ListView):
         if api_error:
             messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
 
+        admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.request.user.models_user)
+        context['admitad_site_id'] = admitad_site_id if user_admitad_credentials else False
+
         context['api_error'] = api_error
 
         return context

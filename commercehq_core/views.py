@@ -819,6 +819,9 @@ class OrdersList(ListView):
         context['aliexpress_account'] = AliexpressAccount.objects.filter(user=self.request.user.models_user)
         context['api_error'] = api_error
 
+        admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.request.user.models_user)
+        context['admitad_site_id'] = admitad_site_id if user_admitad_credentials else False
+
         return context
 
     def get_store(self):

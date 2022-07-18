@@ -18,7 +18,7 @@ from shopified_core import permissions
 from shopified_core.utils import app_link, external_link, safe_float, safe_int
 
 from .models import AliexpressAccount, AliexpressCategory
-from .settings import API_KEY, API_SECRET
+from .settings import API_KEY, API_SECRET, API_KEY_ADMITAD, API_SECRET_ADMITAD
 from .utils import get_aliexpress_account, get_store_data
 
 
@@ -29,10 +29,13 @@ class AuthorizeView(RedirectView):
             # Aliexpress doesn't redirect to local links for some reason
             redirect_url = redirect_url.replace('dev.', 'app.')
 
+        # use admitad APP if reflink is set
+        admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.request.user.models_user)
+
         return external_link(
             url='https://oauth.aliexpress.com/authorize',
             response_type='code',
-            client_id=API_KEY,
+            client_id=API_KEY_ADMITAD if user_admitad_credentials else API_KEY,
             redirect_uri=redirect_url,
             state=get_random_string(32),
             view='web',
@@ -42,11 +45,15 @@ class AuthorizeView(RedirectView):
 
 class TokenView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
+
+        # use admitad APP if reflink is set
+        admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.request.user.models_user)
+
         res = requests.post('https://oauth.aliexpress.com/token', data={
             'code': self.request.GET['code'],
             'grant_type': 'authorization_code',
-            'client_id': API_KEY,
-            'client_secret': API_SECRET,
+            'client_id': API_KEY_ADMITAD if user_admitad_credentials else API_KEY,
+            'client_secret': API_SECRET_ADMITAD if user_admitad_credentials else API_SECRET,
         })
 
         if res.ok:
@@ -54,6 +61,7 @@ class TokenView(RedirectView):
                 user=self.request.user.models_user,
                 aliexpress_user_id=res.json().get('user_id'),
                 aliexpress_username=res.json().get('user_nick'),
+                is_admitad=user_admitad_credentials,
                 defaults={
                     'access_token': res.json().get('access_token'),
                     'data': res.text

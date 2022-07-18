@@ -44,6 +44,7 @@ def create_shipstation_orders(self, token):
             shipstation_key='',
             status__in=[PLSOrder.PAID, PLSOrder.SHIPPING_ERROR],
         ).first()
+
         orderlines = PLSOrderLine.objects.filter(pls_order=order.id)
 
         while order:

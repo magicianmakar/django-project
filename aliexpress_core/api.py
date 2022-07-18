@@ -9,7 +9,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import reverse
 
 from aliexpress_core.models import AliexpressAccount
-from aliexpress_core.settings import API_KEY, API_SECRET
+from aliexpress_core.settings import API_KEY, API_SECRET, API_KEY_ADMITAD, API_SECRET_ADMITAD
 from aliexpress_core.utils import FindProductViaApi, MaillingAddress, PlaceOrder, PlaceOrderRequest, ProductBaseItem, ShippingInfo
 from bigcommerce_core.models import BigCommerceOrderTrack, BigCommerceProduct, BigCommerceStore
 from bigcommerce_core.utils import get_bigcommerce_order_data, get_order_product_data
@@ -18,7 +18,7 @@ from commercehq_core.utils import get_chq_order
 from groovekart_core.models import GrooveKartOrderTrack, GrooveKartProduct, GrooveKartStore
 from groovekart_core.utils import get_gkart_order
 from leadgalaxy.models import ShopifyOrderTrack, ShopifyProduct, ShopifyStore
-from leadgalaxy.utils import get_shopify_order
+from leadgalaxy.utils import get_shopify_order, get_admitad_credentials
 from lib.aliexpress_api import TopException
 from lib.exceptions import capture_exception
 from shopified_core import permissions
@@ -344,6 +344,14 @@ class AliexpressFulfillHelper():
             order_fulfill_url = app_link('api/gkart/order-fulfill')
 
         aliexpress_order = PlaceOrder()
+
+        # use admitad APP if reflink is set
+        admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.store.user.models_user)
+        if user_admitad_credentials:
+            aliexpress_order.set_app_info(API_KEY_ADMITAD, API_SECRET_ADMITAD)
+        else:
+            aliexpress_order.set_app_info(API_KEY, API_SECRET)
+
         aliexpress_order.set_app_info(API_KEY, API_SECRET)
 
         address = MaillingAddress()
@@ -594,7 +602,14 @@ class AliexpressProduct():
 
         if not aliexpress_product_result:
             aliexpress_product_obj = FindProductViaApi()
-            aliexpress_product_obj.set_app_info(API_KEY, API_SECRET)
+
+            # use admitad APP if reflink is set
+            admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.aliexpress_account.user.models_user)
+            if user_admitad_credentials:
+                aliexpress_product_obj.set_app_info(API_KEY_ADMITAD, API_SECRET_ADMITAD)
+            else:
+                aliexpress_product_obj.set_app_info(API_KEY, API_SECRET)
+
             aliexpress_product_obj.product_id = self.product_id
             aliexpress_product_obj.target_currency = 'USD'
             response = aliexpress_product_obj.getResponse(authrize=self.aliexpress_account.access_token)
@@ -686,7 +701,14 @@ class ShippingMethods():
 
     def get_shipping_data(self):
         aliexpress_obj = ShippingInfo()
-        aliexpress_obj.set_app_info(API_KEY, API_SECRET)
+
+        # use admitad APP if reflink is set
+        admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.aliexpress_account.user.models_user)
+
+        if user_admitad_credentials:
+            aliexpress_obj.set_app_info(API_KEY_ADMITAD, API_SECRET_ADMITAD)
+        else:
+            aliexpress_obj.set_app_info(API_KEY, API_SECRET)
 
         send_goods_country_code = 'CN'
         for v in self.variant:
