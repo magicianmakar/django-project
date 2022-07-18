@@ -499,7 +499,8 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
             if cancelled:
                 cancelled_order_ids = self.get_cancelled_order_ids()
                 for id, number in cancelled_order_ids.items():
-                    queryset = queryset.exclude(pls_order_id=id, pls_order__order_number=number)
+                    if id.isnumeric():
+                        queryset = queryset.exclude(pls_order_id=id, pls_order__order_number=number)
 
             supplier = form.cleaned_data['supplier']
             if supplier:
