@@ -70,10 +70,7 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
         for goal in Goal.objects.filter(plans=current_plan):
             UserGoalRelationship.objects.get_or_create(user=user, goal=goal)
 
-    if settings.HUPSPOT_API_KEY:
-        update_hubspot_user.apply_async([user.id], expires=500)
-
-    if settings.HUPSPOT_API_KEY:
+    if not settings.DEBUG and settings.HUPSPOT_API_KEY:
         update_hubspot_user.apply_async([user.id], expires=500)
 
 
@@ -316,7 +313,8 @@ def shopify_send_keen_event_for_product(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=GroupPlan)
 def plan_update_hubspot_sync(sender, instance, created, **kwargs):
-    update_plans_list_in_hubspot()
+    if not settings.DEBUG and settings.HUPSPOT_API_KEY:
+        update_plans_list_in_hubspot()
 
 
 main_subscription_canceled = Signal(providing_args=["stripe_sub"])
