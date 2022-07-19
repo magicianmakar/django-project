@@ -69,7 +69,7 @@
                             <tr>
                                 <td style="vertical-align:middle">
                                     {% if variant.image %}
-                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% fb_marketplace_image_thumb variant.image 'thumb' %}" style="width:50px;margin-right:10px" />
+                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb variant.image 'thumb' %}" style="width:50px;margin-right:10px" />
                                     {% else %}
                                         <img class="thumb" style="width: 50px" src="{% static 'img/blank.gif' %}" />
                                     {% endif %}
