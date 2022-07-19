@@ -41,6 +41,7 @@ SUPPLEMENTS_SUPPLIER = [
 class PLSupplement(PLSupplementMixin, model_base.Product):
     PRODUCT_TYPE = 'pls'
 
+    shipstation_account = models.ForeignKey("ShipStationAccount", null=True, on_delete=models.SET_NULL)
     wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
     label_template_url = models.URLField()
     approved_label_url = models.URLField(null=True, blank=True)
@@ -375,7 +376,7 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
                 'billTo': get_address(json.loads(self.billing_address)),
             }
 
-    def to_shipstation_order(self):
+    def to_shipstation_order(self, shipstation_acc):
         status = {
             'pending': 'awaiting_payment',
             'paid': 'awaiting_shipment',
@@ -399,7 +400,9 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
             extra_info['requestedShippingService'] = self.shipping_service_id
 
         for item in self.order_items.all():
-            extra_info['items'] += item.to_shipstation_item()
+            item_pl_shipstation_acc = item.label.user_supplement.pl_supplement.shipstation_account
+            if item_pl_shipstation_acc == shipstation_acc:
+                extra_info['items'] += item.to_shipstation_item()
 
         return {
             **self.shipstation_address,
@@ -752,3 +755,20 @@ class BasketOrder(models.Model):
             self.status = 'paid'
         else:
             self.status = ''
+
+
+class ShipStationAccount(models.Model):
+    class Meta:
+        ordering = ['-pk']
+
+    name = models.CharField(max_length=500)
+    api_key = models.CharField(max_length=500)
+    api_secret = models.CharField(max_length=500)
+    api_url = models.URLField(default="https://ssapi.shipstation.com")
+    max_retries = models.IntegerField(default=5)
+    send_timeout = models.IntegerField(default=60)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name

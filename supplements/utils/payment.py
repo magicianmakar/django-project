@@ -30,7 +30,7 @@ def complete_payment(transaction_id, pls_order_id):
     return pls_order
 
 
-def get_shipping_costs(country_code, province_code, total_weight, default_type=None):
+def get_shipping_costs(country_code, province_code, order_weights, default_type=None):
     try:
         address = supplement_customer_address({'country_code': country_code})
         country_code = address['country_code']
@@ -48,11 +48,21 @@ def get_shipping_costs(country_code, province_code, total_weight, default_type=N
         services = {s['service_id']: s for s in shipping_data.get('services', [])}
         shipping_rates = shipping_data.get('shipping_rates', [])
         for shipping_rate in shipping_rates:
-            if total_weight >= shipping_rate['weight_from'] \
-                    and total_weight < shipping_rate['weight_to']:
-                if shipping_rate.get('service_id'):
-                    shipping_rate['service'] = services.get(shipping_rate.get('service_id'))
+            total_cost = 0
+            for weight in order_weights:
+                if weight >= shipping_rate['weight_from'] \
+                        and weight < shipping_rate['weight_to']:
+                    total_cost += shipping_rate['shipping_cost']
 
+            if shipping_rate.get('service_id'):
+                shipping_rate['shipping_cost'] = total_cost
+                shipping_rate['service'] = services.get(shipping_rate.get('service_id'))
+                for service in costs:
+                    if shipping_rate.get('service_id') == service['service_id']:
+                        service['shipping_cost'] += total_cost
+                        shipping_rate['shipping_cost'] = 0
+
+            if shipping_rate['shipping_cost'] > 0:
                 costs.append(shipping_rate)
 
         if not costs:
@@ -105,7 +115,7 @@ class Util:
         store_type = self.store.store_type
 
         get_shipstation_line_key = PLSOrderLine.get_shipstation_key
-        total_weight = 0
+        total_weight = []
         wholesale_price = amount = 0
         for line in lines:
             user_supplement = line['user_supplement']
@@ -114,7 +124,7 @@ class Util:
             line_wholesale = user_supplement.wholesale_price * quantity
             amount += line_amount
             wholesale_price += line_wholesale
-            total_weight += user_supplement.pl_supplement.weight * quantity
+            total_weight.append(user_supplement.pl_supplement.weight * quantity)
 
         ship_to, bill_to = prepare_shipping_data(order)
         shipping = get_shipping(
@@ -301,7 +311,6 @@ class Util:
                 'quantity': 1,
                 'amount': Decimal(order.amount / 100).quantize(Decimal('.01'))
             })
-
         transaction_id, error = user.authorize_net_customer.charge_items(payment_items)
         if not transaction_id:
             raise Exception(error)
@@ -323,6 +332,7 @@ class Util:
         shipping_mapping = {}
         inventory_mapping = {}
         orders_status = {}
+        supplements_cost_groups = {}
         orders = {}
         for order_data_id in order_data_ids:
             orders_status[order_data_id] = {
@@ -509,26 +519,36 @@ class Util:
                 if orders_status[order_data_id]['success']:
                     # Initialize shipping mapping for order
                     shipping_mapping.setdefault(order_data['order_id'], {
-                        'total_weight': Decimal('0.0'),
+                        'total_weight': {},
                         'country_code': order_data['shipping_address']['country_code'],
                         'province_code': dict_val(order_data['shipping_address'],
                                                   ['province_code', 'province']),
                     })
-                    shipping_mapping[order_data['order_id']]['total_weight'] += total_weight
+                    shipstation_account = user_supplement.current_label.user_supplement.pl_supplement \
+                        .shipstation_account
+
+                    if shipstation_account.name not in supplements_cost_groups:
+                        supplements_cost_groups[shipstation_account.name] = 0
+
+                    supplements_cost_groups[shipstation_account.name] += total_weight
+
+                    shipping_mapping[order_data['order_id']][
+                        'total_weight'] = supplements_cost_groups
                     orders[order_id]['items'] += items
 
         # Gather successful order shipping methods to show customer
         order_costs = {'shipping': {}, 'taxes': {}}
         default_shipping_option = models_user.get_config('pl_default_shipping_option')
         for order_id in shipping_mapping:
+            weight_list = list(shipping_mapping[order_id]['total_weight'].values())
             order_costs['shipping'][order_id] = get_shipping_costs(
                 shipping_mapping[order_id]['country_code'],
                 shipping_mapping[order_id]['province_code'],
-                shipping_mapping[order_id]['total_weight'],
+                weight_list,
                 default_shipping_option,
             )
             for i in order_costs['shipping'][order_id]:
-                i['total_weight'] = shipping_mapping[order_id]['total_weight']
+                i['total_weight'] = weight_list
 
             # Shipping location must be supported by our carrier
             if orders[order_id]['shipping_service']:

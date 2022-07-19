@@ -32,6 +32,7 @@ class AliexpressAccount(models.Model):
     aliexpress_username = models.CharField(max_length=255, default='', blank=True)
 
     data = models.TextField(default='', blank=True)
+    is_admitad = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)

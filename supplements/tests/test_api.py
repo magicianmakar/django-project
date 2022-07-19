@@ -17,6 +17,7 @@ from .factories import (
     PLSOrderLineFactory,
     PLSupplementFactory,
     ShippingGroupFactory,
+    ShipStationAccountFactory,
     UserSupplementFactory,
     UserSupplementLabelFactory,
     BasketItemFactory,
@@ -35,8 +36,18 @@ class PLSBaseTestCase(BaseTestCase):
         self.user.profile.save()
         self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls.use'))
 
+        self.shipstation_account = ShipStationAccountFactory.create(
+            name='Test Account',
+            api_key='hasvbdjkhasdsahvdkjsa',
+            api_secret='hsabjdkbasjhbdjkahsvdkjhavsdk',
+            api_url='http://example.com',
+            max_retries='5',
+            send_timeout='60',
+        )
+
         self.supplement = PLSupplementFactory.create(
             title='Fish Oil',
+            shipstation_account=self.shipstation_account,
             description='Fish oil is great',
             category='supplement',
             tags='supplement',

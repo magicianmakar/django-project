@@ -9,7 +9,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import reverse
 
 from aliexpress_core.models import AliexpressAccount
-from aliexpress_core.settings import API_KEY, API_SECRET
+from aliexpress_core.settings import API_KEY, API_SECRET, API_KEY_ADMITAD, API_SECRET_ADMITAD
 from aliexpress_core.utils import FindProductViaApi, MaillingAddress, PlaceOrder, PlaceOrderRequest, ProductBaseItem, ShippingInfo
 from bigcommerce_core.models import BigCommerceOrderTrack, BigCommerceProduct, BigCommerceStore
 from bigcommerce_core.utils import get_bigcommerce_order_data, get_order_product_data
@@ -18,13 +18,13 @@ from commercehq_core.utils import get_chq_order
 from groovekart_core.models import GrooveKartOrderTrack, GrooveKartProduct, GrooveKartStore
 from groovekart_core.utils import get_gkart_order
 from leadgalaxy.models import ShopifyOrderTrack, ShopifyProduct, ShopifyStore
-from leadgalaxy.utils import get_shopify_order
+from leadgalaxy.utils import get_shopify_order, get_admitad_credentials
 from lib.aliexpress_api import TopException
 from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.exceptions import AliexpressFulfillException
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import app_link
+from shopified_core.utils import app_link, safe_float
 from woocommerce_core.models import WooOrderTrack, WooProduct, WooStore
 from woocommerce_core.utils import get_woo_order
 
@@ -67,15 +67,12 @@ class AliexpressFulfillHelper():
         }
 
     def ds_product_data(self, product_id, aliexpress_account):
-        cache_key = f"aliexpress_drop_ship_product_details_{product_id}"
-        aliexpress_product_result = cache.get(cache_key, {})
+        # cache_key = f"aliexpress_drop_ship_product_details_{product_id}"
+        # aliexpress_product_result = cache.get(cache_key, {})
         product_data = AliexpressProduct(product_id, aliexpress_account)
-        if not aliexpress_product_result:
-            aliexpress_product_result = product_data.get_product_data()
-            if aliexpress_product_result is None:
-                return None
-            else:
-                cache.set(cache_key, aliexpress_product_result, timeout=300)
+        aliexpress_product_result = product_data.get_product_data()
+        if aliexpress_product_result is None:
+            return None
         sku_data = product_data.get_product_sku_data(aliexpress_product_result)
         return sku_data
 
@@ -347,6 +344,14 @@ class AliexpressFulfillHelper():
             order_fulfill_url = app_link('api/gkart/order-fulfill')
 
         aliexpress_order = PlaceOrder()
+
+        # use admitad APP if reflink is set
+        admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.store.user.models_user)
+        if user_admitad_credentials:
+            aliexpress_order.set_app_info(API_KEY_ADMITAD, API_SECRET_ADMITAD)
+        else:
+            aliexpress_order.set_app_info(API_KEY, API_SECRET)
+
         aliexpress_order.set_app_info(API_KEY, API_SECRET)
 
         address = MaillingAddress()
@@ -355,7 +360,9 @@ class AliexpressFulfillHelper():
         address.address = self.shipping_address['address1']
         address.address2 = self.shipping_address['address2']
         address.city = self.shipping_address['city']
-        address.province = self.shipping_address['province']
+        address.province = self.shipping_address['province'].strip()
+        if address.province.lower() == 'n/a' or not address.province:
+            address.province = 'Other'
         address.zip = self.shipping_address['zip']
         address.country = self.shipping_address['country_code']
 
@@ -508,18 +515,19 @@ class AliexpressFulfillHelper():
             items_sku = []
             duplicate_item = False
             for i, obj in enumerate(req.product_items):
-                if obj.sku_attr in items_sku or obj.product_id in items_sku:
+                if obj.sku_attr:
+                    sku_str = f"{obj.sku_attr}#{obj.product_id}"
+                else:
+                    sku_str = obj.product_id
+
+                if sku_str in items_sku:
                     duplicate_item = True
                     try:
                         index = items_sku.index(obj.sku_attr)
                     except:
                         index = items_sku.index(obj.product_id)
-                    popped = req.product_items.pop()
-                    req.product_items[index].product_count = req.product_items[index].product_count + popped.product_count
-                if obj.sku_attr:
-                    items_sku.append(obj.sku_attr)
-                else:
-                    items_sku.append(obj.product_id)
+                    req.product_items[index].product_count += req.product_items[i].product_count
+                items_sku.append(sku_str)
             if duplicate_item:
                 aliexpress_order.set_info(req)
             # #######End of check########
@@ -589,12 +597,26 @@ class AliexpressProduct():
         self.aliexpress_account = aliexpress_account
 
     def get_product_data(self):
-        aliexpress_product_obj = FindProductViaApi()
-        aliexpress_product_obj.set_app_info(API_KEY, API_SECRET)
-        aliexpress_product_obj.product_id = self.product_id
-        response = aliexpress_product_obj.getResponse(authrize=self.aliexpress_account.access_token)
-        response = response['aliexpress_ds_product_get_response']
-        return response.get('result')
+        cache_key = f"aliexpress_drop_ship_product_details_{self.product_id}"
+        aliexpress_product_result = cache.get(cache_key, {})
+
+        if not aliexpress_product_result:
+            aliexpress_product_obj = FindProductViaApi()
+
+            # use admitad APP if reflink is set
+            admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.aliexpress_account.user.models_user)
+            if user_admitad_credentials:
+                aliexpress_product_obj.set_app_info(API_KEY_ADMITAD, API_SECRET_ADMITAD)
+            else:
+                aliexpress_product_obj.set_app_info(API_KEY, API_SECRET)
+
+            aliexpress_product_obj.product_id = self.product_id
+            aliexpress_product_obj.target_currency = 'USD'
+            response = aliexpress_product_obj.getResponse(authrize=self.aliexpress_account.access_token)
+            response = response['aliexpress_ds_product_get_response']
+            cache.set(cache_key, response.get('result'), timeout=600)
+            aliexpress_product_result = response.get('result')
+        return aliexpress_product_result
 
     def get_product_sku_data(self, aliexpress_product_data):
         final_skus = {}
@@ -626,6 +648,48 @@ class AliexpressProduct():
                     continue
         return final_skus
 
+    def get_data(self, aliexpress_product_data):
+        final_skus = {}
+        variant_sku_data = aliexpress_product_data.get('ae_item_sku_info_dtos').get('ae_item_sku_info_d_t_o')
+        if variant_sku_data is not None and len(variant_sku_data) > 0:
+            if len(variant_sku_data) == 1:
+                sku_id = variant_sku_data[0].get('id')
+                if sku_id == '<none>':
+                    return {
+                        'sku': variant_sku_data[0].get('id'),
+                        'price': safe_float(variant_sku_data[0].get('sku_price')),
+                        'stock': variant_sku_data[0].get('sku_available_stock'),
+                        'variant': False
+                    }
+
+            for data in variant_sku_data:
+                try:
+                    sku_list = data.get("ae_sku_property_dtos").get("ae_sku_property_d_t_o")
+                    ali_variant_title_list = [i.get('property_value_definition_name') or i.get('sku_property_value') for i in sku_list]
+                    ali_variant_title_list = sorted(ali_variant_title_list)
+                    ali_variant_title = (' / '.join(ali_variant_title_list)).lower()
+                    final_skus[ali_variant_title] = {
+                        'sku': data.get('id'),
+                        'price': safe_float(data.get('sku_price')),
+                        'stock': data.get('sku_available_stock'),
+                        'variant': True
+                    }
+
+                    # for products imported via API
+                    alternate_variant_title_list = [i.get('sku_property_value') for i in sku_list]
+                    alternate_variant_title_list = sorted(alternate_variant_title_list)
+                    alternate_variant_title = (' / '.join(alternate_variant_title_list)).lower()
+                    final_skus[alternate_variant_title] = {
+                        'sku': data.get('id'),
+                        'price': data.get('sku_price'),
+                        'stock': data.get('sku_available_stock'),
+                        'variant': True
+                    }
+
+                except Exception:
+                    continue
+        return final_skus
+
 
 class ShippingMethods():
     def __init__(self, line_item, shipping_address, aliexpress_account):
@@ -637,7 +701,14 @@ class ShippingMethods():
 
     def get_shipping_data(self):
         aliexpress_obj = ShippingInfo()
-        aliexpress_obj.set_app_info(API_KEY, API_SECRET)
+
+        # use admitad APP if reflink is set
+        admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.aliexpress_account.user.models_user)
+
+        if user_admitad_credentials:
+            aliexpress_obj.set_app_info(API_KEY_ADMITAD, API_SECRET_ADMITAD)
+        else:
+            aliexpress_obj.set_app_info(API_KEY, API_SECRET)
 
         send_goods_country_code = 'CN'
         for v in self.variant:
@@ -736,7 +807,12 @@ class AliexpressApi(ApiResponseMixin):
 
         return self.api_success()
 
-    def post_import_shipping_method(self, request, user, data):
+    def post_import_aliexpress_data(self, request, user, data):
+        shipping_data = self.import_shipping_method(user, data)
+        product_data = self.import_ali_product_data(user, data)
+        return self.api_success({**shipping_data, **product_data})
+
+    def import_shipping_method(self, user, data):
         try:
             SHIPPING_DATA = {
                 "CAINIAO_CONSOLIDATION_AE": "Aliexpress Direct (UAE)",
@@ -800,13 +876,13 @@ class AliexpressApi(ApiResponseMixin):
                 "YANWEN_ECONOMY": "Yanwen Economic Air Mail",
                 "YANWEN_ECONOMY_SG": "Yanwen Special Economy",
                 "YANWEN_AM": "Yanwen Special Standard",
-                "Other": "Sellers Shipping Method"
+                "Other": "Seller's Shipping Method"
             }
 
             cache_key = f"aliexpress_shipping_method_{data['order']['store']}_{data['order']['order_id']}_{data['order']['order_data']['source_id']}"
             aliexpress_shipping_result = cache.get(cache_key, {})
             if aliexpress_shipping_result:
-                return self.api_success(aliexpress_shipping_result)
+                return aliexpress_shipping_result
 
             priority_service_list = []  # saves the list of Shipping methods in order of priority from Settings under AliExpress tab
             service = ''
@@ -833,7 +909,7 @@ class AliexpressApi(ApiResponseMixin):
             shipping_obj = ShippingMethods(line_item, data['order']['order_data']['shipping_address'], aliexpress_account)
             shipping_data = shipping_obj.get_shipping_data()
             if shipping_data is None:
-                return self.api_success({'data': {}})
+                return {'data': {}}
             shipping_services = [{
                 'amount': '',
                 'service_code': '',
@@ -856,7 +932,28 @@ class AliexpressApi(ApiResponseMixin):
                                     service = data['service_name']
                                     break
             cache.set(cache_key, {'data': shipping_services, 'shipping_setting': service}, timeout=600)
-            return self.api_success({'data': shipping_services, 'shipping_setting': service})
+
+            return {'data': shipping_services, 'shipping_setting': service}
         except:
             shipping_services = {}
-            return self.api_success({'data': shipping_services, 'shipping_setting': ''})
+            return {'data': shipping_services, 'shipping_setting': ''}
+
+    def import_ali_product_data(self, user, data):
+        try:
+            product_id = data['order']['order_data']['source_id']
+            aliexpress_account = AliexpressAccount.objects.filter(user=user.models_user).first()
+            product_data = AliexpressProduct(product_id, aliexpress_account)
+            aliexpress_product_result = product_data.get_product_data()
+            p_data = product_data.get_data(aliexpress_product_result)
+            if 'variant' in p_data:
+                return p_data
+            try:
+                variant = [v['title'].lower() for v in data['order']['order_data']['variant']]
+            except:
+                variant = map(lambda title: title.strip().lower(), data['order']['order_data']['variant'])  # if item variant list contain spaces
+                variant = list(variant)
+            variant = sorted(variant)
+            variant = (' / '.join(variant)).lower()
+            return p_data[variant]
+        except:
+            return {'sku': '', 'price': '', 'stock': '', 'variant': False}

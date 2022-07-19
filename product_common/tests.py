@@ -2,6 +2,7 @@ from unittest.mock import Mock, patch
 
 from lib.test import BaseTestCase
 from product_common.lib.shipstation import get_shipstation_shipments
+from supplements.models import ShipStationAccount
 
 
 class ShipstationTestCase(BaseTestCase):
@@ -16,7 +17,7 @@ class ShipstationTestCase(BaseTestCase):
                                       get_auth_header,
                                       get_paginated_response):
         get_auth_header.return_value = {}
-
+        ShipStationAccount.objects.create(name='test case', api_key='testkey', api_secret='testsecret')
         get_shipstation_shipments('http://url?1=1')
         requests_get.assert_called_with(
             'http://url?1=1&pageSize=500',

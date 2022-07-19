@@ -1317,6 +1317,22 @@ $(".copy-text-btn").on("click", function() {
     });
 });
 
+// this function generates CORB warning, but still track the click and handle cookies
+// should be run BEFORE placing an order
+function generate_admitad_click(ulp,subid) {
+    var helperImg = document.createElement('img');
+    helperImg.style.display = 'none';
+    helperImg.addEventListener('load', () => {
+        document.body.removeChild(helperImg);
+      });
+      helperImg.addEventListener('error', () => {
+        document.body.removeChild(helperImg);
+      });
+    helperImg.src='https://ad.admitad.com/goto/'+window.admitad_site_id+'/?ulp='+encodeURIComponent(ulp)+'&subid='+encodeURIComponent(subid);
+    document.body.appendChild(helperImg);
+
+}
+
 function sendOrdersToVueApp(btns) {
     if (btns.length) {
         var btn = btns.shift();
@@ -1328,12 +1344,17 @@ function sendOrdersToVueApp(btns) {
                 'store_type': window.storeType,
                 'order_id': btn.attr('order-id'),
                 'line_id': btn.attr('line-id'),
-                'order_data': JSON.parse(atob(btn.attr('order-data')))
+                'order_data': JSON.parse(atob(btn.attr('order-data'))),
+                'order_store_url': window.location.href,
+                'store_name': $('.nav-tabs li.active').text()
             },
         };
         btn.button('loading');
+        if (window.admitad_site_id && msg.order.order_data.source_id){
+            generate_admitad_click('https://www.aliexpress.com/item/' + msg.order.order_data.source_id + '.html',window.app_base_link);
+        }
         $.ajax({
-            url: api_url('import-shipping-method', 'aliexpress'),
+            url: api_url('import-aliexpress-data', 'aliexpress'),
             type: "POST",
             data: JSON.stringify(msg),
             dataType: 'json',
@@ -1342,18 +1363,50 @@ function sendOrdersToVueApp(btns) {
                 btn.button('reset');
                 msg['order']['shipping_services'] = response.data;
                 msg['order']['shipping_setting'] = response.shipping_setting;
+                msg['order']['order_data']['variant_price'] = response.price;
+                msg['order']['order_data']['sku'] = response.sku;
+                msg['order']['order_data']['stock'] = response.stock;
                 document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
                 sendOrdersToVueApp(btns);
+                
             },
             error: function (response) {
                 btn.button('reset');
                 msg['order']['shipping_setting'] = '';
+                msg['order']['order_data']['variant_price'] = '';
+                msg['order']['order_data']['sku'] = '';
+                msg['order']['order_data']['stock'] = '';
                 document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
                 sendOrdersToVueApp(btns);
             },
         });
     }
 }
+
+$("#single-click-add-queue").on("click" ,function() {
+    var arr = [];
+    $(".quick-order-btn").each(function (i, el) {
+        var data_target = $(this).attr("data-target");
+        if (data_target == "all") {
+            var elObj = $(this).closest("div.order");
+            elObj.find('.line-checkbox').each(function (i, el) {
+                var obj = $(el).closest('div.line');
+                var btn= '';
+                if ($(obj).hasClass("bundled")) {
+                    btn = obj.find('a.quick-bundle-order');
+                    btn = $(btn);
+                    adddQuickBundleOrders(btn);
+                }
+                else {
+                    btn = obj.find('a.place-order');
+                    btn = $(btn);
+                    arr.push(btn);
+                }
+            });
+        }
+    });
+    sendOrdersToVueApp(arr);
+});
 
 $(".quick-order-btn").on("click", function(e) {
     e.preventDefault();

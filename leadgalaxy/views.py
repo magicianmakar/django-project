@@ -1846,6 +1846,8 @@ class OrdersView(AuthenticationMixin, TemplateView):
         self.open_orders = None  # Found orders count
         self.current_page = None  # current Page instance returned by paginator
 
+        self.admitad_site_id = None
+
     # Get temaplte name funcion for TemplateView class
     def get_template_names(self):
         theme = self.request.GET.get('theme')
@@ -1926,6 +1928,9 @@ class OrdersView(AuthenticationMixin, TemplateView):
         # Reset user filter settings
         if self.request.GET.get('reset') == '1':
             self.user.profile.del_config_values('_orders_filter_', True)
+
+        admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(self.request.user.models_user)
+        self.admitad_site_id = admitad_site_id if user_admitad_credentials else False
 
         return super().dispatch(request, *args, **kwargs)
 

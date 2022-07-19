@@ -1,16 +1,15 @@
 import json
 from urllib.parse import urlencode
 
-from django.conf import settings
-
 import requests
 
 from shopified_core.utils import base64_encode
+from supplements.models import ShipStationAccount
 
 
-def get_auth_header():
-    api_key = settings.SHIPSTATION_API_KEY
-    api_secret = settings.SHIPSTATION_API_SECRET
+def get_auth_header(shipstation_acc):
+    api_key = shipstation_acc.api_key
+    api_secret = shipstation_acc.api_secret
 
     content = f"{api_key}:{api_secret}"
     encoded = base64_encode(content)
@@ -69,8 +68,10 @@ def create_shipstation_order(pls_order, raw_data):
     }
 
     headers = {'Content-Type': 'application/json'}
-    headers.update(get_auth_header())
-    url = f'{settings.SHIPSTATION_API_URL}/orders/createOrder'
+    shipstation_acc = pls_order.label.user_supplement.pl_supplement.shipstation_account
+    headers.update(get_auth_header(shipstation_acc))
+    shipstation_url = shipstation_acc.api_url
+    url = f'{shipstation_url}/orders/createOrder'
     response = requests.post(url, data=json.dumps(data), headers=headers)
     response = response.json()
 
@@ -79,38 +80,48 @@ def create_shipstation_order(pls_order, raw_data):
 
 
 def get_shipstation_shipments(resource_url):
-    headers = {'Content-Type': 'application/json'}
-    headers.update(get_auth_header())
-    if resource_url.endswith('?'):
-        resource_url = f'{resource_url}pageSize=500'
-    elif resource_url.find('?') > -1:
-        resource_url = f'{resource_url}&pageSize=500'
-    else:
-        resource_url = f'{resource_url}?pageSize=500'
+    shipstation_accounts = ShipStationAccount.objects.all()
+    shipments = []
+    for shipstation_acc in shipstation_accounts:
+        headers = {'Content-Type': 'application/json'}
+        headers.update(get_auth_header(shipstation_acc))
+        if resource_url.endswith('?'):
+            resource_url = f'{resource_url}pageSize=500'
+        elif resource_url.find('?') > -1:
+            resource_url = f'{resource_url}&pageSize=500'
+        else:
+            resource_url = f'{resource_url}?pageSize=500'
 
-    response = requests.get(resource_url, headers=headers).json()
-
-    shipments = get_paginated_response(response, resource_url, 'shipments')
+        response = requests.get(resource_url, headers=headers).json()
+        shipments = get_paginated_response(response, resource_url, 'shipments', shipstation_acc)
+        if shipments:
+            break
 
     return shipments
 
 
 def get_shipstation_orders(params=None):
-    resource_url = f'{settings.SHIPSTATION_API_URL}/orders?pageSize=500'
-    if params:
-        resource_url = '{}&{}'.format(resource_url, urlencode(params))
+    shipstation_accounts = ShipStationAccount.objects.all()
+    orders = []
+    for shipstation_acc in shipstation_accounts:
+        shipstation_url = shipstation_acc.api_url
+        resource_url = f'{shipstation_url}/orders?pageSize=500'
+        if params:
+            resource_url = '{}&{}'.format(resource_url, urlencode(params))
 
-    headers = {'Content-Type': 'application/json'}
-    headers.update(get_auth_header())
-    response = requests.get(resource_url, headers=headers).json()
-    orders = get_paginated_response(response, resource_url, 'orders')
+        headers = {'Content-Type': 'application/json'}
+        headers.update(get_auth_header(shipstation_acc))
+        response = requests.get(resource_url, headers=headers).json()
+        acc_orders = get_paginated_response(response, resource_url, 'orders', shipstation_acc)
 
+        for acc_order in acc_orders:
+            orders.append(acc_order)
     return orders
 
 
-def get_paginated_response(response, url, key):
+def get_paginated_response(response, url, key, shipstation_acc):
     headers = {'Content-Type': 'application/json'}
-    headers.update(get_auth_header())
+    headers.update(get_auth_header(shipstation_acc))
 
     data = response.get(key, [])
     total_pages = response.get('pages', 1)

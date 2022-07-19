@@ -2,10 +2,10 @@ import json
 from urllib.parse import urlencode
 
 import requests
-from django.conf import settings
 from django.core.cache import cache
 
 from shopified_core.utils import base64_encode, hash_text
+from supplements.models import ShipStationAccount
 
 
 class LimitExceededError(Exception):
@@ -14,9 +14,9 @@ class LimitExceededError(Exception):
         super().__init__(*args, **kwargs)
 
 
-def get_auth_header():
-    api_key = settings.SHIPSTATION_API_KEY
-    api_secret = settings.SHIPSTATION_API_SECRET
+def get_auth_header(shipstation_acc):
+    api_key = shipstation_acc.api_key
+    api_secret = shipstation_acc.api_secret
 
     content = f"{api_key}:{api_secret}"
     encoded = base64_encode(content)
@@ -53,11 +53,12 @@ def prepare_shipping_data(order):
     return [ship_to, bill_to]
 
 
-def create_shipstation_order(pls_order, raw_request=False):
+def create_shipstation_order(pls_order, shipstation_acc, raw_request=False):
     headers = {'Content-Type': 'application/json'}
-    headers.update(get_auth_header())
-    url = f'{settings.SHIPSTATION_API_URL}/orders/createOrder'
-    data = pls_order.to_shipstation_order()
+    headers.update(get_auth_header(shipstation_acc))
+    shipstation_url = shipstation_acc.api_url
+    url = f'{shipstation_url}/orders/createOrder'
+    data = pls_order.to_shipstation_order(shipstation_acc)
     r = requests.post(url, data=json.dumps(data), headers=headers)
 
     if r.status_code == 429:
@@ -79,7 +80,7 @@ def create_shipstation_order(pls_order, raw_request=False):
 
 
 def get_orders_lock(token=None):
-    lock = cache.lock('create_shipstation_orders_lock', timeout=settings.SEND_SHIPSTATION_TIMEOUT)
+    lock = cache.lock('create_shipstation_orders_lock', timeout=60)
 
     if token:
         lock.local.token = token.encode() if isinstance(token, str) else token
@@ -106,10 +107,10 @@ def send_shipstation_orders():
     return False
 
 
-def get_shipstation_order(order_number):
+def get_shipstation_order(order_number, shipstation_acc):
     headers = {'Content-Type': 'application/json'}
-    headers.update(get_auth_header())
-    url = f'{settings.SHIPSTATION_API_URL}/orders'
+    headers.update(get_auth_header(shipstation_acc))
+    url = f'{shipstation_acc.api_url}/orders'
 
     response = requests.get(url, params={'orderNumber': order_number}, headers=headers)
     response.raise_for_status()
@@ -119,34 +120,39 @@ def get_shipstation_order(order_number):
     return result
 
 
-def get_shipstation_shipments(resource_url):
+def get_shipstation_shipments(resource_url, shipstation_acc=None):
     headers = {'Content-Type': 'application/json'}
-    headers.update(get_auth_header())
+    headers.update(get_auth_header(shipstation_acc))
     resource_url = f'{resource_url}?pageSize=500'
     response = requests.get(resource_url, headers=headers).json()
 
-    shipments = get_paginated_response(response, resource_url, 'shipments')
+    shipments = get_paginated_response(response, resource_url, 'shipments', shipstation_acc)
 
     return shipments
 
 
 def get_shipstation_orders(params=None):
-    resource_url = f'{settings.SHIPSTATION_API_URL}/orders?pageSize=500'
-    if params:
-        resource_url = '{}&{}'.format(resource_url, urlencode(params))
+    shipstation_accounts = ShipStationAccount.objects.all()
+    orders = []
+    for shipstation_acc in shipstation_accounts:
+        shipstation_url = shipstation_acc.api_url
+        resource_url = f'{shipstation_url}/orders?pageSize=500'
+        if params:
+            resource_url = '{}&{}'.format(resource_url, urlencode(params))
 
-    headers = {'Content-Type': 'application/json'}
-    headers.update(get_auth_header())
-    response = requests.get(resource_url, headers=headers).json()
+        headers = {'Content-Type': 'application/json'}
+        headers.update(get_auth_header(shipstation_acc))
+        response = requests.get(resource_url, headers=headers).json()
+        acc_orders = get_paginated_response(response, resource_url, 'orders', shipstation_acc)
 
-    orders = get_paginated_response(response, resource_url, 'orders')
-
+        for acc_order in acc_orders:
+            orders.append(acc_order)
     return orders
 
 
-def get_paginated_response(response, url, key):
+def get_paginated_response(response, url, key, shipstation_acc):
     headers = {'Content-Type': 'application/json'}
-    headers.update(get_auth_header())
+    headers.update(get_auth_header(shipstation_acc))
 
     data = response[key]
     total_pages = response['pages']

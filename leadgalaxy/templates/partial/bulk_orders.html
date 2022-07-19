@@ -25,6 +25,14 @@
                     </a>
                 </li>
                 {% endif %}
+                {% if request.user|can:'aliexpress_api_integration.use' %}
+                <li>
+                    <a id="single-click-add-queue"
+                        href="javascript:void(0);">
+                        For AliExpress Quick Orders
+                    </a>
+                </li>
+                {% endif %}
 
             {% if request.user|can:'pls.use' %}
             <li>

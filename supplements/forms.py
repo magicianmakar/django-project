@@ -85,6 +85,7 @@ class PLSupplementForm(forms.ModelForm):
                   'on_sale',
                   'inventory',
                   'supplier',
+                  'shipstation_account',
                   ]
 
         widgets = {
@@ -101,6 +102,7 @@ class PLSupplementForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         self.fields['shipping_countries'].required = False
+        self.fields['shipstation_account'].required = True
         if self.user.can('pls_admin.use'):
             self.fields['supplier'].choices = [('', '---------')] + list(ProductSupplier.get_suppliers(shipping=False).values_list('id', 'title'))
         elif self.user.can('pls_supplier.use'):
