@@ -1319,18 +1319,19 @@ $(".copy-text-btn").on("click", function() {
 
 // this function generates CORB warning, but still track the click and handle cookies
 // should be run BEFORE placing an order
-function generate_admitad_click(ulp,subid) {
+function generate_admitad_click(ulp, subid) {
     var helperImg = document.createElement('img');
     helperImg.style.display = 'none';
-    helperImg.addEventListener('load', () => {
+    helperImg.addEventListener('load', function () {
         document.body.removeChild(helperImg);
-      });
-      helperImg.addEventListener('error', () => {
-        document.body.removeChild(helperImg);
-      });
-    helperImg.src='https://ad.admitad.com/goto/'+window.admitad_site_id+'/?ulp='+encodeURIComponent(ulp)+'&subid='+encodeURIComponent(subid);
-    document.body.appendChild(helperImg);
+    });
 
+    helperImg.addEventListener('error', function () {
+        document.body.removeChild(helperImg);
+    });
+
+    helperImg.src = 'https://ad.admitad.com/goto/' + window.admitad_site_id + '/?ulp=' + encodeURIComponent(ulp) + '&subid=' + encodeURIComponent(subid);
+    document.body.appendChild(helperImg);
 }
 
 function sendOrdersToVueApp(btns) {
@@ -1368,7 +1369,7 @@ function sendOrdersToVueApp(btns) {
                 msg['order']['order_data']['stock'] = response.stock;
                 document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
                 sendOrdersToVueApp(btns);
-                
+
             },
             error: function (response) {
                 btn.button('reset');
