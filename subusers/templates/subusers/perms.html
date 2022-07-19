@@ -1,10 +1,11 @@
 {% load static %}
 {% load widget_tweaks %}
 
-<h4><i>{{subuser.get_full_name|default:subuser.username}}</i> &nbsp; Can manage the following stores:</h4>
+<h4><i>{{subuser.get_full_name|default:subuser.username}}</i> &nbsp; can manage the following stores:</h4>
 <div class="row">
     <div class="col-md-12">
         <form method="POST" class="m-t-xs" role="form" action="{% url template_config.url.namespace|add:'subusers_perms' user_id=subuser.id %}">
+            <h4>Shopify Stores</h4>
             <div class="form-group">
                 {% render_field form.subuser_stores  %}
                 {{ form.subuser_stores.errors | safe }}
