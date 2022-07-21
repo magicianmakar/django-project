@@ -12,6 +12,7 @@ from shopified_core.decorators import add_to_class
 from shopified_core.models import BoardBase, OrderTrackBase, UserUploadBase
 from shopified_core.utils import safe_json
 from suredone_core.models import SureDoneProductBase, SureDoneProductVariantBase, SureDoneStoreBase, SureDoneSupplierBase
+from suredone_core.utils import SureDoneUtils, sd_customer_address
 
 
 @add_to_class(User, 'get_fb_boards')
@@ -107,6 +108,26 @@ class FBStore(SureDoneStoreBase):
 
     def get_admin_order_details(self, order_id):
         return f'{self.get_admin_url()}/orders/{order_id}'
+
+    def get_order(self, order_id):
+        r = SureDoneUtils(user=self.user.models_user).api.get_order_details(order_id)
+        orders_data = r.get('orders', [])
+
+        if isinstance(orders_data, list) and len(orders_data) > 0:
+            order_data = orders_data[0]
+            order_data['order_number'] = order_data.get('oid')
+            order_data['created_at'] = order_data.get('date')
+            get_config = self.user.models_user.get_config
+            order_data['shipping_address'] = sd_customer_address(
+                order_data.get('shipping'),
+                order_data.get('billing').get('phone'),
+                german_umlauts=get_config('_use_german_umlauts', False),
+                shipstation_fix=True,
+            )
+            order_data['line_items'] = order_data.pop('items')
+            return order_data
+
+        return None
 
 
 class FBProduct(SureDoneProductBase):
