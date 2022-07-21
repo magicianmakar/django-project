@@ -359,12 +359,12 @@ class AliexpressFulfillHelper():
         address.full_name = self.shipping_address['name']
         address.address = self.shipping_address['address1']
         address.address2 = self.shipping_address['address2']
+        address.country = self.shipping_address['country_code']
         address.city = self.shipping_address['city']
         address.province = self.shipping_address['province'].strip()
-        if address.province.lower() == 'n/a' or not address.province:
+        if address.province.lower() == 'n/a' or not address.province or address.province == address.country:
             address.province = 'Other'
         address.zip = self.shipping_address['zip']
-        address.country = self.shipping_address['country_code']
 
         if not self.shipping_address['phone'].startswith('+'):
             dialing_code = '+' + str(phonenumbers.country_code_for_region(self.shipping_address['country_code']))
@@ -523,10 +523,11 @@ class AliexpressFulfillHelper():
                 if sku_str in items_sku:
                     duplicate_item = True
                     try:
-                        index = items_sku.index(obj.sku_attr)
+                        index = items_sku.index(sku_attr)
                     except:
-                        index = items_sku.index(obj.product_id)
-                    req.product_items[index].product_count += req.product_items[i].product_count
+                        index = None
+                    if index is not None:
+                        req.product_items[index].product_count += req.product_items[i].product_count
                 items_sku.append(sku_str)
             if duplicate_item:
                 aliexpress_order.set_info(req)
