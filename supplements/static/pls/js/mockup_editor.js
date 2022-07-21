@@ -57,9 +57,16 @@ var MockupEditor = (function() {
                 return false;
             }
 
-            // Labels can have an exact extra margin of 0.125 inches
+            // Labels can have an exact extra margin of 0.125 inches .
             var margin = 0.125;
-
+            // we should accept a margin of error to the closest 0.01 for three decimal places
+            var roundingMargin = 0.01;
+            var countDecimal = function (num) {
+                    if (Number.isInteger(num)) {
+                        return 0;
+                    }
+                    return num.toString().split('.')[1].length;
+                };
             // Can either be of vertical or horizontal orientation
             var sizes = [[defaultWidth, defaultHeight], [defaultHeight, defaultWidth]];
             for (var i = 0, iLength = sizes.length; i < iLength; i++) {
@@ -70,10 +77,20 @@ var MockupEditor = (function() {
                     return false;
                 }
 
-                sizeX += margin;
-                sizeY += margin;
-                if (pdfHeight === sizeX && pdfWidth === sizeY) {
+                if (pdfHeight === sizeX + margin && pdfWidth === sizeY + margin) {
                     return false;
+                }
+
+                sizeXDecimals = countDecimal(sizeX);
+                sizeYDecimals = countDecimal(sizeY);
+                if (sizeXDecimals >= 3 || sizeYDecimals >= 3) {
+                    var lowerX = sizeX-roundingMargin;
+                    var upperX = sizeX+roundingMargin;
+                    var lowerY = sizeY-roundingMargin;
+                    var upperY = sizeY+roundingMargin;
+                    if (pdfHeight >= lowerX && pdfHeight <= upperX && pdfWidth >= lowerY && pdfWidth <= upperY) {
+                        return false;
+                    }
                 }
             }
 
