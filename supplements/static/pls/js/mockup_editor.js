@@ -77,7 +77,7 @@ var MockupEditor = (function() {
                     return false;
                 }
 
-                if (pdfHeight === sizeX + margin && pdfWidth === sizeY + margin) {
+                if (pdfHeight <= sizeX + margin && pdfWidth <= sizeY + margin) {
                     return false;
                 }
 
