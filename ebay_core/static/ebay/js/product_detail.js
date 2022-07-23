@@ -1234,24 +1234,57 @@ Handlebars.registerHelper('urlencode', function(text) {
     return encodeURIComponent(text).replace(/%20/g, '+');
 });
 
-// Product Shopify Connect
-window.ebayProductSelected = function (store, ebay_id) {
-    $.ajax({
-        url: api_url('product-connect', 'ebay'),
-        type: 'POST',
-        data: {
-            product: config.product_guid,
-            ebay: ebay_id,
-            store: store
-        },
-        success: function (data) {
-            $('#modal-ebay-product').modal('hide');
-            window.location.hash = 'connections';
-            window.location.reload();
-        },
-        error: function (data) {
-            displayAjaxError('Connect Product', data);
+// Connect Product to an eBay Product
+window.ebayProductSelected = function (store, ebay_id, additional_data) {
+    if (!verifyPusherIsDefined()) {
+        return;
+    }
+
+    var loadingContainer = $('#modal-ebay-product .ebay-find-loading');
+    var productsContainer = $('#modal-ebay-product .ebay-products');
+
+    loadingContainer.show();
+    productsContainer.hide();
+
+    var pusher = new Pusher(config.sub_conf.key);
+    var channel = pusher.subscribe(config.sub_conf.channel);
+
+    channel.bind('product-connected', function(eventData) {
+        if (eventData.product == config.product_id) {
+            loadingContainer.hide();
+            productsContainer.show();
+            pusher.unsubscribe(channel);
+
+            if (eventData.success) {
+                toastr.success('Successfully connected the product.', 'Product Connect');
+
+                $('#modal-ebay-product').modal('hide');
+                window.location.hash = 'connections';
+                window.location.reload();
+            } else {
+                displayAjaxError('Connect Product', eventData);
+            }
         }
+    });
+
+    channel.bind('pusher:subscription_succeeded', function(eventData) {
+        $.ajax({
+            url: api_url('product-connect', 'ebay'),
+            type: 'POST',
+            data: {
+                product: config.product_id,
+                ebay: ebay_id,
+                store: store,
+                ebay_relist_id: additional_data.ebay_relist_id,
+            },
+            success: function (data) {
+            },
+            error: function (data) {
+                loadingContainer.hide();
+                productsContainer.show();
+                displayAjaxError('Connect Product', data);
+            }
+        });
     });
 };
 
@@ -1271,24 +1304,47 @@ $('.product-connection-disconnect').click(function (e) {
         showCancelButton: true,
         closeOnCancel: true,
         closeOnConfirm: false,
+        showLoaderOnConfirm: true,
         confirmButtonColor: "#DD6B55",
         confirmButtonText: "Disconnect",
         cancelButtonText: "Cancel"
     },
     function(isConfirmed) {
         if (isConfirmed) {
-            $.ajax({
-                url: api_url('product-connect', 'ebay') + '?' + $.param({
-                    product: config.product_guid,
-                }),
-                type: 'DELETE',
-                success: function (data) {
-                    window.location.hash = 'connections';
-                    window.location.reload();
-                },
-                error: function (data) {
-                    displayAjaxError('Connect Product', data);
+            if (!verifyPusherIsDefined()) {
+                return;
+            }
+
+            var pusher = new Pusher(config.sub_conf.key);
+            var channel = pusher.subscribe(config.sub_conf.channel);
+
+            channel.bind('product-disconnected', function(eventData) {
+                if (eventData.product == config.product_id) {
+                    pusher.unsubscribe(channel);
+
+                    if (eventData.success) {
+                        toastr.success('Successfully disconnected the product.', 'Product Disconnect');
+                        swal.close();
+                        window.location.hash = 'connections';
+                        window.location.reload();
+                    } else {
+                        displayAjaxError('Disconnect Product', eventData);
+                    }
                 }
+            });
+
+            channel.bind('pusher:subscription_succeeded', function(eventData) {
+                $.ajax({
+                    url: api_url('product-connect', 'ebay') + '?' + $.param({
+                        product: config.product_id,
+                    }),
+                    type: 'DELETE',
+                    success: function (data) {},
+                    error: function (data) {
+                        swal.close();
+                        displayAjaxError('Connect Product', data);
+                    }
+                });
             });
         }
     });

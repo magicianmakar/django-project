@@ -1,14 +1,13 @@
 import arrow
+import itertools
 import json
 from celery import chain
-from functools import cmp_to_key
 from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import ObjectDoesNotExist
-from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -1336,49 +1335,97 @@ class EbayStoreApi(ApiBase):
 
     def post_ebay_products(self, request, user, data):
         store = safe_int(data.get('store'))
+        query = data.get('query')
         if not store:
             return self.api_error('No store was selected', status=404)
         try:
             store = EbayStore.objects.get(id=store)
             permissions.user_can_view(user, store)
-            parent_products = list(EbayProduct.objects.filter(store=store))
-            parent_products = [parent_product for parent_product in parent_products if parent_product.is_connected]
+            products = tasks.get_import_product_options(store.id, user.id, page=1, page_limit=100)
+            if not products:
+                return self.api_error('No products found', status=404)
 
-            products = []
+            products = products.get('products', [])
 
-            for product in parent_products:
-                product = model_to_dict(product)
-                product['image'] = {'src': product.get('thumbnail_image')}
-                product['name'] = product.get('title')
-                products.append(product)
+            for product in products:
+                product['image'] = {'src': product.get('image')}
+                product['name'] = product.pop('title', 'Product')
+                product['connected'] = product.get('status') == 'connected'
+                product['id'] = product.pop('product_id', 0)
 
-            if data.get('connected') or data.get('hide_connected'):
-                connected = {}
-                for p in store.products.filter(source_id__in=[i['source_id'] for i in products]).values_list('id', 'source_id'):
-                    connected[p[1]] = p[0]
+            if data.get('hide_connected'):
+                products = [p for p in products if not p.get('connected')]
 
-                for idx, i in enumerate(products):
-                    products[idx]['connected'] = connected.get(i['source_id'])
-
-                def connected_cmp(a, b):
-                    if a['connected'] and b['connected']:
-                        return a['connected'] < b['connected']
-                    elif a['connected']:
-                        return 1
-                    elif b['connected']:
-                        return -1
-                    else:
-                        return 0
-
-                products = sorted(products, key=cmp_to_key(connected_cmp), reverse=True)
-
-                if data.get('hide_connected'):
-                    products = [p for p in products if not p.get('connected')]
-
-            return self.api_success({'products': products})
+            return self.api_success({'products': products, 'query': query, 'store': store.id})
 
         except EbayStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
+
+    def post_product_connect(self, request, user, data):
+        try:
+            product = EbayProduct.objects.get(id=data.get('product'))
+        except EbayProduct.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+        permissions.user_can_edit(user, product)
+
+        try:
+            store = EbayStore.objects.get(id=data.get('store'))
+        except EbayStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+        permissions.user_can_view(user, store)
+
+        ebay_relist_id = data.get('ebay_relist_id')
+        if not ebay_relist_id:
+            return self.api_error('No ebay relist id was provided', status=400)
+
+        source_id = safe_int(data.get('ebay'))
+        if source_id != product.source_id or product.store != store:
+            connected_to = self.helper.get_connected_products(self.product_model, store, source_id)
+
+            if connected_to.exists():
+                error_message = ['The selected product is already connected to:\n']
+                connected_products = connected_to.values_list('store', 'guid')
+                links = []
+
+                for store_id, guid in connected_products:
+                    path = self.helper.get_product_path({'store_id': store_id, 'guid': guid})
+                    links.append(request.build_absolute_uri(path))
+
+                error_message = itertools.chain(error_message, links)
+                error_message = '\n'.join(error_message)
+
+                return self.api_error(error_message, status=500)
+
+            # Make the change on SureDone
+            task = tasks.connect_product_to_ebay.apply_async(kwargs={
+                'user_id': user.id,
+                'store_id': store.id,
+                'product_id': product.id,
+                'source_id': source_id,
+                'ebay_relist_id': ebay_relist_id,
+            })
+            return self.api_success({'task': task.id})
+
+        return self.api_error('Product already connected')
+
+    def delete_product_connect(self, request, user, data):
+        product_ids = data.get('product').split(',')
+        products = EbayProduct.objects.filter(id__in=product_ids)
+
+        for product in products:
+            permissions.user_can_edit(user, product)
+
+            source_id = product.source_id
+            if source_id:
+                # Make the change on SureDone
+                task = tasks.disconnect_product_from_ebay.apply_async(kwargs={
+                    'user_id': user.id,
+                    'store_id': product.store.id,
+                    'product_id': product.id,
+                })
+                return self.api_success({'task': task.id})
+
+        return self.api_error('No products found', status=404)
 
     def get_autocomplete_variants(self, request, user, data):
         if not request.user.is_authenticated:

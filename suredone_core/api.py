@@ -335,9 +335,14 @@ class SureDoneApiHandler:
         else:
             pass
 
-    def handle_bulk_api(self, action: str, variations_data: list, skip_all_channels=False):
+    def handle_bulk_api(self, action: str, variations_data: list, skip_all_channels=False, force=False):
         url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}'
-        params = {'syncskip': 1} if skip_all_channels else {}
+        params = {}
+
+        if skip_all_channels:
+            params['skip_all_channels'] = 1
+        if force:
+            params['force'] = 'true'
 
         # Insert the action type to the request data
         variations_data[0].insert(0, f'action={action}')
@@ -360,8 +365,8 @@ class SureDoneApiHandler:
     def relist_product_details_bulk(self, variations_data: list, skip_all_channels=False):
         return self.handle_bulk_api('relist', variations_data, skip_all_channels)
 
-    def edit_product_details_bulk(self, variations_data: list, skip_all_channels=False):
-        return self.handle_bulk_api('edit', variations_data, skip_all_channels)
+    def edit_product_details_bulk(self, variations_data: list, skip_all_channels=False, force=False):
+        return self.handle_bulk_api('edit', variations_data, skip_all_channels, force)
 
     def add_products_bulk(self, variations_data: list, skip_all_channels=False):
         return self.handle_bulk_api('add', variations_data, skip_all_channels)
@@ -454,6 +459,8 @@ class SureDoneApiHandler:
 
     def post_imported_products(self, bulk_data: list, skip_all_channels=True):
         url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}'
+        # Use force to set the eBay source ID on the product
+        # SureDone otherwise rejects ebay product ID as it's a read-only field
         params = {'force': 'true'}
         if skip_all_channels:
             params['syncskip'] = 1

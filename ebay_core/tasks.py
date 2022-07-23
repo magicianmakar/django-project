@@ -1141,16 +1141,20 @@ def get_import_product_options(self, store_id, user_id, page=1, page_limit=10):
         permissions.user_can_view(user, store)
 
         utils = EbayUtils(user)
-        result = utils.get_import_products(store, user, page=page, limit=page_limit)
+        api_result = utils.get_import_products(store, user, page=page, limit=page_limit)
 
-        store.pusher_trigger(pusher_event, {
-            'success': False,
+        response = {
+            'success': True,
             'task': self.request.id,
             'current': page,
             'prev': page > 1,
-            'next': result.get('next', False),
-            'products': result.get('products', [])
-        })
+            'next': api_result.get('next', False),
+            'products': api_result.get('products', [])
+        }
+
+        store.pusher_trigger(pusher_event, response)
+
+        return response
 
     except Exception as e:
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
@@ -1174,7 +1178,7 @@ def import_product(self, store_id, user_id, product_guid, csv_position, product_
     pusher_event = 'ebay-product-import-completed'
 
     try:
-        permissions.user_can_edit(user, store)
+        permissions.user_can_view(user, store)
 
         EbayUtils(user).import_product_from_csv(
             store=store,
@@ -1233,4 +1237,87 @@ def sync_product_with_import_file(self, store_id, user_id, product_id, csv_posit
             'task': self.request.id,
             'error': http_exception_response(e, json=True).get('message', default_error_message),
             'product': product.guid,
+        })
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def connect_product_to_ebay(self, user_id, store_id, product_id, source_id, ebay_relist_id):
+    user = User.objects.get(id=user_id)
+    store = EbayStore.objects.get(id=store_id)
+    product = EbayProduct.objects.get(id=product_id)
+
+    pusher_event = 'product-connected'
+
+    try:
+        permissions.user_can_view(user, store)
+        permissions.user_can_edit(user, product)
+
+        resp = EbayUtils(user).set_product_ebay_id(store, product, safe_int(source_id), safe_int(ebay_relist_id))
+
+        if resp and resp.get('result') == 'success':
+            product.source_id = source_id
+            product.store = store
+            product.save()
+            product.product_variants.all().update(source_id=source_id)
+            store.pusher_trigger(pusher_event, {
+                'success': True,
+                'task': self.request.id,
+                'product': product.id,
+            })
+        else:
+            store.pusher_trigger(pusher_event, {
+                'success': False,
+                'task': self.request.id,
+                'error': 'Something went wrong. Please try again',
+                'product': product.id,
+            })
+
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'task': self.request.id,
+            'error': http_exception_response(e, json=True).get('message', 'Server Error'),
+            'product': product.id,
+        })
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def disconnect_product_from_ebay(self, user_id, store_id, product_id):
+    user = User.objects.get(id=user_id)
+    store = EbayStore.objects.get(id=store_id)
+    product = EbayProduct.objects.get(id=product_id)
+
+    pusher_event = 'product-disconnected'
+
+    try:
+        permissions.user_can_view(user, store)
+        permissions.user_can_edit(user, product)
+        resp = EbayUtils(user).set_product_ebay_id(product.store, product, 0, 0)
+
+        if resp and resp.get('result') == 'success':
+            product.source_id = 0
+            product.save()
+            product.product_variants.all().update(source_id=0)
+            store.pusher_trigger(pusher_event, {
+                'success': True,
+                'task': self.request.id,
+                'product': product.id,
+            })
+        else:
+            store.pusher_trigger(pusher_event, {
+                'success': False,
+                'task': self.request.id,
+                'error': resp.get('message', 'Something went wrong.'),
+                'product': product.id,
+            })
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'task': self.request.id,
+            'error': http_exception_response(e, json=True).get('message', 'Server Error'),
+            'product': product.id,
         })

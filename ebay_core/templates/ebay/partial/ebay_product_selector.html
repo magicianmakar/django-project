@@ -32,7 +32,7 @@
                     <div class="col-sm-12 text-center m-t-lg ebay-find-loading" style="position:absolute;display:none">
                         <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
                     </div>
-                    <div class="col-sm-12">
+                    <div class="col-sm-12" style="min-height: 100px;">
                         <div class="container-fluid ebay-products ative-scroll"></div>
                     </div>
                 </div>
@@ -81,14 +81,16 @@
 <script id="product-select-template" type="text/x-handlebars-template">
     <div class="product-item row">
         <div class="product-thumb col-md-1">
-            <a class="ebay-product product-image-selection" href="#" data-product-id="{{product.id}}" data-shopified-id="{{product.connected}}"
-                data-product-title="{{product.name}}" data-product-image="{{product.image.src}}">
+            <a class="ebay-product product-image-selection" href="#" data-product-id="{{product.id}}" data-ebay-id="{{product.connected}}"
+                data-product-title="{{product.name}}" data-product-image="{{product.image.src}}" data-ebay-relist-id="{{product.product_relist_id}}">
                 <img src="{{product.image.src}}" style="width:45px">
             </a>
         </div>
         <div class="col-md-11">
-            <a class="ebay-product product-selection" href="#" data-product-id="{{product.id}}" data-shopified-id="{{product.connected}}"
-                data-product-title="{{product.name}}" data-product-image="{{product.image.src}}">{{product.name}}</a>
+            <a class="ebay-product product-selection" href="#" data-product-id="{{product.id}}" data-ebay-id="{{product.connected}}"
+                data-product-title="{{product.name}}" data-product-image="{{product.image.src}}" data-ebay-relist-id="{{product.product_relist_id}}">
+                {{product.name}}
+            </a>
         </div>
     </div>
 </script>

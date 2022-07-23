@@ -1266,6 +1266,8 @@ class EbayUtils(SureDoneUtils):
                         'status': 'non-connected',
                         'variants_count': 1,
                         'product_type': product_type,
+                        'product_id': value.get(f'{store.instance_prefix}id'),
+                        'product_relist_id': value.get(f'{store.instance_prefix}relistid'),
                     }
 
                 current_index += 1
@@ -1348,6 +1350,18 @@ class EbayUtils(SureDoneUtils):
             return self.api.post_imported_products(selected_rows)
         else:
             raise ValueError('No import data was found.')
+
+    def set_product_ebay_id(self, store: EbayStore, product: EbayProduct, ebay_id, ebay_relist_id):
+        all_variants = product.product_variants.all()
+        guids = all_variants.values_list('guid', flat=True)
+
+        request_data = [{
+            'guid': guid,
+            f'{store.instance_prefix}id': ebay_id,
+            f'{store.instance_prefix}relistid': ebay_relist_id,
+        } for guid in guids]
+
+        return self.force_update_product(request_data, 'ebay', store.store_instance_id)
 
     def import_product_from_csv(self, store, product_guid, csv_position, product_variants_count,
                                 supplier_url, vendor_name, vendor_url):
