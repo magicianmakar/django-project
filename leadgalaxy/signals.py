@@ -20,6 +20,7 @@ from leadgalaxy.models import (
     SUBUSER_GKART_STORE_PERMISSIONS,
     SUBUSER_STORE_PERMISSIONS,
     SUBUSER_WOO_STORE_PERMISSIONS,
+    SUBUSER_GOOGLE_STORE_PERMISSIONS,
     GroupPlan,
     GroupPlanChangeLog,
     ShopifyOrderTrack,
@@ -32,6 +33,7 @@ from leadgalaxy.models import (
     SubuserGKartPermission,
     SubuserPermission,
     SubuserWooPermission,
+    SubuserGooglePermission,
     UserProfile
 )
 from lib.exceptions import capture_exception
@@ -284,6 +286,29 @@ def add_fb_store_permissions_to_subuser(sender, instance, pk_set, action, **kwar
         for store in stores:
             permissions = store.subuser_fb_permissions.all()
             instance.subuser_fb_permissions.add(*permissions)
+
+        update_store_count_in_activecampaign(instance.user.id)
+
+
+def add_google_store_permissions_base(store):
+    for codename, name in SUBUSER_GOOGLE_STORE_PERMISSIONS:
+        SubuserGooglePermission.objects.create(store=store, codename=codename, name=name)
+
+
+@receiver(post_save, sender='google_core.GoogleStore')
+def add_google_store_permissions(sender, instance, created, **kwargs):
+    if created:
+        add_google_store_permissions_base(instance)
+        update_store_count_in_activecampaign(instance.user.id)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_google_stores.through)
+def add_google_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+    if action == "post_add":
+        stores = instance.user.models_user.googlestore_set.filter(pk__in=pk_set)
+        for store in stores:
+            permissions = store.subuser_google_permissions.all()
+            instance.subuser_google_permissions.add(*permissions)
 
         update_store_count_in_activecampaign(instance.user.id)
 

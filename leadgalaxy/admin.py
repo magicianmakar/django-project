@@ -38,6 +38,7 @@ from .models import (
     SubuserGKartPermission,
     SubuserBigCommercePermission,
     SubuserFBPermission,
+    SubuserGooglePermission,
     UserAddress,
     UserBlackSampleTracking,
     UserCompany,
@@ -472,6 +473,13 @@ class SubuserBigCommercePermissionAdmin(admin.ModelAdmin):
 
 @admin.register(SubuserFBPermission)
 class SubuserFBPermission(admin.ModelAdmin):
+    list_display = ('id', 'codename', 'name', 'store')
+    raw_id_fields = ('store',)
+    search_fields = ('name',)
+
+
+@admin.register(SubuserGooglePermission)
+class SubuserGooglePermission(admin.ModelAdmin):
     list_display = ('id', 'codename', 'name', 'store')
     raw_id_fields = ('store',)
     search_fields = ('name',)

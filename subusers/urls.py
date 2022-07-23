@@ -18,4 +18,6 @@ urlpatterns = [
         subusers.views.subuser_bigcommerce_store_permissions, name='subuser_bigcommerce_store_permissions'),
     url(r'^fb-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
         subusers.views.subuser_fb_store_permissions, name='subuser_fb_store_permissions'),
+    url(r'^google-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
+        subusers.views.subuser_google_store_permissions, name='subuser_google_store_permissions'),
 ]

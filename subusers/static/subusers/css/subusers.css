@@ -155,3 +155,11 @@ h3 {
 #id_subuser_stores li, #id_subuser_fb_stores li {
     list-style: none;
 }
+
+#id_subuser_stores, #id_subuser_google_stores {
+    padding: 0 0 0 20px;
+}
+
+#id_subuser_stores li, #id_subuser_google_stores li {
+    list-style: none;
+}

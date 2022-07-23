@@ -8,15 +8,17 @@ from leadgalaxy.models import (
     SubuserGKartPermission,
     SubuserBigCommercePermission,
     SubuserFBPermission,
+    SubuserGooglePermission,
 )
 from leadgalaxy.signals import add_fb_store_permissions_base
+from leadgalaxy.signals import add_google_store_permissions_base
 
 
 class SubUserStoresForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ["subuser_stores", "subuser_chq_stores", "subuser_woo_stores", "subuser_gkart_stores",
-                  "subuser_bigcommerce_stores", "subuser_fb_stores"]
+                  "subuser_bigcommerce_stores", "subuser_fb_stores", "subuser_google_stores"]
 
     def __init__(self, *args, **kwargs):
         parent_user = kwargs.pop("parent_user")
@@ -31,6 +33,7 @@ class SubUserStoresForm(forms.ModelForm):
             initial['subuser_gkart_stores'] = [t.pk for t in kwargs['instance'].subuser_gkart_stores.all()]
             initial['subuser_bigcommerce_stores'] = [t.pk for t in kwargs['instance'].subuser_bigcommerce_stores.all()]
             initial['subuser_fb_stores'] = [t.pk for t in kwargs['instance'].subuser_fb_stores.all()]
+            initial['subuser_google_stores'] = [t.pk for t in kwargs['instance'].subuser_google_stores.all()]
 
         self.fields["subuser_stores"].widget = forms.widgets.CheckboxSelectMultiple()
         self.fields["subuser_stores"].help_text = ""
@@ -55,6 +58,10 @@ class SubUserStoresForm(forms.ModelForm):
         self.fields["subuser_fb_stores"].widget = forms.widgets.CheckboxSelectMultiple()
         self.fields["subuser_fb_stores"].help_text = ""
         self.fields["subuser_fb_stores"].queryset = parent_user.profile.get_fb_stores()
+
+        self.fields["subuser_google_stores"].widget = forms.widgets.CheckboxSelectMultiple()
+        self.fields["subuser_google_stores"].help_text = ""
+        self.fields["subuser_google_stores"].queryset = parent_user.profile.get_google_stores()
 
     def save(self, commit=True):
         instance = forms.ModelForm.save(self, False)
@@ -86,6 +93,10 @@ class SubUserStoresForm(forms.ModelForm):
             instance.subuser_fb_stores.clear()
             for store in self.cleaned_data['subuser_fb_stores']:
                 instance.subuser_fb_stores.add(store)
+
+            instance.subuser_google_stores.clear()
+            for store in self.cleaned_data['subuser_google_stores']:
+                instance.subuser_google_stores.add(store)
 
         self.save_m2m = save_m2m
 
@@ -184,6 +195,25 @@ class SubuserFBPermissionsForm(forms.Form):
         # Handle Facebook stores that were created before subusers functionality was implemented
         if not permissions_queryset:
             add_fb_store_permissions_base(store=store)
+
+        permissions_widget = SubuserPermissionsSelectMultiple(attrs={'class': 'js-switch'})
+        permissions_field = SubuserPermissionsChoiceField(initial=permissions_initial,
+                                                          queryset=permissions_queryset,
+                                                          widget=permissions_widget,
+                                                          required=False)
+        self.fields['permissions'] = permissions_field
+
+
+class SubuserGooglePermissionsForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(SubuserGooglePermissionsForm, self).__init__(*args, **kwargs)
+        permissions_initial = kwargs['initial']['permissions']
+        store = kwargs['initial']['store']
+        permissions_queryset = SubuserGooglePermission.objects.filter(store=store)
+
+        # Handle Google stores that were created before subusers functionality was implemented
+        if not permissions_queryset:
+            add_google_store_permissions_base(store=store)
 
         permissions_widget = SubuserPermissionsSelectMultiple(attrs={'class': 'js-switch'})
         permissions_field = SubuserPermissionsChoiceField(initial=permissions_initial,

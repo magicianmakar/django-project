@@ -19,6 +19,7 @@ from .forms import (
     SubuserGKartPermissionsForm,
     SubuserBigCommercePermissionsForm,
     SubuserFBPermissionsForm,
+    SubuserGooglePermissionsForm,
 )
 from shopified_core.permissions import can_add_subuser
 
@@ -408,3 +409,47 @@ def subuser_fb_store_permissions(request, user_id, store_id):
     }
 
     return render(request, 'subusers/fb_store_permissions.html', context)
+
+
+@transaction.atomic
+@login_required
+def subuser_google_store_permissions(request, user_id, store_id):
+    store = request.user.googlestore_set.filter(pk=store_id).first()
+    if not store:
+        raise Http404
+
+    subuser = get_object_or_404(User,
+                                pk=user_id,
+                                profile__subuser_parent=request.user,
+                                profile__subuser_google_stores__pk=store_id)
+
+    subuser_google_permissions = subuser.profile.subuser_google_permissions.filter(store=store)
+    initial = {'permissions': subuser_google_permissions, 'store': store}
+
+    if request.method == 'POST':
+        form = SubuserGooglePermissionsForm(request.POST, initial=initial)
+        if form.is_valid():
+            new_permissions = form.cleaned_data['permissions']
+            subuser.profile.subuser_google_permissions.remove(*subuser_google_permissions)
+            subuser.profile.subuser_google_permissions.add(*new_permissions)
+            messages.success(request, 'Subuser permissions successfully updated')
+            return redirect(f'{get_namespace(request)}subuser_google_store_permissions', user_id, store_id)
+    else:
+        form = SubuserGooglePermissionsForm(initial=initial)
+
+    breadcrumbs = [
+        'Account',
+        {'title': 'Sub Users', 'url': reverse(f'{get_namespace(request)}subusers')},
+        subuser.username,
+        {'title': 'Permissions', 'url': reverse(f'{get_namespace(request)}subuser_perms_edit', args=(user_id,))},
+        store.title,
+    ]
+
+    context = {
+        'subuser': subuser,
+        'form': form,
+        'breadcrumbs': breadcrumbs,
+        'page': 'subusers',
+    }
+
+    return render(request, 'subusers/google_store_permissions.html', context)
