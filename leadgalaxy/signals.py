@@ -15,6 +15,7 @@ from hubspot_core.tasks import update_hubspot_user, update_plans_list_in_hubspot
 from leadgalaxy.models import (
     SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS,
     SUBUSER_CHQ_STORE_PERMISSIONS,
+    SUBUSER_FB_STORE_PERMISSIONS,
     SUBUSER_GEAR_STORE_PERMISSIONS,
     SUBUSER_GKART_STORE_PERMISSIONS,
     SUBUSER_STORE_PERMISSIONS,
@@ -26,6 +27,7 @@ from leadgalaxy.models import (
     ShopifyStore,
     SubuserBigCommercePermission,
     SubuserCHQPermission,
+    SubuserFBPermission,
     SubuserGearPermission,
     SubuserGKartPermission,
     SubuserPermission,
@@ -259,6 +261,29 @@ def add_bigcommerce_store_permissions_to_subuser(sender, instance, pk_set, actio
         for store in stores:
             permissions = store.subuser_bigcommerce_permissions.all()
             instance.subuser_bigcommerce_permissions.add(*permissions)
+
+        update_store_count_in_activecampaign(instance.user.id)
+
+
+def add_fb_store_permissions_base(store):
+    for codename, name in SUBUSER_FB_STORE_PERMISSIONS:
+        SubuserFBPermission.objects.create(store=store, codename=codename, name=name)
+
+
+@receiver(post_save, sender='facebook_core.FBStore')
+def add_fb_store_permissions(sender, instance, created, **kwargs):
+    if created:
+        add_fb_store_permissions_base(instance)
+        update_store_count_in_activecampaign(instance.user.id)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_fb_stores.through)
+def add_fb_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+    if action == "post_add":
+        stores = instance.user.models_user.fbstore_set.filter(pk__in=pk_set)
+        for store in stores:
+            permissions = store.subuser_fb_permissions.all()
+            instance.subuser_fb_permissions.add(*permissions)
 
         update_store_count_in_activecampaign(instance.user.id)
 

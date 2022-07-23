@@ -10,14 +10,17 @@ from leadgalaxy.models import (
     SUBUSER_WOO_STORE_PERMISSIONS,
     SUBUSER_GKART_STORE_PERMISSIONS,
     SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS,
+    SUBUSER_FB_STORE_PERMISSIONS,
     SubuserPermission,
     SubuserCHQPermission,
     SubuserWooPermission,
     SubuserGKartPermission,
     SubuserBigCommercePermission,
+    SubuserFBPermission,
 )
 
 from commercehq_core.models import CommerceHQStore
+from facebook_core.models import FBStore
 from woocommerce_core.models import WooStore
 from groovekart_core.models import GrooveKartStore
 from bigcommerce_core.models import BigCommerceStore
@@ -85,6 +88,13 @@ class Command(DropifiedBaseCommand):
                 BigCommerceStore.objects.iterator()
             ])
             count += BigCommerceStore.objects.count()
+
+            stores.append([
+                SubuserFBPermission,
+                self.get_selected_permissions(SUBUSER_FB_STORE_PERMISSIONS),
+                FBStore.objects.iterator()
+            ])
+            count += FBStore.objects.count()
 
         subuser_permissions = []
         if options.get('reload_global'):
@@ -163,6 +173,10 @@ class Command(DropifiedBaseCommand):
                 for subuser_store in subuser.profile.subuser_bigcommerce_stores.all():
                     store_permissions = get_store_perms(subuser_store.subuser_bigcommerce_permissions)
                     subuser.profile.subuser_bigcommerce_permissions.add(*store_permissions)
+
+                for subuser_store in subuser.profile.subuser_fb_stores.all():
+                    store_permissions = get_store_perms(subuser_store.subuser_fb_permissions)
+                    subuser.profile.subuser_fb_permissions.add(*store_permissions)
 
             if self.progress:
                 progress_bar.close()

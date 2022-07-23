@@ -43,6 +43,14 @@
             </div>
             <hr />
             {% endif %}
+            {% if form.subuser_fb_stores.field.choices.queryset.all|length %}
+            <h4>Facebook Stores</h4>
+            <div class="form-group">
+                {% render_field form.subuser_fb_stores  %}
+                {{ form.subuser_fb_stores.errors | safe }}
+            </div>
+            <hr />
+            {% endif %}
             <div class="pull-right">
               <a href="{% url template_config.url.namespace|add:'subuser_perms_edit' subuser.id %}" class="btn btn-warning m-b">Edit Permissions</a>
               <button type="submit" class="btn btn-primary m-b">Save</button>
