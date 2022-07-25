@@ -8,9 +8,10 @@ from leadgalaxy.templatetags.template_helper import app_link
 
 from lib.exceptions import capture_exception
 
-from aliexpress_core.settings import API_KEY, API_SECRET
+from aliexpress_core.settings import API_KEY, API_SECRET, API_KEY_ADMITAD, API_SECRET_ADMITAD
 from aliexpress_core.utils import MaillingAddress, PlaceOrder, OrderInfo, PlaceOrderRequest, ProductBaseItem
 from leadgalaxy.models import ShopifyStore, ShopifyProduct, ShopifyOrderTrack
+from leadgalaxy.utils import get_admitad_credentials
 from shopify_orders.utils import OrderErrorsCheck, update_elasticsearch_shopify_order
 from shopify_orders.models import ShopifyOrder
 from groovekart_core.models import GrooveKartStore
@@ -271,11 +272,16 @@ def get_order_info_via_api(self, order, source_id, store_id, store_type=None, us
         return 'Aliexpress Account is not connected'
 
     aliexpress_order_details = OrderInfo()
-    aliexpress_order_details.set_app_info(API_KEY, API_SECRET)
+    admitad_site_id, user_admitad_credentials = get_admitad_credentials(user.models_user)
+
+    if user_admitad_credentials:
+        aliexpress_order_details.set_app_info(API_KEY_ADMITAD, API_SECRET_ADMITAD)
+    else:
+        aliexpress_order_details.set_app_info(API_KEY, API_SECRET)
 
     aliexpress_order_details.single_order_query = json.dumps({"order_id": source_id})
 
-    aliexpress_account = AliexpressAccount.objects.filter(user=user).first()
+    aliexpress_account = AliexpressAccount.objects.filter(user=user.models_user).first()
 
     try:
         result = aliexpress_order_details.getResponse(authrize=aliexpress_account.access_token)
