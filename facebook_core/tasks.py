@@ -1,6 +1,7 @@
 import json
 from json import JSONDecodeError
 from math import ceil
+from lxml import html
 
 from requests.exceptions import HTTPError
 
@@ -248,6 +249,10 @@ def product_save(req_data, user_id, pusher_channel):
                     'error': 'Product data cannot be empty.'
                 })
                 return
+
+            # Remove HTML tags from product description
+            if product_data.get('description'):
+                product_data['description'] = html.fromstring(product_data.get('description')).text_content()
 
         # 3. Verify and compute original URL
         original_url = product_data.get('original_url')
