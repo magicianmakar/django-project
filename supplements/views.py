@@ -3,8 +3,8 @@ import math
 from datetime import datetime, timedelta
 from decimal import Decimal
 from io import BytesIO
-
 from PIL import Image
+
 from django import template
 from django.conf import settings
 from django.contrib import messages
@@ -32,13 +32,13 @@ import simplejson as json
 from barcode import generate
 from pdfrw import PageMerge, PdfReader, PdfWriter
 from pdfrw.pagemerge import RectXObj
+from leadgalaxy.models import UserProfile
 from product_common import views as common_views
 from product_common.lib import views as common_lib_views
 from product_common.lib.views import PagingMixin, upload_image_to_aws, upload_object_to_aws
 from product_common.models import ProductImage, ProductSupplier
 from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
-
 from shopified_core import permissions
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
@@ -223,7 +223,7 @@ class ProductEdit(Product):
     def dispatch(self, request, *args, **kwargs):
         self.supplement = self.get_supplement(kwargs.get('supplement_id', None))
         user = request.user
-        if user.can('pls_admin.use') or user.supplies(self.supplement):
+        if (user.can('pls_admin.use') or user.supplies(self.supplement)) and user.is_warehouse_account(self.supplement):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -857,9 +857,8 @@ class AdminLabelHistory(LabelHistory):
     def dispatch(self, request, *args, **kwargs):
         user = request.user
         self.supplement = self.get_supplement(user, kwargs.get('supplement_id', None))
-        if request.user.can('pls_admin.use') \
-           or request.user.can('pls_staff.use') \
-           or user.supplies(self.supplement.pl_supplement):
+        if (request.user.can('pls_admin.use') or request.user.can('pls_staff.use') or user.supplies(
+                self.supplement.pl_supplement)) and user.is_warehouse_account(self.supplement.pl_supplement):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1056,6 +1055,10 @@ class AllUserSupplements(MyLabels, ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
+        warehouse_account = UserProfile.objects.get(user=user.models_user.id).warehouse_account
+        if warehouse_account:
+            queryset = queryset.filter(pl_supplement__shipstation_account=UserProfile.objects.get(
+                user=self.request.user.models_user.id).warehouse_account)
         form = AllLabelFilterForm(self.request.GET, user=user)
         if form.is_valid():
             label_user_name = form.cleaned_data['label_user_name']
@@ -1199,7 +1202,8 @@ class Order(common_views.OrderView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+        warehouse_account = UserProfile.objects.get(user=self.request.user.models_user.id).warehouse_account
+        if (request.user.can('pls_admin.use') or request.user.can('pls_staff.use')) and warehouse_account is None:
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1479,7 +1483,8 @@ class PayoutView(common_views.PayoutView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+        warehouse_account = UserProfile.objects.get(user=self.request.user.models_user.id).warehouse_account
+        if (request.user.can('pls_admin.use') or request.user.can('pls_staff.use')) and warehouse_account is None:
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1859,7 +1864,8 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if settings.DEBUG and request.user.can('pls_admin.use'):
+        warehouse_account = UserProfile.objects.get(user=self.request.user.models_user.id).warehouse_account
+        if settings.DEBUG and request.user.can('pls_admin.use') and warehouse_account is None:
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1975,7 +1981,8 @@ class Reports(LoginRequiredMixin, TemplateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('pls_admin.use'):
+        warehouse_account = UserProfile.objects.get(user=self.request.user.models_user.id).warehouse_account
+        if request.user.can('pls_admin.use') and warehouse_account is None:
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()

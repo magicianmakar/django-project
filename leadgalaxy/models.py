@@ -204,6 +204,8 @@ class UserProfile(models.Model):
                                  blank=True,
                                  on_delete=models.SET_NULL,
                                  verbose_name="Linked Supplier")
+    warehouse_account = models.ForeignKey('supplements.ShipStationAccount', related_name='linked_warehouse', null=True,
+                                          blank=True, on_delete=models.SET_NULL, verbose_name="Linked Warehouse")
 
     def __str__(self):
         return f'<UserProfile: {self.id}>'
@@ -589,6 +591,11 @@ class UserProfile(models.Model):
         if self.supplier is not None:
             return self.supplier == item.supplier
         return False
+
+    def is_warehouse_account(self, item):
+        if self.warehouse_account is not None:
+            return self.warehouse_account == item.shipstation_account
+        return True
 
     def can(self, perm_name, store=None):
         if perm_name[-4:] == '.sub':
@@ -2765,6 +2772,11 @@ def user_can(self, perms, store_id=None):
 @add_to_class(User, 'supplies')
 def supplies(self, item):
     return self.profile.supplies(item)
+
+
+@add_to_class(User, 'is_warehouse_account')
+def is_warehouse_account(self, item):
+    return self.profile.is_warehouse_account(item)
 
 
 @add_to_class(User, 'get_config')

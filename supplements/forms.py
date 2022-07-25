@@ -3,8 +3,10 @@ import re
 from django import forms
 from django.core.validators import FileExtensionValidator
 
+from leadgalaxy.models import UserProfile
 from product_common.models import ProductSupplier
-from .models import LabelSize, Payout, PLSOrder, PLSupplement, RefundPayments, UserSupplement, UserSupplementLabel
+from .models import LabelSize, Payout, PLSOrder, PLSupplement, RefundPayments, UserSupplement, UserSupplementLabel, \
+    ShipStationAccount
 
 
 class UserSupplementForm(forms.ModelForm):
@@ -107,6 +109,10 @@ class PLSupplementForm(forms.ModelForm):
             self.fields['supplier'].choices = [('', '---------')] + list(ProductSupplier.get_suppliers(shipping=False).values_list('id', 'title'))
         elif self.user.can('pls_supplier.use'):
             self.fields['supplier'].choices = [(self.user.profile.supplier.id, self.user.profile.supplier)]
+
+        warehouse_account = UserProfile.objects.get(user=self.user.models_user.id).warehouse_account
+        if warehouse_account:
+            self.fields['shipstation_account'].queryset = ShipStationAccount.objects.filter(name=warehouse_account.name)
 
     def clean_template(self):
         template = self.cleaned_data['template']
