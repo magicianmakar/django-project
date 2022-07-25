@@ -51,7 +51,7 @@
 
         {% if user_buttons and label.current_label_of %}
         <div class="row m-t">
-          {% if pls_admin or pls_staff %}
+          {% if pls_admin or pls_staff or pls_supplier %}
           <div class="col-md-5">
             <form method="POST" role="form">
               <input type="hidden" name="action" value="{{ label.REJECTED }}" />

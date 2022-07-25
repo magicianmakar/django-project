@@ -666,7 +666,9 @@ class UserSupplementView(Supplement):
         all_comments = []
         for label in user_supplement.labels.all().order_by('-created_at'):
             comments = label.comments
-            if self.request.user.can('pls_admin.use') or self.request.user.can('pls_staff.use'):
+            if self.request.user.can('pls_admin.use') or \
+               self.request.user.can('pls_staff.use') or \
+               self.request.user.can('pls_supplier.use'):
                 comments = comments.all().order_by('-created_at')
             else:
                 comments = comments.all().exclude(is_private=True).order_by('-created_at')
