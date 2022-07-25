@@ -181,6 +181,24 @@ def get_order_mappings(order, user_timezone):
             'order_name': order.order_name
         }
 
+    if hasattr(order, 'store') and order.store.store_type == 'ebay':
+        products = [item.get('title') for item in order.items]
+        return {
+            'date': order_date.datetime,
+            'date_as_string': order_date.format('MM/DD/YYYY'),
+            'order_id': order.order_id,
+            'ebay_order_id': order.ebay_order_id,
+            'ebay_order_url': order.order_url,
+            'srn': order.srn,
+            'total_price': float(order.amount),
+            'total_refund': 0.0,
+            'profit': float(order.amount),
+            'products': products,
+            'refunded_products': [],
+            'aliexpress_track': [],
+            'order_name': order.order_name
+        }
+
     return {
         'date': order_date.datetime,
         'date_as_string': order_date.format('MM/DD/YYYY'),
@@ -304,21 +322,17 @@ def get_profit_details(store, store_type, date_range, limit=20, page=1, orders_m
     if not orders_map:
         orders = sync.orders.filter(date__range=(start, end))
 
-        # Get FB orders
-        if store_type == 'fb':
+        # Get FB, google or eBay orders
+        if store_type in ['fb', 'ebay', 'google']:
             filters_config = {}
             filters_config['after'], filters_config['before'] = start.strftime('%x'), end.strftime('%x')
-            orders = fb_utils.FBOrderListQuery(store.user, store, filters_config).items()
-            for order in orders:
-                order.order_id = order.id
-                order.amount = order.total
-                order.order_name = order.number
+            if store_type == 'fb':
+                orders = fb_utils.FBOrderListQuery(store.user, store, filters_config).items()
+            elif store_type == 'google':
+                orders = google_utils.GoogleOrderListQuery(store.user, store, filters_config).items()
+            else:
+                orders = ebay_utils.EbayOrderListQuery(store.user, store, filters_config).items()
 
-        # Get Google orders
-        if store_type == 'google':
-            filters_config = {}
-            filters_config['after'], filters_config['before'] = start.strftime('%x'), end.strftime('%x')
-            orders = google_utils.GoogleOrderListQuery(store.user, store, filters_config).items()
             for order in orders:
                 order.order_id = order.id
                 order.amount = order.total
@@ -411,6 +425,11 @@ def get_profit_details(store, store_type, date_range, limit=20, page=1, orders_m
         if store_type == 'fb':
             order_id = detail.get('fb_order_id')
 
+        if store_type == 'ebay':
+            order_id = detail.get('ebay_order_id')
+            srn = detail.get('srn')
+            order_id = f'{order_id}&srn={srn}'
+
         if store_type == 'google':
             order_id = detail.get('google_order_id')
 
@@ -449,17 +468,16 @@ def get_profits(store, store_type, start, end, user_timezone):
     # Saved Orders
     orders = sync.orders.filter(date__range=(start, end))
 
-    # Get FB orders
-    if store_type == 'fb':
+    # Get FB, google or eBay orders
+    if store_type in ['fb', 'ebay', 'google']:
         filters_config = {}
         filters_config['after'], filters_config['before'] = start.strftime('%x'), end.strftime('%x')
-        orders = fb_utils.FBOrderListQuery(store.user, store, filters_config).items()
-
-    # Get Google orders
-    if store_type == 'google':
-        filters_config = {}
-        filters_config['after'], filters_config['before'] = start.strftime('%x'), end.strftime('%x')
-        orders = google_utils.GoogleOrderListQuery(store.user, store, filters_config).items()
+        if store_type == 'fb':
+            orders = fb_utils.FBOrderListQuery(store.user, store, filters_config).items()
+        elif store_type == 'google':
+            orders = google_utils.GoogleOrderListQuery(store.user, store, filters_config).items()
+        else:
+            orders = ebay_utils.EbayOrderListQuery(store.user, store, filters_config).items()
 
     orders_map = {}
     totals_orders_count = 0
@@ -477,7 +495,7 @@ def get_profits(store, store_type, start, end, user_timezone):
 
         totals_orders_count += 1
 
-        if store_type == 'fb' or store_type == 'google':
+        if store_type in ['fb', 'ebay', 'google']:
             order.order_id = order.id
             order.amount = order.total
             order.order_name = order.number
@@ -513,11 +531,12 @@ def get_profits(store, store_type, start, end, user_timezone):
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
 
-    # Aliexpress/EBay costs
-    if store_type == 'fb' or store_type == 'google':
+    # Aliexpress/EBay/FB/Google costs
+    if store_type in ['fb', 'ebay', 'google']:
         orders_list = [order.order_id for order in orders]
     else:
         orders_list = orders.values('order_id')
+
     shippings = models.FulfillmentCost.objects.filter(store_content_type=store_content_type,
                                                       store_object_id=store.id,
                                                       order_id__in=orders_list)
@@ -585,10 +604,11 @@ def get_profits(store, store_type, start, end, user_timezone):
         profits_data[date_key]['css_empty'] = ''
 
     # Totals
-    if store_type == 'fb' or store_type == 'google':
+    if store_type in ['fb', 'ebay', 'google']:
         revenue = sum([float(order.total) for order in orders]) or 0.0
     else:
         revenue = orders.aggregate(total=Sum('amount'))['total'] or 0.0
+
     totals = {
         'revenue': revenue,
         'fulfillment_cost': shippings.aggregate(total=Sum('total_cost'))['total'] or 0.0,

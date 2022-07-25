@@ -79,7 +79,7 @@ class EbayStore(SureDoneStoreBase):
         return 'https://www.ebay.com/mys/overview'
 
     def get_admin_order_details(self, order_id):
-        pass
+        return f'{self.get_store_url()}/sh/ord/details?orderid={order_id}'
 
     def get_suppliers(self):
         return []
