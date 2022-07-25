@@ -199,6 +199,7 @@ class FBStoreApi(ApiBase):
             all_options_data=options_data,
             update_active_status=True,
         )
+        store.sync_title(options_data)
         return self.api_success({'result': 'success'})
 
     def post_advanced_settings(self, request, user, data):
@@ -1138,3 +1139,28 @@ class FBStoreApi(ApiBase):
 
         pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
         return self.api_success({'pusher': pusher})
+
+    def post_store_update(self, request, user, data):
+        if user.is_subuser:
+            raise PermissionDenied()
+
+        pk = int(data.get('id', 0))
+        if not pk:
+            return self.api_error('Store ID is required.', status=400)
+
+        try:
+            store = FBStore.objects.get(pk=pk, user=user.models_user)
+        except FBStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        permissions.user_can_edit(user, store)
+
+        title = data.get('title', '').strip()
+
+        if not title:
+            return self.api_error('Title is required.', status=400)
+
+        store.title = title
+        store.save()
+
+        return self.api_success()
