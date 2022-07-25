@@ -270,7 +270,8 @@ class AliexpressAccount(models.Model):
                 if not variants.get(attr['sku_property_id']):
                     variants[attr['sku_property_id']] = {'title': attr['sku_property_name'], 'values': []}
 
-                variants[attr['sku_property_id']]['values'].append(attr['sku_property_value'])
+                if attr['sku_property_value'] not in variants[attr['sku_property_id']]['values']:
+                    variants[attr['sku_property_id']]['values'].append(attr['sku_property_value'])
                 variant_values.append(attr['sku_property_value'])
                 variant_skus.append(f"{attr['sku_property_id']}:{attr['property_value_id']}")
                 variants_sku[attr['sku_property_value']] = f"{attr['sku_property_id']}:{attr['property_value_id']}"

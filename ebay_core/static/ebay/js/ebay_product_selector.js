@@ -30,9 +30,17 @@ function ebayProductSearch (e) {
             var product_template = Handlebars.compile($("#product-select-template").html());
 
             if (data.products.length === 0) {
-                productsContainer.append($('<div class="text-center">' +
-                    '<h3>No Product found with the given search query</h3>' +
-                    '</div>'));
+                if (data.query) {
+                    productsContainer.append($('<div class="text-center">' +
+                        '<h3>No Product found with the given search query</h3>' +
+                        '</div>'));
+                } else {
+                    productsContainer.append($('<div class="text-center">' +
+                        '<h3>No products found. Please start a new import.</h3></br>' +
+                        '<a href="/ebay/products/' + data.store + '/import" class="btn btn-success" id="start-new-import-button">' +
+                        '<i class="fa fa-plus"></i> Start a New Import</button>' +
+                        '</div>'));
+                }
             }
 
             var store = this.store;
@@ -46,7 +54,8 @@ function ebayProductSearch (e) {
                         window.ebayProductSelected(store, $(this).data('product-id'), {
                             title: $(this).data('product-title'),
                             image: $(this).data('product-image'),
-                            shopified: $(this).data('shopified-id'),
+                            ebay: $(this).data('ebay-id'),
+                            ebay_relist_id: $(this).data('ebay-relist-id'),
                         });
                     }
                 });

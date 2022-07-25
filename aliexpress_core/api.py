@@ -352,8 +352,6 @@ class AliexpressFulfillHelper():
         else:
             aliexpress_order.set_app_info(API_KEY, API_SECRET)
 
-        aliexpress_order.set_app_info(API_KEY, API_SECRET)
-
         address = MaillingAddress()
         address.contact_person = self.shipping_address['name']
         address.full_name = self.shipping_address['name']

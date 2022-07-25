@@ -122,6 +122,38 @@
               {% endfor %}
           </div>
           {% endif %}
+          {% if subuser.profile.subuser_fb_stores.all %}
+          <br />
+          <h5>Facebook Store Permissions</h5>
+          <div style="display:block">
+              {% for store in subuser.profile.subuser_fb_stores.all %}
+                  <p>
+                      {{ store.title }} &nbsp;
+                      <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_fb_store_permissions' subuser.id store.id %}">Edit</a>
+                  </p>
+              {% empty %}
+                  <p class="text-center">
+                      No stores found
+                  </p>
+              {% endfor %}
+          </div>
+          {% endif %}
+          {% if subuser.profile.subuser_google_stores.all %}
+          <br />
+          <h5>Google Store Permissions</h5>
+          <div style="display:block">
+              {% for store in subuser.profile.subuser_google_stores.all %}
+                  <p>
+                      {{ store.title }} &nbsp;
+                      <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_google_store_permissions' subuser.id store.id %}">Edit</a>
+                  </p>
+              {% empty %}
+                  <p class="text-center">
+                      No stores found
+                  </p>
+              {% endfor %}
+          </div>
+          {% endif %}
     </div>
 </div>
 {% endblock main-container %}

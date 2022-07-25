@@ -396,14 +396,20 @@ def profit_details(request):
 def facebook_remove(request):
     if request.method == 'POST':
         store = utils.get_store_from_request(request)
-        access = get_object_or_404(FacebookAccess,
-                                   user=request.user.models_user,
-                                   store=store,
-                                   facebook_user_id=request.POST.get('facebook_user_id'))
-
-        access.access_token = ''
-        access.expires_in = None
-        access.save()
+        facebook_user_id = request.POST.get('facebook_user_id')
+        if facebook_user_id:
+            access = get_object_or_404(FacebookAccess,
+                                       user=request.user.models_user,
+                                       store=store,
+                                       facebook_user_id=facebook_user_id)
+            access.access_token = ''
+            access.expires_in = None
+            access.save()
+        else:
+            FacebookAccess.objects.filter(
+                user=request.user.models_user,
+                store=store
+            ).update(access_token='', expires_in=None)
 
         return JsonResponse({'success': True})
 

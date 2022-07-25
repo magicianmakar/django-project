@@ -15,10 +15,12 @@ from hubspot_core.tasks import update_hubspot_user, update_plans_list_in_hubspot
 from leadgalaxy.models import (
     SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS,
     SUBUSER_CHQ_STORE_PERMISSIONS,
+    SUBUSER_FB_STORE_PERMISSIONS,
     SUBUSER_GEAR_STORE_PERMISSIONS,
     SUBUSER_GKART_STORE_PERMISSIONS,
     SUBUSER_STORE_PERMISSIONS,
     SUBUSER_WOO_STORE_PERMISSIONS,
+    SUBUSER_GOOGLE_STORE_PERMISSIONS,
     GroupPlan,
     GroupPlanChangeLog,
     ShopifyOrderTrack,
@@ -26,10 +28,12 @@ from leadgalaxy.models import (
     ShopifyStore,
     SubuserBigCommercePermission,
     SubuserCHQPermission,
+    SubuserFBPermission,
     SubuserGearPermission,
     SubuserGKartPermission,
     SubuserPermission,
     SubuserWooPermission,
+    SubuserGooglePermission,
     UserProfile
 )
 from lib.exceptions import capture_exception
@@ -70,10 +74,7 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
         for goal in Goal.objects.filter(plans=current_plan):
             UserGoalRelationship.objects.get_or_create(user=user, goal=goal)
 
-    if settings.HUPSPOT_API_KEY:
-        update_hubspot_user.apply_async([user.id], expires=500)
-
-    if settings.HUPSPOT_API_KEY:
+    if not settings.DEBUG and settings.HUPSPOT_API_KEY:
         update_hubspot_user.apply_async([user.id], expires=500)
 
 
@@ -266,6 +267,52 @@ def add_bigcommerce_store_permissions_to_subuser(sender, instance, pk_set, actio
         update_store_count_in_activecampaign(instance.user.id)
 
 
+def add_fb_store_permissions_base(store):
+    for codename, name in SUBUSER_FB_STORE_PERMISSIONS:
+        SubuserFBPermission.objects.create(store=store, codename=codename, name=name)
+
+
+@receiver(post_save, sender='facebook_core.FBStore')
+def add_fb_store_permissions(sender, instance, created, **kwargs):
+    if created:
+        add_fb_store_permissions_base(instance)
+        update_store_count_in_activecampaign(instance.user.id)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_fb_stores.through)
+def add_fb_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+    if action == "post_add":
+        stores = instance.user.models_user.fbstore_set.filter(pk__in=pk_set)
+        for store in stores:
+            permissions = store.subuser_fb_permissions.all()
+            instance.subuser_fb_permissions.add(*permissions)
+
+        update_store_count_in_activecampaign(instance.user.id)
+
+
+def add_google_store_permissions_base(store):
+    for codename, name in SUBUSER_GOOGLE_STORE_PERMISSIONS:
+        SubuserGooglePermission.objects.create(store=store, codename=codename, name=name)
+
+
+@receiver(post_save, sender='google_core.GoogleStore')
+def add_google_store_permissions(sender, instance, created, **kwargs):
+    if created:
+        add_google_store_permissions_base(instance)
+        update_store_count_in_activecampaign(instance.user.id)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_google_stores.through)
+def add_google_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+    if action == "post_add":
+        stores = instance.user.models_user.googlestore_set.filter(pk__in=pk_set)
+        for store in stores:
+            permissions = store.subuser_google_permissions.all()
+            instance.subuser_google_permissions.add(*permissions)
+
+        update_store_count_in_activecampaign(instance.user.id)
+
+
 @receiver(post_save, sender=ShopifyOrderTrack, dispatch_uid='sync_aliexpress_fulfillment_cost')
 def sync_aliexpress_fulfillment_cost(sender, instance, created, **kwargs):
 
@@ -316,7 +363,8 @@ def shopify_send_keen_event_for_product(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=GroupPlan)
 def plan_update_hubspot_sync(sender, instance, created, **kwargs):
-    update_plans_list_in_hubspot()
+    if not settings.DEBUG and settings.HUPSPOT_API_KEY:
+        update_plans_list_in_hubspot()
 
 
 main_subscription_canceled = Signal(providing_args=["stripe_sub"])

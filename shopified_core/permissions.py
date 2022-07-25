@@ -134,7 +134,7 @@ def user_can_view(user, obj, raise_on_error=True, superuser_can=True):
                     return raise_or_return_result("Unknown Store Type", raise_on_error=raise_on_error)
 
                 if store.id not in stores:
-                    return raise_or_return_result("You don't have autorization to view this store.", raise_on_error=raise_on_error)
+                    return raise_or_return_result("You don't have authorization to view this store.", raise_on_error=raise_on_error)
 
     if not can:
         return raise_or_return_result("Unauthorized View Action", raise_on_error=raise_on_error)

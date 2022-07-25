@@ -111,7 +111,7 @@
         appId: null,
         {% endif %}
         showPanel: {{ show_facebook_connection|yesno:"true,false" }},
-        graphAPIVersion: "{% app_setting FACEBOOK_GRAPH_API_VERSION %}"
+        graphAPIVersion: "{% app_setting 'FACEBOOK_GRAPH_API_VERSION' %}"
       },
       sub_conf: {
         key: "{% app_setting 'PUSHER_KEY' %}",

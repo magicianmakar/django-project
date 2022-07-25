@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db.models import Q
+from django.urls import reverse
 from django.utils.crypto import get_random_string
 
 from shopified_core import permissions
@@ -81,3 +82,13 @@ class EbayApiHelper(ApiHelperBase):
 
         pusher = {'key': settings.PUSHER_KEY, 'channel': product.store.pusher_channel()}
         return {'pusher': pusher}
+
+    def get_product_path(self, data):
+        """
+        Returns a path for product detail view
+        Args:
+            data:
+                store_id: store ID which owns the product
+                guid: GUID of the product
+        """
+        return reverse('ebay:product_detail', args=[data['store_id'], data['guid']])

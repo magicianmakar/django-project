@@ -838,7 +838,7 @@ class OrderPlaceRedirectView(RedirectView):
 
 
 @method_decorator(login_required, name='dispatch')
-@method_decorator(PlatformPermissionRequired('fb'), name='dispatch')
+@method_decorator(PlatformPermissionRequired('facebook'), name='dispatch')
 class ProfitDashboardView(ProfitDashboardMixin, ListView):
     store_type = 'fb'
     store_model = FBStore

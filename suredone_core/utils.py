@@ -409,6 +409,15 @@ class SureDoneUtils:
         api_request_data = self.transform_variant_data_into_sd_list_format(request_data)
         return self.api.relist_product_details_bulk(api_request_data)
 
+    def force_update_product(self, variants_data: List[dict], store_type: str, store_instance_id: int):
+        skip_channels_config = self.get_skip_channels_config(store_type, store_instance_id)
+        request_data = [{
+            **v,
+            **skip_channels_config,
+        } for v in variants_data]
+        api_request_data = self.transform_variant_data_into_sd_list_format(request_data)
+        return self.api.edit_product_details_bulk(api_request_data, force=True)
+
     def generate_data_per_variant(self, root_data: dict, variants_specific_data: list) -> list:
         data_per_variant = []
         if len(variants_specific_data) > 0:

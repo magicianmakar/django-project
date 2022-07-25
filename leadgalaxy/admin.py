@@ -37,6 +37,8 @@ from .models import (
     SubuserGearPermission,
     SubuserGKartPermission,
     SubuserBigCommercePermission,
+    SubuserFBPermission,
+    SubuserGooglePermission,
     UserAddress,
     UserBlackSampleTracking,
     UserCompany,
@@ -464,6 +466,20 @@ class SubuserGearPermissionAdmin(admin.ModelAdmin):
 
 @admin.register(SubuserBigCommercePermission)
 class SubuserBigCommercePermissionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'codename', 'name', 'store')
+    raw_id_fields = ('store',)
+    search_fields = ('name',)
+
+
+@admin.register(SubuserFBPermission)
+class SubuserFBPermission(admin.ModelAdmin):
+    list_display = ('id', 'codename', 'name', 'store')
+    raw_id_fields = ('store',)
+    search_fields = ('name',)
+
+
+@admin.register(SubuserGooglePermission)
+class SubuserGooglePermission(admin.ModelAdmin):
     list_display = ('id', 'codename', 'name', 'store')
     raw_id_fields = ('store',)
     search_fields = ('name',)
