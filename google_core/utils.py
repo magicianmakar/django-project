@@ -862,6 +862,7 @@ class GoogleOrderItem:
         self.number = self.google_order_id
         self.total = sd_order_data.get('total')
         self.notes = sd_order_data.get('internalnotes')
+        self.last_note = list(self.notes.values())[-1] if self.notes else ''
         self.store = self.store
 
         sd_shipping_data = sd_order_data.get('shipping')
