@@ -514,7 +514,8 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             authenticity_cert=supplement.authenticity_certificate_url,
             mockup_layers=supplement.mockup_type.get_layers(),
             total_allowed_label=total_allowed_label,
-            label_limit_left=label_limit_left
+            label_limit_left=label_limit_left,
+            supplier=supplement.supplier
         )
 
         if 'label_url' in form_data:
@@ -740,6 +741,7 @@ class UserSupplementView(Supplement):
             mockup_layers=supplement.pl_supplement.mockup_type.get_layers(),
             comment_form=CommentForm(initial=comment_form_data),
             user_buttons=True,
+            supplier=supplement.pl_supplement.supplier
         )
 
         if 'label_url' in form_data:

@@ -158,7 +158,14 @@
           </div>
         </div>
       </div>
-
+      <div class="row">
+        <div class="col-md-10">
+          <label class="col-sm-3 col-xs-12 control-label">Supplier:</label>
+          <div class="col-sm-9 col-xs-12">
+            <a id="supplier_profile" href="#">{{ supplier }}</a>
+          </div>
+        </div>
+      </div>
       {% if authenticity_cert %}
       <div class="row m-t">
         <div class="col-md-10">
@@ -175,7 +182,7 @@
       {% endif %}
     </div>
   </div>
-
+  {% include "supplements/partials/supplier_profile_modal.html" with supplier=supplier %}
   {% include "supplements/partials/mockup_images_modal.html" with label_url=label_url approved_label_url=approved_label_url %}
   {% endblock %}
 </div>

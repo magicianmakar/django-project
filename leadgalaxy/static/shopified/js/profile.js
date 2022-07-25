@@ -88,11 +88,14 @@ $('#country').change(function (e) {
 $('#save-profile').click(function () {
     var btn = $(this);
     btn.button('loading');
-
+    userProfileForm = $('form#user-profile')[0];
+    var formData = new FormData(userProfileForm);
     $.ajax({
         url: '/api/user-profile',
         type: 'POST',
-        data: $('form#user-profile').serialize(),
+        processData: false,
+        contentType: false,
+        data: formData,
         context: {btn: btn},
         success: function (data) {
             if (data.status == 'ok') {

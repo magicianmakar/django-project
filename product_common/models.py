@@ -63,6 +63,8 @@ class ProductSupplier(SupplierMixin, models.Model):
     slug = models.SlugField(max_length=100)
     profit_percentage = models.DecimalField(max_digits=10, decimal_places=2)
     is_shipping_supplier = models.BooleanField(default=False)
+    description = models.TextField(blank=True)
+    logo_url = models.URLField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

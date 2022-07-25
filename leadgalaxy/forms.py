@@ -8,6 +8,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.validators import validate_email, ValidationError, RegexValidator
 from django.conf import settings
+from addons_core.forms import URLFileInputWidget
 
 from .models import UserProfile, SubuserPermission, SubuserCHQPermission, SubuserWooPermission, SubuserBigCommercePermission
 from shopified_core.utils import login_attempts_exceeded, unlock_account_email, unique_username, send_email_from_template
@@ -158,6 +159,10 @@ class UserProfileForm(forms.Form):
     user_address_country = forms.CharField(max_length=100, required=False)
     user_address_zip_code = forms.CharField(max_length=100, required=False)
     user_address_phone = forms.CharField(max_length=100, required=False)
+
+    supplier_name = forms.CharField(max_length=100, required=False)
+    supplier_description = forms.CharField(max_length=300, required=False)
+    supplier_logo = forms.FileField(required=False, widget=URLFileInputWidget())
 
 
 class UserProfileEmailForm(forms.Form):

@@ -76,6 +76,7 @@ from .models import (
     UserUpload
 )
 from .templatetags.template_helper import money_format, shopify_image_thumb
+from product_common.lib.views import upload_image_to_aws
 
 
 class ShopifyStoreApi(ApiBase):
@@ -2306,6 +2307,15 @@ class ShopifyStoreApi(ApiBase):
                     profile.address.country = form.cleaned_data['user_address_country']
                     profile.address.phone = form.cleaned_data['user_address_phone']
                     profile.address.save()
+
+            if user.can('pls_supplier.use'):
+                supplier_logo = request.FILES.get('supplier_logo', None)
+                supplier_logo_url = upload_image_to_aws(supplier_logo, 'supplier_logo', user.id)
+                supplier = user.profile.supplier
+                supplier.title = form.cleaned_data['supplier_name']
+                supplier.description = form.cleaned_data['supplier_description']
+                supplier.logo_url = supplier_logo_url
+                supplier.save()
 
             profile.save()
 
