@@ -623,6 +623,14 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         sd_api_response = ebay_utils.update_product_details(product_data, 'ebay', store.store_instance_id,
                                                             skip_all_channels=skip_publishing)
 
+        parsed_ebay_errors_list = []
+
+        if product_data.get('status') != 'disable' and product_data.get('published') is False:
+            api_response = ebay_utils.end_product([parent_guid], 'ebay', store.store_instance_id)
+            api_error_message = api_response.get('1', {}).get('errors')
+            if api_error_message:
+                parsed_ebay_errors_list += ebay_utils.parse_ebay_errors(api_error_message)
+
         url = reverse('ebay:product_detail', kwargs={'pk': product.guid, 'store_index': store.pk})
 
         # If the product was not successfully posted
@@ -630,9 +638,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
 
         api_error_message = sd_api_response.get('1', {}).get('errors')
         if api_error_message:
-            parsed_ebay_errors_list = ebay_utils.parse_ebay_errors(api_error_message)
-        else:
-            parsed_ebay_errors_list = None
+            parsed_ebay_errors_list += ebay_utils.parse_ebay_errors(api_error_message)
 
         if error_msg:
             store.pusher_trigger(pusher_event, {

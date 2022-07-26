@@ -431,6 +431,9 @@ class SureDoneApiHandler:
     def add_products_bulk(self, variations_data: list, skip_all_channels=False):
         return self.handle_bulk_api('add', variations_data, skip_all_channels)
 
+    def end_product_details_bulk(self, variations_data: list, skip_all_channels=False):
+        return self.handle_bulk_api('end', variations_data, skip_all_channels)
+
     def delete_products_bulk(self, guids_to_delete: list, skip_all_channels=False):
         return self.handle_bulk_api('delete', guids_to_delete, skip_all_channels)
 

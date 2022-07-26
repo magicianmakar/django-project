@@ -52,6 +52,7 @@ function prepareApiData(productData, variants) {
         longdescription: $('#product-description').val().trim(),
         fb_category_id: productData.fb_category_id,
         fb_category_name: productData.fb_category_name,
+        status: productData.status,
         vendor: $('#product-vendor').val(),
         published: $('#product-visible').prop('checked'),
         images: productData.images,
@@ -424,6 +425,9 @@ $('#product-update-btn').click(function (e) {
 
             if (eventData.success) {
                 toastr.success('Product Updated.','Facebook Update');
+                setTimeout(function() {
+                    window.location.href = 'product_url' in eventData ? eventData.product_url : '/fb/products';
+                }, 1000);
             }
             if (eventData.error) {
                 displayAjaxError('Facebook Update', eventData, true);
