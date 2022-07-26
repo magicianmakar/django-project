@@ -1,4 +1,5 @@
 from json import JSONDecodeError
+from math import ceil
 from requests.exceptions import HTTPError
 
 from django.contrib.auth.models import User
@@ -782,6 +783,51 @@ def product_delete(user_id, parent_guid, store_id, skip_all_channels=False):
             'product': product.guid,
             'product_url': reverse('ebay:product_detail', kwargs={'pk': parent_guid, 'store_index': store.pk})
         })
+
+
+@celery_app.task(base=CaptureFailure)
+def delete_all_store_products(user_id, store_id, skip_all_channels=False):
+    user = User.objects.get(id=user_id)
+    try:
+        ebay_utils = EbayUtils(user)
+        products = EbayProduct.objects.filter(store_id=store_id).prefetch_related('product_variants')
+
+        guids_to_delete = []
+        for product in products:
+            parent = None
+            for variant in product.product_variants.all():
+                if variant.is_main_variant:
+                    parent = variant
+                else:
+                    guids_to_delete.append(variant.guid)
+            # Don't add the parent to the list until all children are deleted
+            # because otherwise SureDone will return an error on parent deletion
+            if parent:
+                guids_to_delete.append(parent.guid)
+
+        batch_size = 100
+        count = len(guids_to_delete)
+        steps = ceil(count / batch_size)
+        for step in range(0, steps):
+            data = guids_to_delete[batch_size * step: count] \
+                if step == steps - 1 else guids_to_delete[batch_size * step: batch_size * (step + 1)]
+
+            api_response = ebay_utils.delete_products_by_guid(data, skip_all_channels)
+
+            if isinstance(api_response, dict) and api_response.get('result') == 'success':
+                EbayProduct.objects.filter(guid__in=data).delete()
+            else:
+                capture_message('Failed to delete products post store deletion', extra={
+                    'data': data,
+                    'suredone_response': api_response,
+                    'suredone_user': ebay_utils.sd_account.api_username,
+                    'step': step,
+                    'total_batches': steps,
+                })
+
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
 
 
 @celery_app.task(base=CaptureFailure)

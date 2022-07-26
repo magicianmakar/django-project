@@ -1,8 +1,7 @@
 import json
 from json import JSONDecodeError
-from math import ceil
 from lxml import html
-
+from math import ceil
 from requests.exceptions import HTTPError
 
 from django.contrib.auth.models import User
@@ -18,7 +17,7 @@ from product_alerts.utils import get_supplier_variants, variant_index_from_suppl
 from shopified_core import permissions
 from shopified_core.utils import get_domain, http_exception_response, http_excption_status_code, safe_json
 from suredone_core.models import SureDoneAccount
-from suredone_core.utils import SureDonePusher, GetSureDoneProductByGuidEmpty
+from suredone_core.utils import SureDonePusher
 
 from .models import FBProduct, FBStore
 from .utils import FBOrderUpdater, FBUtils, smart_board_by_product
@@ -891,18 +890,20 @@ def delete_all_store_products(user_id, store_id, skip_all_channels=False):
     user = User.objects.get(id=user_id)
     try:
         fb_utils = FBUtils(user)
-        products = FBProduct.objects.filter(store_id=store_id)
+        products = FBProduct.objects.filter(store_id=store_id).prefetch_related('product_variants')
 
         guids_to_delete = []
         for product in products:
-            sd_product_data = fb_utils.api.get_item_by_guid(product.guid)
-
-            if not (sd_product_data and sd_product_data.get('guid')):
-                raise GetSureDoneProductByGuidEmpty()
-
-            attributes = list(sd_product_data.get('attributes', {}).values())
-            guids_to_delete += [p.get('guid') for p in attributes if p.get('guid')]
-            guids_to_delete.append(product.guid)
+            parent = None
+            for variant in product.product_variants.all():
+                if variant.is_main_variant:
+                    parent = variant
+                else:
+                    guids_to_delete.append(variant.guid)
+            # Don't add the parent to the list until all children are deleted
+            # because otherwise SureDone will return an error on parent deletion
+            if parent:
+                guids_to_delete.append(parent.guid)
 
         batch_size = 100
         count = len(guids_to_delete)
@@ -915,6 +916,14 @@ def delete_all_store_products(user_id, store_id, skip_all_channels=False):
 
             if isinstance(api_response, dict) and api_response.get('result') == 'success':
                 FBProduct.objects.filter(guid__in=data).delete()
+            else:
+                capture_message('Failed to delete facebook products post store deletion', extra={
+                    'data': data,
+                    'suredone_response': api_response,
+                    'suredone_user': fb_utils.sd_account.api_username,
+                    'step': step,
+                    'total_batches': steps,
+                })
 
     except Exception as e:
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
