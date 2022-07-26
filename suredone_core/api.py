@@ -1,3 +1,4 @@
+from copy import deepcopy
 import json
 import requests
 
@@ -64,7 +65,12 @@ class SureDoneApiHandler:
             except ValueError:
                 pass
         else:
-            pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.authorize_channel_v1(request_data)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def authorize_channel_v3(self, request_data: dict, legacy=False):
         url = f'{self.API_ENDPOINT}/v3/authorize/ebay/url'
@@ -79,10 +85,12 @@ class SureDoneApiHandler:
             except ValueError:
                 pass
         else:
-            try:
-                return response.json()
-            except ValueError:
-                pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.authorize_channel_v3(request_data, legacy)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def authorize_ebay_channel(self, request_data: dict, legacy=False):
         url = f'{self.API_ENDPOINT}/v3/authorize/ebay/url'
@@ -103,10 +111,12 @@ class SureDoneApiHandler:
             except ValueError:
                 pass
         else:
-            try:
-                return response.json()
-            except ValueError:
-                pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.authorize_ebay_complete(code, state)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def authorize_ebay_complete_legacy(self):
         url = f'{self.API_ENDPOINT}/v3/authorize/ebay/complete'
@@ -120,10 +130,12 @@ class SureDoneApiHandler:
             except ValueError:
                 pass
         else:
-            try:
-                return response.json()
-            except ValueError:
-                pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.authorize_ebay_complete_legacy()
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def update_settings(self, request_data: dict):
         url = f'{self.API_ENDPOINT}/v1/settings'
@@ -137,7 +149,12 @@ class SureDoneApiHandler:
             except ValueError:
                 pass
         else:
-            pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.update_settings(request_data)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def update_user_settings(self, request_data: dict):
         url = f'{self.API_ENDPOINT}/v1/settings'
@@ -241,13 +258,19 @@ class SureDoneApiHandler:
         url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}'
 
         response = requests.get(url, params=params, headers=self.HEADERS)
+
         if response.ok:
             try:
                 return response.json()
             except ValueError:
                 pass
         else:
-            pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.get_products(params)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def search_ebay_categories(self, store_index: int, search_term: str):
         url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}'
@@ -258,13 +281,19 @@ class SureDoneApiHandler:
         }
 
         response = requests.get(url, params=params, headers=self.HEADERS)
+
         if response.ok:
             try:
                 return response.json()
             except ValueError:
                 pass
         else:
-            pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.search_ebay_categories(store_index, search_term)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def get_ebay_specifics(self, site_id: int, cat_id: int):
         url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}'
@@ -274,39 +303,57 @@ class SureDoneApiHandler:
         }
 
         response = requests.get(url, params=params, headers=self.HEADERS)
+
         if response.ok:
             try:
                 return response.json()
             except ValueError:
                 pass
         else:
-            pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.get_ebay_specifics(site_id, cat_id)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def search_fb_categories(self, search_term: str):
         url = f'{self.API_ENDPOINT}/v1/internal/facebook/categories'
         params = {'search': search_term}
 
         response = requests.get(url, params=params, headers=self.HEADERS)
+
         if response.ok:
             try:
                 return response.json()
             except ValueError:
                 pass
         else:
-            pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.search_fb_categories(search_term)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def search_google_categories(self, search_term: str):
         url = f'{self.API_ENDPOINT}/v1/internal/google/categories'
         params = {'search': search_term}
 
         response = requests.get(url, params=params, headers=self.HEADERS)
+
         if response.ok:
             try:
                 return response.json()
             except ValueError:
                 pass
         else:
-            pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.search_google_categories(search_term)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def get_item_by_guid(self, guid, convert_prices_from_suredone=False):
         url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}/edit'
@@ -315,6 +362,7 @@ class SureDoneApiHandler:
         }
 
         response = requests.get(url, params=params, headers=self.HEADERS)
+
         if response.ok:
             try:
                 response = response.json()
@@ -333,7 +381,12 @@ class SureDoneApiHandler:
             except ValueError:
                 pass
         else:
-            pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.get_item_by_guid(guid)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def handle_bulk_api(self, action: str, variations_data: list, skip_all_channels=False, force=False):
         url = f'{self.API_ENDPOINT}{self.API_EDITOR_PATH}'
@@ -344,23 +397,30 @@ class SureDoneApiHandler:
         if force:
             params['force'] = 'true'
 
+        request_data = deepcopy(variations_data)
         # Insert the action type to the request data
-        variations_data[0].insert(0, f'action={action}')
-        for i in range(1, len(variations_data)):
-            variations_data[i].insert(0, '')
+        request_data[0].insert(0, f'action={action}')
+        for i in range(1, len(request_data)):
+            request_data[i].insert(0, '')
 
         data = param({
-            'requests': variations_data
+            'requests': request_data
         })
 
         response = requests.post(url, data=data, params=params, headers=self.HEADERS)
+
         if response.ok:
             try:
                 return response.json()
             except ValueError:
                 pass
         else:
-            pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.handle_bulk_api(action, variations_data, skip_all_channels)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def relist_product_details_bulk(self, variations_data: list, skip_all_channels=False):
         return self.handle_bulk_api('relist', variations_data, skip_all_channels)
@@ -378,13 +438,19 @@ class SureDoneApiHandler:
         url = f'{self.API_ENDPOINT}/v1/options/{option_type if option_type else "all"}'
         try:
             response = requests.get(url, headers=self.HEADERS, timeout=25)
+
             if response.ok:
                 try:
                     return response.json()
                 except ValueError:
                     pass
             else:
-                pass
+                new_token = self.handle_invalid_token_error(response)
+                if new_token:
+                    self.HEADERS['X-Auth-Token'] = new_token
+                    return self.get_all_account_options(option_type)
+                else:
+                    return {"result": "error", "message": "Something went wrong, please try again."}
         except(requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
             capture_exception(extra={
                 'description': 'Timeout exception when requesting SureDone user options',
@@ -400,25 +466,37 @@ class SureDoneApiHandler:
         url = f'{self.API_ENDPOINT}/v3/orders'
 
         response = requests.get(url, params=params, headers=self.HEADERS)
+
         if response.ok:
             try:
                 return response.json()
             except ValueError:
                 pass
         else:
-            pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.get_orders(params)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def get_order_details(self, order_id: int):
         url = f'{self.API_ENDPOINT}/v3/orders/{order_id}'
 
         response = requests.get(url, headers=self.HEADERS)
+
         if response.ok:
             try:
                 return response.json()
             except ValueError:
                 pass
         else:
-            pass
+            new_token = self.handle_invalid_token_error(response)
+            if new_token:
+                self.HEADERS['X-Auth-Token'] = new_token
+                return self.get_order_details(order_id)
+            else:
+                return {"result": "error", "message": "Something went wrong, please try again."}
 
     def update_order_details(self, oid: int, order_details: dict, params=None):
         url = f'{self.API_ENDPOINT}/v3/orders/{oid}'
@@ -470,6 +548,27 @@ class SureDoneApiHandler:
         })
 
         return requests.post(url, data=data, params=params, headers=self.HEADERS)
+
+    def handle_invalid_token_error(self, response):
+        try:
+            result = response.json()
+            if result.get('result') == 'error' and result.get('message') == 'Invalid Token':
+                sd_user_account = SureDoneAccount.objects.get(api_username=self.api_username)
+                sd_password = sd_user_account.password
+                # re-authorize user
+                api_resp = SureDoneAdminApiHandler.authorize_user(username=self.api_username, password=sd_password)
+                api_resp.raise_for_status()
+                user_data = api_resp.json()
+                if user_data.get('result') == 'success':
+                    sd_user_account.api_token = user_data.get('token')
+                    sd_user_account.save()
+                    return user_data.get('token')
+        except Exception as e:
+            capture_exception(extra={
+                'description': 'Exception when handling invalid token error',
+                'suredone_account_username': self.HEADERS['X-Auth-User'],
+                'exception': e,
+            })
 
     def get_last_log(self, identifier: str, context: str, action: str):
         url = f'{self.API_ENDPOINT}/v3/logs'
