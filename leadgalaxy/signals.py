@@ -15,6 +15,7 @@ from hubspot_core.tasks import update_hubspot_user, update_plans_list_in_hubspot
 from leadgalaxy.models import (
     SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS,
     SUBUSER_CHQ_STORE_PERMISSIONS,
+    SUBUSER_EBAY_STORE_PERMISSIONS,
     SUBUSER_FB_STORE_PERMISSIONS,
     SUBUSER_GEAR_STORE_PERMISSIONS,
     SUBUSER_GKART_STORE_PERMISSIONS,
@@ -28,6 +29,7 @@ from leadgalaxy.models import (
     ShopifyStore,
     SubuserBigCommercePermission,
     SubuserCHQPermission,
+    SubuserEbayPermission,
     SubuserFBPermission,
     SubuserGearPermission,
     SubuserGKartPermission,
@@ -263,6 +265,29 @@ def add_bigcommerce_store_permissions_to_subuser(sender, instance, pk_set, actio
         for store in stores:
             permissions = store.subuser_bigcommerce_permissions.all()
             instance.subuser_bigcommerce_permissions.add(*permissions)
+
+        update_store_count_in_activecampaign(instance.user.id)
+
+
+def add_ebay_store_permissions_base(store):
+    for codename, name in SUBUSER_EBAY_STORE_PERMISSIONS:
+        SubuserEbayPermission.objects.create(store=store, codename=codename, name=name)
+
+
+@receiver(post_save, sender='ebay_core.EbayStore')
+def add_ebay_store_permissions(sender, instance, created, **kwargs):
+    if created:
+        add_ebay_store_permissions_base(instance)
+        update_store_count_in_activecampaign(instance.user.id)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_ebay_stores.through)
+def add_ebay_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+    if action == "post_add":
+        stores = instance.user.models_user.ebaystore_set.filter(pk__in=pk_set)
+        for store in stores:
+            permissions = store.subuser_ebay_permissions.all()
+            instance.subuser_ebay_permissions.add(*permissions)
 
         update_store_count_in_activecampaign(instance.user.id)
 

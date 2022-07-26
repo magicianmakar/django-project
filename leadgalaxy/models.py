@@ -113,6 +113,7 @@ SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS = (
 SUBUSER_EBAY_STORE_PERMISSIONS = (
     *SUBUSER_STORE_PERMISSIONS_BASE,
     ('send_to_ebay', 'Send products to eBay'),
+    ('view_profit_dashboard', 'View profit dashboard'),
 )
 
 SUBUSER_FB_STORE_PERMISSIONS = (
@@ -193,6 +194,7 @@ class UserProfile(models.Model):
     subuser_gear_permissions = models.ManyToManyField('SubuserGearPermission', blank=True)
     subuser_gkart_permissions = models.ManyToManyField('SubuserGKartPermission', blank=True)
     subuser_bigcommerce_permissions = models.ManyToManyField('SubuserBigCommercePermission', blank=True)
+    subuser_ebay_permissions = models.ManyToManyField('SubuserEbayPermission', blank=True)
     subuser_fb_permissions = models.ManyToManyField('SubuserFBPermission', blank=True)
     subuser_google_permissions = models.ManyToManyField('SubuserGooglePermission', blank=True)
 
@@ -681,6 +683,8 @@ class UserProfile(models.Model):
                 return self.has_subuser_gkart_permission(codename, store)
             elif store_model_name == 'BigCommerceStore':
                 return self.has_subuser_bigcommerce_permission(codename, store)
+            elif store_model_name == 'EbayStore':
+                return self.has_subuser_ebay_permission(codename, store)
             elif store_model_name == 'FBStore':
                 return self.has_subuser_fb_permission(codename, store)
             elif store_model_name == 'GoogleStore':
@@ -726,6 +730,12 @@ class UserProfile(models.Model):
             return False
 
         return self.subuser_bigcommerce_permissions.filter(codename=codename, store=store).exists()
+
+    def has_subuser_ebay_permission(self, codename, store):
+        if not self.subuser_ebay_stores.filter(pk=store.id).exists():
+            return False
+
+        return self.subuser_ebay_permissions.filter(codename=codename, store=store).exists()
 
     def has_subuser_fb_permission(self, codename, store):
         if not self.subuser_fb_stores.filter(pk=store.id).exists():
@@ -1041,6 +1051,19 @@ class SubuserBigCommercePermission(models.Model):
 
     def __str__(self):
         return f'<SubuserBigCommercePermission: {self.id}>'
+
+
+class SubuserEbayPermission(models.Model):
+    codename = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
+    store = models.ForeignKey('ebay_core.EbayStore', related_name='subuser_ebay_permissions', on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = 'pk',
+        unique_together = 'codename', 'store'
+
+    def __str__(self):
+        return f'<SubuserEbayPermission: {self.id}>'
 
 
 class SubuserFBPermission(models.Model):

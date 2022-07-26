@@ -33,6 +33,8 @@ urlpatterns = [
         subusers.views.subuser_woo_store_permissions, name='subuser_woo_store_permissions'),
     url(r'^subusers/gear-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
         subusers.views.subuser_gkart_store_permissions, name='subuser_gkart_store_permissions'),
+    url(r'^subusers/ebay-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
+        subusers.views.subuser_ebay_store_permissions, name='subuser_ebay_store_permissions'),
     url(r'^subusers/fb-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
         subusers.views.subuser_fb_store_permissions, name='subuser_fb_store_permissions'),
     url(r'^subusers/google-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',

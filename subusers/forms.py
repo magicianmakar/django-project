@@ -7,9 +7,11 @@ from leadgalaxy.models import (
     SubuserWooPermission,
     SubuserGKartPermission,
     SubuserBigCommercePermission,
+    SubuserEbayPermission,
     SubuserFBPermission,
     SubuserGooglePermission,
 )
+from leadgalaxy.signals import add_ebay_store_permissions_base
 from leadgalaxy.signals import add_fb_store_permissions_base
 from leadgalaxy.signals import add_google_store_permissions_base
 
@@ -18,7 +20,7 @@ class SubUserStoresForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ["subuser_stores", "subuser_chq_stores", "subuser_woo_stores", "subuser_gkart_stores",
-                  "subuser_bigcommerce_stores", "subuser_fb_stores", "subuser_google_stores"]
+                  "subuser_bigcommerce_stores", "subuser_ebay_stores", "subuser_fb_stores", "subuser_google_stores"]
 
     def __init__(self, *args, **kwargs):
         parent_user = kwargs.pop("parent_user")
@@ -32,6 +34,7 @@ class SubUserStoresForm(forms.ModelForm):
             initial['subuser_woo_stores'] = [t.pk for t in kwargs['instance'].subuser_woo_stores.all()]
             initial['subuser_gkart_stores'] = [t.pk for t in kwargs['instance'].subuser_gkart_stores.all()]
             initial['subuser_bigcommerce_stores'] = [t.pk for t in kwargs['instance'].subuser_bigcommerce_stores.all()]
+            initial['subuser_ebay_stores'] = [t.pk for t in kwargs['instance'].subuser_ebay_stores.all()]
             initial['subuser_fb_stores'] = [t.pk for t in kwargs['instance'].subuser_fb_stores.all()]
             initial['subuser_google_stores'] = [t.pk for t in kwargs['instance'].subuser_google_stores.all()]
 
@@ -54,6 +57,10 @@ class SubUserStoresForm(forms.ModelForm):
         self.fields["subuser_bigcommerce_stores"].widget = forms.widgets.CheckboxSelectMultiple()
         self.fields["subuser_bigcommerce_stores"].help_text = ""
         self.fields["subuser_bigcommerce_stores"].queryset = parent_user.profile.get_bigcommerce_stores()
+
+        self.fields["subuser_ebay_stores"].widget = forms.widgets.CheckboxSelectMultiple()
+        self.fields["subuser_ebay_stores"].help_text = ""
+        self.fields["subuser_ebay_stores"].queryset = parent_user.profile.get_ebay_stores()
 
         self.fields["subuser_fb_stores"].widget = forms.widgets.CheckboxSelectMultiple()
         self.fields["subuser_fb_stores"].help_text = ""
@@ -89,6 +96,10 @@ class SubUserStoresForm(forms.ModelForm):
             instance.subuser_bigcommerce_stores.clear()
             for store in self.cleaned_data['subuser_bigcommerce_stores']:
                 instance.subuser_bigcommerce_stores.add(store)
+
+            instance.subuser_ebay_stores.clear()
+            for store in self.cleaned_data['subuser_ebay_stores']:
+                instance.subuser_ebay_stores.add(store)
 
             instance.subuser_fb_stores.clear()
             for store in self.cleaned_data['subuser_fb_stores']:
@@ -177,6 +188,25 @@ class SubuserBigCommercePermissionsForm(forms.Form):
         super(SubuserBigCommercePermissionsForm, self).__init__(*args, **kwargs)
         permissions_initial = kwargs['initial']['permissions']
         permissions_queryset = SubuserBigCommercePermission.objects.filter(store=kwargs['initial']['store'])
+        permissions_widget = SubuserPermissionsSelectMultiple(attrs={'class': 'js-switch'})
+        permissions_field = SubuserPermissionsChoiceField(initial=permissions_initial,
+                                                          queryset=permissions_queryset,
+                                                          widget=permissions_widget,
+                                                          required=False)
+        self.fields['permissions'] = permissions_field
+
+
+class SubuserEbayPermissionsForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(SubuserEbayPermissionsForm, self).__init__(*args, **kwargs)
+        permissions_initial = kwargs['initial']['permissions']
+        store = kwargs['initial']['store']
+        permissions_queryset = SubuserEbayPermission.objects.filter(store=store)
+
+        # Handle eBay stores that were created before subusers functionality was implemented
+        if not permissions_queryset:
+            add_ebay_store_permissions_base(store=store)
+
         permissions_widget = SubuserPermissionsSelectMultiple(attrs={'class': 'js-switch'})
         permissions_field = SubuserPermissionsChoiceField(initial=permissions_initial,
                                                           queryset=permissions_queryset,

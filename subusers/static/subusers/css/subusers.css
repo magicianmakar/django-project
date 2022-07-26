@@ -148,6 +148,14 @@ h3 {
     list-style: none;
 }
 
+#id_subuser_stores, #id_subuser_ebay_stores {
+    padding: 0 0 0 20px;
+}
+
+#id_subuser_stores li, #id_subuser_ebay_stores li {
+    list-style: none;
+}
+
 #id_subuser_stores, #id_subuser_fb_stores {
     padding: 0 0 0 20px;
 }
