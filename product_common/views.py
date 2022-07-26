@@ -10,7 +10,7 @@ from django.views import View
 from django.views.generic.list import ListView
 
 import simplejson as json
-
+from leadgalaxy.models import UserProfile
 from shopified_core.utils import safe_int
 
 from .forms import OrderFilterForm, PayoutFilterForm, ProductEditForm, ProductForm
@@ -445,6 +445,11 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                 else:
                     queryset = queryset.filter(pls_order__order_number__endswith=order_number, pls_order_id=order_id)
 
+            warehouse_account = UserProfile.objects.get(user=self.request.user.models_user.id).warehouse_account
+            if warehouse_account:
+                queryset = queryset.filter(
+                    label__user_supplement__pl_supplement__shipstation_account=UserProfile.objects.get(
+                        user=self.request.user.models_user.id).warehouse_account)
             status = form.cleaned_data['status']
             if status:
                 queryset = queryset.filter(status=status)
@@ -582,6 +587,7 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
             'breadcrumbs': self.get_breadcrumbs(),
             'total_line_items': count,
             'date_range': self.request.GET.get('date', None),
+            'warehouse_account': UserProfile.objects.get(user=self.request.user.models_user.id).warehouse_account
         })
         self.add_paging_context(context)
         return context

@@ -945,9 +945,12 @@ class EbayUtils(SureDoneUtils):
         lines = {}
 
         for order in sd_orders:
+            order['id'] = order['oid']
             orders[order['oid']] = order
             for line in order['items']:
                 line['image'] = line.get('media', '')
+                line['id'] = line.get('itemid')
+                line['product_id'] = line['itemdetails']['product'].get('id')
                 lines[f"{order['oid']}-{line['sku']}"] = line
 
         new_tracker_orders = []
@@ -1695,6 +1698,7 @@ class EbayOrderItem:
                     'products': [],
                     'is_bundle': False,
                     'is_refunded': False,  # TODO: where can this calculated from?
+                    'weight': item.get('weight', None),
                 })
                 if product_variant:
                     order_data['variant'] = self.get_order_data_variant(product_variant)
@@ -1706,7 +1710,12 @@ class EbayOrderItem:
                     'order_data': order_data,
                     'shippping_method': shippping_method,
                 })
-                # TODO: add is_pls handling here
+
+                if supplier.is_pls and supplier.user_supplement:
+                    weight = supplier.user_supplement.get_weight(safe_int(item.get('quantity')))
+                    order_data.update({
+                        'weight': weight,
+                    })
 
             self.items.append(current_item)
 

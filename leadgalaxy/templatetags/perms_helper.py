@@ -80,3 +80,8 @@ def create_walmart_affiliate_link(product_url, user):
 @register.filter(name='supplies')
 def supplies(user, item):
     return user.supplies(item)
+
+
+@register.filter(name='is_warehouse_account')
+def is_warehouse_account(user, item):
+    return user.is_warehouse_account(item)

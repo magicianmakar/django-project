@@ -48,10 +48,12 @@
   {% endif %}
 
   {% if pls_admin %}
-    {% if request.path == pls_orders %}
-    <li class="active"><a data-toggle="tab" href="#tab-1">Payments</a></li>
-    {% else %}
-    <li><a href="{% url 'pls:order_list' %}">Payments</a></li>
+    {% if not request.user.profile.warehouse_account %}
+      {% if request.path == pls_orders %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Payments</a></li>
+      {% else %}
+      <li><a href="{% url 'pls:order_list' %}">Payments</a></li>
+      {% endif %}
     {% endif %}
 
     {% if DEBUG and request.path == pls_upload_json %}
@@ -60,10 +62,12 @@
     <li><a href="{% url 'pls:upload_json' %}">Import / Export </a></li>
     {% endif %}
 
-    {% if request.path == pls_reports %}
-    <li class="active"><a data-toggle="tab" href="#tab-1">Reports</a></li>
-    {% else %}
-    <li><a href="{% url 'pls:reports' %}">Reports</a></li>
+    {% if not request.user.profile.warehouse_account %}
+      {% if request.path == pls_reports %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Reports</a></li>
+      {% else %}
+      <li><a href="{% url 'pls:reports' %}">Reports</a></li>
+      {% endif %}
     {% endif %}
   {% endif %}
   </ul>

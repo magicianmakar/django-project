@@ -387,6 +387,7 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
             'items': [],
             'advancedOptions': {
                 'customField1': self.order_number,
+                'storeId': shipstation_acc.store_id
             }
         }
 
@@ -767,6 +768,7 @@ class ShipStationAccount(models.Model):
     api_url = models.URLField(default="https://ssapi.shipstation.com")
     max_retries = models.IntegerField(default=5)
     send_timeout = models.IntegerField(default=60)
+    store_id = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
