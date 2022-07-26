@@ -69,22 +69,15 @@ var MockupEditor = (function() {
                 };
             // Can either be of vertical or horizontal orientation
             var sizes = [[defaultWidth, defaultHeight], [defaultHeight, defaultWidth]];
-            console.log(sizes);
-            console.log(pdfHeight);
-            console.log(pdfWidth);
-            console.log(margin);
-            console.log(roundingMargin);
             for (var i = 0, iLength = sizes.length; i < iLength; i++) {
                 var sizeX = sizes[i][0];
                 var sizeY = sizes[i][1];
 
                 if (pdfHeight === sizeX && pdfWidth === sizeY) {
-                    console.log("One");
                     return false;
                 }
 
                 if (pdfHeight <= sizeX + margin && pdfWidth <= sizeY + margin) {
-                    console.log("Two");
                     return false;
                 }
 
@@ -96,7 +89,6 @@ var MockupEditor = (function() {
                     var lowerY = sizeY-roundingMargin;
                     var upperY = sizeY+roundingMargin;
                     if (pdfHeight >= lowerX && pdfHeight <= upperX && pdfWidth >= lowerY && pdfWidth <= upperY) {
-                        console.log("Three");
                         return false;
                     }
                 }
