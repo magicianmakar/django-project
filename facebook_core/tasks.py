@@ -17,7 +17,7 @@ from product_alerts.utils import get_supplier_variants, variant_index_from_suppl
 from shopified_core import permissions
 from shopified_core.utils import get_domain, http_exception_response, http_excption_status_code, safe_json
 from suredone_core.models import SureDoneAccount
-from suredone_core.utils import GetSureDoneProductByGuidEmpty, SureDonePusher
+from suredone_core.utils import SureDonePusher
 
 
 from .models import FBProduct, FBStore
