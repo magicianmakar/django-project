@@ -72,6 +72,10 @@ class SupplierBase(models.Model):
             return False
 
     @property
+    def is_logistics(self):
+        return self.supplier_type() == 'logistics'
+
+    @property
     def is_alibaba(self):
         return self.supplier_type() == 'alibaba'
 
@@ -119,6 +123,8 @@ class SupplierBase(models.Model):
         try:
             if self.is_dropified and 'print-on-demand' in self.product_url:
                 return 'dropified-print'
+            if self.is_dropified and 'logistics' in self.product_url:
+                return 'logistics'
             if self.is_pls:
                 return 'pls'
 
@@ -339,6 +345,7 @@ class OrderTrackBase(models.Model):
 
     def get_source_url(self):
         if self.source_id:
+            print(self.source_type)
             if self.source_type == 'ebay':
                 if re.match(r'\d{2}-\d{5}-\d{5}', self.source_id) and self.created_at < arrow.get('2022-02-01').datetime:
                     return f'https://order.ebay.com/ord/show?orderId={self.source_id}&purchaseOrderId={self.source_id}#/'
@@ -352,6 +359,8 @@ class OrderTrackBase(models.Model):
                 return f"{reverse('prints:orders')}?order={self.source_id}"
             elif self.source_type == 'alibaba':
                 return f'https://biz.alibaba.com/ta/detail.htm?orderId={self.source_id}'
+            elif self.source_type == 'dropified-logistics':
+                return reverse('logistics:order', kwargs={'order_id': self.source_id})
             else:
                 return 'https://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
         else:
@@ -368,6 +377,8 @@ class OrderTrackBase(models.Model):
             return 'Print on Demand'
         elif self.source_type == 'alibaba':
             return 'Alibaba'
+        elif self.source_type == 'dropified-logistics':
+            return '3PL'
         else:
             return 'Aliexpress'
 

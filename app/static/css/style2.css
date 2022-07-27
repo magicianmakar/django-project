@@ -681,6 +681,12 @@ fieldset[disabled] .btn-danger.active {
 .dropdown-menu .btn-danger.btn-outline {
     color: #de1c22;
 }
+.color-danger {
+    color: #de1c22;
+}
+.color-primary {
+    color: #6bAA55;
+}
 
 .bg-default {
     background-color: #f6f8f9;
@@ -731,7 +737,9 @@ a.text-default:focus > .dropified-icons:before {
 }
 
 .scrtabs-tab-container ~ .actions,
-.nav.nav-tabs ~ .actions {
+.nav.nav-tabs ~ .actions,
+.scrtabs-tab-container ~ form .actions,
+.nav.nav-tabs ~ form .actions {
     color: #56708a;
     font-size: 16px;
     font-weight: 500;
@@ -743,18 +751,16 @@ a.text-default:focus > .dropified-icons:before {
     background-color: #fff;
     border-radius: 0 0 8px 8px;
     border-color: #e7eaec;
-    border-style: none solid solid solid;
+    border-style: solid;
     border-width: 0 1px 1px 1px;
-}
-
-.scrtabs-tab-container ~ .actions {
-    /*width: calc(100% - 15px);*/
 }
 
 .scrtabs-tabs-fixed-container {
     width: 100% !important;
 }
 
+.tabs-container :not(.tab-content) .actions > li,
+.tabs-container :not(.tab-content) .actions > form > li,
 .scrtabs-tab-container ~ .actions > li,
 .nav.nav-tabs ~ .actions > li,
 .scrtabs-tab-container ~ .actions > form > li,
@@ -763,11 +769,13 @@ a.text-default:focus > .dropified-icons:before {
     margin: 0 5px;
 }
 
+.tabs-container :not(.tab-content) .actions > li:first-child,
 .scrtabs-tab-container ~ .actions > li:first-child,
 .nav.nav-tabs ~ .actions > li:first-child {
     margin-left: 0;
 }
 
+.tabs-container :not(.tab-content) .actions li.group,
 .scrtabs-tab-container ~ .actions li.group,
 .nav.nav-tabs ~ .actions li.group {
     display: flex;
@@ -775,6 +783,7 @@ a.text-default:focus > .dropified-icons:before {
     width: 100%;
 }
 
+.tabs-container :not(.tab-content) .actions li.border-left,
 .scrtabs-tab-container ~ .actions li.border-left,
 .nav.nav-tabs ~ .actions li.border-left,
 li.border-left {
@@ -782,6 +791,7 @@ li.border-left {
     padding-left: 15px;
 }
 
+.tabs-container :not(.tab-content) .actions li.border-right,
 .scrtabs-tab-container ~ .actions li.border-right,
 .nav.nav-tabs ~ .actions li.border-right,
 li.border-right {
@@ -789,25 +799,29 @@ li.border-right {
     padding-right: 15px;
 }
 
+.tabs-container :not(.tab-content) .actions li form,
 .scrtabs-tab-container ~ .actions li form,
 .nav.nav-tabs ~ .actions li form {
     display: flex;
     width: 100%;
 }
 
+.tabs-container :not(.tab-content) .actions li input.form-control,
 .scrtabs-tab-container ~ .actions li input.form-control,
 .nav.nav-tabs ~ .actions li input.form-control {
     flex: 1;
     float: left;
     font-size: 15px;
-    padding: 8px;
+    padding: 7px 8px;
     border: 1px solid #e6ebef;
     border-radius: 8px;
 }
 
+.tabs-container :not(.tab-content) .actions li > span:not(.select2),
+.tabs-container :not(.tab-content) .actions li a:not(.btn),
 .scrtabs-tab-container ~ .actions li > span:not(.select2),
-.nav.nav-tabs ~ .actions li > span,
 .scrtabs-tab-container ~ .actions li a:not(.btn),
+.nav.nav-tabs ~ .actions li > span,
 .nav.nav-tabs ~ .actions li a:not(.btn) {
     display: block;
     padding: 8px 16px;
@@ -817,33 +831,39 @@ li.border-right {
     padding: 0;
 }
 
+.tabs-container :not(.tab-content) .actions li .btn,
 .scrtabs-tab-container ~ .actions li .btn,
 .nav.nav-tabs ~ .actions li .btn {
     padding: 7px 12px;
     border-radius: 6px;
 }
 
+.tabs-container :not(.tab-content) .actions li .btn.btn-icon,
 .scrtabs-tab-container ~ .actions li .btn.btn-icon,
 .nav.nav-tabs ~ .actions li .btn.btn-icon {
-    padding: 6px 12px 9px;
+    padding: 6px 12px;
     margin-left: 12px;
 }
 
+.tabs-container :not(.tab-content) .actions li .btn.btn-icon i,
 .scrtabs-tab-container ~ .actions li .btn.btn-icon i,
 .nav.nav-tabs ~ .actions li .btn.btn-icon i {
     font-size: 12px;
 }
 
+.tabs-container :not(.tab-content) .actions li .platform-selection,
 .scrtabs-tab-container ~ .actions li .platform-selection,
 .nav.nav-tabs ~ .actions li .platform-selection {
     margin-bottom: 0;
 }
 
+.tabs-container :not(.tab-content) .actions li .platform-selection label,
 .scrtabs-tab-container ~ .actions li .platform-selection label,
 .nav.nav-tabs ~ .actions li .platform-selection label {
     display: none;
 }
 
+.tabs-container :not(.tab-content) .actions li .platform-selection .dropdown-toggle,
 .scrtabs-tab-container ~ .actions li .platform-selection .dropdown-toggle,
 .nav.nav-tabs ~ .actions li .platform-selection .dropdown-toggle {
     border: 1px solid #e6ebef;
@@ -875,7 +895,7 @@ li.border-right {
     padding-right: 0;
 }
 
-.nav.nav-tabs:after {
+.nav.nav-tabs:not(:empty):after {
     content: " ";
     width: 100%;
     border-bottom: 1px solid #e7eaec;
@@ -1484,6 +1504,8 @@ li.border-right {
 
 .ibox-title > a {
     font-size: 16px;
+    max-width: calc(100% - 25px);
+    display: inline-block;
 }
 
 #view-all-training{
@@ -2090,6 +2112,7 @@ a span.badge + span:not(.badge) {
     border-radius: 8px;
     margin-bottom: 10px;
     box-shadow: none;
+    width: 100%;
 }
 
 .hidden-form.active .form {
@@ -2709,6 +2732,9 @@ body.fixed-sidebar .icon-navbar, body.canvas-menu .icon-navbar {
 .input-group-addon:first-child {
     border-radius: 8px 0 0 8px;
 }
+.input-group-addon:last-child {
+    border-radius: 0 8px 8px 0;
+}
 
 select.input-group-addon {
     padding: 9px 0 !important;
@@ -3004,6 +3030,55 @@ textarea.note {
 
 .hidden {
     display: none!important;
+}
+
+.modal-content .modal-loading {
+    display: none;
+    position: absolute;
+    top: 40%;
+    left: 0;
+    right: 0;
+    z-index: 2000;
+}
+
+.modal-content.loading .modal-loading {
+    display: block;
+}
+
+.modal-content.loading .modal-body:after {
+    content: '';
+    background-color: rgba(255, 255, 255, 0.7);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2000;
+}
+
+.logistics-carrier {
+    padding: 10px 20px 5px;
+    border:  1px solid #e6ebef;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 10px 0;
+    width: 100%;
+    display: flex;
+    align-items: start;
+    align-items: center;
+    position: relative;
+}
+
+.logistics-carrier.active {
+    border-color: #6bAA55;
+}
+
+.logistics-carrier img {
+    max-width: 100px;
+    max-height: 50px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
 }
 
 #loopedinSelector {

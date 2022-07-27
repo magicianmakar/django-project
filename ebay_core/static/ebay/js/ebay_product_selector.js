@@ -27,7 +27,7 @@ function ebayProductSearch (e) {
             store: store
         },
         success: function (data) {
-            var product_template = Handlebars.compile($("#product-select-template").html());
+            var product_template = Handlebars.compile($("#ebay-product-select-template").html());
 
             if (data.products.length === 0) {
                 if (data.query) {

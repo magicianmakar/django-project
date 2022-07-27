@@ -668,7 +668,7 @@ class EbayStoreApi(ApiBase):
             reload = True
             product.set_default_supplier(product_supplier, commit=True)
 
-        return self.api_success({'reload': reload})
+        return self.api_success({'reload': reload, 'export': product_supplier.id})
 
     def post_supplier_default(self, request, user, data):
         product_guid = data.get('product')

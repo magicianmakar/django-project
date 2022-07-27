@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load url_tools static template_helper %}
+
+{% block main-container %}
+<div class="tabs-container">
+    <ul class="nav nav-tabs" style="padding:0;border:0 none;"></ul>
+    <ul class="actions" style="border-radius: 8px;border-top-width:1px;">
+        <li>{% include "logistics/partials/balance.html" %}</li>
+        <li></li>
+        <li class="pull-right border-left group">
+            <form method="get">
+                <input type="text" class="form-control m-l-sm" name="search" value="{{request.GET.search}}" placeholder="Search">
+                <button type="submit" class="btn btn-primary btn-icon">
+                    <i class="fa fa-search"></i>
+                </button>
+            </form>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div id="tab-1" class="tab-pane active">
+            <div class="panel-body">
+                <table class="table table-condensed xtable-hover">
+                  <thead>
+                    <tr>
+                      <th><a href="{% url_toggle 'sort' '-store_order_number,store_order_number' %}">Order {% sort_icon 'sort' 'store_order_number' %}</a></th>
+                      <th><a href="{% url_toggle 'sort' '-warehouse__name,warehouse__name' %}">From {% sort_icon 'sort' 'warehouse__name' %}</a></th>
+                      <th><a href="{% url_toggle 'sort' '-to_address,to_address' %}">To {% sort_icon 'sort' 'to_address' %}</a></th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.store_order_number }}</td>
+                        <td>{{ order.warehouse.get_full_name }}</td>
+                        <td>
+                            <div class="multi-line-text-overflow">
+                            {% with to_address=order.get_address %}
+                            <img class="shipping-country-code" shipping-country-code="{{to_address.country_code|lower}}"
+                                 style="width: 28px; margin-bottom: 4px;" title="{{to_address.country}}" src="//cdn.dropified.com/static/flags/{{to_address.country_code|lower}}.svg">
+                            {{ to_address.address1 }} - {{ to_address.province }} - {{ to_address.city }}
+                            {% endwith %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if order.source_label_url %}
+                            <a href="{{ order.label_url }}" download="{{ order.label_url }}" target="_blank"><i class="fa fa-download"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td class="text-center" colspan="8">
+                            No orders found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+              </table>
+
+              {% include "partial/paginator.html" %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

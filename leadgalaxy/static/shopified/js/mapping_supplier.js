@@ -176,7 +176,7 @@
                     displayAjaxError('Variants Mapping', data);
                 }
             });
-        } else if (supplier_url.indexOf('alibaba.com') !== -1){
+        } else if (supplier_url.indexOf('alibaba.com') !== -1) {
             $.ajax({
                 url: api_url('product-variants', 'alibaba'),
                 type: 'GET',

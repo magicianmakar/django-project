@@ -235,6 +235,12 @@ class GrooveKartProduct(ProductBase):
     def is_connected(self):
         return bool(self.source_id)
 
+    def get_images(self):
+        try:
+            return self.parsed['images']
+        except:
+            return []
+
     def have_supplier(self):
         try:
             return self.default_supplier is not None
@@ -676,6 +682,8 @@ class GrooveKartSupplier(SupplierBase):
                 return int(re.findall(r'print-on-demand.+?([0-9]+)', self.product_url)[0])
             elif self.is_pls:
                 return self.get_user_supplement_id()
+            elif self.is_logistics:
+                return int(re.findall(r'logistics/product/([0-9]+)', self.product_url)[0])
         except:
             return None
 

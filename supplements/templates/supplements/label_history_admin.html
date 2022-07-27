@@ -73,7 +73,7 @@
           </div>
           {% endfor %}
           {% endif %}
-          {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
+          {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' or request.user|can:'pls_supplier.use'%}
             <label id="private-note" class="onoffswitch">
               <input type="checkbox" name="is_private">
               &nbsp;Leave private note

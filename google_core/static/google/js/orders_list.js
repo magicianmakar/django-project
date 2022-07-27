@@ -458,39 +458,16 @@ function addOrderNote(orderId, note) {
 // Called when Order ID: Add is clicked
 $('.mark-as-ordered').click(addOrderSourceID);
 
-$('.note-panel').click(function (e) {
-    if ($(this).prop('editing-mode') === true) {
-        return;
-    } else {
-        $(this).prop('editing-mode', true);
-        $(this).prop('init-width', $(this).css('width'));
-        $(this).prop('init-height', $(this).css('height'));
-        $(this).prop('init-overflow', $(this).css('overflow'));
-    }
-
-    $(this).animate({
-        width: '500px',
-        height: '300px',
-    }, 300, function() {
-        $(this).css('overflow', 'initial');
-    });
-
-    $('.edit-note', this).toggle();
-    $('.note-preview', this).toggle();
+$('.note-panel .note-preview').click(function (e) {
+    var parent = $(this).parents('.note-panel');
+    $('.edit-note', parent).toggleClass('hidden');
+    $('.note-preview', parent).toggleClass('hidden');
 });
 
 $('.note-panel .note-edit-cancel').click(function (e) {
     var parent = $(this).parents('.note-panel');
-    parent.animate({
-        width: $(parent).prop('init-width'),
-        height: $(parent).prop('init-height'),
-    }, 300, function() {
-        $(parent).css('overflow', $(parent).prop('init-overflow'));
-        $(parent).prop('editing-mode', false);
-    });
-
-    $('.edit-note', parent).toggle();
-    $('.note-preview', parent).toggle();
+    $('.edit-note', parent).toggleClass('hidden');
+    $('.note-preview', parent).toggleClass('hidden');
 });
 
 $('.note-panel .note-edit-save').click(function (e) {

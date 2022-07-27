@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load static compress template_helper %}
+
+{% block main-container %}
+<div class="row">
+    <div class="col-md-10 col-md-offset-1">
+        <div class="tabs-container">
+            <div class="tab-content">
+                <div class="tab-pane active">
+                    <div class="panel-body">
+                        <form method="POST">
+                            <input type="hidden" name="id" value="{{ product.id }}">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Title</label>
+                                        <input type="text" name="title" class="form-control" value="{{ product.title|default:'' }}" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label><a href="https://hts.usitc.gov/" target="_blank">HS Code</a> (for international sales)</label>
+                                        <input type="text" name="hs_tariff" class="form-control" value="{{ product.hs_tariff|default:'' }}" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h3>
+                                Variants
+                                <a href="#" id="add-variant" class="btn btn-primary btn-small">Add</a>
+                                <input type="hidden" name="variants_map" value="{{ product.variants_map|default:'[]' }}">
+                            </h3>
+
+                            <div id="variant-groups" class="row"></div>
+
+                            <h3>Package</h3>
+                            <div class="row">
+                                <!-- TODO: Add active/inactive for products -->
+                                <div class="col-md-4"></div>
+                                <div class="col-md-1"><label>Weight</label></div>
+                                <div class="col-md-1"><label>Length</label></div>
+                                <div class="col-md-1"><label>Width</label></div>
+                                <div class="col-md-1"><label>Height</label></div>
+                            </div>
+                            <div id="variants"></div>
+
+                            {% if product.variants.count %}
+                            <h3>Inventory</h3>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="pull-left" style="width:100%;">&nbsp;</label>
+                                    {% for variant in product.variants.all %}
+                                    <label class="pull-left single-line-text-overflow" title="{{ variant.title }}" data-variant-id="{{ variant.id }}" style="margin-bottom:10px;">{{ variant.title }}</label>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-9" style="padding-left:0;">
+                                    {% for warehouse in warehouses %}
+                                    <div class="listing" style="max-width: 250px; float: left; margin-left: 30px;">
+                                        <label>{{ warehouse.get_full_name }}</label>
+                                        {% for variant in product.variants.all %}
+                                        {% with listing_key=warehouse.id|addstr:"_"|addstr:variant.id %}
+                                        <input type="hidden" name="listings" value="{{ listing_key }}">
+                                        <div class="row" style="margin-bottom:10px;">
+                                            <div class="col-md-6">
+                                                <input type="number" step="1" class="form-control" name="inventory_{{ listing_key }}" value="{{ inventories|key_value:listing_key }}" placeholder="Stock">
+                                            </div>
+                                            <div class="col-md-6" style="padding-left: 0;">
+                                                <div class="input-group">
+                                                    <div class="input-group-addon">$</div>
+                                                    <input type="number" step=".1" min="0" class="form-control" name="price_{{ listing_key }}" value="{{ prices|key_value:listing_key }}" placeholder="Cost" autocomplete="off">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endwith %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extracss %}
+<style type="text/css">
+    .joined-inputs {
+        max-width: 70%;
+        border-radius: 8px 0 0 8px;
+        float: left;
+    }
+    .joined-inputs ~ .joined-inputs {
+        max-width: 30%;
+        border-radius: 0 8px 8px 0;
+        border-left: 0 none;
+    }
+    label.single-line-text-overflow {
+        width: 100%;
+        height: 40px;
+        line-height: 40px;
+        margin-bottom: 0;
+    }
+    .variant-group .close {
+        float: left;
+        padding: 10px 0 10px 10px;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block extrajs %}
+{% verbatim %}
+<script id="variant" type="text/x-handlebars-template">
+    <div class="row variant" style="margin-bottom: 10px;">
+        <input type="hidden" name="variant_ids" value="{{ variant.id }}">
+        <div class="col-md-4">
+            <!-- <button type="button" class="close pull-left" aria-label="Close" style="padding:10px 10px 10px 0;"><span aria-hidden="true">&times;</span></button> -->
+            <input type="hidden" class="form-control" name="variant_title_{{ variant.id }}" value="{{ variant.title }}">
+            <input type="hidden" class="form-control" name="variant_sku_{{ variant.id }}" value="{{ variant.sku }}">
+            <label class="single-line-text-overflow variant-label">{{ variant.title }} - {{ variant.sku }}</label>
+        </div>
+        <div class="col-md-1">
+            <input type="number" step=".01" min="0" class="form-control" name="variant_weight_{{ variant.id }}" value="{{ variant.weight }}">
+        </div>
+        <div class="col-md-1">
+            <input type="number" step=".01" min="0" class="form-control" name="variant_length_{{ variant.id }}" value="{{ variant.length }}">
+        </div>
+        <div class="col-md-1">
+            <input type="number" step=".01" min="0" class="form-control" name="variant_width_{{ variant.id }}" value="{{ variant.width }}">
+        </div>
+        <div class="col-md-1">
+            <input type="number" step=".01" min="0" class="form-control" name="variant_height_{{ variant.id }}" value="{{ variant.height }}">
+        </div>
+    </div>
+</script>
+
+<script id="variant-group" type="text/x-handlebars-template">
+    <div class="col-md-12 form-group variant-group">
+        <button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <input type="text" name="group_title" class="form-control joined-inputs" placeholder="Title" value="{{title}}" style="width: calc(70% - 115px)">
+        <input type="text" name="group_sku" class="form-control joined-inputs" value="{{sku}}" placeholder="SKU" style="width: calc(30% - 20px)">
+        <a href="#" class="btn btn-primary pull-right variant-group-add-values" style="padding:10px 12px;">Add values</a>
+        <div class="row variant-group-values">
+            {{#each values}}
+            <div class="col-md-4 m-t-xs variant-group-value">
+                <input type="text" name="value_title" placeholder="Value" value="{{this.title}}" class="form-control joined-inputs">
+                <input type="text" name="value_sku" placeholder="SKU" value="{{this.sku}}" class="form-control joined-inputs">
+            </div>
+            {{/each}}
+        </div>
+    </div>
+</script>
+
+<script id="variant-group-value" type="text/x-handlebars-template">
+    <div class="col-md-4 m-t-xs variant-group-value">
+        <input type="text" name="value_title" placeholder="Value" value="{{title}}" class="form-control joined-inputs">
+        <input type="text" name="value_sku" placeholder="SKU" value="{{sku}}" class="form-control joined-inputs">
+    </div>
+</script>
+{% endverbatim %}
+
+<script type="text/javascript">
+    var variants = {% json_dumps variants_data %};
+    var listings = {% json_dumps listings_data %};
+</script>
+
+{% compress js %}
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'logistics/js/product.js' %}"></script>
+{% endcompress %}
+{% endblock %}

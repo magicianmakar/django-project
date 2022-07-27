@@ -410,7 +410,7 @@ $('#product-update-btn').click(function (e) {
     var apiData = prepareApiData(product, variants, variantsConfig);
 
     var pusher = new Pusher(config.sub_conf.key);
-    var channel = pusher.subscribe(config.sub_conf.channel);
+    var channel = pusher.subscribe(config.sub_conf.channelUser);
 
     channel.bind('fb-product-update', function(eventData) {
         if (eventData.product === product.guid) {

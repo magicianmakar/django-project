@@ -10,6 +10,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 
+import decimal
 import dj_database_url
 import os
 import sys
@@ -116,6 +117,7 @@ INSTALLED_APPS = (
     'facebook_core',
     'google_core',
     'suredone_core',
+    'logistics',
     'loopedin_core',
     'fb_marketplace_core',
 )
@@ -222,6 +224,7 @@ DROPIFIED_API = {
     'acp': 'acp_core.api.ACPApi',
     'alibaba': 'alibaba_core.api.AlibabaApi',
     'aliexpress': 'aliexpress_core.api.AliexpressApi',
+    'logistics': 'logistics.api.LogisticsApi',
 }
 
 # Database
@@ -734,8 +737,12 @@ SUREDONE_DEFAULT_VARIANTS_FIELDS_CONFIG = [
     'material', 'ucfshipsfrom', 'ucfbundle', 'ucfgemcolor', 'ucfringsize', 'ucfmainstonecolor', 'ucfmetalcolor',
     'ucfussize', 'ucftrainlength', 'ucfheight', 'ucfbeltlength', 'ucfplugtype', 'model', 'ucfquantity']
 
-# LoopedIn
+EASYPOST_API_KEY = os.environ.get('EASYPOST_API_KEY', 'EZAK8dcdb29a71544497888d97297b9c38ccoxy7wSeEV9iZR54D0CTwVg')
+EASYPOST_DEBUG_API_KEY = os.environ.get('EASYPOST_DEBUG_API_KEY', 'EZTK8dcdb29a71544497888d97297b9c38cctCiWIIW59bI4QUaJywp8XA')
+DROPIFIED_CARRIERS = os.environ.get('DROPIFIED_CARRIERS', 'USPS').split(',')
+DROPIFIED_RATE_PERCENT = decimal.Decimal(os.environ.get('DROPIFIED_RATE_PERCENT', 5) / 100) + 1
 
+# LoopedIn
 LOOPEDIN_SSO_KEY = os.environ.get("LOOPEDIN_SSO_KEY")
 LOOPEDIN_WORKSPACE_ID = os.environ.get("LOOPEDIN_WORKSPACE_ID")
 

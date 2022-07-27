@@ -1511,6 +1511,20 @@ $.merge(
     }
 });
 
+$('[data-click-cookies]').click(function (e) {
+    e.preventDefault();
+    var elem = $($(this).data('click-elem'));
+    console.log('clicked', elem);
+    if (!elem.length) {
+        return false;
+    }
+    var cookieName = $(this).data('click-cookies');
+    var open = Cookies.get(cookieName) == 'true';
+    Cookies.set(cookieName, !open);
+
+    elem.toggleClass('active', !open);
+});
+
 function copyLink(e) {
     var plan_url = e.dataset.plan;
     var target_url = window.location.origin + plan_url;

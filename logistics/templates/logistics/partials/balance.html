@@ -1,0 +1,76 @@
+{% load template_helper %}
+
+{% if not hidden_btn %}
+<button type="button" id="3pl-balance" class="btn btn-outline {% if user.logistics_balance.balance %}btn-primary{% else %}btn-danger{% endif %}" data-toggle="modal" data-target="#add-logistics-balance">
+    {% money_format user.logistics_balance.balance|default:"0" %}
+</button>
+{% endif %}
+
+<div id="add-logistics-balance" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-loading sk-spinner sk-spinner-double-bounce">
+                <div class="sk-double-bounce1"></div>
+                <div class="sk-double-bounce2"></div>
+            </div>
+            <form role="form" method="post" id="logistics-balance-form">
+                <div class="m-t-none modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Add 3PL Balance</h4>
+                </div>
+                <div class="modal-body">
+                    <label style="display: block; margin-bottom: 5px;">
+                        <input type="radio" name="credits" value="30" class="icheck" required>
+                        <span class="label-text">$ 30</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 5px;">
+                        <input type="radio" name="credits" value="60" class="icheck" required>
+                        <span class="label-text">$ 60</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 5px;">
+                        <input type="radio" name="credits" value="90" class="icheck" required>
+                        <span class="label-text">$ 90</span>
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Purchase</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        $('#logistics-balance-form').on('submit', function(e) {
+            e.preventDefault();
+            $('#add-logistics-balance .modal-content').addClass('loading');
+            $.ajax({
+                url: api_url('purchase-credits', 'logistics'),
+                type: 'POST',
+                data: {
+                    credits: $(this).find('[name="credits"]:checked').val()
+                },
+            }).done(function(data) {
+                toastr.success('Credits purchased', '3PL Balance');
+                $('#3pl-balance').text(data.balance).addClass('btn-success').removeClass('btn-danger').trigger('blur');
+            }).fail(function(data) {
+                displayAjaxError('3PL Balance', data);
+            }).always(function() {
+                $('#add-logistics-balance .modal-content').removeClass('loading');
+                $('#add-logistics-balance').modal('hide');
+            });
+        });
+
+        if (window.location.hash === '#showBalance') {
+            $('#add-logistics-balance').modal('show');
+        }
+    });
+</script>
+
+<style type="text/css">
+    #add-logistics-balance .loading .modal-footer {
+        display: none;
+    }
+</style>

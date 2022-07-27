@@ -18,6 +18,7 @@ from .forms import (
     SubuserWooPermissionsForm,
     SubuserGKartPermissionsForm,
     SubuserBigCommercePermissionsForm,
+    SubuserEbayPermissionsForm,
     SubuserFBPermissionsForm,
     SubuserGooglePermissionsForm,
 )
@@ -365,6 +366,50 @@ def subuser_bigcommerce_store_permissions(request, user_id, store_id):
     }
 
     return render(request, 'subusers/bigcommerce_store_permissions.html', context)
+
+
+@transaction.atomic
+@login_required
+def subuser_ebay_store_permissions(request, user_id, store_id):
+    store = request.user.ebaystore_set.filter(pk=store_id).first()
+    if not store:
+        raise Http404
+
+    subuser = get_object_or_404(User,
+                                pk=user_id,
+                                profile__subuser_parent=request.user,
+                                profile__subuser_ebay_stores__pk=store_id)
+
+    subuser_ebay_permissions = subuser.profile.subuser_ebay_permissions.filter(store=store)
+    initial = {'permissions': subuser_ebay_permissions, 'store': store}
+
+    if request.method == 'POST':
+        form = SubuserEbayPermissionsForm(request.POST, initial=initial)
+        if form.is_valid():
+            new_permissions = form.cleaned_data['permissions']
+            subuser.profile.subuser_ebay_permissions.remove(*subuser_ebay_permissions)
+            subuser.profile.subuser_ebay_permissions.add(*new_permissions)
+            messages.success(request, 'Subuser permissions successfully updated')
+            return redirect(f'{get_namespace(request)}subuser_ebay_store_permissions', user_id, store_id)
+    else:
+        form = SubuserEbayPermissionsForm(initial=initial)
+
+    breadcrumbs = [
+        'Account',
+        {'title': 'Sub Users', 'url': reverse('{}subusers'.format(get_namespace(request)))},
+        subuser.username,
+        {'title': 'Permissions', 'url': reverse('{}subuser_perms_edit'.format(get_namespace(request)), args=(user_id,))},
+        store.title,
+    ]
+
+    context = {
+        'subuser': subuser,
+        'form': form,
+        'breadcrumbs': breadcrumbs,
+        'page': 'subusers',
+    }
+
+    return render(request, 'subusers/ebay_store_permissions.html', context)
 
 
 @transaction.atomic

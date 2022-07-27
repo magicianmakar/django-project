@@ -49,6 +49,7 @@ djangorestframework==3.13.1
 docutils==0.14
 elasticsearch-dsl==6.4.0
 elasticsearch==6.4.0
+easypost==6.0.0
 enum34==1.1.6
 facebook-business==3.2.10
 factory-boy==3.2.1

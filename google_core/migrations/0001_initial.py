@@ -74,7 +74,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('store_name', models.CharField(blank=True, default='', max_length=100, null=True, verbose_name='Google store name')),
-                ('creds', django.contrib.postgres.fields.jsonb.JSONField(default=dict, verbose_name='Google creds')),
+                ('creds', models.JSONField(default=dict, verbose_name='Google creds')),
                 ('sd_account', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='google_core_stores', to='suredone_core.SureDoneAccount', verbose_name='Parent SureDone Account')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],

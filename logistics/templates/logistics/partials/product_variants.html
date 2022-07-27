@@ -1,0 +1,14 @@
+<tr class="row-slide closed">
+    <td><div></div></td>
+    <td><div></div></td>
+    <td><div>{{ variant.title }}</div></td>
+    <td><div>
+        <label class="label label-success">weight: {{variant.weight}}</label>
+        {% if variant.height or variant.width or variant.length %}
+        <label class="label label-success">HxWxL: {{variant.height}}x{{variant.width}}x{{variant.length}}</label>
+        {% endif %}
+    </div></td>
+    <td><div>{{variant.inventory}}</div></td>
+    <td><div>{{variant.price}}</div></td>
+    <td><div></div></td>
+</tr>

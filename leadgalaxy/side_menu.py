@@ -23,6 +23,12 @@ def get_menu_structure(namespace, request):
             'place-orders',
             'tracking',
         ]),
+        ('logistics', [
+            'logistics-products',
+            'logistics-warehouses',
+            'logistics-carriers',
+            'logistics-orders',
+        ]),
         ('business', [
             'profit-dashboard',
             'marketing-feeds',
@@ -109,6 +115,7 @@ def get_menu_item_data(request):
     except:
         pass
 
+    store_type_prefixes = r'(/chq|/gear|/gkart|/woo|/ebay|/fb|/google|/bigcommerce/fb_marketplace)?'
     return {
         'orders': {
             'title': 'Orders',
@@ -119,14 +126,14 @@ def get_menu_item_data(request):
             'title': 'Place Orders',
             'url_name': 'orders_list',
             'permissions': ['orders.view'],
-            'match': r'(/\w+)?/orders$',
+            'match': fr'{store_type_prefixes}/orders$',
             'icon': 'img/place-order.svg',
         },
         'tracking': {
             'title': 'Tracking',
             'url_name': 'orders_track',
             'permissions': ['orders.view'],
-            'match': r'(/\w+)?/orders/track',
+            'match': fr'{store_type_prefixes}/orders/track',
             'icon': 'img/tracking.svg',
         },
         'products': {
@@ -136,7 +143,7 @@ def get_menu_item_data(request):
         'all-products': {
             'title': 'Saved Products',
             'url_name': 'products_list',
-            'match': r'(/chq|/gear|/gkart|/woo|/ebay|/fb|/google|/bigcommerce)?/products?($|\?\w+)',
+            'match': fr'{store_type_prefixes}/products?($|\?\w+)',
             'icon': 'img/saved-product.svg',
         },
         'import-products': {
@@ -167,14 +174,14 @@ def get_menu_item_data(request):
             'title': 'Boards',
             'url_name': 'boards_list',
             'permissions': ['view_product_boards.use', 'view_product_boards.sub'],
-            'match': r'(/\w+)?/boards/list',
+            'match': fr'{store_type_prefixes}/boards/list',
             'icon': 'img/board.svg',
         },
         'alerts': {
             'title': 'Alerts',
             'url_name': 'product_alerts',
             'permissions': ['price_changes.use', 'price_change_options.use'],
-            'match': r'(/\w+)?/products/update',
+            'match': fr'{store_type_prefixes}/products/update',
             'platforms': ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce'],
             'icon': 'img/alert.svg',
         },
@@ -185,8 +192,8 @@ def get_menu_item_data(request):
         'profit-dashboard': {
             'title': 'Profit Dashboard',
             'url_name': 'profit_dashboard.views.index',
-            'match': r'(/\w+)?/profit-dashboard',
-            'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq'],
+            'match': f'{store_type_prefixes}/profit-dashboard',
+            'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq', 'ebay', 'fb', 'google'],
             'icon': 'img/profit-dashboard.svg',
             'hidden': hide_profit_dashboard,
         },
@@ -202,7 +209,7 @@ def get_menu_item_data(request):
             'title': 'Marketing Feeds',
             'url_name': 'product_feeds',
             'permissions': ['product_feeds.use', 'google_product_feed.use'],
-            'match': r'(/\w+)?/marketing/feeds',
+            'match': fr'{store_type_prefixes}/marketing/feeds',
             'icon': 'img/marketing.svg',
         },
         'tubehunt': {
@@ -218,14 +225,14 @@ def get_menu_item_data(request):
             'url_name': 'products_collections',
             'permissions': ['us_products.use'],
             'url_kwargs': {'collection': 'us'},
-            'match': r'(/\w+)?/products/collections/\w+',
+            'match': fr'{store_type_prefixes}/products/collections/\w+',
             'icon': 'img/us-product.svg',
         },
         'subusers': {
             'title': 'Sub Users',
             'url_name': 'subusers',
             'permissions': ['sub_users.use'],
-            'match': r'(/\w+)?/subusers',
+            'match': fr'{store_type_prefixes}/subusers',
             'icon': 'img/sub-user.svg',
         },
         'tools': {
@@ -233,7 +240,7 @@ def get_menu_item_data(request):
             'url_name': 'article-content-page',
             'url_kwargs': {"slug_article": "tools-business-tools"},
             'permissions': ['businesstools_page.use'],
-            'match': r'(/\w+)?/pages/content/tools-business-tools',
+            'match': fr'{store_type_prefixes}/pages/content/tools-business-tools',
         },
         'academy': {
             'title': '<span id="academy-span">Dropshipping 101</span>',
@@ -246,7 +253,7 @@ def get_menu_item_data(request):
         'account': {
             'title': 'Manage Account',
             'url_name': 'user_profile',
-            'match': r'(/\w+)?/user/profile',
+            'match': fr'{store_type_prefixes}/user/profile',
             'fa_icon': 'fa-user',
         },
         'help': {
@@ -269,7 +276,7 @@ def get_menu_item_data(request):
         'get-started': {
             'title': 'Manage Stores',
             'url_name': 'manage_stores' if is_research else 'index',
-            'match': r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/$',
+            'match': r'(/chq|/gear|/gkart|/woo|/bigcommerce|/ebay|/fb|/google)?/$',
             'is_ns_aware': not is_research,
             'icon': 'img/manage-store.svg',
         },
@@ -277,7 +284,7 @@ def get_menu_item_data(request):
             'title': 'Dashboard',
             'url_name': 'dashboard',
             'match': r'(/\w+)?/dashboard',
-            'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq'],
+            'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq', 'ebay', 'fb', 'google'],
             'icon': 'img/profit-dashboard.svg',
             'hidden': hide_dashboard,
             'is_ns_aware': False,
@@ -309,6 +316,43 @@ def get_menu_item_data(request):
             hidden=lambda a: not user or (not user.is_staff and user.profile.plan not in a.display_plans.all()
                                           and not a.display_bundles.filter(id__in=bunles_ids).exists()),
         ),
+        'logistics': {
+            'title': 'Logistics',
+            'permissions': ['logistics.view'],
+            'is_ns_aware': False,
+        },
+        'logistics-products': {
+            'title': 'Products',
+            'url_name': 'logistics:products',
+            'permissions': ['logistics.view'],
+            'is_ns_aware': False,
+            'match': r'/logistics/products',
+            'icon': 'img/saved-product.svg',
+        },
+        'logistics-warehouses': {
+            'title': 'Warehouses',
+            'url_name': 'logistics:warehouses',
+            'permissions': ['logistics.view'],
+            'is_ns_aware': False,
+            'match': r'/logistics/warehouses',
+            'icon': 'img/tracking.svg',
+        },
+        'logistics-carriers': {
+            'title': 'Carriers',
+            'url_name': 'logistics:carriers',
+            'permissions': ['logistics.view'],
+            'is_ns_aware': False,
+            'match': r'/logistics/carriers',
+            'icon': 'img/board.svg',
+        },
+        'logistics-orders': {
+            'title': 'Shipments',
+            'url_name': 'logistics:orders',
+            'permissions': ['logistics.view'],
+            'is_ns_aware': False,
+            'match': r'/logistics/orders',
+            'icon': 'img/tracking.svg',
+        },
         'swipebox-headline-generator': {
             'title': 'Retro Elite Bonuses',
             'url': 'https://app.dropified.com/pages/retro-elite-bonuses',
@@ -446,6 +490,7 @@ def get_namespace(request):
     item = get_active_item(request)
     url_obj = resolve(request.path)
 
+    # request.session["nav_ns"] = ""
     namespace = url_obj.namespace
     url_name = url_obj.url_name
 

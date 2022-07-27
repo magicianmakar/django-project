@@ -1,5 +1,6 @@
 import arrow
 import base64
+import binascii
 import ctypes
 import hashlib
 import hmac
@@ -528,6 +529,26 @@ def version_compare(left, right):
         return [int(x) for x in re.sub(r'(\.0+)*$', '', v).split(".")]
 
     return compare(normalize(left), normalize(right))
+
+
+def cached_return(function, timeout=3600, force=False, **unique):
+    def decorator(*args, **kwargs):
+        if not settings.DEBUG and not force:
+            return function(*args, **kwargs)
+
+        token = ','.join(str(a) for a in args)
+        token += ','.join(f"{k}:{v}" for k, v in kwargs.items())
+        token += ','.join(f"{k}:{v}" for k, v in unique.items())
+        token = binascii.crc32(token.encode('ascii'))
+        cache_key = f"{function.__module__}_{function.__name__}_{token}"
+        result = cache.get(cache_key)
+        if result:
+            return result
+
+        result = function(*args, **kwargs)
+        cache.set(cache_key, result, timeout=timeout)
+        return result
+    return decorator
 
 
 def order_data_cache_key(*args, prefix='order'):
@@ -1325,6 +1346,8 @@ def get_cached_order(user, store_type, order_data_id):
         key = order_data_cache_key(order_data_id, prefix='order')
 
     order = order_data_cache(key)
+    if not order:
+        return key, None
 
     phone = order['order']['phone']
 
@@ -1332,11 +1355,12 @@ def get_cached_order(user, store_type, order_data_id):
     if type(phone) is dict:
         phone = phone['number']
 
-    phone_country_code, phone_number = order_phone_number(user.models_user, phone, order['shipping_address']['country_code'])
-    order['order']['phone'] = {
-        'country': order['shipping_address']['country_code'],
-        'number': phone_number,
-        'code': phone_country_code,
-    }
+    if order.get('shipping_address'):
+        phone_country_code, phone_number = order_phone_number(user.models_user, phone, order['shipping_address']['country_code'])
+        order['order']['phone'] = {
+            'country': order['shipping_address']['country_code'],
+            'number': phone_number,
+            'code': phone_country_code,
+        }
 
     return key, order

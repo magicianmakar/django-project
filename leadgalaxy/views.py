@@ -818,7 +818,7 @@ def bulk_edit(request, what):
             store = get_object_or_404(ShopifyStore, id=request.GET.get('store'))
             stores[str(store.id)] = store
             product_ids[str(store.id)] = products
-        else:  # bulk edit products from multiple stores
+        else:  # bulk edit products from multiple store
             products = ShopifyProduct.objects.select_related('store').filter(pk__in=products.split(','))
             for product in products:
                 store = product.store
@@ -1996,7 +1996,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
             epacket_shipping=bool(self.models_user.get_config('epacket_shipping')),
             aliexpress_shipping_method=self.models_user.get_config('aliexpress_shipping_method'),
             auto_ordered_mark=bool(self.models_user.get_config('auto_ordered_mark', True)),
-            order_custom_line_attr=bool(self.models_user.get_config('order_custom_line_attr')),
+            order_custom_line_attr=bool(self.models_user.get_config('order_custo_mline_attr')),
             use_relative_dates=bool(self.models_user.get_config('use_relative_dates', True)),
             fix_order_variants=self.models_user.get_config('fix_order_variants'),
             aliexpress_fix_address=self.models_user.get_config('aliexpress_fix_address', True),
@@ -2619,6 +2619,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
         self.load_models_cache()
 
         orders_cache = {}
+        raw_orders_cache = {}
         open_print_on_demand = False
         for index, order in enumerate(self.current_page):
             created_at = arrow.get(order['created_at'])
@@ -2692,6 +2693,45 @@ class OrdersView(AuthenticationMixin, TemplateView):
                 country_code = order.get('shipping_address', {}).get('country_code')
                 if not country_code:
                     country_code = order.get('customer', {}).get('default_address', {}).get('country_code')
+
+                if self.models_user.can('logistics.use'):
+                    logistics_address = utils.shopify_customer_address(
+                        order,
+                        german_umlauts=self.config.german_umlauts,
+                        shipstation_fix=True
+                    )[1]
+                else:
+                    logistics_address = None
+
+                if not order['pending_payment'] and (not product or not product.have_supplier()):
+                    try:
+                        raw_order_id = f"raw_{self.store.id}_{order['id']}_{line_item['id']}"
+                        line_item['raw_order_data_id'] = raw_order_id
+                        raw_orders_cache[f"order_{raw_order_id}"] = {
+                            'id': '{}_{}_{}'.format(self.store.id, order['id'], line_item['id']),
+                            'order_name': order['name'],
+                            'title': line_item['title'],
+                            'quantity': line_item['quantity'],
+                            'weight': line_item.get('weight'),
+                            'logistics_address': logistics_address,
+                            'shipping_method': line_item.get('shipping_method'),
+                            'order_id': order['id'],
+                            'line_id': line_item['id'],
+                            'product_id': line_item['product_id'],
+                            'variants': (line_item['variant_title'] or '').split(' / '),
+                            'total': safe_float(line_item['price'], 0.0),
+                            'store': self.store.id,
+                            'is_refunded': line_item['refunded'],
+                            'is_raw': True,
+                            'order': {
+                                'phone': {
+                                    'number': logistics_address.get('phone'),
+                                    'country': logistics_address['country_code']
+                                },
+                            }
+                        }
+                    except:
+                        capture_exception()
 
                 supplier = None
                 bundle_data = []
@@ -2843,6 +2883,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
                             'weight': line_item.get('weight'),
                             'shipping_address': customer_address,
                             'shipping_method': line_item.get('shipping_method'),
+                            'logistics_address': logistics_address,
                             'order_id': order['id'],
                             'line_id': line_item['id'],
                             'product_id': product.id if product else None,
@@ -2918,6 +2959,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
         for i in self.orders_ids:
             active_orders['active_order_{}'.format(i)] = True
 
+        caches['orders'].set_many(raw_orders_cache, timeout=86400 if self.bulk_queue else 21600)
         caches['orders'].set_many(orders_cache, timeout=86400 if self.bulk_queue else 21600)
         caches['orders'].set_many(active_orders, timeout=86400 if self.bulk_queue else 3600)
 

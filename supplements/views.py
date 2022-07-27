@@ -514,7 +514,8 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             authenticity_cert=supplement.authenticity_certificate_url,
             mockup_layers=supplement.mockup_type.get_layers(),
             total_allowed_label=total_allowed_label,
-            label_limit_left=label_limit_left
+            label_limit_left=label_limit_left,
+            supplier=supplement.supplier
         )
 
         if 'label_url' in form_data:
@@ -665,7 +666,9 @@ class UserSupplementView(Supplement):
         all_comments = []
         for label in user_supplement.labels.all().order_by('-created_at'):
             comments = label.comments
-            if self.request.user.can('pls_admin.use') or self.request.user.can('pls_staff.use'):
+            if self.request.user.can('pls_admin.use') or \
+               self.request.user.can('pls_staff.use') or \
+               self.request.user.can('pls_supplier.use'):
                 comments = comments.all().order_by('-created_at')
             else:
                 comments = comments.all().exclude(is_private=True).order_by('-created_at')
@@ -740,6 +743,7 @@ class UserSupplementView(Supplement):
             mockup_layers=supplement.pl_supplement.mockup_type.get_layers(),
             comment_form=CommentForm(initial=comment_form_data),
             user_buttons=True,
+            supplier=supplement.pl_supplement.supplier
         )
 
         if 'label_url' in form_data:

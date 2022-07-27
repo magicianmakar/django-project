@@ -119,6 +119,10 @@
 
                                 {% include 'partial/profile_address.html' with title='Company' slug='company' company=user.profile.company countries=countries profile=user.profile only %}
 
+                                {% if user|can:'pls_supplier.use' %}
+                                    {% include 'partial/supplier_profile.html' with title='Supplier' slug='supplier' supplier=user.profile.supplier only %}
+                                {% endif %}
+
                                 {% if user|can:'supplement_samples.use' %}
                                     {% include 'partial/profile_address.html' with title='Samples Shipping Address' slug='user_address' company=user.profile.address countries=countries  profile=user.profile only %}
 

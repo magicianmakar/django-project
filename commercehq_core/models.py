@@ -239,6 +239,12 @@ class CommerceHQProduct(ProductBase):
         except:
             return None
 
+    def get_images(self):
+        try:
+            return self.parsed['images']
+        except:
+            return []
+
     def update_data(self, data):
         if type(data) is not dict:
             data = json.loads(data)
@@ -679,6 +685,8 @@ class CommerceHQSupplier(SupplierBase):
                 return int(re.findall(r'print-on-demand.+?([0-9]+)', self.product_url)[0])
             elif self.is_pls:
                 return self.get_user_supplement_id()
+            elif self.is_logistics:
+                return int(re.findall(r'logistics/product/([0-9]+)', self.product_url)[0])
         except:
             return None
 

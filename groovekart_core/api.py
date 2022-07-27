@@ -410,7 +410,7 @@ class GrooveKartApi(ApiBase):
         original_link = remove_link_query(data.get('original-link'))
         supplier_url = remove_link_query(data.get('supplier-link'))
 
-        if get_domain(original_link) == 'dropified':
+        if get_domain(original_link) == 'dropified' and 'supplement' in original_link:
             try:
                 user_supplement_id = int(urlparse(original_link).path.split('/')[-1])
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id, user=user.models_user)
@@ -454,7 +454,7 @@ class GrooveKartApi(ApiBase):
 
         product.save()
 
-        return self.api_success({'reload': not data.get('export')})
+        return self.api_success({'reload': not data.get('export'), 'export': product_supplier.id})
 
     def post_supplier_default(self, request, user, data):
         product = GrooveKartProduct.objects.get(id=data.get('product'))
@@ -606,7 +606,7 @@ class GrooveKartApi(ApiBase):
 
             supplier_url = remove_link_query(supplier_url)
 
-        elif get_domain(supplier_url) == 'dropified':
+        elif get_domain(supplier_url) == 'dropified' and 'supplement' in supplier_url:
             try:
                 user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id)
@@ -651,7 +651,7 @@ class GrooveKartApi(ApiBase):
             product.set_default_supplier(supplier, commit=True)
             product.save()
 
-        return self.api_success({'product': product.id})
+        return self.api_success({'product': product.id, 'export': supplier.id})
 
     def post_order_fulfill(self, request, user, data):
         try:

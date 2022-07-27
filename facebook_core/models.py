@@ -56,8 +56,15 @@ class FBStore(SureDoneStoreBase):
             self.is_active = bool(system_token) and bool(access_token)
 
         # Get facebook account title
-        self.title = instance_title
+        if not self.title:
+            self.title = instance_title
 
+        self.save()
+
+    def sync_title(self, options_data: dict):
+        fb_sets_data = safe_json(options_data.get(f'plugin_settings_{self.instance_prefix}')).get('sets', {})
+
+        self.title = self.store_name = fb_sets_data.get('page_shop_name', {}).get('value')
         self.save()
 
     @property

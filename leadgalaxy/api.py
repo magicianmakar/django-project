@@ -76,6 +76,7 @@ from .models import (
     UserUpload
 )
 from .templatetags.template_helper import money_format, shopify_image_thumb
+from product_common.lib.views import upload_image_to_aws
 
 
 class ShopifyStoreApi(ApiBase):
@@ -936,7 +937,7 @@ class ShopifyStoreApi(ApiBase):
 
         original_link = remove_link_query(data.get('original-link'))
 
-        if get_domain(original_link) == 'dropified':
+        if get_domain(original_link) == 'dropified' and 'supplement' in original_link:
             try:
                 user_supplement_id = int(urlparse(original_link).path.split('/')[-1])
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id)
@@ -995,7 +996,8 @@ class ShopifyStoreApi(ApiBase):
             capture_exception()
 
         return self.api_success({
-            'reload': not data.get('export')
+            'reload': not data.get('export'),
+            'export': product_supplier.id
         })
 
     def delete_product_metadata(self, request, user, data):
@@ -2307,6 +2309,15 @@ class ShopifyStoreApi(ApiBase):
                     profile.address.phone = form.cleaned_data['user_address_phone']
                     profile.address.save()
 
+            if user.can('pls_supplier.use'):
+                supplier_logo = request.FILES.get('supplier_logo', None)
+                supplier_logo_url = upload_image_to_aws(supplier_logo, 'supplier_logo', user.id)
+                supplier = user.profile.supplier
+                supplier.title = form.cleaned_data['supplier_name']
+                supplier.description = form.cleaned_data['supplier_description']
+                supplier.logo_url = supplier_logo_url
+                supplier.save()
+
             profile.save()
 
             invoice_to_company = form.cleaned_data.get('invoice_to_company')
@@ -2459,13 +2470,8 @@ class ShopifyStoreApi(ApiBase):
                             'supplier_url': data.get('supplier')
                         })
 
-        elif get_domain(supplier_url) == 'dropified' and 'supplement' in supplier_url:
-            try:
-                user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
-                user_supplement = UserSupplement.objects.get(id=user_supplement_id, user=user.models_user)
-            except:
-                capture_exception(level='warning')
-                return self.api_error('Product supplier is not correct', status=422)
+        elif get_domain(supplier_url) == 'dropified':
+            pass
 
         elif get_domain(supplier_url) == 'alitems':
             supplier_url = parse_qs(urlparse(supplier_url).query)['ulp'].pop()
@@ -2519,7 +2525,7 @@ class ShopifyStoreApi(ApiBase):
 
         tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id, shopify_product=shopify_data)
 
-        return self.api_success({'product': product.id})
+        return self.api_success({'product': product.id, 'export': supplier.id})
 
     def get_description_templates(self, request, user, data):
         if not request.user.can('custom_description.use'):

@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% load url_tools static compress %}
+
+{% block main-container %}
+<div class="tabs-container">
+    <!-- <ul class="nav nav-tabs scrolling-tabs">
+        {% with url_name=request.resolver_match.namespaces.0|add:":"|add:request.resolver_match.url_name %}
+        {% if url_name == 'logistics:products' %}
+        <li class="active"><a data-toggle="tab" href="#tab-1">All Products</a></li>
+        {% else %}
+        <li><a href="{% url 'logistics:products' %}">All Products</a></li>
+        {% endif %}
+        {% endwith %}
+    </ul> -->
+
+    <ul class="nav nav-tabs" style="padding:0;border:0 none;"></ul>
+    <ul class="actions" style="border-radius: 8px;border-top-width:1px;">
+        <li>
+            <a href="javascript:;" class="text-default filter-btn" data-click-cookies="logistics_products" data-click-elem="#filter-form">
+                Filter by
+                <span class="dropified-icons di-arrow-down"></span>
+            </a>
+        </li>
+        <li class="pull-right border-left group">
+            <form method="get">
+                <input type="text" class="form-control m-l-sm" name="title" value="{{request.GET.title}}" placeholder="Search by name">
+                <button type="submit" class="btn btn-primary btn-icon">
+                    <i class="fa fa-search"></i>
+                </button>
+            </form>
+        </li>
+        <li class="pull-right">
+            <a href="{% url 'logistics:product' %}" class="btn btn-primary">
+                <i class="fa fa-plus"></i> Add Product
+            </a>
+        </li>
+    </ul>
+
+    <div id="filter-form" class="hidden-form {% if request.COOKIES.logistics_products == 'true' %}active{% endif %}" data-hidden-link=".filter-btn">
+        <form method="get" class="form" style="position:relative;">
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Title</label>
+                    <input name="title" value="{{request.GET.title|default:''}}" class="form-control" placeholder="Product title">
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="tab-content">
+        <div id="tab-1" class="tab-pane active">
+            <div class="panel-body">
+                <table class="table table-condensed xtable-hover">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Preview</th>
+                            <th><a href="{% url_toggle 'sort' '-title,title' %}">Title {% sort_icon 'sort' 'title' %}</a></th>
+                            <th><a href="{% url_toggle 'sort' '-suppliers__warehouse__name,suppliers__warehouse__name' %}">Warehouse {% sort_icon 'sort' 'carrier' %}</a></th>
+                            <th>Total Stock {% sort_icon 'sort' 'inventory' %}</th>
+                            <th>Price {% sort_icon 'sort' 'price' %}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for product in products.distinct %}
+                        {% for supplier in product.suppliers.active %}
+                        <tr class="row-slide-parent">
+                            <td style="padding: 5px;">
+                                {% if supplier.listings.all %}
+                                <a href="#" style="padding:11px 13px;" class="row-slide pull-left"><i class="dropified-icons di-arrow-down"></i></a>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 5px;">
+                                <img src="{% static 'img/blank.gif' %}"
+                                     data-src="{{ product.image|default:'' }}"
+                                     class="cached-img no-img no-img-sm unveil"
+                                     no-img-width="40px"
+                                     style="max-width:40px;max-height:40px;">
+                            </td>
+                            <td>
+                                <div class="multi-line-text-overflow">
+                                    <a href="{% url 'logistics:supplier' supplier_id=supplier.id %}">{{ product.title }}</a>
+                                </div>
+                            </td>
+                            <td>{{ supplier.warehouse.get_full_name }}</td>
+                            <td>{{ supplier.total_inventory }}</td>
+                            <td>{{ supplier.price_range }}</td>
+                            <td>
+                                <a href="{% url 'logistics:supplier' supplier_id=supplier.id %}">
+                                    <i class="dropified-icons di-pencil color-primary" style="font-size: 15px;"></i>
+                                </a>
+                                <a href="#" class="connect-supplier" data-supplier-id="{{ supplier.id }}">
+                                    <i class="dropified-icons di-bolt color-primary" style="font-size: 15px;"></i>
+                                </a>
+                                <a href="#" class="delete-supplier" data-id="{{ supplier.id }}">
+                                    <i class="dropified-icons di-trash color-danger" style="font-size: 15px;"></i>
+                                </a>
+                            </td>
+                        </tr>
+
+                        {% for listing in supplier.listings.all %}
+                        {% include "logistics/partials/product_variants.html" with variant=listing.to_dict %}
+                        {% endfor %}
+
+                        {% empty %}
+                        <tr class="row-slide-parent">
+                            <td style="padding: 5px;">
+                                {% if product.variants.all %}
+                                <a href="#" style="padding:11px 13px;" class="row-slide pull-left"><i class="dropified-icons di-arrow-down"></i></a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <img src="{% static 'img/blank.gif' %}"
+                                     data-src="{{ product.image|default:'' }}"
+                                     class="cached-img no-img no-img-sm unveil"
+                                     no-img-width="40px"
+                                     style="max-width:40px;max-height:40px;">
+                            </td>
+                            <td>
+                                <div class="multi-line-text-overflow">
+                                    <a href="{% url 'logistics:product' pk=product.id %}">{{ product.title }}</a>
+                                </div>
+                            </td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>
+                                <a href="{% url 'logistics:product' pk=product.id %}">
+                                    <i class="dropified-icons di-pencil color-primary" style="font-size: 15px;"></i>
+                                </a>
+                                <a href="#" class="delete-product" data-id="{{ product.id }}">
+                                    <i class="dropified-icons di-trash color-danger" style="font-size: 15px;"></i>
+                                </a>
+                            </td>
+                        </tr>
+
+                        {% for variant in product.variants.all %}
+                        {% include "logistics/partials/product_variants.html" with variant=variant.to_dict %}
+                        {% endfor %}
+
+                        {% endfor %}
+                        {% empty %}
+                        <tr>
+                            <td class="text-center" colspan="8">
+                                No products found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% include "partial/paginator.html" %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="connect-product-modal" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Connect Product With</h4>
+            </div>
+            <div class="modal-body">
+                <a href="#" class="btn btn-primary connect" data-store-type="shopify">Shopify</a>
+                <a href="#" class="btn btn-primary connect" data-store-type="chq">CommerceHQ</a>
+                <a href="#" class="btn btn-primary connect" data-store-type="woo">WooCommerce</a>
+                <a href="#" class="btn btn-primary connect" data-store-type="gkart">GrooveKart</a>
+                <a href="#" class="btn btn-primary connect" data-store-type="bigcommerce">BigCommerce</a>
+                <a href="#" class="btn btn-primary connect" data-store-type="ebay">eBay</a>
+                <a href="#" class="btn btn-primary connect" data-store-type="fb">Facebook</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include "partial/shopify_product_selector.html" %}
+{% include "commercehq/partial/commercehq_product_selector.html" %}
+{% include "woocommerce/partial/woocommerce_product_selector.html" %}
+{% include "groovekart/partial/groovekart_product_selector.html" %}
+{% include "bigcommerce/partial/bigcommerce_product_selector.html" %}
+{% include "ebay/partial/ebay_product_selector.html" %}
+{% include "facebook/partial/fb_product_selector.html" %}
+{% endblock %}
+
+
+{% block extracss %}
+<style type="text/css">
+    .table > tbody > tr.row-slide > td {
+        padding: 0;
+    }
+    .table > tbody > tr.row-slide > td > div {
+        transition: height .3s, padding .3s;
+        padding: 16px 8px;
+    }
+    table.table > tbody > tr.row-slide.closed > td {
+        border-bottom: 1px solid transparent !important;
+    }
+    .table > tbody > tr.row-slide.closed > td > div {
+        height: 0;
+        padding: 0 8px;
+        opacity: 0;
+    }
+    .table > tbody > tr.row-slide > td .label {
+        display: inline-block;
+    }
+    #connect-product-modal .connect {
+        margin: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block extrajs %}
+{% compress js %}
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+
+<script type="text/javascript" src="{% static 'shopified/js/shopify_product_selector.js' %}"></script>
+<script type="text/javascript" src="{% static 'commercehq/js/commercehq_product_selector.js' %}"></script>
+<script type="text/javascript" src="{% static 'woocommerce/js/woocommerce_product_selector.js' %}"></script>
+<script type="text/javascript" src="{% static 'groovekart/js/groovekart_product_selector.js' %}"></script>
+<script type="text/javascript" src="{% static 'bigcommerce/js/bigcommerce_product_selector.js' %}"></script>
+<script type="text/javascript" src="{% static 'ebay/js/ebay_product_selector.js' %}"></script>
+<script type="text/javascript" src="{% static 'facebook/js/fb_product_selector.js' %}"></script>
+<script type="text/javascript" src="{% static 'logistics/js/products.js' %}"></script>
+{% endcompress %}
+{% endblock %}

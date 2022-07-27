@@ -1,0 +1,241 @@
+{% load static template_helper %}
+
+<div id="modal-logistics-order-detail" class="modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content logistics-order">
+      <form class="form">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Create Label</h4>
+        </div>
+        <div class="modal-body">
+          <div class="modal-loading sk-spinner sk-spinner-double-bounce">
+            <div class="sk-double-bounce1"></div>
+            <div class="sk-double-bounce2"></div>
+          </div>
+          <div class="row" style="display:flex;">
+            <div class="col-md-7" id="logistics-info">
+              <div class="logistics-errors"></div>
+              <input type="hidden" name="refresh" value="">
+              <h4>Ship To</h4>
+              <input type="hidden" name="order_id">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Address Line 1</label>
+                    <input type="text" name="to_address_address1" class="form-control">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Address Line 2</label>
+                    <input type="text" name="to_address_address2" class="form-control">
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>City</label>
+                    <input type="text" name="to_address_city" class="form-control">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Company</label>
+                    <input type="text" name="to_address_company" class="form-control">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Province</label>
+                    <input type="text" name="to_address_province" class="form-control">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Country</label>
+                    <select name="to_address_country_code" class="form-control">
+                      {% for country_code, country in countries %}
+                      <option value="{{ country_code }}">{{ country }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Postal Code</label>
+                    <input type="text" name="to_address_zip" class="form-control">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" name="to_address_phone" class="form-control">
+                  </div>
+                </div>
+              </div>
+
+              <hr>
+              <div class="logistics-shipment">
+                <h4>Ship From</h4>
+                <select name="warehouse" class="form-control">
+                  {% for warehouse in request.user.models_user.warehouses.active %}
+                  <option value="{{ warehouse.id }}" data-country-code="{{ warehouse.country_code }}">{{ warehouse.get_full_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <hr>
+              <h4>Shipment Information</h4>
+              <div class="customs-items"></div>
+              <h5>Package</h5>
+              <div class="row">
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Weight (oz)</label>
+                    <div class="input-group">
+                      <input type="number" step='.1' name="weight" class="form-control" autocomplete="off">
+                      <div class="input-group-addon" style="border-radius:0 8px 8px 0;">oz</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Length (in)</label>
+                    <div class="input-group">
+                      <input type="number" step='.1' name="length" class="form-control" autocomplete="off">
+                      <div class="input-group-addon" style="border-radius:0 8px 8px 0;">in</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Width (in)</label>
+                    <div class="input-group">
+                      <input type="number" step='.1' name="width" class="form-control" autocomplete="off">
+                      <div class="input-group-addon" style="border-radius:0 8px 8px 0;">in</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Height (in)</label>
+                    <div class="input-group">
+                      <input type="number" step='.1' name="height" class="form-control" autocomplete="off">
+                      <div class="input-group-addon" style="border-radius:0 8px 8px 0;">in</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-5" id="logistics-result" style="position: relative;">
+              <a href="#" class="btn btn-success btn-outline refresh-carriers hidden">Refresh Carriers</a>
+              <div class="logistics-carriers" style="position:absolute;top:0;bottom:170px;padding-bottom:10px;overflow-y:auto;right:15px;left:15px;">
+              </div>
+              <div class="logistics-label-image" style="position: absolute;bottom:0;max-height:153px;overflow-y:auto;right:15px;left:15px;">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div id="logistics-shipment-actions">
+            <a href="#" class="btn btn-default btn-outline" data-dismiss="modal" aria-label="Cancel">Cancel</a>
+            <button class="btn btn-primary pull-right create-logistics-label" style="width: 160px;"
+              data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">Get Rates</button>
+            <button class="btn btn-primary pull-right buy-logistics-label hidden" style="width:160px;margin-right:0;"
+              data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">Buy Label</button>
+          </div>
+          <div id="logistics-label-actions" class="hidden">
+            <a href="#" target="_blank" class="btn btn-primary pull-right" id="logistics-download-label" style="width: 160px;">Download</a>
+            <button class="btn btn-success pull-right" id="logistics-print-label" style="width: 160px;">Print</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  var logisticsCountries = {% json_dumps countries %};
+</script>
+
+{% verbatim %}
+<script id="customs-item" type="text/x-handlebars-template">
+  <div class="customs-item" data-id="{{order_data_id}}">
+    <h5>{{title}}</h5>
+    <div class="row">
+      <div class="col-md-3">
+        <div class="form-group">
+          <label>Total Weight</label>
+          <div class="input-group">
+            <input type="number" step='.1' name="item_weight" value="{{weight}}" class="form-control" autocomplete="off">
+            <div class="input-group-addon" style="border-radius:0 8px 8px 0;">oz</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label><a href="https://hts.usitc.gov/" target="_blank">HS Code</a></label>
+          <input type="text" name="item_hs_tariff" value="{{hs_tariff}}" class="form-control">
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="form-group">
+          <label>Origin Country</label>
+          <select name="item_country_code" class="form-control">
+            {{#each countries}}
+            <option value="{{this.[0]}}">{{this.[1]}}</option>
+            {{/each}}
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</script>
+
+<script id="shipment-rate" type="text/x-handlebars-template">
+  <div class="logistics-carrier" is-root="{{ is_root }}">
+    <input type="hidden" name="rate_id" value="{{ id }}">
+    <div style="width: calc(100% - 100px); float: left;">
+      <h3>
+        {{ carrier }}
+        {{#if service}}
+        - {{ service }}
+        {{/if}}
+        <span class="color-primary">{{currencySign}}{{rate}}</span>
+      </h3>
+      <p>{{ est_delivery_days }}</p>
+    </div>
+    <img src="{{ logo }}">
+  </div>
+</script>
+{% endverbatim %}
+
+<style type="text/css">
+  body ~ #logistics-label-image {
+    display: none;
+  }
+  @media print {
+    @page {
+      margin: 0;
+    }
+
+    body.with-label-url {
+      display: none;
+      margin: 1.6cm;
+    }
+
+    body.with-label-url ~ #logistics-label-image {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+    }
+  }
+</style>

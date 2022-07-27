@@ -10,6 +10,7 @@ from leadgalaxy.models import (
     SUBUSER_WOO_STORE_PERMISSIONS,
     SUBUSER_GKART_STORE_PERMISSIONS,
     SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS,
+    SUBUSER_EBAY_STORE_PERMISSIONS,
     SUBUSER_FB_STORE_PERMISSIONS,
     SUBUSER_GOOGLE_STORE_PERMISSIONS,
     SubuserPermission,
@@ -17,11 +18,13 @@ from leadgalaxy.models import (
     SubuserWooPermission,
     SubuserGKartPermission,
     SubuserBigCommercePermission,
+    SubuserEbayPermission,
     SubuserFBPermission,
     SubuserGooglePermission,
 )
 
 from commercehq_core.models import CommerceHQStore
+from ebay_core.models import EbayStore
 from facebook_core.models import FBStore
 from google_core.models import GoogleStore
 from woocommerce_core.models import WooStore
@@ -91,6 +94,13 @@ class Command(DropifiedBaseCommand):
                 BigCommerceStore.objects.iterator()
             ])
             count += BigCommerceStore.objects.count()
+
+            stores.append([
+                SubuserEbayPermission,
+                self.get_selected_permissions(SUBUSER_EBAY_STORE_PERMISSIONS),
+                EbayStore.objects.iterator()
+            ])
+            count += EbayStore.objects.count()
 
             stores.append([
                 SubuserFBPermission,
@@ -183,6 +193,10 @@ class Command(DropifiedBaseCommand):
                 for subuser_store in subuser.profile.subuser_bigcommerce_stores.all():
                     store_permissions = get_store_perms(subuser_store.subuser_bigcommerce_permissions)
                     subuser.profile.subuser_bigcommerce_permissions.add(*store_permissions)
+
+                for subuser_store in subuser.profile.subuser_ebay_stores.all():
+                    store_permissions = get_store_perms(subuser_store.subuser_ebay_permissions)
+                    subuser.profile.subuser_ebay_permissions.add(*store_permissions)
 
                 for subuser_store in subuser.profile.subuser_fb_stores.all():
                     store_permissions = get_store_perms(subuser_store.subuser_fb_permissions)

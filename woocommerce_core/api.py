@@ -372,7 +372,7 @@ class WooStoreApi(ApiBase):
 
             supplier_url = remove_link_query(supplier_url)
 
-        elif get_domain(supplier_url) == 'dropified':
+        elif get_domain(supplier_url) == 'dropified' and 'supplement' in supplier_url:
             try:
                 user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id, user=user.models_user)
@@ -417,7 +417,7 @@ class WooStoreApi(ApiBase):
             product.set_default_supplier(supplier, commit=True)
             product.sync()
 
-        return self.api_success({'product': product.id})
+        return self.api_success({'product': product.id, 'export': supplier.id})
 
     def get_product_woocommerce_id(self, request, user, data):
         product = data.get('product').split(',')
@@ -499,7 +499,7 @@ class WooStoreApi(ApiBase):
         original_link = remove_link_query(data.get('original-link'))
         supplier_url = remove_link_query(data.get('supplier-link'))
 
-        if get_domain(original_link) == 'dropified':
+        if get_domain(original_link) == 'dropified' and 'supplement' in original_link:
             try:
                 user_supplement_id = int(urlparse(original_link).path.split('/')[-1])
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id)
@@ -545,7 +545,7 @@ class WooStoreApi(ApiBase):
 
         product.save()
 
-        return self.api_success({'reload': not data.get('export')})
+        return self.api_success({'reload': not data.get('export'), 'export': product_supplier.id})
 
     def post_bundles_mapping(self, request, user, data):
         if not user.can('mapping_bundle.use'):

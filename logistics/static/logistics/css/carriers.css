@@ -1,0 +1,14 @@
+#carrier-credentials:empty:after {
+    content: "Select a carrier type to fill credentials";
+    color: #de1c22;
+}
+
+.table img {
+    max-width: 100px;
+    max-height: 50px;
+    float: left;
+}
+
+.table > tbody > tr > td {
+    vertical-align: middle;
+}

@@ -41,6 +41,11 @@ CURRENCY_MAP = {
 }
 
 
+@register.filter
+def addstr(arg1, arg2):
+    return f"{arg1}{arg2}"
+
+
 @register.simple_tag
 def app_setting(name):
     return getattr(settings, name, None)

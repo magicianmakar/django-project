@@ -142,7 +142,7 @@
                         <input type="hidden" id="query_customer_id" name="query_customer_id"
                             value="{{ request.GET.query_customer_id|default:'' }}" orig-value="{{request.GET.query_customer|default:''}}" />
 
-                        <input id="query_customer" name="query_customer" class="form-control"placeholder="Name or Email" data-store="{{store.id}}"
+                        <input id="query_customer" name="query_customer" class="form-control" placeholder="Name or Email" data-store="{{store.id}}"
                             value="{% base64_decode_params request.GET.query_customer %}"
                         >
                     </div>
@@ -464,6 +464,12 @@
                                     </div>
                                     {% endif %}
 
+                                    {% if user|can:'logistics.use' %}
+                                    <a class="btn btn-primary pull-right small create-logistics-order" href="#">
+                                        Buy Shipping
+                                    </a>
+                                    {% endif %}
+
                                     <div class="note-panel">
                                         <div class="note-preview">
                                             <span class="note-text multi-line-text-overflow">{{order.note|default:'' }}</span>
@@ -488,149 +494,6 @@
                         </div>
 
                         <div class="details">
-                            <div class="row shipping-info new-layout-hidden">
-                                <div class="col-md-3" style="padding-left:5px">
-
-                                    <p class="m-n">
-                                        <span class="itooltip" title="Customer Name" data-placement="auto right">
-                                            {{order.shipping_address.first_name|default:''}} {{order.shipping_address.last_name|default:''}}
-                                            {% if order.shipping_address.company %}
-                                                - {{order.shipping_address.company}}
-                                            {% endif %}
-                                        </span>
-                                    </p>
-
-                                    <span class="itooltip" title="
-                                    {{order.shipping_address.address1}}<br>
-                                    {{order.shipping_address.address2}}<br>
-                                    {% if order.corrections.city and order.corrections.city.lower != order.shipping_address.city.lower %}
-                                    {{order.corrections.city}}(was &quot;{{order.shipping_address.city}}&quot;),<br>
-                                    {% else %}
-                                    {{order.shipping_address.city}},<br>
-                                    {% endif %}
-                                    {% if order.corrections.province and order.corrections.province.lower != order.shipping_address.province.lower %}
-                                    {{order.corrections.province}}(was &quot;{{order.shipping_address.province|default:'N/A'}}&quot;),<br>
-                                    {% else %}
-                                    {{order.shipping_address.province|default:'N/A'}},<br>
-                                    {% endif %}
-                                    {{order.shipping_address.zip}},
-                                    {{order.shipping_address.country}} - {{order.shipping_address.phone}}
-                                    " data-placement="auto right">
-
-                                    </span>
-
-                                    <p class="m-n">
-                                        <span class="itooltip" title="Address" data-placement="auto right">
-                                            {{order.shipping_address.address1}}
-                                        </span>
-                                    </p>
-
-                                    {% if order.shipping_address.address2 %}
-                                    <p class="m-n" data-placement="auto right">
-                                        <span class="itooltip" title="Address (second line)" data-placement="auto right">
-                                            {{order.shipping_address.address2}}
-                                        </span>
-                                    </p>
-                                    {% endif %}
-
-                                    <p class="m-n" >
-                                        <span class="itooltip" title="City" data-placement="auto right">
-                                            {{order.shipping_address.city}},
-                                        </span>
-
-                                        {% if order.corrections.city and order.corrections.city.lower != order.shipping_address.city.lower %}
-                                        <span class="pull-right itooltip" data-html="true"
-                                            title="City changed from <b style=color:#ff9090>{{order.shipping_address.city}}</b> to
-                                                   <b style=color:#90ffaf>{{order.corrections.city}}</b> to match with Aliexpress">
-                                            Changed to <b>{{order.corrections.city}}</b>
-                                        </span>
-                                        {% endif %}
-                                    </p>
-
-                                    <p class="m-n">
-                                        <span class="itooltip shipping-province-code" title="Province" data-placement="auto right" shipping-province-code="{{order.shipping_address.province_code}}">
-                                            {{order.shipping_address.province|default:'N/A'}},
-                                        </span>
-
-                                        {% if order.corrections.province and order.corrections.province.lower != order.shipping_address.province.lower %}
-                                        <span class="pull-right itooltip" data-html="true"
-                                            title="Province changed from <b style=color:#ff9090>{{order.shipping_address.province}}</b> to
-                                                   <b style=color:#90ffaf>{{order.corrections.province}}</b> to match with Aliexpress">
-                                            Changed to <b>{{order.corrections.province}}</b>
-                                        </span>
-                                        {% endif %}
-                                    </p>
-
-                                    <p class="m-n">
-                                        <span class="itooltip" title="Zip code &amp; Country" data-placement="auto right">
-                                            <span class="zip-code">{{order.shipping_address.zip}}</span>,
-                                            <b>{{order.shipping_address.country}}</b>
-                                        </span>
-                                    </p>
-
-                                    {% if order.shipping_address.phone %}
-                                    <p style="margin:5px 0 0 0">
-                                        <span class="itooltip" title="Phone number" data-placement="auto right">
-                                            {{order.shipping_address.phone}}
-                                        </span>
-                                    </p>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-1 hidden-xs">
-
-                                    {% if order.customer.email %}
-                                    <a href="mailto:{{order.customer.email}}" class="itooltip m-r-xs" title="Send Email To The Customer"> <i class="fa fa-envelope-o fa-lg"></i></a>
-                                    {% endif %}
-
-                                    {% if order.shipping_address.phone %}
-                                    <a href="tel:{{order.shipping_address.phone}}" class="itooltip " title="Call Customer"> <i class="fa fa-phone fa-lg"></i></a>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-2 xs-text-right">
-                                    <b>{% money_format order.total_price store %}</b>
-                                    {% if order.total_tip %}
-                                        -
-                                        <b class="text-success">Tip: {% money_format order.total_tip store %}</b>
-                                    {% endif %}
-
-                                    <div>
-                                        {% if shipping_method_filter_enabled %}
-                                            {% if order.shipping_lines %}
-                                            <ul class="shipping-method xs-text-left">
-                                                {% for shipping_line in order.shipping_lines %}
-                                                    <li>{{ shipping_line.title }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                            {% endif %}
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-md-offset-3">
-                                    <div class="note-panel panel panel-default hidden-sm hidden-xs">
-                                        <div class="panel-heading">
-                                            Order Notes
-                                        </div>
-                                        <div class="panel-body">
-                                            <div class="note-preview">
-                                                <span class="note-text">{{order.note|default:''|truncatewords:10 }}</span>
-                                            </div>
-                                            <div class="edit-note">
-                                                <textarea class="note">{{order.note|default:''}}</textarea>
-                                                <button class="btn btn-primary btn-xs note-edit-save"
-                                                        order-id="{{order.id}}" store-id="{{store.id}}">
-                                                    <i class="fa fa-save"></i> Save
-                                                </button>
-                                                <button class="btn btn-default btn-xs note-edit-cancel">
-                                                    <i class="fa fa-times"></i> Cancel
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <i class="fa fa-edit" style="position:absolute;bottom:0px;right:5px;z-index:1200"></i>
-                                    </div>
-                                </div>
-                            </div>
-
                             {% for item in order.line_items %}
                             {% with image=item.image original=item.product.get_original_info excluded_product=item.product.is_excluded %}
                             <div class="line rounded
@@ -640,6 +503,7 @@
                                 line-id="{{item.id}}"
                                 order-id="{{order.id}}"
                                 order-data-id="{{ item.order_data_id }}"
+                                raw-order-data-id="{{ item.raw_order_data_id }}"
                                 order-number="{{order.name}}"
                                 line-title="{{item.title}}"
                                 supplier-type="{{item.supplier_type}}"
@@ -1013,6 +877,7 @@
 {% include "supplements/partials/order_details_modal.html" %}
 {% include 'alibaba/partials/orders.html' %}
 {% include 'common/partial/aliexpress_bulk_order.html' %}
+{% include "logistics/partials/order_details_modal.html" %}
 {% endblock %}
 
 
@@ -1072,6 +937,7 @@
     <script src="{% static 'prints/js/place_orders.js' %}" type="text/javascript"></script>
     <script src="{% static 'alibaba/js/orders.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/aliexpress_bulk_order.js' %}" type="text/javascript"></script>
+    <script src="{% static 'logistics/js/shipment.js' %}"></script>
     <script src="{% static 'js/bulk_orders.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/order_items.js' %}" type="text/javascript"></script>
     <script src="{% static 'pls/js/pls_payment.js' %}" type="text/javascript"></script>

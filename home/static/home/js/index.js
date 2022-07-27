@@ -2152,6 +2152,36 @@
         });
     });
 
+    $('.fb-edit-store-btn').click(function(e) {
+        e.preventDefault();
+        var storeId = $(this).data('store-id');
+        var storeTitle = $(this).data('store-title');
+        $('#fb-store-update-modal').modal('show');
+        $('#fb-store-update-form input[name="id"]').val(storeId);
+        $('#fb-store-update-form input[name="title"]').val(storeTitle);
+    });
+
+    $('#fb-store-update-form').on('submit', function(e) {
+        $('#fb-store-update-form [type=submit]').bootstrapBtn('loading');
+
+        $.ajax({
+            url: api_url('store-update', 'fb'),
+            type: 'POST',
+            data: $('#fb-store-update-form').serialize(),
+            success: function(data) {
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
+            },
+            error: function(data) {
+                $('#fb-store-update-form [type=submit]').bootstrapBtn('reset');
+                displayAjaxError('Edit Store', data);
+            }
+        });
+
+        return false;
+    });
+
     $('.fb-delete-store-btn').click(function(e) {
         e.preventDefault();
         var storeId = $(this).data('store-id');

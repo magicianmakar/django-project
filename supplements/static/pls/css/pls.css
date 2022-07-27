@@ -484,3 +484,25 @@
   border: 1px solid transparent;
   border-radius: 4px;
 }
+
+#modal-supplier_profile .tabs-container .nav-tabs,
+#modal-supplier_profile .tabs-container .tab-pane .panel-body {
+  border-style: none;
+}
+
+#modal-supplier_profile h3 {
+  font-size: 24px;
+}
+
+#logo_div {
+  display: flex;
+  align-items: center;
+  border-radius: 15px;
+  background:whitesmoke;
+  margin-left: 20px;
+  min-height: 120px
+}
+
+#logo_div img {
+  width: 100%;
+}

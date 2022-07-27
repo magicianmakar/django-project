@@ -1,6 +1,7 @@
 import json
 from json import JSONDecodeError
 from math import ceil
+from lxml import html
 
 from requests.exceptions import HTTPError
 
@@ -249,6 +250,10 @@ def product_save(req_data, user_id, pusher_channel):
                 })
                 return
 
+            # Remove HTML tags from product description
+            if product_data.get('description'):
+                product_data['description'] = html.fromstring(product_data.get('description')).text_content()
+
         # 3. Verify and compute original URL
         original_url = product_data.get('original_url')
 
@@ -371,6 +376,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
     store = FBStore.objects.get(id=store_id)
     product = FBProduct.objects.get(guid=parent_guid)
     default_error_message = 'Something went wrong, please try again.'
+    sd_pusher = SureDonePusher(pusher_channel)
     pusher_event = 'fb-product-update'
     try:
         permissions.user_can_view(user, store)
@@ -418,7 +424,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         # If the product was not successfully posted
         error_msg = fb_utils.format_error_messages('actions', sd_api_response)
         if error_msg:
-            store.pusher_trigger(pusher_event, {
+            sd_pusher.trigger(pusher_event, {
                 'success': False,
                 'error': error_msg,
                 'product': product.guid,
@@ -435,7 +441,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
 
         # If the SureDone returns no data, then the product did not get imported
         if not updated_product or not isinstance(updated_product, FBProduct):
-            store.pusher_trigger(pusher_event, {
+            sd_pusher.trigger(pusher_event, {
                 'success': False,
                 'error': default_error_message,
                 'product': product.guid,
@@ -443,7 +449,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
             })
             return
 
-        store.pusher_trigger(pusher_event, {
+        sd_pusher.trigger(pusher_event, {
             'success': True,
             'product': product.guid,
             'product_url': url,
@@ -453,7 +459,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
             capture_exception(extra=http_exception_response(e))
 
-        store.pusher_trigger(pusher_event, {
+        sd_pusher.trigger(pusher_event, {
             'success': False,
             'error': http_exception_response(e, json=True).get('message', 'Server Error'),
             'product': product.guid,

@@ -27,7 +27,7 @@ function fbProductSearch (e) {
             store: store
         },
         success: function (data) {
-            var product_template = Handlebars.compile($("#product-select-template").html());
+            var product_template = Handlebars.compile($("#fb-product-select-template").html());
 
             if (data.products.length === 0) {
                 productsContainer.append($('<div class="text-center">' +
