@@ -9,6 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.validators import validate_email, ValidationError, RegexValidator
 from django.conf import settings
 from addons_core.forms import URLFileInputWidget
+from product_common.lib.views import upload_image_to_aws
 
 from .models import UserProfile, SubuserPermission, SubuserCHQPermission, SubuserWooPermission, SubuserBigCommercePermission
 from shopified_core.utils import login_attempts_exceeded, unlock_account_email, unique_username, send_email_from_template
@@ -161,7 +162,7 @@ class UserProfileForm(forms.Form):
     user_address_phone = forms.CharField(max_length=100, required=False)
 
     supplier_name = forms.CharField(max_length=100, required=False)
-    supplier_description = forms.CharField(max_length=300, required=False)
+    supplier_description = forms.CharField(widget=forms.Textarea, required=False, strip=False)
     supplier_logo = forms.FileField(required=False, widget=URLFileInputWidget())
 
 
@@ -446,3 +447,18 @@ class SubuserBigCommercePermissionsForm(forms.Form):
                                                           widget=permissions_widget,
                                                           required=False)
         self.fields['permissions'] = permissions_field
+
+
+class SupplierProfileLogoForm(forms.ModelForm):
+    logo_url = forms.FileField(required=False, widget=URLFileInputWidget())
+
+    request = None
+
+    def clean_logo_url(self):
+        if self.request.POST.get('logo_url_url_clear'):
+            return ''
+
+        icon = self.cleaned_data['logo_url']
+        if icon and not isinstance(icon, str):
+            return upload_image_to_aws(icon, 'supplier_logo', self.request.user.id)
+        return icon

@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
 from django.contrib import admin
+from addons_core.admin import FormWithRequestMixin
 
 from .models import Order, OrderLine, Payout, Product, ProductImage, ProductSupplier
+from leadgalaxy.forms import SupplierProfileLogoForm
 
 
 @admin.register(Product)
@@ -19,11 +20,15 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 @admin.register(ProductSupplier)
-class ProductSupplierAdmin(admin.ModelAdmin):
+class ProductSupplierAdmin(FormWithRequestMixin, admin.ModelAdmin):
+    form = SupplierProfileLogoForm
+
     list_display = (
         'id',
         'title',
+        'slug',
         'profit_percentage',
+        'is_shipping_supplier',
         'created_at',
         'updated_at'
     )

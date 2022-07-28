@@ -2310,11 +2310,12 @@ class ShopifyStoreApi(ApiBase):
 
             if user.can('pls_supplier.use'):
                 supplier_logo = request.FILES.get('supplier_logo', None)
-                supplier_logo_url = upload_image_to_aws(supplier_logo, 'supplier_logo', user.id)
                 supplier = user.profile.supplier
+                if supplier_logo:
+                    supplier_logo_url = upload_image_to_aws(supplier_logo, 'supplier_logo', user.id)
+                    supplier.logo_url = supplier_logo_url
                 supplier.title = form.cleaned_data['supplier_name']
                 supplier.description = form.cleaned_data['supplier_description']
-                supplier.logo_url = supplier_logo_url
                 supplier.save()
 
             profile.save()
