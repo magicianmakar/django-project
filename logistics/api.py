@@ -325,7 +325,12 @@ class LogisticsApi(ApiResponseMixin):
                 source='3PL',
             )
         )
-        response = invoice.pay()
+
+        try:
+            response = invoice.pay()
+        except stripe.error.CardError as e:
+            capture_exception()
+            return self.api_error(f'Credit Card Error: {str(e)}', status=400)
 
         if not response['paid']:
             return self.api_error('Payment failed', status=400)

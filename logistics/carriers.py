@@ -14,6 +14,7 @@ CARRIERS = {
     'cdl': 'img/logistics-carriers/cdl.png',
     'chronopost': 'img/logistics-carriers/chronopost.png',
     'courier-express': 'img/logistics-carriers/courier-express.png',
+    'couriersplease': 'img/logistics-carriers/couriersplease.png',
     'dai-post': 'img/logistics-carriers/dai-post.png',
     'deutsche-post': 'img/logistics-carriers/deutsche-post.png',
     'deutsche-post-uk': 'img/logistics-carriers/deutsche-post.png',

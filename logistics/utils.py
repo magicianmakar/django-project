@@ -38,7 +38,7 @@ def get_logistics_account(user):
     account = user.logistics_accounts.first()
     if account is None:
         account = Account.objects.create(user=user)
-        AccountBalance.objects.get_or_create(user=user)
+        AccountBalance.objects.get_or_create(user=user, defaults={'balance': 0})
 
     if not account.api_key:
         account.create_source()
