@@ -19,7 +19,6 @@ from shopified_core.utils import get_domain, http_exception_response, http_excpt
 from suredone_core.models import SureDoneAccount
 from suredone_core.utils import SureDonePusher
 
-
 from .models import FBProduct, FBStore
 from .utils import FBOrderUpdater, FBUtils, smart_board_by_product
 
