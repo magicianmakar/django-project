@@ -138,6 +138,9 @@ class APIRequest():
             if e.errorcode == 27 and e.subcode == 'invalid-sessionkey':
                 return {'error': 'Please re-connect your Alibaba account in Settings'}
 
+            if e.errorcode == 15 and e.subcode == '4008':
+                return {'error': 'Product wasn\'t found or this is not a dropshipping product'}
+
             raise AlibabaUnknownError('Unknown error in Alibaba')
 
     def get(self, resource, params=None):
