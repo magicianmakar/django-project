@@ -521,7 +521,7 @@ class AliexpressFulfillHelper():
                 if sku_str in items_sku:
                     duplicate_item = True
                     try:
-                        index = items_sku.index(sku_attr)
+                        index = items_sku.index(sku_str)
                     except:
                         index = None
                     if index is not None:
