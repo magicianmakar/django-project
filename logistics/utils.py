@@ -471,7 +471,12 @@ class Shipment():
 
             self.order.is_dropified = rate['is_root']
             if self.order.is_dropified:
-                if Decimal(rate['rate']) > self.user.logistics_balance.balance:
+                try:
+                    balance = self.user.logistics_balance
+                except AccountBalance.DoesNotExist:
+                    balance = AccountBalance.objects.create(user=self.user, balance=0)
+
+                if Decimal(rate['rate']) > balance.balance:
                     link = f'<a href="{reverse("logistics:orders")}#showBalance" target="_blank">Dropified balance</a>'
                     raise OrderError(f'Add funds to your {link} to use our discounted USPS rates')
 
