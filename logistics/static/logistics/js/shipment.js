@@ -201,7 +201,7 @@
                         }
 
                         rate['currencySign'] = currencySign;
-                        rate['est_delivery_days'] = rate.est_delivery_days ? 'Estimate delivery in ' + rate.est_delivery_days + ' day(s).' : '';
+                        rate['est_delivery_days'] = rate.est_delivery_days ? 'Estimated delivery in ' + rate.est_delivery_days + ' day(s).' : '';
                         var logisticsCarrier = $(shipmentRate(rate));
                         carriersElem.append(logisticsCarrier);
                         if (order.rate_id == rate.id) {
