@@ -364,6 +364,17 @@ class AliexpressFulfillHelper():
             address.province = 'Other'
         address.zip = self.shipping_address['zip']
 
+        if address.country == 'BR':
+            try:
+                cpf = self.shipping_address['cpf'].strip()
+                # TO DO confirm if cpf always has 11 digits
+                if len(cpf) == 0:
+                    return self.order_error("Please enter a correct 11 digits CPF")
+                else:
+                    address.cpf = cpf
+            except KeyError:
+                return self.order_error("Please enter a correct 11 digits CPF")
+
         if not self.shipping_address['phone'].startswith('+'):
             dialing_code = '+' + str(phonenumbers.country_code_for_region(self.shipping_address['country_code']))
             order_phone_number = dialing_code + '-' + self.shipping_address['phone']
