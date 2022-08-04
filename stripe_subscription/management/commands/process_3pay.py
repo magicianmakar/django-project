@@ -43,6 +43,11 @@ class Command(DropifiedBaseCommand):
                         print("Skip this")
                         continue
 
+                    if not user.profile.bundles.filter(slug='retro-elite-lifetime').exists() and \
+                            not user.profile.bundles.filter(slug='retro-unlimited-pass').exists():
+                        print("Skip this (bundles not found)")
+                        continue
+
                     # fetch latest stripe sub data
                     stripe_subscription = user.stripesubscription_set.get(subscription_id=current_stripe_sub['id'])
                     stripe_subscription.refresh()

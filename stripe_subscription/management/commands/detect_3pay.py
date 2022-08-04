@@ -42,6 +42,11 @@ class Command(DropifiedBaseCommand):
                         print("Skip this")
                         continue
 
+                    if not user.profile.bundles.filter(slug='retro-elite-lifetime').exists() and \
+                            not user.profile.bundles.filter(slug='retro-unlimited-pass').exists():
+                        print("Skip this (bundles not found)")
+                        continue
+
                     # fetching all 3-pay charges to detect 3-pay product, update data in user's profile config
                     charges = stripe.Charge.list(limit=30, customer=stripe_customer.customer_id).data
                     count_charges = 0
