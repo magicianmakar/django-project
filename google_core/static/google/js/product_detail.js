@@ -52,6 +52,7 @@ function prepareApiData(productData, variants) {
         longdescription: document.editor.getData(),
         google_category_id: productData.google_category_id,
         google_category_name: productData.google_category_name,
+        status: productData.status,
         vendor: $('#product-vendor').val(),
         published: $('#product-visible').prop('checked'),
         images: productData.images,
@@ -302,6 +303,16 @@ function productExport(btn) {
             if (eventData.success) {
                 swal('Google Product Export', 'Please wait a few minutes for a product to get published on Google.' +
                     ' It may take up to an hour for a product to appear to Google.', 'success');
+
+                var alerts = $('#alerts-col');
+                alerts.empty();
+                alerts.append('<div class="alert alert-info" role="alert">' +
+                    '<i class="fa fa-info-circle"></i>&nbsp;' +
+                    'A product export has been queued and is pending.' +
+                    '</div>');
+
+                // setTimeout(productErrorLog, 3 * 60000);
+
             } else {
                 displayAjaxError('Google Export', eventData, true);
             }
@@ -326,6 +337,75 @@ function productExport(btn) {
         });
     });
 }
+
+function productErrorLog() {
+    var store_id = $('#store-select').val();
+    if (!verifyPusherIsDefined()) {
+        return;
+    }
+
+    var pusher = new Pusher(config.sub_conf.key);
+    var channel = pusher.subscribe(config.sub_conf.channelUser);
+
+    channel.bind('google-product-latest-relist-log', function(eventData) {
+        if (eventData.product === product.guid) {
+            if (eventData.progress) {
+                return;
+            }
+            pusher.unsubscribe(channel);
+
+            if (!eventData.error && !eventData.warning) {
+                return;
+            }
+
+            var alerts = $('#alerts-col');
+            alerts.empty();
+            var log;
+            try {
+                log = JSON.parse(eventData.log);
+            } catch (e) {}
+
+            if (eventData.error) {
+                alerts.append(
+                    '<div class="alert alert-danger" role="alert">' +
+                    '<i class="fa fa-times-circle-o"/>&nbsp;' + log.message +
+                    '</div>');
+                if (log.errors) {
+                    $('#alerts-col .alert').append('<ul></ul>');
+                    log.errors.forEach(function(item) {
+                         $('#alerts-col .alert ul').append('<li>' + item + '</li>');
+                    });
+                }
+            } else if (eventData.warning) {
+                alerts.empty();
+                alerts.append(
+                    '<div class="alert alert-warning" role="alert">' +
+                    '<i class="fa fa-exclamation-triangle"/>&nbsp;' + log.message +
+                    '</div>');
+                if (log.warnings) {
+                    $('#alerts-col .alert').append('<ul></ul>');
+                    log.warnings.forEach(function(item) {
+                         $('#alerts-col .alert ul').append('<li>' + item + '</li>');
+                    });
+                }
+            }
+        }
+    });
+
+    channel.bind('pusher:subscription_succeeded', function() {
+        $.ajax({
+            url: api_url('product-latest-relist-log', 'google'),
+            type: 'GET',
+            data: {
+                'product': product.guid,
+                'store': store_id,
+            },
+            success: function (data) {},
+            error: function (data) {}
+        });
+    });
+}
+
 
 $('#product-update-btn').click(function (e) {
     e.preventDefault();
@@ -355,6 +435,9 @@ $('#product-update-btn').click(function (e) {
 
             if (eventData.success) {
                 toastr.success('Product Updated.','Google Update');
+                setTimeout(function() {
+                    window.location.href = 'product_url' in eventData ? eventData.product_url : '/google/products';
+                }, 1000);
             }
             if (eventData.error) {
                 displayAjaxError('Google Update', eventData, true);
@@ -1526,6 +1609,10 @@ $('.variant-checkbox').on('click', function() {
 (function() {
     setup_full_editor('product-description');
     showProductInfo(product);
+
+    if (product.status !== 'active') {
+        productErrorLog();
+    }
 
     setTimeout(function() {
         var element = document.querySelector("#trix-notes");

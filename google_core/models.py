@@ -59,10 +59,18 @@ class GoogleStore(SureDoneStoreBase):
         return self.creds.get('merchant_center_id', {}).get('value')
 
     @property
+    def access_token(self):
+        return self.creds.get('access_token', {}).get('value')
+
+    @property
     def auth_completed(self):
         # Google store do not have onboarding yet...
         return True
         # return self.system_token
+
+    @property
+    def is_unauthorized(self):
+        return not bool(self.system_token) and not bool(self.access_token)
 
     @property
     def instance_prefix(self):

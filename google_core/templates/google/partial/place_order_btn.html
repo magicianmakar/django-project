@@ -41,6 +41,11 @@
             <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}" product-id="{{item.product.parent_product_id}}">Mark as Ordered</a></li>
             {% endif %}
 
+            {% if not item.is_bundle and item.fulfillment_status == 'Unfulfilled' and order.status != 'PENDING' %}
+            <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.order_track.source_tracking}}">Mark as Fulfilled</a></li>
+            {% endif %}
+
+
             {% if item.supplier.is_walmart %}
                 {% with user.id|stringformat:"i" as user_id %}
                 {% with item.supplier.product_url|urlencode:"" as encoded_product_url %}

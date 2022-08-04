@@ -238,9 +238,17 @@ class SureDoneApiHandler:
 
     def remove_google_channel_auth(self, instance_id):
         url = f'{self.API_ENDPOINT}/v3/authorize/google/revoke'
+        headers = {**self.HEADERS, 'Content-Type': 'Application/json'}
         request_data = {'instance': instance_id}
 
-        return requests.get(url, params=request_data, headers=self.HEADERS)
+        response = requests.post(url, json=request_data, headers=headers)
+        if response.ok:
+            try:
+                return response.json()
+            except ValueError:
+                pass
+        else:
+            pass
 
     def authorize_google_complete(self, instance, code, granted_scopes, denied_scopes, state):
         url = f'{self.API_ENDPOINT}/v3/authorize/google/complete'

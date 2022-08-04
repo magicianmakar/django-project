@@ -525,7 +525,7 @@
                         <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
                         <a class="store-link" href="{% url 'google:products_list' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
-                    {% if not item.auth_completed %}
+                    {% if not item.auth_completed and not item.is_unauthorized %}
                         <td class="no-wrap text-right" colspan="3">
                             <a href="{% url 'google:onboard' item.id %}" class="label label-warning" style="background-color: #f0ad4e; color: white;">
                                 Complete Authorization
@@ -543,6 +543,35 @@
                                             data-store-id="{{ item.pk }}"
                                             style="border-radius: 8px !important;"
                                         >
+                                            <i class="fa fa-times"></i> Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                        {% endif %}
+                    {% elif item.is_unauthorized %}
+                        <td class="no-wrap text-right" colspan="3">
+                            <span class="label label-danger" style="font-size: 10px;">
+                                Unauthorized
+                            </span>
+                        </td>
+                        {% if not user.is_subuser %}
+                        <td style="white-space:nowrap" class="hidden-sm hidden-xs">
+                            <div class="btn-group ">
+                                <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                    <i class="fa fa-cog"></i> <span class=""></span></button>
+                                <ul class="dropdown-menu pull-right">
+                                    <li>
+                                        <a data-store-id="{{item.id}}" class="reauthorize-google-store"
+                                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
+                                            <i class="fa fa-refresh"></i> Re-Authorize
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a
+                                            class="google-delete-store-btn btn-danger btn-outline"
+                                            data-store-id="{{ item.pk }}">
                                             <i class="fa fa-times"></i> Delete
                                         </a>
                                     </li>

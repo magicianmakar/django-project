@@ -1,4 +1,7 @@
+import json
 from json import JSONDecodeError
+from lxml import html
+from math import ceil
 from requests.exceptions import HTTPError
 
 from django.contrib.auth.models import User
@@ -9,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from app.celery_base import CaptureFailure, celery_app, retry_countdown
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_exception, capture_message
 from product_alerts.utils import get_supplier_variants, variant_index_from_supplier_sku
 from shopified_core import permissions
 from shopified_core.utils import get_domain, http_exception_response, http_excption_status_code, safe_json
@@ -31,18 +34,104 @@ def add_new_google_store(sd_account_id, pusher_channel, user_id, instance_id=Non
         default_error_message = 'Failed to add a new Google channel. ' \
                                 'Please try again or contact support@dropified.com'
 
+    next_instance_id = None
+    created_instance_id = None
+
     try:
-        sd_account = SureDoneAccount.objects.get(id=sd_account_id)
+        try:
+            sd_account = SureDoneAccount.objects.get(id=sd_account_id)
+        except SureDoneAccount.DoesNotExist:
+            capture_exception()
+            sd_pusher.trigger(default_event, {
+                'success': False,
+                'error': 'Something went wrong. Please try again.'
+            })
+            return
 
         # Step 1: Find a channel to authorize
         google_utils = GoogleUtils(user, account_id=sd_account.id)
-        next_instance_id = google_utils.find_next_instance_to_authorize()
 
-        # Step 2: Create a new instance
-        created_instance_id = google_utils.create_new_google_store_instance(next_instance_id)
+        channel_inst_to_use = None
+        if instance_id is not None:
+            channel_inst_to_use = instance_id
+
+        if channel_inst_to_use is None:
+            next_instance_id = google_utils.find_next_instance_to_authorize()
+            channel_inst_to_use = google_utils.create_new_google_store_instance(next_instance_id)
+            instance_enabled = True
+        else:
+            sd_auth_channel_resp = google_utils.api.remove_google_channel_auth(channel_inst_to_use)
+            if not sd_auth_channel_resp or not isinstance(sd_auth_channel_resp, dict):
+                capture_exception(extra={
+                    'description': 'Failed to remove google authorization from SureDone for re-authorize.',
+                    'suredone_username': sd_account.api_username,
+                })
+                sd_pusher.trigger(default_event, {
+                    'success': False,
+                    'error': 'Something went wrong. Please try again.'
+                })
+                return
+            elif sd_auth_channel_resp.get('results', {}).get('successful').get('code') != 2:
+                error_message = sd_auth_channel_resp.get('message')
+                error_message = error_message if error_message else 'Something went wrong. Please try again.'
+                capture_exception(extra={
+                    'description': 'Received error when removing google authorization from SureDone for re-authorize.',
+                    'suredone_username': sd_account.api_username,
+                    'error': error_message,
+                })
+                sd_pusher.trigger(default_event, {
+                    'success': False,
+                    'error': error_message
+                })
+                return
+
+            all_options_data = google_utils.get_all_user_options()
+            plugin_settings = safe_json(all_options_data.pop('plugin_settings', '{}')).get('register', {})
+            if 'google' in plugin_settings.get('context', {}):
+                google_utils.sync_or_create_store_instance(channel_inst_to_use, all_options_data)
+
+            inst_statuses = google_utils.get_store_statuses_by_platform('google')
+            instance = next((item for item in inst_statuses if item.get('instance') == channel_inst_to_use), None)
+            instance_enabled = bool(instance.get('active', 0)) if isinstance(instance, dict) else False
+
+        # Step 2: Enable the channel instance if not enabled yet
+        if not instance_enabled:
+            sd_enable_channel_resp = google_utils.update_plugin_store_status('google', channel_inst_to_use, 'on')
+
+            # If failed to enable the google channel instance
+            try:
+                sd_enable_channel_resp.raise_for_status()
+                resp_data = sd_enable_channel_resp.json()
+
+                if resp_data.get('result') != 'success':
+                    capture_message('Request to enable an Google store instance failed.', extra={
+                        'suredone_account_id': sd_account_id,
+                        'store_instance_id': channel_inst_to_use,
+                        'response_code': sd_enable_channel_resp.status_code,
+                        'response_reason': sd_enable_channel_resp.reason,
+                        'response_data': resp_data
+                    })
+                    sd_pusher.trigger(default_event, {
+                        'success': False,
+                        'error': default_error_message
+                    })
+                    return
+            except Exception:
+                capture_exception(extra={
+                    'description': 'Error when trying to enable an Google instance on a SureDone account',
+                    'suredone_account_id': sd_account_id,
+                    'store_instance_id': channel_inst_to_use,
+                    'response_code': sd_enable_channel_resp.status_code,
+                    'response_reason': sd_enable_channel_resp.reason,
+                })
+                sd_pusher.trigger(default_event, {
+                    'success': False,
+                    'error': default_error_message
+                })
+                return
 
         # Step 3: Get Auth URL
-        auth_url = google_utils.get_auth_url(created_instance_id)
+        auth_url = google_utils.get_auth_url(channel_inst_to_use)
 
         if not auth_url:
             raise HTTPError('Invalid auth_url returned from SureDone')
@@ -54,6 +143,12 @@ def add_new_google_store(sd_account_id, pusher_channel, user_id, instance_id=Non
 
         return sd_account_id
     except Exception:
+        capture_exception(extra={
+            'suredone_account_id': sd_account_id,
+            'user': user.id,
+            'next_instance_id': next_instance_id,
+            'created_instance_id': created_instance_id,
+        })
         sd_pusher.trigger(default_event, {
             'success': False,
             'error': default_error_message,
@@ -154,6 +249,10 @@ def product_save(req_data, user_id, pusher_channel):
                     'error': 'Product data cannot be empty.'
                 })
                 return
+
+        # Remove HTML tags from product description
+        if product_data.get('description'):
+            product_data['description'] = html.fromstring(product_data.get('description')).text_content()
 
         # 3. Verify and compute original URL
         original_url = product_data.get('original_url')
@@ -277,7 +376,6 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
     store = GoogleStore.objects.get(id=store_id)
     product = GoogleProduct.objects.get(guid=parent_guid)
     default_error_message = 'Something went wrong, please try again.'
-    sd_pusher = SureDonePusher(pusher_channel)
     pusher_event = 'google-product-update'
     try:
         permissions.user_can_view(user, store)
@@ -325,7 +423,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         # If the product was not successfully posted
         error_msg = google_utils.format_error_messages('actions', sd_api_response)
         if error_msg:
-            sd_pusher.trigger(pusher_event, {
+            store.pusher_trigger(pusher_event, {
                 'success': False,
                 'error': error_msg,
                 'product': product.guid,
@@ -342,7 +440,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
 
         # If the SureDone returns no data, then the product did not get imported
         if not updated_product or not isinstance(updated_product, GoogleProduct):
-            sd_pusher.trigger(pusher_event, {
+            store.pusher_trigger(pusher_event, {
                 'success': False,
                 'error': default_error_message,
                 'product': product.guid,
@@ -350,7 +448,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
             })
             return
 
-        sd_pusher.trigger(pusher_event, {
+        store.pusher_trigger(pusher_event, {
             'success': True,
             'product': product.guid,
             'product_url': url,
@@ -360,7 +458,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
             capture_exception(extra=http_exception_response(e))
 
-        sd_pusher.trigger(pusher_event, {
+        store.pusher_trigger(pusher_event, {
             'success': False,
             'error': http_exception_response(e, json=True).get('message', 'Server Error'),
             'product': product.guid,
@@ -745,3 +843,88 @@ def products_supplier_sync(self, store_id, user_id, products, sync_price, price_
         store.pusher_trigger('products-supplier-sync', push_data)
 
     cache.delete(cache_key)
+
+
+@celery_app.task(base=CaptureFailure)
+def product_latest_relist_log(user_id, parent_guid, store_id, pusher_channel):
+    user = User.objects.get(id=user_id)
+    product = GoogleProduct.objects.get(guid=parent_guid)
+    sd_pusher = SureDonePusher(pusher_channel)
+    pusher_event = 'google-product-latest-relist-log'
+
+    try:
+        google_utils = GoogleUtils(user)
+        latest_relist_log = google_utils.api.get_last_log(identifier=parent_guid, context='google', action='relist')
+
+        if latest_relist_log and latest_relist_log.get('result') in ['failure', 'error']:
+            sd_pusher.trigger(pusher_event, {
+                'error': True,
+                'product': parent_guid,
+                'log': json.dumps(latest_relist_log.get('message')),
+                'product_url': reverse('google:product_detail', kwargs={'pk': parent_guid, 'store_index': store_id}),
+            })
+        elif latest_relist_log and latest_relist_log.get('result') == 'warning':
+            sd_pusher.trigger(pusher_event, {
+                'warning': True,
+                'product': parent_guid,
+                'log': json.dumps(latest_relist_log.get('message')),
+                'product_url': reverse('google:product_detail', kwargs={'pk': parent_guid, 'store_index': store_id}),
+            })
+        else:
+            sd_pusher.trigger(pusher_event, {
+                'error': False,
+                'product': parent_guid,
+                'product_url': reverse('google:product_detail', kwargs={'pk': parent_guid, 'store_index': store_id}),
+            })
+
+    except Exception as e:
+        capture_exception(extra={
+            'message': 'Failed to fetch product latest relist log',
+            'product_id': product.id,
+            'error': e
+        })
+
+
+@celery_app.task(base=CaptureFailure)
+def delete_all_store_products(user_id, store_id, skip_all_channels=False):
+    user = User.objects.get(id=user_id)
+    try:
+        google_utils = GoogleUtils(user)
+        products = GoogleProduct.objects.filter(store_id=store_id).prefetch_related('product_variants')
+
+        guids_to_delete = []
+        for product in products:
+            parent = None
+            for variant in product.product_variants.all():
+                if variant.is_main_variant:
+                    parent = variant
+                else:
+                    guids_to_delete.append(variant.guid)
+            # Don't add the parent to the list until all children are deleted
+            # because otherwise SureDone will return an error on parent deletion
+            if parent:
+                guids_to_delete.append(parent.guid)
+
+        batch_size = 100
+        count = len(guids_to_delete)
+        steps = ceil(count / batch_size)
+        for step in range(0, steps):
+            data = guids_to_delete[batch_size * step:count] \
+                if step == steps - 1 else guids_to_delete[batch_size * step:batch_size * (step + 1)]
+
+            api_response = google_utils.delete_products_by_guid(data, skip_all_channels)
+
+            if isinstance(api_response, dict) and api_response.get('result') == 'success':
+                GoogleProduct.objects.filter(guid__in=data).delete()
+            else:
+                capture_message('Failed to delete google products post store deletion', extra={
+                    'data': data,
+                    'suredone_response': api_response,
+                    'suredone_user': google_utils.sd_account.api_username,
+                    'step': step,
+                    'total_batches': steps,
+                })
+
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
