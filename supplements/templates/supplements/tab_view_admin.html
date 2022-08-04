@@ -32,10 +32,12 @@
     {% endif %}
   {% endif %}
   {% if pls_staff or pls_admin %}
-    {% if request.path == pls_payouts %}
-    <li class="active"><a data-toggle="tab" href="#tab-1">Payouts</a></li>
-    {% else %}
-    <li><a href="{% url 'pls:payout_list' %}">Payouts</a></li>
+    {% if not request.user.profile.warehouse_account %}
+      {% if request.path == pls_payouts %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Payouts</a></li>
+      {% else %}
+      <li><a href="{% url 'pls:payout_list' %}">Payouts</a></li>
+      {% endif %}
     {% endif %}
   {% endif %}
 

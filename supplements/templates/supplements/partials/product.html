@@ -29,9 +29,11 @@
           <a href="{{ item.get_url }}" class="btn btn-xs btn-outline btn-primary limit-reached"> Customize <i class="fa fa-long-arrow-right"></i> </a>
         </div>
         {% if pls_admin or request.user|supplies:item %}
-        <div class="col-md-6 text-right">
-          <a href="{% url 'pls:product_edit' item.id %}" class="btn btn-xs btn-outline btn-default"> Admin Edit <i class="fa fa-edit"></i> </a>
-        </div>
+          {% if item.shipstation_account == request.user.profile.warehouse_account or request.user.profile.warehouse_account is None  %}
+            <div class="col-md-6 text-right">
+              <a href="{% url 'pls:product_edit' item.id %}" class="btn btn-xs btn-outline btn-default"> Admin Edit <i class="fa fa-edit"></i> </a>
+            </div>
+          {% endif %}
         {% endif %}
       </div>
     </div>
