@@ -375,6 +375,13 @@ class AliexpressFulfillHelper():
             except KeyError:
                 return self.order_error("Please enter a correct 11 digits CPF")
 
+        if 'rut_no' in self.shipping_address and address.country == 'CL':
+            rut_no = self.shipping_address['rut_no'].strip()
+            if len(rut_no) == 0:
+                return self.order_error("Please enter a correct RUT No.")
+            else:
+                address.rut_no = rut_no
+
         if not self.shipping_address['phone'].startswith('+'):
             dialing_code = '+' + str(phonenumbers.country_code_for_region(self.shipping_address['country_code']))
             order_phone_number = dialing_code + '-' + self.shipping_address['phone']
