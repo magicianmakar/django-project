@@ -99,36 +99,36 @@
               <div class="row">
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label>Weight (oz)</label>
+                    <label>Total Weight</label>
                     <div class="input-group">
-                      <input type="number" step='.1' name="weight" class="form-control" autocomplete="off">
-                      <div class="input-group-addon" style="border-radius:0 8px 8px 0;">oz</div>
+                      <input type="number" min="0" step="1" name="weight" class="form-control" autocomplete="off">
+                      <div class="input-group-addon" style="border-radius:0 8px 8px 0;">{{request.user.models_user.profile.get_config.logistics_weight_unit|default:'oz'}}</div>
                     </div>
                   </div>
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label>Length (in)</label>
+                    <label>Length</label>
                     <div class="input-group">
-                      <input type="number" step='.1' name="length" class="form-control" autocomplete="off">
+                      <input type="number" min="0" step="1" name="length" class="form-control" autocomplete="off">
                       <div class="input-group-addon" style="border-radius:0 8px 8px 0;">in</div>
                     </div>
                   </div>
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label>Width (in)</label>
+                    <label>Width</label>
                     <div class="input-group">
-                      <input type="number" step='.1' name="width" class="form-control" autocomplete="off">
+                      <input type="number" min="0" step="1" name="width" class="form-control" autocomplete="off">
                       <div class="input-group-addon" style="border-radius:0 8px 8px 0;">in</div>
                     </div>
                   </div>
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label>Height (in)</label>
+                    <label>Height</label>
                     <div class="input-group">
-                      <input type="number" step='.1' name="height" class="form-control" autocomplete="off">
+                      <input type="number" min="0" step="1" name="height" class="form-control" autocomplete="off">
                       <div class="input-group-addon" style="border-radius:0 8px 8px 0;">in</div>
                     </div>
                   </div>
@@ -164,6 +164,10 @@
 
 <script type="text/javascript">
   var logisticsCountries = {% json_dumps countries %};
+  var userConfig = {% json_dumps request.user.models_user.profile.get_config %};
+  if (!userConfig.logistics_weight_unit) {
+    userConfig.logistics_weight_unit = 'oz';
+  }
 </script>
 
 {% verbatim %}
@@ -173,10 +177,10 @@
     <div class="row">
       <div class="col-md-3">
         <div class="form-group">
-          <label>Total Weight</label>
+          <label>Weight</label>
           <div class="input-group">
-            <input type="number" step='.1' name="item_weight" value="{{weight}}" class="form-control" autocomplete="off">
-            <div class="input-group-addon" style="border-radius:0 8px 8px 0;">oz</div>
+            <input type="number" min="0" step="1" name="item_weight" value="{{weight}}" class="form-control" autocomplete="off">
+            <div class="input-group-addon" style="border-radius:0 8px 8px 0;">{{config.logistics_weight_unit}}</div>
           </div>
         </div>
       </div>

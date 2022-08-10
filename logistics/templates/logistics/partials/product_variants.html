@@ -1,11 +1,11 @@
+{% load template_helper %}
+
 <tr class="row-slide closed">
-    <td><div></div></td>
-    <td><div></div></td>
     <td><div>{{ variant.title }}</div></td>
     <td><div>
-        <label class="label label-success">weight: {{variant.weight}}</label>
+        weight: {{variant.weight|float_or_int}}
         {% if variant.height or variant.width or variant.length %}
-        <label class="label label-success">HxWxL: {{variant.height}}x{{variant.width}}x{{variant.length}}</label>
+        - HxWxL: {{variant.height|float_or_int}}x{{variant.width|float_or_int}}x{{variant.length|float_or_int}}
         {% endif %}
     </div></td>
     <td><div>{{variant.inventory}}</div></td>

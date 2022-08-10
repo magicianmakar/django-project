@@ -479,3 +479,8 @@ def variant_names(variants, join=' / '):
 @register.simple_tag()
 def compareatprice(price):
     return price if float(price) > 0 else ''
+
+
+@register.filter
+def float_or_int(number):
+    return float(number) if '.' in str(number) else int(number)

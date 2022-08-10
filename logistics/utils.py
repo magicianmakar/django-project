@@ -52,6 +52,32 @@ def get_easypost_api(user, debug=settings.DEBUG):
     return easypost
 
 
+def ounce_to_unit(weight, user):
+    unit = user.get_config('logistics_weight_unit', 'oz')
+    weight = float(weight)
+    if unit == 'lb':
+        return weight / 16
+    elif unit == 'gr':
+        return weight * 28.35
+    elif unit == 'kg':
+        return weight / 35.274
+    else:
+        return weight
+
+
+def unit_to_ounce(weight, user):
+    unit = user.get_config('logistics_weight_unit', 'oz')
+    weight = float(weight)
+    if unit == 'lb':
+        return weight * 16
+    elif unit == 'gr':
+        return weight / 28.35
+    elif unit == 'kg':
+        return weight * 35.274
+    else:
+        return weight
+
+
 def get_variant_data(variants):
     if not isinstance(variants, list):
         variants = [variants]
@@ -489,6 +515,12 @@ class Shipment():
                     for rate in shipment['rates']:
                         if rate['id'] == self.order.rate_id:
                             break
+                    else:
+                        self._source_obj['errors'].append('Rate not found')
+                        self.order.shipment_data = json.dumps(self._source_obj)
+                        self.order.save()
+                        return False
+
                     shipment = shipment.buy(rate=rate).to_dict()
                     if shipment.get('errors'):
                         capture_message('Error paying for shipment', extra={'easypost_errors': shipment['errors']})
@@ -514,6 +546,9 @@ class Shipment():
             self.order.source_label_url = self._source_obj['postage_label']['label_url']
             self.order.rate_id = self._source_obj['selected_rate']['id']
             self.order.shipment_cost = Decimal(self._source_obj['selected_rate']['rate']) * settings.DROPIFIED_RATE_PERCENT
+            self.order.carrier = self._source_obj['selected_rate']['carrier']
+            self.order.service = self._source_obj['selected_rate']['service']
+            self.order.paid_at = arrow.get(self._source_obj['postage_label']['label_date']).datetime
             self.order.is_paid = True
             if self.order.is_dropified:
                 AccountBalance.objects.filter(user=self.user).update(balance=models.F('balance') - self.order.shipment_cost)

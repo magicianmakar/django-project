@@ -5,8 +5,6 @@
 <div class="tabs-container">
     <ul class="nav nav-tabs" style="padding:0;border:0 none;"></ul>
     <ul class="actions" style="border-radius: 8px;border-top-width:1px;">
-        <li>{% include "logistics/partials/balance.html" %}</li>
-        <li></li>
         <li class="pull-right border-left group">
             <form method="get">
                 <input type="text" class="form-control m-l-sm" name="search" value="{{request.GET.search}}" placeholder="Search">
@@ -24,6 +22,11 @@
                   <thead>
                     <tr>
                       <th><a href="{% url_toggle 'sort' '-store_order_number,store_order_number' %}">Order {% sort_icon 'sort' 'store_order_number' %}</a></th>
+                      <th><a href="{% url_toggle 'sort' '-paid_at,paid_at' %}">Paid</a></th>
+                      <th><a href="{% url_toggle 'sort' '-carrier,carrier' %}">Carrier</a></th>
+                      <th><a href="{% url_toggle 'sort' '-service,service' %}">Service</a></th>
+                      <th><a href="{% url_toggle 'sort' '-weight,weight' %}">Weight</a></th>
+                      <th><a href="{% url_toggle 'sort' '-shipment_cost,shipment_cost' %}">Cost</a></th>
                       <th><a href="{% url_toggle 'sort' '-warehouse__name,warehouse__name' %}">From {% sort_icon 'sort' 'warehouse__name' %}</a></th>
                       <th><a href="{% url_toggle 'sort' '-to_address,to_address' %}">To {% sort_icon 'sort' 'to_address' %}</a></th>
                       <th>Actions</th>
@@ -33,6 +36,11 @@
                     {% for order in orders %}
                     <tr>
                         <td>{{ order.store_order_number }}</td>
+                        <td>{% date_humanize order.paid_at %}</td>
+                        <td>{{ order.carrier }}</td>
+                        <td>{{ order.service }}</td>
+                        <td>{{ order.weight }}</td>
+                        <td>${{ order.shipment_cost }}</td>
                         <td>{{ order.warehouse.get_full_name }}</td>
                         <td>
                             <div class="multi-line-text-overflow">
@@ -45,7 +53,10 @@
                         </td>
                         <td>
                             {% if order.source_label_url %}
-                            <a href="{{ order.label_url }}" download="{{ order.label_url }}" target="_blank"><i class="fa fa-download"></i></a>
+                            <a class="btn btn-primary btn-xs" href="{{ order.label_url }}" download="{{ order.label_url }}" target="_blank">
+                                <i class="fa fa-download"></i>
+                                Download
+                            </a>
                             {% endif %}
                         </td>
                     </tr>

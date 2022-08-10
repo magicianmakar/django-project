@@ -1,7 +1,7 @@
 {% load template_helper %}
 
 {% if not hidden_btn %}
-<button type="button" id="3pl-balance" class="btn btn-outline {% if user.logistics_balance.balance %}btn-primary{% else %}btn-danger{% endif %}" data-toggle="modal" data-target="#add-logistics-balance">
+<button type="button" id="3pl-balance" class="btn btn-outline" data-toggle="modal" data-target="#add-logistics-balance">
     {% money_format user.logistics_balance.balance|default:"0" %}
 </button>
 {% endif %}
@@ -54,7 +54,7 @@
                 },
             }).done(function(data) {
                 toastr.success('Credits purchased', '3PL Balance');
-                $('#3pl-balance').text(data.balance).addClass('btn-success').removeClass('btn-danger').trigger('blur');
+                $('#3pl-balance').text(data.balance);
             }).fail(function(data) {
                 displayAjaxError('3PL Balance', data);
             }).always(function() {

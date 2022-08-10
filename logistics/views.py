@@ -49,7 +49,9 @@ class ProductView(LoginRequiredMixin, View):
         ctx['breadcrumbs'] = ['Logistics', {'title': 'Products', 'url': reverse('logistics:products')}, 'Product']
 
         models_user = self.request.user.models_user
-        ctx['warehouses'] = Warehouse.objects.active().filter(user=models_user)
+        warehouses = Warehouse.objects.active().filter(user=models_user)
+        ctx['warehouses'] = warehouses
+        ctx['warehouses_data'] = [w.to_dict() for w in Warehouse.objects.active().filter(user=models_user)]
 
         if product is None:
             return ctx
@@ -63,6 +65,18 @@ class ProductView(LoginRequiredMixin, View):
             key = f"{listing.supplier.warehouse_id}_{listing.variant_id}"
             ctx['inventories'][key] = listing.inventory
             ctx['prices'][key] = listing.price
+
+        ctx['listings_data'] = []
+        for warehouse in warehouses:
+            listing = {'full_name': warehouse.get_full_name(), 'variants': []}
+            for variant in product.variants.all():
+                listing_key = f"{warehouse.id}_{variant.id}"
+                listing['variants'].append({
+                    'listing_key': listing_key,
+                    'inventory': ctx['inventories'].get(listing_key, ''),
+                    'price': ctx['prices'].get(listing_key, ''),
+                })
+            ctx['listings_data'].append(listing)
 
         return ctx
 

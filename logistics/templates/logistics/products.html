@@ -50,34 +50,20 @@
     <div class="tab-content">
         <div id="tab-1" class="tab-pane active">
             <div class="panel-body">
-                <table class="table table-condensed xtable-hover">
+                <table class="table table-condensed xtable-hover" id="logistics-products">
                     <thead>
                         <tr>
-                            <th></th>
-                            <th>Preview</th>
                             <th><a href="{% url_toggle 'sort' '-title,title' %}">Title {% sort_icon 'sort' 'title' %}</a></th>
                             <th><a href="{% url_toggle 'sort' '-suppliers__warehouse__name,suppliers__warehouse__name' %}">Warehouse {% sort_icon 'sort' 'carrier' %}</a></th>
                             <th>Total Stock {% sort_icon 'sort' 'inventory' %}</th>
                             <th>Price {% sort_icon 'sort' 'price' %}</th>
-                            <th></th>
+                            <th class="actions"></th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for product in products.distinct %}
-                        {% for supplier in product.suppliers.active %}
+                        {% for supplier in product.suppliers.active.distinct %}
                         <tr class="row-slide-parent">
-                            <td style="padding: 5px;">
-                                {% if supplier.listings.all %}
-                                <a href="#" style="padding:11px 13px;" class="row-slide pull-left"><i class="dropified-icons di-arrow-down"></i></a>
-                                {% endif %}
-                            </td>
-                            <td style="padding: 5px;">
-                                <img src="{% static 'img/blank.gif' %}"
-                                     data-src="{{ product.image|default:'' }}"
-                                     class="cached-img no-img no-img-sm unveil"
-                                     no-img-width="40px"
-                                     style="max-width:40px;max-height:40px;">
-                            </td>
                             <td>
                                 <div class="multi-line-text-overflow">
                                     <a href="{% url 'logistics:supplier' supplier_id=supplier.id %}">{{ product.title }}</a>
@@ -86,16 +72,42 @@
                             <td>{{ supplier.warehouse.get_full_name }}</td>
                             <td>{{ supplier.total_inventory }}</td>
                             <td>{{ supplier.price_range }}</td>
-                            <td>
-                                <a href="{% url 'logistics:supplier' supplier_id=supplier.id %}">
-                                    <i class="dropified-icons di-pencil color-primary" style="font-size: 15px;"></i>
+                            <td class="actions">
+                                <div class="btn-group">
+                                    <a class="btn btn-primary btn-xs" href="{% url 'logistics:supplier' supplier_id=supplier.id %}">
+                                        <i class="dropified-icons di-pencil"></i>
+                                        Edit
+                                    </a>
+                                    <button type="button" class="btn btn-primary btn-xs dropdown-toggle"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu pull-left" style="left:auto;right:0;">
+                                        <li>
+                                            <a href="{% url 'logistics:supplier' supplier_id=supplier.id %}">
+                                                <i class="dropified-icons di-pencil color-primary" style="font-size: 15px;"></i>
+                                                Edit
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#" class="connect-supplier" data-supplier-id="{{ supplier.id }}">
+                                                <i class="dropified-icons di-bolt color-primary" style="font-size: 15px;"></i>
+                                                Connect
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#" class="delete-supplier" data-id="{{ supplier.id }}">
+                                                <i class="dropified-icons di-trash color-danger" style="font-size: 15px;"></i>
+                                                Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                {% if supplier.listings.all %}
+                                <a href="#" class="btn btn-default btn-outline small row-slide">
+                                    <i class="dropified-icons di-arrow-down"></i>
                                 </a>
-                                <a href="#" class="connect-supplier" data-supplier-id="{{ supplier.id }}">
-                                    <i class="dropified-icons di-bolt color-primary" style="font-size: 15px;"></i>
-                                </a>
-                                <a href="#" class="delete-supplier" data-id="{{ supplier.id }}">
-                                    <i class="dropified-icons di-trash color-danger" style="font-size: 15px;"></i>
-                                </a>
+                                {% endif %}
                             </td>
                         </tr>
 
@@ -105,18 +117,6 @@
 
                         {% empty %}
                         <tr class="row-slide-parent">
-                            <td style="padding: 5px;">
-                                {% if product.variants.all %}
-                                <a href="#" style="padding:11px 13px;" class="row-slide pull-left"><i class="dropified-icons di-arrow-down"></i></a>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <img src="{% static 'img/blank.gif' %}"
-                                     data-src="{{ product.image|default:'' }}"
-                                     class="cached-img no-img no-img-sm unveil"
-                                     no-img-width="40px"
-                                     style="max-width:40px;max-height:40px;">
-                            </td>
                             <td>
                                 <div class="multi-line-text-overflow">
                                     <a href="{% url 'logistics:product' pk=product.id %}">{{ product.title }}</a>
@@ -125,13 +125,30 @@
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td>
-                                <a href="{% url 'logistics:product' pk=product.id %}">
-                                    <i class="dropified-icons di-pencil color-primary" style="font-size: 15px;"></i>
+                            <td class="actions">
+                                <div class="btn-group">
+                                    <a class="btn btn-primary btn-xs" href="{% url 'logistics:product' pk=product.id %}">
+                                        <i class="dropified-icons di-pencil"></i>
+                                        Edit
+                                    </a>
+                                    <button type="button" class="btn btn-primary btn-xs dropdown-toggle"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu pull-left" style="left:auto;right:0;">
+                                        <li>
+                                            <a href="#" class="delete-product" data-id="{{ product.id }}">
+                                                <i class="dropified-icons di-trash color-danger" style="font-size: 15px;"></i>
+                                                Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                {% if product.variants.all %}
+                                <a href="#" class="btn btn-default btn-outline small row-slide">
+                                    <i class="dropified-icons di-arrow-down"></i>
                                 </a>
-                                <a href="#" class="delete-product" data-id="{{ product.id }}">
-                                    <i class="dropified-icons di-trash color-danger" style="font-size: 15px;"></i>
-                                </a>
+                                {% endif %}
                             </td>
                         </tr>
 
@@ -208,6 +225,30 @@
     }
     #connect-product-modal .connect {
         margin: 10px;
+    }
+    #logistics-products .actions {
+        white-space: nowrap;
+        max-width: 140px;
+
+    }
+    #logistics-products td {
+        vertical-align: middle;
+    }
+    .btn.row-slide.active,
+    .btn.row-slide:focus,
+    .btn.row-slide:active {
+        background-color: #ffffff;
+        color: #1c1c1c;
+        box-shadow: none;
+        border-color: #e8e8e8;
+    }
+    .btn.row-slide:hover {
+        background-color: #bababa;
+        border-color: #bababa;
+        color: #FFFFFF;
+    }
+    .btn.row-slide.active i:before {
+        content: "\e901";
     }
 </style>
 {% endblock %}

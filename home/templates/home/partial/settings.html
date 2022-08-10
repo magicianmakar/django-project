@@ -1112,3 +1112,40 @@
     </div>
 </div>
 {% endif %}
+
+{% if user|can:'logistics.use' %}
+<div id="3pl-settings" class="tab-pane">
+    <div class="panel-body">
+        <form class="config-form" action="" method="post">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="logistics_weight_unit" class="control-label">
+                            Weight Unit
+                            {% include 'partial/help_tooltip.html' with help="Set the unit of Weight to use on 3PL feature. Weights are especially useful when creating weight based shipping rates." qtipstyle="color:#BBB" %}
+                        </label>
+                        <select id="logistics_weight_unit" name="logistics_weight_unit" class="form-control">
+                            <option value="oz" {% if config.logistics_weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
+                            <option value="g" {% if config.logistics_weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
+                            <option value="kg" {% if config.logistics_weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
+                            <option value="lb" {% if config.logistics_weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
+                        </select>
+                        <span class="help-block "></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12"><hr /></div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <button class="btn btn-primary btn-lg">
+                            Save <i class="fa fa-save"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}

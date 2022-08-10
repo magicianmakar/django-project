@@ -184,6 +184,7 @@ class Warehouse(models.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'full_name': self.get_full_name(),
             'address_source_id': self.address_source_id,
             'name': self.name,
             'company': self.company,
@@ -240,12 +241,18 @@ class Variant(models.Model):
     width = models.DecimalField(decimal_places=3, max_digits=6, default=0, verbose_name='Width (inches)')
     height = models.DecimalField(decimal_places=3, max_digits=6, default=0, verbose_name='Height (inches)')
 
+    def save(self, *args, **kwargs):
+        from .utils import unit_to_ounce
+        self.weight = unit_to_ounce(self.weight, self.product.user)
+        super().save(*args, **kwargs)
+
     def to_dict(self):
+        from .utils import ounce_to_unit
         return {
             'id': self.id,
             'title': self.title,
             'sku': self.sku,
-            'weight': self.weight or 0,
+            'weight': ounce_to_unit(self.weight, self.product.user) or 0,
             'length': self.length or 0,
             'width': self.width or 0,
             'height': self.height or 0,
@@ -439,11 +446,14 @@ class Order(models.Model):
     width = models.DecimalField(decimal_places=3, max_digits=6, default=0, verbose_name='Width (inches)')
     height = models.DecimalField(decimal_places=3, max_digits=6, default=0, verbose_name='Height (inches)')
     shipment_data = models.TextField(default='{}')
+
     rate_id = models.CharField(max_length=255, blank=True, default='')
+    carrier = models.CharField(max_length=150, blank=True, default='')
+    service = models.CharField(max_length=150, blank=True, default='')
+    shipment_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tracking_number = models.CharField(max_length=255, blank=True, default='')
     source_label_url = models.TextField(blank=True, default='')
-
-    shipment_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    paid_at = models.DateTimeField(null=True, blank=True)
     is_dropified = models.BooleanField(default=False)
     is_paid = models.BooleanField(default=False)
 
@@ -467,7 +477,8 @@ class Order(models.Model):
         if not package:
             return False
 
-        self.weight = float(package.get('weight'))
+        from .utils import unit_to_ounce
+        self.weight = unit_to_ounce(package.get('weight'), self.warehouse.user)
         self.length = float(package.get('length'))
         self.width = float(package.get('width'))
         self.height = float(package.get('height'))
@@ -517,6 +528,7 @@ class Order(models.Model):
             order_data_ids.append(item.order_data_id)
             items.append(item.to_dict())
 
+        from .utils import ounce_to_unit
         return {
             'id': self.id,
             'order_data_ids': order_data_ids,
@@ -524,10 +536,10 @@ class Order(models.Model):
             'to_address_hash': self.to_address_hash,
             'to_address': self.get_address(),
             'from_address': self.get_address('from'),
-            'weight': self.weight,
-            'length': self.length,
-            'width': self.width,
-            'height': self.height,
+            'weight': ounce_to_unit(self.weight, self.warehouse.user),
+            'length': float(self.length) or 0,
+            'width': float(self.width) or 0,
+            'height': float(self.height) or 0,
             'items': items,
             'rate_id': self.rate_id,
             'shipment': self.get_shipment(),
@@ -548,6 +560,11 @@ class OrderItem(models.Model):
     hs_tariff = models.CharField(max_length=32, blank=True, default='')  # hs_code
     country_code = models.CharField(max_length=10, blank=True, default='')
 
+    def save(self, *args, **kwargs):
+        from .utils import unit_to_ounce
+        self.weight = unit_to_ounce(self.weight, self.order.warehouse.user)
+        super().save(*args, **kwargs)
+
     @property
     def store_api(self):
         ids = self.get_store_ids()
@@ -565,10 +582,11 @@ class OrderItem(models.Model):
         return self._store_api_request
 
     def to_dict(self):
+        from .utils import ounce_to_unit
         order_item = {
             'title': self.title,
             'hs_tariff': self.hs_tariff,
-            'weight': self.weight,
+            'weight': ounce_to_unit(self.weight, self.order.warehouse.user),
             'country_code': self.country_code,
             'order_data_id': '_'.join(self.order_data_id.split('_')[1:]),
             'warehouse_id': self.order.warehouse_id,
@@ -617,6 +635,7 @@ class OrderItem(models.Model):
                 self.order_track_id = result['order_track_id']
             else:
                 raise Exception(result)
+
         except:
             capture_exception()
 

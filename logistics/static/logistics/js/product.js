@@ -1,23 +1,37 @@
 var variantTemplate = Handlebars.compile($("#variant").html());
-for (var i = 0, iLength = variants.length; i < iLength; i++) {
-    $('#variants').append(variantTemplate({'variant': variants[i]}));
-}
 var lastVariantID = $('.variant').length;
-
 var groupTpl = Handlebars.compile($("#variant-group").html());
-JSON.parse($('[name="variants_map"]').val()).forEach(function(variantType) {
-    variantType.sku = '';
-    variantType.values = variantType.values.map(function(v) {
-        if (v.sku.indexOf(':') > -1) {
-            var skus = v.sku.split(':');
-            v.sku = skus[1];
-            variantType.sku = skus[0];
-        }
-        return v;
-    });
-    $('#variant-groups').append(groupTpl(variantType));
-});
 
+$(document).on('ready', function() {
+    JSON.parse($('[name="variants_map"]').val()).forEach(function(variantType) {
+        variantType.sku = '';
+        variantType.values = variantType.values.map(function(v) {
+            if (v.sku.indexOf(':') > -1) {
+                var skus = v.sku.split(':');
+                v.sku = skus[1];
+                variantType.sku = skus[0];
+            }
+            return v;
+        });
+        $('#variant-groups').append(groupTpl(variantType));
+    });
+
+    for (var i = 0, iLength = variants.length; i < iLength; i++) {
+        if (!isNaN(variants[i].length)) {
+            variants[i].length = parseFloat(variants[i].length);
+        }
+        if (!isNaN(variants[i].width)) {
+            variants[i].width = parseFloat(variants[i].width);
+        }
+        if (!isNaN(variants[i].height)) {
+            variants[i].height = parseFloat(variants[i].height);
+        }
+
+        $('#variants').append(variantTemplate({'variant': variants[i], 'config': userConfig}));
+    }
+
+    joinVariants(formatVariants());
+});
 
 $('#variants').on('keyup', '[name^="variant_title_"]', function() {
     var variantId = $(this).parents('.variant').find('[name="variant_ids"]').val();
@@ -65,6 +79,7 @@ function addVariant() {
         'length': 0,
         'width': 0,
         'height': 0,
+        'config': userConfig
     }}));
 }
 
@@ -149,7 +164,7 @@ function joinVariants(variantsMap) {
             lastVariantID += 1;
             variantId = lastVariantID * -1;
             $('#variants').append(variantTemplate({
-                'variant': $.extend({}, variant, {'id': variantId})
+                'variant': $.extend({}, variant, {'id': variantId, 'config': userConfig})
             }));
         }
         existingIds.push(variantId + '');
@@ -159,6 +174,7 @@ function joinVariants(variantsMap) {
         if (existingIds.indexOf($(this).val()) === -1) {
             var variant = $(this).parents('.variant');
             $(this).appendTo($('#variants'));
+            // variant.addClass('unlinked');
             variant.remove();
         }
     });

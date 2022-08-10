@@ -37,10 +37,12 @@
                             <div class="row">
                                 <!-- TODO: Add active/inactive for products -->
                                 <div class="col-md-4"></div>
-                                <div class="col-md-1"><label>Weight</label></div>
-                                <div class="col-md-1"><label>Length</label></div>
-                                <div class="col-md-1"><label>Width</label></div>
-                                <div class="col-md-1"><label>Height</label></div>
+                                <div class="col-md-6 p-l-none">
+                                    <div class="col-md-3"><label>Weight</label></div>
+                                    <div class="col-md-3"><label>Length</label></div>
+                                    <div class="col-md-3"><label>Width</label></div>
+                                    <div class="col-md-3"><label>Height</label></div>
+                                </div>
                             </div>
                             <div id="variants"></div>
 
@@ -116,6 +118,29 @@
         padding: 10px 0 10px 10px;
         margin-right: 10px;
     }
+    .listing label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+    }
+    .variant {
+        padding: 3px 0;
+        border-radius: 8px;
+    }
+    .variant.unlinked {
+        background-color: #953f42;
+        border-color: #953f42;
+    }
+    .variant.unlinked .variant-label {
+        color: #ffffff;
+    }
+    .variant.unlinked input,
+    .variant.unlinked .input-group-addon {
+        background-color: #bd878a;
+        border-color: #953f42;
+        color: #fff;
+    }
 </style>
 {% endblock %}
 
@@ -130,17 +155,31 @@
             <input type="hidden" class="form-control" name="variant_sku_{{ variant.id }}" value="{{ variant.sku }}">
             <label class="single-line-text-overflow variant-label">{{ variant.title }} - {{ variant.sku }}</label>
         </div>
-        <div class="col-md-1">
-            <input type="number" step=".01" min="0" class="form-control" name="variant_weight_{{ variant.id }}" value="{{ variant.weight }}">
-        </div>
-        <div class="col-md-1">
-            <input type="number" step=".01" min="0" class="form-control" name="variant_length_{{ variant.id }}" value="{{ variant.length }}">
-        </div>
-        <div class="col-md-1">
-            <input type="number" step=".01" min="0" class="form-control" name="variant_width_{{ variant.id }}" value="{{ variant.width }}">
-        </div>
-        <div class="col-md-1">
-            <input type="number" step=".01" min="0" class="form-control" name="variant_height_{{ variant.id }}" value="{{ variant.height }}">
+        <div class="col-md-6 p-l-none">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <input type="number" step="1" min="0" class="form-control" name="variant_weight_{{ variant.id }}" value="{{ variant.weight }}" autocomplete="off">
+                    <div class="input-group-addon" style="border-radius:0 8px 8px 0;">{{config.logistics_weight_unit}}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="input-group">
+                    <input type="number" step="1" min="0" class="form-control" name="variant_length_{{ variant.id }}" value="{{ variant.length }}">
+                    <div class="input-group-addon" style="border-radius:0 8px 8px 0;">in</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="input-group">
+                    <input type="number" step="1" min="0" class="form-control" name="variant_width_{{ variant.id }}" value="{{ variant.width }}">
+                    <div class="input-group-addon" style="border-radius:0 8px 8px 0;">in</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="input-group">
+                    <input type="number" step="1" min="0" class="form-control" name="variant_height_{{ variant.id }}" value="{{ variant.height }}">
+                    <div class="input-group-addon" style="border-radius:0 8px 8px 0;">in</div>
+                </div>
+            </div>
         </div>
     </div>
 </script>
@@ -162,6 +201,26 @@
     </div>
 </script>
 
+<script id="listing" type="text/x-handlebars-template">
+    <div class="listing" style="max-width: 250px; float: left; margin-left: 30px;">
+        <label>{{ this.full_name }}</label>
+        {{#each this.variants}}
+        <input type="hidden" name="listings" value="{{ this.listing_key }}">
+        <div class="row" style="margin-bottom:10px;">
+            <div class="col-md-6">
+                <input type="number" step="1" class="form-control" name="inventory_{{ this.listing_key }}" value="{{ this.inventory }}" placeholder="Stock">
+            </div>
+            <div class="col-md-6" style="padding-left: 0;">
+                <div class="input-group">
+                    <div class="input-group-addon">$</div>
+                    <input type="number" step=".1" min="0" class="form-control" name="price_{{ this.listing_key }}" value="{{ this.price }}" placeholder="Cost" autocomplete="off">
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</script>
+
 <script id="variant-group-value" type="text/x-handlebars-template">
     <div class="col-md-4 m-t-xs variant-group-value">
         <input type="text" name="value_title" placeholder="Value" value="{{title}}" class="form-control joined-inputs">
@@ -172,7 +231,12 @@
 
 <script type="text/javascript">
     var variants = {% json_dumps variants_data %};
+    var warehouses = {% json_dumps warehouses_data %};
     var listings = {% json_dumps listings_data %};
+    var userConfig = {% json_dumps request.user.models_user.profile.get_config %};
+    if (!userConfig.logistics_weight_unit) {
+        userConfig.logistics_weight_unit = 'oz';
+    }
 </script>
 
 {% compress js %}

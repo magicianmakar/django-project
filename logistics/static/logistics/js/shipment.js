@@ -28,6 +28,7 @@
 
                 var customsItem = Handlebars.compile($("#customs-item").html());
                 item['countries'] = logisticsCountries;
+                item['config'] = userConfig;
                 customsItem = customsItem(item);
 
                 wrapper.find('.customs-items').append(customsItem);

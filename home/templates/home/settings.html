@@ -57,6 +57,11 @@
             </li>
             {% endif %}
 
+            {% if user|can:'logistics.use' %}
+            <li class="logistics-tab">
+                <a data-toggle="tab" href="#3pl-settings" data-auto-hash="3pl" data-auto-click="true" aria-expanded="false">3PL</a>
+            </li>
+            {% endif %}
         </ul>
         <div class="tab-content">
             {% include 'home/partial/settings.html'%}

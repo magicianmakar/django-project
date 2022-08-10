@@ -1,13 +1,13 @@
 $('.row-slide-parent').on('click', '.row-slide', function(e) {
     e.preventDefault();
 
-    var arrowElem = $(this).find('.dropified-icons');
+    var arrowElem = $(this);
     var child = $(this).parents('.row-slide-parent').nextUntil('.row-slide-parent');
-    if (arrowElem.hasClass('di-arrow-down')) {
-        arrowElem.removeClass('di-arrow-down').addClass('di-arrow-up');
+    if (child.hasClass('closed')) {
+        arrowElem.addClass('active');
         child.removeClass('closed');
     } else {
-        arrowElem.removeClass('di-arrow-up').addClass('di-arrow-down');
+        arrowElem.removeClass('active');
         child.addClass('closed');
     }
 });

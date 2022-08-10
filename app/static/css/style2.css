@@ -35,6 +35,10 @@ label,
   padding-right: 20px;
 }
 
+.p-l-none {
+  padding-left: 0;
+}
+
 .p-r-l {
   padding-left: 20px;
 }
@@ -437,7 +441,7 @@ fieldset[disabled] .btn {
     border-bottom: 4px dashed;
 }
 
-.btn > .dropified-icons:not(.di-arrow-up) {
+.btn > .dropified-icons:not(.di-arrow-up, .di-arrow-down) {
     padding-left: 5px;
 }
 .btn.btn-icon > i.dropified-icons {
