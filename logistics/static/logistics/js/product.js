@@ -72,17 +72,6 @@ $('#variants').on('click', '.variant .close', function(e) {
     wrapper.remove();
 });
 
-function addVariant() {
-    $('#variants').append(variantTemplate({'variant': {
-        'id': ($('.variant').length + 1) * -1,
-        'weight': 0,
-        'length': 0,
-        'width': 0,
-        'height': 0,
-        'config': userConfig
-    }}));
-}
-
 function cartesianProduct(arr) {
     if (!arr.length) {
         return [];
@@ -102,7 +91,7 @@ function updateBySku(variant) {
         var skuElem = $('[name^="variant_sku_"][value="' + variant.sku + '"]');
         if (skuElem.length) {
             parent = skuElem.parents('.variant');
-            parent.find('.variant-label').text(variant.title + ' - ' + variant.sku);
+            parent.find('.variant-label').text(variant.label);
             skuElem.siblings('[name^="variant_title_"]').val(variant.title);
             return parent.find('[name="variant_ids"]').val();
         }
@@ -111,7 +100,7 @@ function updateBySku(variant) {
         var titleElem = $('[name^="variant_title_"][value="' + variant.title + '"]');
         if (titleElem.length) {
             parent = titleElem.parents('.variant');
-            parent.find('.variant-label').text(variant.title + ' - ' + variant.sku);
+            parent.find('.variant-label').text(variant.label);
             titleElem.siblings('[name^="variant_sku_"]').val(variant.sku);
             return parent.find('[name="variant_ids"]').val();
         }
@@ -132,9 +121,12 @@ function formatVariants() {
             var title = $(this).find('[name="value_title"]').val();
             var sku = $(this).find('[name="value_sku"]').val();
             if (title || sku) {
+                if (parentSku) {
+                    sku = sku ? parentSku + ':' + sku : '';
+                }
                 variant.values.push({
                     'title': title,
-                    'sku': parentSku ? parentSku + ':' + sku : sku,
+                    'sku': sku,
                 });
             }
         });
@@ -159,10 +151,20 @@ function joinVariants(variantsMap) {
         variant.title = variant.title.join(' / ');
         variant.sku = variant.sku.join(';');
 
+        variant.label = [];
+        if (variant.title) {
+            variant.label.push(variant.title);
+        }
+        if (variant.sku) {
+            variant.label.push(variant.sku);
+        }
+        variant.label = variant.label.join(' - ');
+
         var variantId = updateBySku(variant);
         if (!variantId) {
             lastVariantID += 1;
             variantId = lastVariantID * -1;
+            console.log('label', variant.label);
             $('#variants').append(variantTemplate({
                 'variant': $.extend({}, variant, {'id': variantId, 'config': userConfig})
             }));
@@ -174,7 +176,6 @@ function joinVariants(variantsMap) {
         if (existingIds.indexOf($(this).val()) === -1) {
             var variant = $(this).parents('.variant');
             $(this).appendTo($('#variants'));
-            // variant.addClass('unlinked');
             variant.remove();
         }
     });
