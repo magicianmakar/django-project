@@ -135,7 +135,7 @@ def is_vendor(self):
     return self.vendors.exists()
 
 
-User.add_to_class("is_vendor", cached_property(is_vendor))
+User.add_to_class("is_vendor", cached_property(is_vendor).__set_name__(User, 'is_vendor'))
 
 
 class OrderExportFilter(models.Model):

@@ -138,6 +138,7 @@ class ProductDetailView(DetailView):
         product_data_dict = model_to_dict(self.object)
         product_data_dict = {k: v for k, v in product_data_dict.items()
                              if k not in ['sd_updated_at', 'updated_at', 'created_at']}
+        product_data_dict['status'] = context.get('product').parsed.get('status')
 
         context['product_data'] = json.dumps(product_data_dict, default=str)
         context['variants'] = json.dumps(self.object.variants_for_details_view)

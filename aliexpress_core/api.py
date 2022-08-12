@@ -364,6 +364,24 @@ class AliexpressFulfillHelper():
             address.province = 'Other'
         address.zip = self.shipping_address['zip']
 
+        if address.country == 'BR':
+            try:
+                cpf = self.shipping_address['cpf'].strip()
+                # TO DO confirm if cpf always has 11 digits
+                if len(cpf) == 0:
+                    return self.order_error("Please enter a correct 11 digits CPF")
+                else:
+                    address.cpf = cpf
+            except KeyError:
+                return self.order_error("Please enter a correct 11 digits CPF")
+
+        if 'rut_no' in self.shipping_address and address.country == 'CL':
+            rut_no = self.shipping_address['rut_no'].strip()
+            if len(rut_no) == 0:
+                return self.order_error("Please enter a correct RUT No.")
+            else:
+                address.rut_no = rut_no
+
         if not self.shipping_address['phone'].startswith('+'):
             dialing_code = '+' + str(phonenumbers.country_code_for_region(self.shipping_address['country_code']))
             order_phone_number = dialing_code + '-' + self.shipping_address['phone']
@@ -521,7 +539,7 @@ class AliexpressFulfillHelper():
                 if sku_str in items_sku:
                     duplicate_item = True
                     try:
-                        index = items_sku.index(sku_attr)
+                        index = items_sku.index(sku_str)
                     except:
                         index = None
                     if index is not None:

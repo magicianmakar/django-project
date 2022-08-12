@@ -36,10 +36,15 @@
 
         <ul class="dropdown-menu pull-right">
             {% if item.order_track %}
-            <li><a class="placed-order-details" href="#" order-id="{{order.id}}" source-order-id="{{item.order_track.source_id}}" order-date="{{item.order_track.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}">Order Details</a></li>
+            <li><a class="placed-order-details" href="#" order-id="{{order.id}}" source-order-id="{{item.order_track.source_id}}" source-url="{{item.order_track.get_source_url}}" order-date="{{item.order_track.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}">Order Details</a></li>
             {% else %}
             <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}" product-id="{{item.product.parent_product_id}}">Mark as Ordered</a></li>
             {% endif %}
+
+            {% if not item.is_bundle and item.fulfillment_status == 'Unfulfilled' and order.status != 'PENDING' %}
+            <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.order_track.source_tracking}}">Mark as Fulfilled</a></li>
+            {% endif %}
+
 
             {% if item.supplier.is_walmart %}
                 {% with user.id|stringformat:"i" as user_id %}

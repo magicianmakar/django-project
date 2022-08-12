@@ -276,6 +276,12 @@ class GoogleStoreApi(ApiBase):
         store.is_active = False
         store.save()
 
+        tasks.delete_all_store_products.apply_async(kwargs={
+            'user_id': user.id,
+            'store_id': store_id,
+            'skip_all_channels': True,
+        })
+
         return self.api_success()
 
     def get_store_verify(self, request, user, data):
@@ -520,9 +526,11 @@ class GoogleStoreApi(ApiBase):
         if not original_link:
             return self.api_error('Original Link is not set', status=500)
 
-        supplier_url = remove_link_query(data.get('supplier-link'))
-        if not supplier_url:
-            return self.api_error('Supplier URL is missing', status=422)
+        supplier_name = data.get('supplier-name')
+        if not supplier_name:
+            return self.api_error('Supplier Name is missing', status=422)
+
+        supplier_url = remove_link_query(data.get('supplier-link', 'http://www.aliexpress.com/'))
 
         product_guid = data.get('product')
 
@@ -532,14 +540,19 @@ class GoogleStoreApi(ApiBase):
         supplier_id = data.get('export', None)
 
         try:
-            product = GoogleProduct.objects.get(guid=product_guid)
+            product = GoogleProduct.objects.filter(guid=product_guid).first()
+            if not product:
+                product_variant = GoogleProductVariant.objects.get(guid=product_guid)
+                product = product_variant.parent_product
+
             permissions.user_can_edit(user, product)
             store = product.store
 
             if not store:
                 return self.api_error('Google store not found', status=404)
-        except GoogleProduct.DoesNotExist:
-            product_title = data.get('product-title')
+
+        except (GoogleProduct.DoesNotExist, GoogleProductVariant.DoesNotExist):
+            product_title = data.get('product-title') or 'Google Product'
             product_image = data.get('product-image')
             product_price = data.get('product-price')
             product_attributes = data.get('product-attributes')
@@ -599,13 +612,23 @@ class GoogleStoreApi(ApiBase):
         if not original_link:
             return self.api_error('Original Link is not set', status=500)
 
+        # move product to the new store if its current one is inactive
+        store_id = data.get('google-store')
+        current_store = GoogleStore.objects.filter(id=store_id).first()
+        if not store.is_active and current_store and current_store.is_active:
+            google_utils = GoogleUtils(user)
+            updated_product = google_utils.move_product_to_store(product, current_store, skip_all_channels=True)
+            if updated_product:
+                product = updated_product
+                store = current_store
+
         reload = False
         try:
             product_supplier = GoogleSupplier.objects.get(id=supplier_id, store__in=user.profile.get_google_stores())
 
             product_supplier.product = product
             product_supplier.product_url = original_link
-            product_supplier.supplier_name = data.get('supplier-name')
+            product_supplier.supplier_name = supplier_name
             product_supplier.supplier_url = supplier_url
             product_supplier.save()
 
@@ -618,7 +641,7 @@ class GoogleStoreApi(ApiBase):
                 product=product,
                 product_guid=product_guid,
                 product_url=original_link,
-                supplier_name=data.get('supplier-name'),
+                supplier_name=supplier_name,
                 supplier_url=supplier_url,
                 is_default=is_default
             )
@@ -1088,3 +1111,23 @@ class GoogleStoreApi(ApiBase):
             cache.delete(user_store_supplier_sync_key)
             return self.api_success()
         return self.api_error('No Sync in progress', status=404)
+
+    def get_product_latest_relist_log(self, request, user, data):
+        parent_guid = data.get('product')
+        if not parent_guid:
+            return self.api_error('Product ID cannot be empty.')
+
+        store_id = data.get('store')
+        if not store_id:
+            return self.api_error('Store ID cannot be empty.')
+
+        pusher_channel = f'user_{user.id}'
+        tasks.product_latest_relist_log.apply_async(kwargs={
+            'user_id': user.id,
+            'parent_guid': parent_guid,
+            'store_id': store_id,
+            'pusher_channel': pusher_channel,
+        }, countdown=0, expires=120)
+
+        pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
+        return self.api_success({'pusher': pusher})

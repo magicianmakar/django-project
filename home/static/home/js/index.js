@@ -1974,6 +1974,48 @@
         });
     });
 
+    $('.reauthorize-google-store').click(function(e) {
+        e.preventDefault();
+        if (typeof(Pusher) === 'undefined') {
+            toastr.error('This could be due to using Adblocker extensions<br>' +
+                'Please whitelist Dropified website and reload the page<br>' +
+                'Contact us for further assistance',
+                'Pusher service is not loaded', {timeOut: 0});
+            return;
+        }
+
+        var buttonEl = $(this);
+        buttonEl.bootstrapBtn('loading');
+
+        var pusher = new Pusher(sub_conf.key);
+        var channel = pusher.subscribe(sub_conf.channel);
+
+        channel.bind('google-reauthorize-store', function(data) {
+            buttonEl.bootstrapBtn('reset');
+            pusher.unsubscribe(channel);
+
+            if (data.success) {
+                window.location.href = data.auth_url;
+            } else {
+                displayAjaxError('Reauthorize Google store', data);
+            }
+        });
+
+        channel.bind('pusher:subscription_succeeded', function() {
+            $.ajax({
+                url: api_url('reauthorize-store', 'google') + '?' + $.param({store: buttonEl.attr('data-store-id')}),
+                type: 'GET',
+                success: function(data) {},
+                error: function(data, status) {
+                    buttonEl.bootstrapBtn('reset');
+                    pusher.unsubscribe(channel);
+                    displayAjaxError('Reauthorize Google store', data);
+                },
+            });
+        });
+    });
+
+
     function handleEbayAdvancedSettingsLoad(data) {
         var generateOptionHtml = function(option, currentSelection) {
             var selectedOption = currentSelection === option.profileId ? ' selected="selected"' : '';

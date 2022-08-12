@@ -51,6 +51,7 @@ function prepareApiData(productData, variants) {
         tags: $('#product-tag').val(),
         longdescription: document.editor.getData(),
         ebay_category_id: productData.ebay_category_id,
+        status: productData.status,
         vendor: $('#product-vendor').val(),
         published: $('#product-visible').prop('checked'),
         images: productData.images,
@@ -349,6 +350,9 @@ $('#product-update-btn').click(function (e) {
 
             if (eventData.success) {
                 toastr.success('Product Updated.','eBay Update');
+                setTimeout(function() {
+                    window.location.href = 'product_url' in eventData ? eventData.product_url : '/ebay/products';
+                }, 1000);
             }
             if (eventData.error) {
                 if (eventData.parsed_ebay_errors_list) {

@@ -310,6 +310,7 @@
                                     <label for="product-visible">
                                         <input type="checkbox" id="product-visible"
                                                 {% if not product.some_variants_are_connected %}
+                                                    style="display:none;"
                                                     {% if config.make_visisble is None or config.make_visisble %}
                                                checked="checked"{% endif %}
                                                 {% else %}
@@ -318,7 +319,9 @@
                                                     {% endif %}
                                                 {% endif %}
                                         >
-                                        Publish in Store
+                                        {% if product.some_variants_are_connected %}
+                                            Publish in Store
+                                        {% endif %}
                                     </label>
                                 </div>{% endcomment %}
 

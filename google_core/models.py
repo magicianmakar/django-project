@@ -59,10 +59,18 @@ class GoogleStore(SureDoneStoreBase):
         return self.creds.get('merchant_center_id', {}).get('value')
 
     @property
+    def access_token(self):
+        return self.creds.get('access_token', {}).get('value')
+
+    @property
     def auth_completed(self):
         # Google store do not have onboarding yet...
         return True
         # return self.system_token
+
+    @property
+    def is_unauthorized(self):
+        return not bool(self.system_token) and not bool(self.access_token)
 
     @property
     def instance_prefix(self):
@@ -174,14 +182,15 @@ class GoogleProduct(SureDoneProductBase):
 
     @property
     def google_url(self):
-        """TODO:google: how do we construct Google product URL? """
         if self.is_connected:
-            return f'https://www.Google.com/itm/{self.source_id}'
+            return f'https://merchants.google.com/mc/items?a={self.store.merchant_center_id}&offerId={self.sku}' \
+                   f'&language=en&channel=0&country=US'
         elif self.some_variants_are_connected:
             connected_variants = self.product_variants.exclude(source_id=0).exclude(source_id=None)
             if connected_variants.count() > 0:
                 connected_variant = connected_variants.first()
-                return f'https://www.Google.com/itm/{connected_variant.source_id}'
+                return f'https://merchants.google.com/mc/items?a={self.store.merchant_center_id}&offerId=' \
+                       f'{connected_variant.sku}&language=en&channel=0&country=US'
 
         return None
 

@@ -264,8 +264,9 @@ class EbayStoreApi(ApiBase):
 
         permissions.user_can_delete(user, store)
 
-        # Delete auth token on SureDone
         ebay_utils = EbayUtils(user)
+
+        # Delete auth token on SureDone
         sd_api_request_data = {
             'instance': store.store_instance_id,
             'channel': 'ebay',
@@ -292,6 +293,12 @@ class EbayStoreApi(ApiBase):
 
         store.is_active = False
         store.save()
+
+        tasks.delete_all_store_products.apply_async(kwargs={
+            'user_id': user.id,
+            'store_id': store_id,
+            'skip_all_channels': True,
+        })
 
         return self.api_success()
 

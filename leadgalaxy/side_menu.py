@@ -490,7 +490,6 @@ def get_namespace(request):
     item = get_active_item(request)
     url_obj = resolve(request.path)
 
-    # request.session["nav_ns"] = ""
     namespace = url_obj.namespace
     url_name = url_obj.url_name
 
