@@ -2725,8 +2725,8 @@ class OrdersView(AuthenticationMixin, TemplateView):
                             'is_raw': True,
                             'order': {
                                 'phone': {
-                                    'number': logistics_address.get('phone'),
-                                    'country': logistics_address['country_code']
+                                    'number': logistics_address.get('phone') if logistics_address else None,
+                                    'country': logistics_address['country_code'] if logistics_address else None
                                 },
                             }
                         }
