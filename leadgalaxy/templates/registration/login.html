@@ -26,12 +26,28 @@
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     {% endcompress %}
 
+    <style type="text/css">
+        .spliter {
+            display: flex;
+            flex-direction: row;
+            height: 99.9%;
+        }
+        .spliter-left, .spliter-right {
+            width: 50%;
+        }
+        .support-footer {
+            position: initial;
+        }
+    </style>
+
     {% include "partial/custom_tags.html" %}
 
 </head>
 
 <body class="login-body gray-bg">
 
+<div class="spliter">
+<div class="spliter-left">
     <div class="d-table">
     <div class="d-table-cell">
 
@@ -125,7 +141,13 @@
         </div>
     </div>
     {% endif %}
+</div>
 
+<div class="spliter-right">
+    <iframe src="https://go.dropified.com/webinar-registration1660597157440" frameborder="0" width="100%" height="100%" allowfullscreen></iframe>
+</div>
+
+</div>
     <!-- Mainly scripts -->
     <script src="{% static 'js/jquery.min.js' %}"></script>
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
