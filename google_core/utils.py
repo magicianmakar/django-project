@@ -1192,9 +1192,9 @@ class GoogleOrderItem:
 
 
 @add_to_class(UserProfile, 'sync_google_stores')
-def user_sync_google_stores(self):
+def user_sync_google_stores(self, use_cached=False):
     if self.user:
-        GoogleUtils(self.user).sync_google_stores()
+        GoogleUtils(self.user).sync_google_stores(use_cached=use_cached)
 
 
 def get_store_from_request(request):
