@@ -19,6 +19,7 @@ from leadgalaxy.models import UserProfile
 from lib.exceptions import capture_exception
 from shopified_core.commands import DropifiedBaseCommand
 from shopify_orders.models import ShopifyOrderRevenue
+from suredone_core.utils import SureDoneUtils
 
 
 def create_contact_worker(cmd, q):
@@ -45,6 +46,7 @@ class Command(DropifiedBaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--create', action='store_true', help='Create Properties only')
         parser.add_argument('--orders', action='store_true', help='Load orders stats')
+        parser.add_argument('--get_sd_orders', action='store_true', help='Load sd orders stats')
         parser.add_argument('--tracks', action='store_true', help='Load order tracking info')
         parser.add_argument('--mrr', action='store_true', help='Get MRR/LTV data')
         parser.add_argument('--missing', action='store_true', help='Add Missing users only')
@@ -60,6 +62,10 @@ class Command(DropifiedBaseCommand):
         elif options['orders']:
             self.write('Orders data...')
             return self.find_orders()
+
+        elif options['get_sd_orders']:
+            self.write('SD orders data...')
+            return self.get_sd_orders()
 
         elif options['mrr']:
             self.write('Get MRR data...')
@@ -159,6 +165,9 @@ class Command(DropifiedBaseCommand):
         self.create_property('dr_orders_30_day_count', 'Orders Count last 30 Days', 'number', 'number')
         self.create_property('dr_orders_all_count', 'Orders Count all time', 'number', 'number')
 
+        self.create_property('dr_ebay_orders_30_day_count', 'Ebay Orders Count last 30 Days', 'number', 'number')
+        self.create_property('dr_ebay_orders_all_count', 'Ebay Orders Count all time', 'number', 'number')
+
         self.create_property('dr_orders_30_day_sum', 'Orders Sum last 30 Days', 'number', 'number')
         self.create_property('dr_orders_all_sum', 'Orders Sum All time', 'number', 'number')
 
@@ -220,6 +229,32 @@ class Command(DropifiedBaseCommand):
                 })
             except User.DoesNotExist:
                 continue
+
+        self.progress_close()
+
+    def get_sd_orders(self):
+        date_limit = arrow.utcnow().replace(days=-30)
+        platform_type = 'ebay'
+        users = User.objects.all().order_by('-id')
+
+        self.progress_total(users.count())
+
+        for user in users:
+            self.progress_update()
+            stores = user.profile.get_ebay_stores()
+            if not stores:
+                continue
+
+            sd_utils = SureDoneUtils(user)
+            search_filters = ['archived:=0']
+            user_sd_orders, total_products_count = sd_utils.get_all_orders(filters=search_filters)
+            user_ebay_orders_all = [order for order in user_sd_orders if order.get('channel') == platform_type]
+            user_ebay_orders_last_30_days = [order for order in user_ebay_orders_all if arrow.get(order.get('dateutc')) > date_limit]
+
+            user.set_config(f'_{platform_type}_orders_count', {
+                '30': len(user_ebay_orders_last_30_days),
+                '-1': len(user_ebay_orders_all),
+            })
 
         self.progress_close()
 
