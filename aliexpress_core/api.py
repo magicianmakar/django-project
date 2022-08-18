@@ -18,7 +18,7 @@ from commercehq_core.utils import get_chq_order
 from groovekart_core.models import GrooveKartOrderTrack, GrooveKartProduct, GrooveKartStore
 from groovekart_core.utils import get_gkart_order
 from leadgalaxy.models import ShopifyOrderTrack, ShopifyProduct, ShopifyStore
-from leadgalaxy.utils import get_shopify_order, get_admitad_credentials
+from leadgalaxy.utils import get_shopify_order, get_admitad_credentials, aliexpress_shipping_info
 from lib.aliexpress_api import TopException
 from lib.exceptions import capture_exception
 from shopified_core import permissions
@@ -728,6 +728,9 @@ class ShippingMethods():
             aliexpress_obj.set_app_info(API_KEY, API_SECRET)
 
         send_goods_country_code = 'CN'
+        if isinstance(self.variant, str):
+            if self.variant.lower() == 'united states':
+                send_goods_country_code = 'US'
         for v in self.variant:
             if isinstance(v, dict):
                 if v.get('title'):
@@ -750,16 +753,26 @@ class ShippingMethods():
             "send_goods_country_code": send_goods_country_code
         }
         aliexpress_obj.set_info(json.dumps(data, indent=0))
-        try:
-            result = aliexpress_obj.getResponse(authrize=self.aliexpress_account.access_token)
-            shipping_data = result['aliexpress_logistics_buyer_freight_calculate_response']['result']
-            if shipping_data.get('success'):
-                shipping_data = shipping_data['aeop_freight_calculate_result_for_buyer_d_t_o_list']['aeop_freight_calculate_result_for_buyer_dto']
-                return shipping_data
-            else:
-                return None
-        except:
-            return None
+        shipping_data = aliexpress_shipping_info(data['product_id'], data['country_code'], data['send_goods_country_code'])
+
+        if len(shipping_data['freight']) > 0:
+            shipping_services = [{
+                'amount': '',
+                'service_code': '',
+                'service_name': 'Select Shipping'
+            }]
+            for data in shipping_data['freight']:
+                shipping_services.append(
+                    {
+                        'amount': data.get('price'),
+                        'service_code': data.get('company'),
+                        'service_name': data.get('companyDisplayName'),
+                        'tracking': data.get('isTracked'),
+                        'time': data.get('time')
+                    }
+                )
+            return shipping_services
+        return None
 
 
 class AliexpressApi(ApiResponseMixin):
@@ -831,71 +844,6 @@ class AliexpressApi(ApiResponseMixin):
 
     def import_shipping_method(self, user, data):
         try:
-            SHIPPING_DATA = {
-                "CAINIAO_CONSOLIDATION_AE": "Aliexpress Direct (UAE)",
-                "CAINIAO_CONSOLIDATION_BR": "Aliexpress Direct (Brazil)",
-                "CAINIAO_PREMIUM": "AliExpress Premium Shipping",
-                "CAINIAO_ECONOMY": "AliExpress Saver Shipping",
-                "CAINIAO_STANDARD": "AliExpress Standard Shipping",
-                "ARAMEX": "ARAMEX",
-                "ASENDIA_US": "ASENDIA (USA)",
-                "AUSPOST": "Australia Post",
-                "BSC_ECONOMY_SG": "BSC Special Economy",
-                "BSC_STANDARD_SG": "BSC Special Standard",
-                "CAINIAO_EXPEDITED_ECONOMY": "Cainiao Expedited Economy",
-                "AE_CAINIAO_STANDARD": "Cainiao Expedited Standard",
-                "CAINIAO_STANDARD_HEAVY": "Cainiao Heavy Parcel Line",
-                "CAINIAO_ECONOMY_SG": "Cainiao Saver Shipping For Special Goods",
-                "CAINIAO_STANDARD_SG": "Cainiao Standard For Special Goods",
-                "CAINIAO_SUPER_ECONOMY": "Cainiao Super Economy",
-                "CAINIAO_SUPER_ECONOMY_SG": "Cainiao Super Economy for Special Goods",
-                "AE_CN_SUPER_ECONOMY_G": "Cainiao Super Economy Global",
-                "CAINIAO_OVERSEAS_WH_EXPPL": "Cainiao Warehouse Express Shipping",
-                "CPAP": "China Post Air Parcel",
-                "YANWEN_JYT": "China Post Ordinary Small Packet Plus",
-                "CPAM": "China Post Registered Air Mail",
-                "CORREIOS_BR": "Correios Brazil",
-                "DEUTSCHE_POST": "Deutsche Post",
-                "DHL": "DHL",
-                "DHLECOM": "DHL e-commerce",
-                "EMS": "EMS",
-                "E_EMS": "e-EMS",
-                "EMS_ZX_ZX_US": "ePacket",
-                "FEDEX": "Fedex IP",
-                "FEDEX_IE": "Fedex IE",
-                "FLYT": "Flyt Express",
-                "FLYT_ECONOMY_SG": "Flyt Special Economy",
-                "GLS_FR": "GLS France",
-                "GLS_ES": "GLS Spain",
-                "LAPOSTE": "La Poste",
-                "MEEST": "Meest",
-                "POSTKR": "POSTKR",
-                "POST_NL": "PostNL",
-                "RUSSIAN_POST": "Russian Post",
-                "SF_EPARCEL_OM": "SF Economic Air Mail",
-                "SF_EPARCEL": "SF eParcel",
-                "SF": "SF Express",
-                "SGP": "Singapore Post",
-                "SUNYOU_RM": "SunYou",
-                "SUNYOU_ECONOMY": "SunYou Economic Air Mail",
-                "SUNYOU_ECONOMY_SG": "SunYou Special Economy",
-                "SHUNYOU_STANDARD_SG": "SunYou Special Standard",
-                "CHP": "Swiss Post",
-                "TNT": "TNT",
-                "LAOPOST": "TOPYOU",
-                "TOPYOU_ECONOMY_SG": "TOPYOU Special Economy",
-                "PTT": "Turkey Post",
-                "UBI": "UBI",
-                "UPS": "UPS",
-                "UPS_US": "UPS (USA)",
-                "UPSE": "UPS Expedited",
-                "USPS": "USPS",
-                "YANWEN_ECONOMY": "Yanwen Economic Air Mail",
-                "YANWEN_ECONOMY_SG": "Yanwen Special Economy",
-                "YANWEN_AM": "Yanwen Special Standard",
-                "Other": "Seller's Shipping Method"
-            }
-
             cache_key = f"aliexpress_shipping_method_{data['order']['store']}_{data['order']['order_id']}_{data['order']['order_data']['source_id']}"
             aliexpress_shipping_result = cache.get(cache_key, {})
             if aliexpress_shipping_result:
@@ -927,30 +875,16 @@ class AliexpressApi(ApiResponseMixin):
             shipping_data = shipping_obj.get_shipping_data()
             if shipping_data is None:
                 return {'data': {}}
-            shipping_services = [{
-                'amount': '',
-                'service_code': '',
-                'service_name': 'Select Shipping'
-            }]
-            for data in shipping_data:
-                if not data.get('error_code'):
-                    temp = {
-                        'amount': data.get('freight').get('amount'),
-                        'service_code': data.get('service_name'),
-                        'service_name': SHIPPING_DATA.get(data.get('service_name')) or data.get('service_name')
-                    }
-                    shipping_services.append(temp)
-                    if shipping_data is not None:
-                        for service_name in priority_service_list:
-                            if service:
-                                break
-                            for data in shipping_data:
-                                if service_name == data.get('service_name'):
-                                    service = data['service_name']
-                                    break
-            cache.set(cache_key, {'data': shipping_services, 'shipping_setting': service}, timeout=600)
+            for service_name in priority_service_list:
+                if service:
+                    break
+                for data in shipping_data:
+                    if service_name == data.get('service_name'):
+                        service = data['service_name']
+                        break
+            cache.set(cache_key, {'data': shipping_data, 'shipping_setting': service}, timeout=600)
 
-            return {'data': shipping_services, 'shipping_setting': service}
+            return {'data': shipping_data, 'shipping_setting': service}
         except:
             shipping_services = {}
             return {'data': shipping_services, 'shipping_setting': ''}

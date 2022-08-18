@@ -403,7 +403,7 @@ def verify_shopify_webhook(store, request, throw_excption=True):
     return webhook_hash == request_hash
 
 
-def aliexpress_shipping_info(aliexpress_id, country_code):
+def aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry='CN'):
     shippement_key = f'ali_shipping_info_{aliexpress_id}_{country_code}'
     freight_data = cache.get(shippement_key)
 
@@ -421,6 +421,7 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
         "maxPrice": 0.01,
         "displayMultipleFreight": False,
         "userScene": 'PC_DETAIL_SHIPPING_PANEL',
+        "sendGoodsCountry": sendGoodsCountry,
     }
 
     headers = {
