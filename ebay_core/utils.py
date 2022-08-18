@@ -105,12 +105,12 @@ class EbayUtils(SureDoneUtils):
 
         return {'auth_url': sd_auth_url}
 
-    def sync_ebay_stores(self):
+    def sync_ebay_stores(self, use_cached=False):
         if not self.api:
             return
 
         # 1. Get all suredone options
-        all_options_data = self.get_all_user_options(verify_custom_fields=True)
+        all_options_data = self.get_all_user_options(verify_custom_fields=True, use_cached=use_cached)
         if not isinstance(all_options_data, dict):
             return
 

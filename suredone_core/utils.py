@@ -115,8 +115,8 @@ class SureDoneUtils:
                         google_instances.append(instance_id)
                 self._account_stores_config['google'] = google_instances
 
-    def get_all_user_options(self, update_db=True, verify_custom_fields=False):
-        all_options_data = self.api.get_all_account_options()
+    def get_all_user_options(self, update_db=True, verify_custom_fields=False, use_cached=False):
+        all_options_data = self.sd_account.parsed_options_config if use_cached else self.api.get_all_account_options()
 
         if all_options_data and isinstance(all_options_data, dict):
             if update_db:

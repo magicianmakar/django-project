@@ -428,10 +428,10 @@ class UserProfile(models.Model):
 
         return stores
 
-    def get_ebay_stores(self, flat=False, do_sync=False):
+    def get_ebay_stores(self, flat=False, do_sync=False, use_cached=False):
         if do_sync:
             # The function is defined in ebay_core.utils.py
-            self.sync_ebay_stores()
+            self.sync_ebay_stores(use_cached=use_cached)
         if self.is_subuser:
             stores = self.subuser_ebay_stores.filter(is_active=True)
         else:
@@ -442,10 +442,10 @@ class UserProfile(models.Model):
 
         return stores
 
-    def get_fb_stores(self, flat=False, do_sync=False, include_non_onboarded=False):
+    def get_fb_stores(self, flat=False, do_sync=False, include_non_onboarded=False, use_cached=False):
         if do_sync:
             # The function is defined in facebook_core.utils.py
-            self.sync_fb_stores()
+            self.sync_fb_stores(use_cached=use_cached)
         if self.is_subuser:
             stores = self.subuser_fb_stores.filter(is_active=True)
         else:
@@ -459,10 +459,10 @@ class UserProfile(models.Model):
 
         return stores
 
-    def get_google_stores(self, flat=False, do_sync=False):
+    def get_google_stores(self, flat=False, do_sync=False, use_cached=False):
         if do_sync:
             # The function is defined in facebook_core.utils.py
-            self.sync_google_stores()
+            self.sync_google_stores(use_cached=use_cached)
         if self.is_subuser:
             stores = self.subuser_google_stores.filter(is_active=True)
         else:

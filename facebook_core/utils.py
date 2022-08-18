@@ -116,12 +116,12 @@ class FBUtils(SureDoneUtils):
 
         return resp.json().get('results', {})
 
-    def sync_fb_stores(self):
+    def sync_fb_stores(self, use_cached=False):
         if not self.api:
             return
 
         # 1. Get all suredone options
-        all_options_data = self.get_all_user_options(verify_custom_fields=True)
+        all_options_data = self.get_all_user_options(verify_custom_fields=True, use_cached=use_cached)
         if not isinstance(all_options_data, dict):
             return
 
