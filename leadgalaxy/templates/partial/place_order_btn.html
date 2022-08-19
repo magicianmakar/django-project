@@ -35,7 +35,6 @@
 
             <span class="dropified-icons di-arrow-up"></span></button>
     {% endif %}
-
         <ul class="dropdown-menu pull-right">
             {% if item.is_bundle %}
                 {% if not order.pending_payment and not item.refunded %}
@@ -123,6 +122,15 @@
                     Mobile Order
                 </a>
             </li>
+            {% endif %}
+
+            {% if use_extension_quick and not item.is_bundle %}
+                <li><a class="place-order-btn quick-quick-ext-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
+                data-href="{% app_link 'orders/place' supplier=item.supplier.id SAPlaceOrder=item.order_data_id %}"
+                data-orderdataid="{{ item.order_data_id }}"
+                data-producturl="{{item.supplier.product_url}}" data-variant="{{ item.order_data.variant|variant_names }}"
+                data-productid="{{ item.order_data.source_id }}" data-quantity="{{item.order_data.quantity}}"
+               ><i class="fa fa-bolt"></i> Quck Extension Order</a></li>
             {% endif %}
             {% endif %}
         </ul>

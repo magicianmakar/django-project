@@ -88,6 +88,14 @@
                     data-href="{% app_link 'bigcommerce/orders/place' supplier=item.supplier.id %}"
                     data-order="{{ item.order_data_id|urlencode }}"
                 >Auto - Choose Shipping</a></li>
+            {% if use_extension_quick and not item.is_bundle %}
+                <li><a class="place-order-btn quick-quick-ext-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
+                data-href="{% app_link 'bigcommerce/orders/place' supplier=item.supplier.id SAPlaceOrder=item.order_data_id %}"
+                data-orderdataid="{{ item.order_data_id }}"
+                data-producturl="{{item.supplier.product_url}}" data-variant="{{ item.order_data.variant|variant_names }}"
+                data-productid="{{ item.order_data.source_id }}" data-quantity="{{item.order_data.quantity}}"
+               ><i class="fa fa-bolt"></i> Quck Extension Order</a></li>
+            {% endif %}
             {% endif %}
         </ul>
     </div>

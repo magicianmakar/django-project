@@ -322,6 +322,87 @@
         });
     });
 
+
+    $('.quick-quick-ext-btn').click(function(e) {
+        e.preventDefault();
+        var btn = $(e.target);
+        var group = btn.parents('.order-line-group');
+        var order_variant = btn.data('variant');
+        var order_productid = btn.data('productid');
+        var order_quantity = btn.data('quantity');
+        var orderdataid = btn.data('orderdataid');
+
+        var line = $(this).parents('.line');
+        if (line && line.attr('supplier-type') === 'alibaba') {
+            orderItemsAlibaba([line.attr('order-data-id')]);
+            return;
+        }
+
+        // Admitad
+        if (window.admitad_site_id && order_productid){
+            generate_admitad_click('https://www.aliexpress.com/item/' + order_productid + '.html',window.app_base_link);
+        }
+
+        // sending message to extension to fetch product data
+        var order_data = {
+            url: btn.data('href'),
+            order_data: group.attr('order-data-id'),
+            order_name: group.attr('order-number'),
+            order_id: group.attr('order-id'),
+            line_id: group.attr('line-id'),
+            line_title: group.attr('line-title'),
+            supplier_type: group.attr('supplier-type'),
+        };
+        var skuIdStr = false;
+
+        window.extensionSendMessage({
+            subject: 'getVariantsCombinations',
+            from: 'website',
+            url: btn.data('producturl')
+        }, function(rep) {
+            rep.forEach(function(item) {
+
+                if (item.skuAttr == "" &&  order_variant == "") {
+                    skuIdStr = item.skuIdStr;
+                    return false;
+                }
+
+                var variants = item.skuAttr.split(';');
+                var variants_normalized = [];
+                variants.forEach(function(variant){
+                    var variant_title=variant.split("#");
+
+                    // replace empty "ships from" labels
+                    if (variant_title[0]=='200007763:201336100') {
+                        variant_title[1]='China';
+                    }
+                    if (variant_title[0]=='200007763:201336106') {
+                        variant_title[1]='United States';
+                    }
+
+                    var variant_title_normalized=variant_title[1].trim();
+                    variants_normalized.push(variant_title_normalized);
+                });
+                var variants_normalized_str = variants_normalized.join(' / ');
+                if (variants_normalized_str.toLowerCase().trim() == order_variant.toLowerCase().trim()) {
+                    skuIdStr = item.skuIdStr;
+                    return false;
+                }
+            });
+
+            if (skuIdStr) {
+                order_data['url']+='&quick-order=1&objectId='+
+                    order_productid+'&skuId='+skuIdStr+'&quantity='+order_quantity;
+                addOrderToQueue(order_data);
+            }
+            else {
+                toastr.error('Quick Order Error (Product variants can\'t be auto-detected. Please use regular oreding method.' ) ;
+            }
+
+        });
+    });
+
+
     $('.auto-shipping-btn').click(function (e) {
         e.preventDefault();
 

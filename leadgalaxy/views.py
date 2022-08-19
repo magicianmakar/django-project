@@ -2009,6 +2009,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
             use_aliexpress_api=self.models_user.can('aliexpress_api_integration.use'),
             aliexpress_account=AliexpressAccount.objects.filter(user=self.models_user),
             aliexpress_order_notes=self.models_user.get_config('aliexpress_order_notes'),
+            use_extension_quick=self.models_user.can('aliexpress_extension_quick_order.use'),
         )
 
         self.config['admitad_site_id'], self.config['user_admitad_credentials'] = utils.get_admitad_credentials(self.models_user)
@@ -3244,6 +3245,18 @@ def orders_place(request):
     for k in list(request.GET.keys()):
         if k.startswith('SA') and k not in redirect_url and request.GET[k]:
             redirect_url = utils.affiliate_link_set_query(redirect_url, k, request.GET[k])
+
+    # quick extension ordering url rewrite
+    if request.GET.get('quick-order'):
+        if not request.user.models_user.can('aliexpress_extension_quick_order.use'):
+            messages.error(request, "Extension Quick Ordering is not available on your current plan. "
+                                    "Please upgrade to use this feature")
+            return HttpResponseRedirect('/')
+
+        # redirect to shoppping cart directly
+        redirect_url = 'https://www.aliexpress.com/p/trade/confirm.html?objectId=' + request.GET.get('objectId') + \
+                       '&skuId=' + request.GET.get('skuId') + '&quantity=' + request.GET.get('quantity') + \
+                       '&SAConfirmOrder=' + request.GET.get('SAPlaceOrder') + '&quick-order=1'
 
     # Verify if the user didn't pass order limit
     parent_user = request.user.models_user

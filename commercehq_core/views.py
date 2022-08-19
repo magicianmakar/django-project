@@ -816,6 +816,7 @@ class OrdersList(ListView):
 
         context['created_at_daterange'] = self.request.GET.get('created_at_daterange', 'all')
         context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
+        context['use_extension_quick'] = self.request.user.models_user.can('aliexpress_extension_quick_order.use')
         context['aliexpress_account'] = AliexpressAccount.objects.filter(user=self.request.user.models_user)
         context['api_error'] = api_error
 
@@ -1377,6 +1378,17 @@ class OrderPlaceRedirectView(RedirectView):
                 redirect_url = affiliate_link_set_query(redirect_url, k, self.request.GET[k])
 
         redirect_url = affiliate_link_set_query(redirect_url, 'SAStore', 'chq')
+
+        # quick extension ordering url rewrite
+        if self.request.GET.get('quick-order'):
+            if not self.request.user.models_user.can('aliexpress_extension_quick_order.use'):
+                messages.error(self.request, "Extension Quick Ordering is not available on your current plan. "
+                                             "Please upgrade to use this feature")
+                return '/'
+            # redirect to shoppping cart directly
+            redirect_url = 'https://www.aliexpress.com/p/trade/confirm.html?objectId=' + self.request.GET.get('objectId') + \
+                           '&skuId=' + self.request.GET.get('skuId') + '&quantity=' + self.request.GET.get('quantity') + \
+                           '&SAConfirmOrder=' + self.request.GET.get('SAPlaceOrder') + '&quick-order=1'
 
         # Verify if the user didn't pass order limit
         parent_user = self.request.user.models_user

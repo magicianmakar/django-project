@@ -1280,6 +1280,14 @@
   }
 },
 {
+  "model": "leadgalaxy.apppermission",
+  "pk": 205,
+  "fields": {
+    "name": "aliexpress_extension_quick_order.use",
+    "description": "Extension Quick Ordering"
+  }
+},
+{
   "model": "leadgalaxy.groupplan",
   "pk": 1,
   "fields": {
