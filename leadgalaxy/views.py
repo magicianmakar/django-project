@@ -1996,7 +1996,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
             epacket_shipping=bool(self.models_user.get_config('epacket_shipping')),
             aliexpress_shipping_method=self.models_user.get_config('aliexpress_shipping_method'),
             auto_ordered_mark=bool(self.models_user.get_config('auto_ordered_mark', True)),
-            order_custom_line_attr=bool(self.models_user.get_config('order_custo_mline_attr')),
+            order_custom_line_attr=bool(self.models_user.get_config('order_custom_line_attr')),
             use_relative_dates=bool(self.models_user.get_config('use_relative_dates', True)),
             fix_order_variants=self.models_user.get_config('fix_order_variants'),
             aliexpress_fix_address=self.models_user.get_config('aliexpress_fix_address', True),
