@@ -383,10 +383,19 @@ class SupplementsApi(ApiResponseMixin, View):
             sku=i.label.sku,
             quantity=i.quantity,
             supplement=i.label.user_supplement.to_dict(),
-            line_total="${:.2f}".format((i.amount * i.quantity) / 100.)
+            line_total=(i.amount * i.quantity) / 100.,
+            line_total_string="${:.2f}".format((i.amount * i.quantity) / 100.)
         ) for i in order.order_items.all()]
 
-        return self.api_success({'items': line_items})
+        transaction_status = request.user.authorize_net_customer.status(order.stripe_transaction_id)
+
+        return self.api_success({
+            'items': line_items,
+            'transaction_status': str(transaction_status),
+            'shipping_price': order.shipping_price / 100.,
+            'shipping_price_string': order.shipping_price_string,
+            'amount': order.amount / 100.
+        })
 
     def post_create_payouts(self, request, user, data):
         if not request.user.can('pls_admin.use'):

@@ -282,7 +282,7 @@ class PLSOrderMixin:
     def refund_amount(self):
         refund = 0
         if self.refund:
-            refund = self.refund.amount - self.refund.fee
+            refund = self.refund.amount - self.refund.fee + self.refund.shipping
 
         return refund
 
@@ -313,10 +313,6 @@ class PLSOrderMixin:
     @property
     def shipping_refund_string(self):
         return '${:.2f}'.format(self.shipping_refund)
-
-    @property
-    def total_refund_amount_string(self):
-        return '${:.2f}'.format(self.refund_amount + self.shipping_refund)
 
     @property
     def order_refund_id(self):

@@ -1,6 +1,39 @@
 {% extends "supplements/tab_view_admin.html" %}
 {% load static compress %}
 
+{% block extrajs-before %}
+<script>
+      function calculate_total_refund() {
+        var amount = 0;
+        $(".refund-amount").each(function (i, item) {
+            if ($(item).val()) {
+                amount += parseFloat($(item).val());
+            }
+        });
+        var id_fee = $('#id_fee').val();
+        // convert from any "falsey" value to 0
+        // https://stackoverflow.com/questions/7540397/convert-nan-to-0-in-javascript
+        id_fee = id_fee || 0
+        var id_shippling = $('#id_shipping').val()
+        id_shippling = id_shippling || 0
+        amount += parseFloat(id_fee);
+        amount += parseFloat(id_shippling);
+        amount = amount.toFixed(2)
+        $('#total_refund').val(amount)
+    }
+
+    $('#id_fee').keyup(function() {
+        console.log("id_fee")
+        calculate_total_refund()
+    });
+
+    $('#id_shipping').keyup(function() {
+      console.log("id_shipping")
+        calculate_total_refund()
+    });
+</script>
+{% endblock %}
+
 {% block extra_pls_css %}
 <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
 {% endblock %}
@@ -42,7 +75,7 @@
       <td>{{ pls_order.amount_string }}</td>
       <td>{{ pls_order.shipping_price_string }}</td>
       <td>
-        {{ pls_order.total_refund_amount_string }}
+        {{ pls_order.refund_amount_string }}
         {% if pls_order.refund %}
         <i class="fa fa-fw fa-question-circle"
           qtip-tooltip="Restocking Fee: <b>{{ pls_order.refund_fee_string }}</b><br>Description: {{ pls_order.refund.description }}"
