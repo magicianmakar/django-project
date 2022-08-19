@@ -64,6 +64,7 @@ class Addon(models.Model):
     action_url = models.URLField(blank=True, null=True)
     stores = models.PositiveIntegerField(default=0, verbose_name='Add store limit')
     auto_fulfill_limit = models.PositiveIntegerField(default=0, verbose_name='Add Auto Fulfill Limit')
+    suredone_orders_limit = models.PositiveIntegerField(default=0, verbose_name='Add SureDone Orders Limit')
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
     is_active = models.BooleanField(default=True)
     limit_addon = models.BooleanField(default=False, verbose_name="This addon enhances limit & doesn't require permission")

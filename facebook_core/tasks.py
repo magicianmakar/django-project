@@ -2,7 +2,6 @@ import json
 from json import JSONDecodeError
 from lxml import html
 from math import ceil
-
 from requests.exceptions import HTTPError
 
 from django.contrib.auth.models import User

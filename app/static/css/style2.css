@@ -2972,7 +2972,8 @@ ul.tagit:focus {
     font-weight: 700;
 
 }
-#modal-add-fulfill-limit .modal-body {
+#modal-add-fulfill-limit .modal-body,
+#modal-add-sd-orders-limit .modal-body{
     text-align: center;
 }
 

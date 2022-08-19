@@ -363,6 +363,7 @@ class ACPAddPlanView(BaseTemplateView):
         products_limit = safe_float(request.POST['products_limit'])
         boards_limit = safe_float(request.POST['boards_limit'])
         auto_fulfill_limit = safe_float(request.POST['fulfill_limit'])
+        suredone_orders_limit = safe_float(request.POST['suredone_orders_limit'])
         unique_supplements_limit = safe_float(request.POST['supplements_limit'])
         user_supplements_limit = safe_float(request.POST['user_supplements'])
 
@@ -411,6 +412,7 @@ class ACPAddPlanView(BaseTemplateView):
                         unique_supplements=unique_supplements_limit,
                         user_supplements=user_supplements_limit,
                         auto_fulfill_limit=auto_fulfill_limit,
+                        suredone_orders_limit=suredone_orders_limit,
 
                         extra_stores=support_adding_extra_stores,
                         extra_store_cost=extra_store_cost,

@@ -286,6 +286,22 @@ class SureDoneUtils:
 
         return all_orders, total_products_count
 
+    def get_orders_count_and_limit_date(self, user: User, start_date: str, end_date: str):
+        time_filters = [self.format_filters({'date': {'value': end_date, 'relation': ':<='}}),
+                        self.format_filters({'date': {'value': start_date, 'relation': ':>='}})]
+        search_filters = ' '.join(time_filters)
+        sd_orders, total_products_count = self.get_all_orders(filters=search_filters, sort_by='dateutc',
+                                                              sort_order='asc')
+
+        sd_order_limit = user.profile.get_surdone_orders_limit()
+        limit_date = None
+        if -1 < sd_order_limit < len(sd_orders):
+            if sd_order_limit == 0:
+                limit_date = start_date
+            else:
+                limit_date = sd_orders[:sd_order_limit][-1].get('date')
+        return len(sd_orders), limit_date
+
     def format_filters(self, filter_map: dict) -> str:
         """
         A SureDone search filter formatting helper

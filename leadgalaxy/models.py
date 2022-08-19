@@ -889,6 +889,24 @@ class UserProfile(models.Model):
 
         return auto_fulfill_limit
 
+    def get_surdone_orders_limit(self):
+        if self.is_subuser:
+            user = self.subuser_parent
+        else:
+            user = self.user
+        plan = user.profile.get_plan()
+        suredone_orders_limit = plan.suredone_orders_limit
+
+        if plan.suredone_orders_limit != -1:
+            # check addons
+            addons_suredone_orders_limit = user.profile.addons.all().aggregate(Sum('suredone_orders_limit'))['suredone_orders_limit__sum'] or 0
+            suredone_orders_limit += addons_suredone_orders_limit
+
+            if user.get_config('_double_orders_limit'):
+                suredone_orders_limit *= 2
+
+        return suredone_orders_limit
+
     def get_orders_count(self, order_track):
         if self.is_subuser:
             user = self.subuser_parent
@@ -2321,6 +2339,7 @@ class GroupPlan(models.Model):
     extra_subuser_cost = models.DecimalField(decimal_places=2, max_digits=9, null=True, default=0.00,
                                              verbose_name='Extra sub user cost per user(in USD)')
     auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
+    suredone_orders_limit = models.IntegerField(default=-1, verbose_name="Suredone Orders Limit")
 
     support_addons = models.BooleanField(default=False)
     single_charge = models.BooleanField(default=False)
