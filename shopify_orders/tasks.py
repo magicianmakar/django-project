@@ -311,11 +311,12 @@ def get_order_info_via_api(self, order, source_id, store_id, store_type=None, us
                 product_price = product['product_price']['amount']
                 total_product_price = total_product_price + (float(product_price) * product_qty)
 
+        shipping_cost = float(order_data['order_amount']['amount']) - total_product_price
         cost = {}
-        cost['total'] = order_data['order_amount']['amount']
+        cost['total'] = round(float(order_data['order_amount']['amount']), 2)
         cost['currency'] = order_data['order_amount']['currency_code']
-        cost['shipping'] = ''
-        cost['products'] = str(total_product_price) if total_product_price > 0 else ''
+        cost['shipping'] = round(shipping_cost, 2) if shipping_cost > 0 else 0
+        cost['products'] = total_product_price if total_product_price > 0 else ''
         order_details['cost'] = cost
         fulfillment_data['order_details'] = order_details
         return fulfillment_data
