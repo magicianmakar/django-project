@@ -165,6 +165,12 @@ class Command(DropifiedBaseCommand):
         self.create_property('dr_orders_30_day_count', 'Orders Count last 30 Days', 'number', 'number')
         self.create_property('dr_orders_all_count', 'Orders Count all time', 'number', 'number')
 
+        self.create_property('dr_facebook_orders_30_day_count', 'Facebook Orders Count last 30 Days', 'number', 'number')
+        self.create_property('dr_facebook_orders_all_count', 'Facebook Orders Count all time', 'number', 'number')
+
+        self.create_property('dr_google_orders_30_day_count', 'Google Orders Count last 30 Days', 'number', 'number')
+        self.create_property('dr_google_orders_all_count', 'Google Orders Count all time', 'number', 'number')
+
         self.create_property('dr_ebay_orders_30_day_count', 'Ebay Orders Count last 30 Days', 'number', 'number')
         self.create_property('dr_ebay_orders_all_count', 'Ebay Orders Count all time', 'number', 'number')
 
@@ -234,27 +240,34 @@ class Command(DropifiedBaseCommand):
 
     def get_sd_orders(self):
         date_limit = arrow.utcnow().replace(days=-30)
-        platform_type = 'ebay'
+        platform_types = ['facebook', 'google', 'ebay']
+
         users = User.objects.all().order_by('-id')
 
         self.progress_total(users.count())
 
         for user in users:
             self.progress_update()
-            stores = user.profile.get_ebay_stores()
-            if not stores:
+
+            fb_stores = user.profile.get_fb_stores()
+            google_stores = user.profile.get_google_stores()
+            ebay_stores = user.profile.get_ebay_stores()
+            if not (fb_stores or google_stores or ebay_stores):
                 continue
 
             sd_utils = SureDoneUtils(user)
             search_filters = ['archived:=0']
             user_sd_orders, total_products_count = sd_utils.get_all_orders(filters=search_filters)
-            user_ebay_orders_all = [order for order in user_sd_orders if order.get('channel') == platform_type]
-            user_ebay_orders_last_30_days = [order for order in user_ebay_orders_all if arrow.get(order.get('dateutc')) > date_limit]
 
-            user.set_config(f'_{platform_type}_orders_count', {
-                '30': len(user_ebay_orders_last_30_days),
-                '-1': len(user_ebay_orders_all),
-            })
+            for platform_type in platform_types:
+                user_orders_all = [order for order in user_sd_orders if order.get('channel') == platform_type]
+                user_orders_last_30_days = [order for order in user_orders_all if arrow.get(order.get('dateutc')) > date_limit]
+
+                if user_orders_all:
+                    user.set_config(f'_{platform_type}_orders_count', {
+                        '30': len(user_orders_last_30_days),
+                        '-1': len(user_orders_all),
+                    })
 
         self.progress_close()
 
