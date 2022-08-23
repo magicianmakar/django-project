@@ -16,7 +16,11 @@
             if (product.fb_category_name === null || product.fb_category_name === undefined) {
                 product.fb_category_name = ''
             }
-            const categorySearchTerm = productDetails?.producttype ?? '';
+            let category_Search_Term = productDetails?.producttype ?? '';
+            if (category_Search_Term.match(' ')) {
+                category_Search_Term = category_Search_Term.split(' ').slice(-1).toString();
+            }
+            const categorySearchTerm = category_Search_Term;
             const fbCategoryId = product.fb_category_id;
             const fbCategoryName = product.fb_category_name;
             this.state = {
@@ -43,6 +47,11 @@
         }
 
         handleCatIdChange(category_id, category_name='') {
+            if(category_name == '') {
+                const { categoryOptions } = this.state;
+                category_name = categoryOptions.find(({ id }) => id == category_id)?.name ?? '';
+            }
+            category_name = category_name.split(" > ").slice(-1).toString();
             product.fb_category_id = category_id;
             product.fb_category_name = category_name;
             this.setState({
@@ -152,7 +161,7 @@
                             className='form-control'
                             id='fb-category-id'
                             name='fb-category-id'
-                            onChange={(event) => this.handleCatIdChange(event)}
+                            onChange={({target: {value}}) => this.handleCatIdChange(value)}
                             type='number'
                             value={fbCategoryId}
                             placeholder='Facebook Category ID'
@@ -209,18 +218,11 @@
                                 Select a category
                             </option>
                             {
-                                categoryOptions && categoryOptions.length !== 0 ?
                                 categoryOptions.map(category => (
                                     <option key={category.id} value={category.id}>
                                         {category.name}
                                     </option>
-                                )) :
-                                    (
-                                        fbCategoryName !== '' &&
-                                        <option key={fbCategoryId} value={fbCategoryId}>
-                                            {fbCategoryName}
-                                        </option>
-                                    )
+                                ))
                             }
                         </select>
                         <small className="form-text text-muted">
