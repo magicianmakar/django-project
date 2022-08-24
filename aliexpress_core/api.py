@@ -496,7 +496,7 @@ class AliexpressFulfillHelper():
                             else:
                                 return self.order_error(e.message)
                         if aliexpress_variant_sku_dict is None:
-                            self.order_item_error(line_id, 'This item is discontinued in AliExpress.')
+                            self.order_item_error(line_item['line_id'], 'This item is discontinued in AliExpress.')
                             line_items_array.pop()
                             continue
 
@@ -514,7 +514,7 @@ class AliexpressFulfillHelper():
                             if product_variant_title in aliexpress_variant_sku_dict:
                                 item.sku_attr = aliexpress_variant_sku_dict[product_variant_title]
                             else:
-                                self.order_item_error(line_id, 'Variant mapping is not set for this item')
+                                self.order_item_error(line_item['line_id'], 'Variant mapping is not set for this item')
                                 line_items_array.pop()
                                 continue
 
