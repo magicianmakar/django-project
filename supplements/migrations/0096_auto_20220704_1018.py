@@ -2,18 +2,16 @@
 
 from django.db import migrations
 from app import settings
-from supplements.models import PLSupplement, ShipStationAccount
 
 
 def forward_func(apps, schema_editor):
     account = apps.get_model('supplements', 'ShipStationAccount')
+    plsupplements = apps.get_model('supplements', 'PLSupplement')
     if settings.SHIPSTATION_API_KEY:
         account.objects.create(name='Dropified', api_key=settings.SHIPSTATION_API_KEY,
                                api_secret=settings.SHIPSTATION_API_SECRET)
-        ship_acc = ShipStationAccount.objects.filter(name='Dropified').first()
-        for pl_supplement in PLSupplement.objects.all():
-            pl_supplement.shipstation_account = ship_acc
-            pl_supplement.save()
+        ship_acc = account.objects.filter(name='Dropified').first()
+        plsupplements.objects.update(shipstation_account=ship_acc)
 
 
 class Migration(migrations.Migration):
