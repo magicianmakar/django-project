@@ -226,12 +226,14 @@ class UserSupplementLabel(models.Model, UserSupplementLabelMixin):
     APPROVED = 'approved'
     AWAITING_REVIEW = 'awaiting'
     REJECTED = 'rejected'
+    QA_PASSED = 'qapassed'
 
     LABEL_STATUSES = [
         (DRAFT, 'Draft'),
         (APPROVED, 'Approved'),
         (AWAITING_REVIEW, 'In Review'),
         (REJECTED, 'Rejected'),
+        (QA_PASSED, 'QA Passed'),
     ]
 
     user_supplement = models.ForeignKey(UserSupplement,

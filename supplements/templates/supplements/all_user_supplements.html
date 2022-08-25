@@ -104,7 +104,7 @@
         <span class='label
         {% if supplement.current_label.status == "approved" %}
         label-primary
-        {% elif supplement.current_label.status == "awaiting" %}
+        {% elif supplement.current_label.status == "awaiting" or supplement.current_label.status == "qapassed" %}
         label-warning
         {% elif supplement.current_label.status == "rejected" %}
         label-danger

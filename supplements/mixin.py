@@ -128,6 +128,13 @@ class UserSupplementMixin(PLSupplementMixin):
         return self.current_label.is_awaiting_review
 
     @property
+    def can_send_to_store(self):
+        if not self.current_label:
+            return False
+
+        return self.current_label.can_send_to_store
+
+    @property
     def shipping_countries(self):
         shipping_countries = self.pl_supplement.shipping_countries
         target = []
@@ -223,6 +230,13 @@ class UserSupplementLabelMixin:
     @property
     def is_awaiting_review(self):
         return self.status == self.AWAITING_REVIEW
+
+    @property
+    def can_send_to_store(self):
+        approved = self.status == self.APPROVED
+        qapassed = self.status == self.QA_PASSED
+        can_send_to_store = approved or qapassed
+        return can_send_to_store
 
     def generate_sku(self):
         self.sku = f"{self.user_supplement.pl_supplement.shipstation_sku}-{self.label_id_string}L"

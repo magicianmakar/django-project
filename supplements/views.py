@@ -291,7 +291,7 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
         data['supplier'] = user_supplement.pl_supplement.supplier.title
 
         api_data = {}
-        if user_supplement.current_label.is_approved:
+        if user_supplement.current_label.can_send_to_store:
             api_data = self.serialize_api_data(data)
 
         return api_data
@@ -734,6 +734,7 @@ class UserSupplementView(Supplement):
             label_limit_left=label_limit_left,
             is_approved=supplement.is_approved,
             is_awaiting_review=supplement.is_awaiting_review,
+            can_send_to_store=supplement.can_send_to_store,
             api_data=api_data,
             store_data=store_type_and_data['store_data'],
             store_types=store_type_and_data['store_types'],
@@ -882,18 +883,18 @@ class AdminLabelHistory(LabelHistory):
 
         reverse_url = self.get_redirect_url(user_supplement.id)
 
-        if action in (label.APPROVED, label.REJECTED):
+        if action in (label.APPROVED, label.REJECTED, label.QA_PASSED):
             label.status = action
-            label.save()
-
             label_class = 'label-danger'
-            if action == label.APPROVED:
-                label_class = 'label-primary'
+            if action == label.APPROVED or action == label.QA_PASSED:
                 # If a label does not have SKU, needs to be generated for barcode
                 if label.sku == '':
                     label.generate_sku()
                 self.add_barcode_to_label(label)
-                label.save()
+                label_class = 'label-primary'
+                if action == label.QA_PASSED:
+                    label_class = 'label-warning'
+            label.save()
 
             comment = (f"<strong>{request.user.get_full_name()}</strong> "
                        f"set the status to <span class='label {label_class}'>"
