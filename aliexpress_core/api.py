@@ -879,8 +879,8 @@ class AliexpressApi(ApiResponseMixin):
                 if service:
                     break
                 for data in shipping_data:
-                    if service_name == data.get('service_name'):
-                        service = data['service_name']
+                    if service_name == data.get('service_code'):
+                        service = data.get('service_code')
                         break
             cache.set(cache_key, {'data': shipping_data, 'shipping_setting': service}, timeout=600)
 
