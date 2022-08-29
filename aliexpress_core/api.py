@@ -366,19 +366,18 @@ class AliexpressFulfillHelper():
 
         if address.country == 'BR':
             try:
-                cpf = self.shipping_address['cpf'].strip()
-                # TO DO confirm if cpf always has 11 digits
-                if len(cpf) == 0:
-                    return self.order_error("Please enter a correct 11 digits CPF")
+                cpf = self.shipping_address['company'].strip()
+                if len(cpf) != 11:
+                    return self.order_error("Please edit the address to enter a valid 11 digits CPF number")
                 else:
                     address.cpf = cpf
             except KeyError:
-                return self.order_error("Please enter a correct 11 digits CPF")
+                return self.order_error("Please edit the address to enter a valid 11 digits CPF number")
 
-        if 'rut_no' in self.shipping_address and address.country == 'CL':
-            rut_no = self.shipping_address['rut_no'].strip()
+        if 'company' in self.shipping_address and address.country == 'CL':
+            rut_no = self.shipping_address['company'].strip()
             if len(rut_no) == 0:
-                return self.order_error("Please enter a correct RUT No.")
+                return self.order_error("Please edit the address to enter a valid RUT number")
             else:
                 address.rut_no = rut_no
 

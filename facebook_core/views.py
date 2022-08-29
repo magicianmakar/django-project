@@ -2,6 +2,7 @@ import arrow
 import json
 import re
 import requests
+from datetime import datetime, timedelta
 from requests.exceptions import HTTPError
 
 from django.conf import settings
@@ -19,6 +20,7 @@ from django.views.generic import ListView
 from django.views.generic.base import RedirectView
 from django.views.generic.detail import DetailView
 
+from addons_core.models import Addon
 from leadgalaxy.utils import (
     affiliate_link_set_query,
     get_admitad_affiliate_url,
@@ -44,6 +46,7 @@ from shopified_core.utils import (
     http_excption_status_code,
     jwt_encode,
     order_data_cache,
+    safe_float,
     safe_int
 )
 from suredone_core.utils import get_daterange_filters
@@ -409,6 +412,14 @@ class OrdersList(ListView):
     def get_queryset(self):
         self.filters_config = self.get_filters()
         self.filters_config['bulk_queue'] = self.bulk_queue
+
+        today = datetime.today().strftime('%Y-%m-%dT%H:%M:%S.%f')
+        thirty_days_ago = (datetime.today() - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%f')
+        _, limit_date = self.fb_utils.get_orders_count_and_limit_date(self.request.user, thirty_days_ago, today)
+
+        if (limit_date and not self.filters_config.get('before')
+                or limit_date and self.filters_config['before'] > limit_date):
+            self.filters_config['before'] = limit_date.replace(' ', 'T')
         return FBOrderListQuery(self.request.user, self.get_store(), self.filters_config)
 
     def get_context_data(self, **kwargs):
@@ -429,6 +440,26 @@ class OrdersList(ListView):
         context['product_filter'] = getattr(self, 'product_filter', None)
         context['filters_config'] = self.filters_config
         context['countries'] = get_counrties_list()
+        context['use_extension_quick'] = self.request.user.models_user.can('aliexpress_extension_quick_order.use')
+
+        # getting suredone order limit set in plan
+        context['suredone_order_limit'] = self.request.user.profile.get_surdone_orders_limit()
+        if context['suredone_order_limit'] > -1:
+            today = datetime.today().strftime('%Y-%m-%dT%H:%M:%S.%f')
+            thirty_days_ago = (datetime.today() - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%f')
+            context['suredone_orders_count'], limit_date = self.fb_utils.get_orders_count_and_limit_date(
+                self.request.user, thirty_days_ago, today)
+
+        try:
+            if context['suredone_order_limit'] == 0:
+                context['suredone_orders_limit_usage_percent'] = 1
+            else:
+                context['suredone_orders_limit_usage_percent'] = safe_float(
+                    context['suredone_orders_count']) / safe_float(context['suredone_order_limit'])
+        except:
+            context['suredone_orders_limit_usage_percent'] = 0
+        if context['suredone_orders_limit_usage_percent'] > 0.8:
+            context['suredone_orders_addons'] = Addon.objects.filter(suredone_orders_limit__gt=0, is_active=True).all()
 
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': self.url},
@@ -743,6 +774,18 @@ class OrderPlaceRedirectView(RedirectView):
                 redirect_url = affiliate_link_set_query(redirect_url, k, self.request.GET[k])
 
         redirect_url = affiliate_link_set_query(redirect_url, 'SAStore', 'fb')
+
+        # quick extension ordering url rewrite
+        if self.request.GET.get('quick-order'):
+            if not self.request.user.models_user.can('aliexpress_extension_quick_order.use'):
+                messages.error(self.request, "Extension Quick Ordering is not available on your current plan. "
+                                             "Please upgrade to use this feature")
+                return '/'
+
+            # redirect to shoppping cart directly
+            redirect_url = 'https://www.aliexpress.com/p/trade/confirm.html?objectId=' + self.request.GET.get('objectId') + \
+                           '&skuId=' + self.request.GET.get('skuId') + '&quantity=' + self.request.GET.get('quantity') + \
+                           '&SAConfirmOrder=' + self.request.GET.get('SAPlaceOrder') + '&quick-order=1'
 
         # Verify if the user didn't pass order limit
         parent_user = self.request.user.models_user

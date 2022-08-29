@@ -428,10 +428,10 @@ class UserProfile(models.Model):
 
         return stores
 
-    def get_ebay_stores(self, flat=False, do_sync=False):
+    def get_ebay_stores(self, flat=False, do_sync=False, use_cached=False):
         if do_sync:
             # The function is defined in ebay_core.utils.py
-            self.sync_ebay_stores()
+            self.sync_ebay_stores(use_cached=use_cached)
         if self.is_subuser:
             stores = self.subuser_ebay_stores.filter(is_active=True)
         else:
@@ -442,10 +442,10 @@ class UserProfile(models.Model):
 
         return stores
 
-    def get_fb_stores(self, flat=False, do_sync=False, include_non_onboarded=False):
+    def get_fb_stores(self, flat=False, do_sync=False, include_non_onboarded=False, use_cached=False):
         if do_sync:
             # The function is defined in facebook_core.utils.py
-            self.sync_fb_stores()
+            self.sync_fb_stores(use_cached=use_cached)
         if self.is_subuser:
             stores = self.subuser_fb_stores.filter(is_active=True)
         else:
@@ -459,10 +459,10 @@ class UserProfile(models.Model):
 
         return stores
 
-    def get_google_stores(self, flat=False, do_sync=False):
+    def get_google_stores(self, flat=False, do_sync=False, use_cached=False):
         if do_sync:
             # The function is defined in facebook_core.utils.py
-            self.sync_google_stores()
+            self.sync_google_stores(use_cached=use_cached)
         if self.is_subuser:
             stores = self.subuser_google_stores.filter(is_active=True)
         else:
@@ -888,6 +888,24 @@ class UserProfile(models.Model):
                 auto_fulfill_limit *= 2
 
         return auto_fulfill_limit
+
+    def get_surdone_orders_limit(self):
+        if self.is_subuser:
+            user = self.subuser_parent
+        else:
+            user = self.user
+        plan = user.profile.get_plan()
+        suredone_orders_limit = plan.suredone_orders_limit
+
+        if plan.suredone_orders_limit != -1:
+            # check addons
+            addons_suredone_orders_limit = user.profile.addons.all().aggregate(Sum('suredone_orders_limit'))['suredone_orders_limit__sum'] or 0
+            suredone_orders_limit += addons_suredone_orders_limit
+
+            if user.get_config('_double_orders_limit'):
+                suredone_orders_limit *= 2
+
+        return suredone_orders_limit
 
     def get_orders_count(self, order_track):
         if self.is_subuser:
@@ -2321,6 +2339,7 @@ class GroupPlan(models.Model):
     extra_subuser_cost = models.DecimalField(decimal_places=2, max_digits=9, null=True, default=0.00,
                                              verbose_name='Extra sub user cost per user(in USD)')
     auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
+    suredone_orders_limit = models.IntegerField(default=-1, verbose_name="Suredone Orders Limit")
 
     support_addons = models.BooleanField(default=False)
     single_charge = models.BooleanField(default=False)

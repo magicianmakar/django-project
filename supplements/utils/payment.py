@@ -408,6 +408,17 @@ class Util:
                 total_weight += product_weight
                 total_wholesale += user_supplement.pl_supplement.wholesale_price
 
+                # Labels must be approved prior to ordering
+                if not user_supplement.is_approved:
+                    orders_status[order_data_id].update({
+                        'success': False,
+                        'status': "Label not approved",
+                        'status_link': reverse('pls:user_supplement', kwargs={
+                            'supplement_id': user_supplement.id
+                        }),
+                    })
+                    continue
+
                 supplement = {
                     'title': user_supplement.title,
                     'price': user_supplement.cost_price,
@@ -417,20 +428,6 @@ class Util:
                     'weight': product_weight,
                 }
                 orders_status[order_data_id]['supplements'].append(supplement)
-
-                # Labels must be approved prior to ordering
-                if not user_supplement.is_approved:
-                    orders_status[order_data_id].update({
-                        'success': False,
-                        'status': "Fix bundle issue",
-                    })
-                    supplement.update({
-                        'status': "Label not approved",
-                        'status_link': reverse('pls:user_supplement', kwargs={
-                            'supplement_id': user_supplement.id
-                        }),
-                    })
-                    continue
 
                 # Deleted supplements are not longer supported for ordering
                 if user_supplement.is_deleted:
@@ -492,7 +489,7 @@ class Util:
             else:
                 # Define order and shipping only if no errors happen
                 order_id = order_data['order_id']
-                if not orders.get(order_id):
+                if not orders.get(order_id) and orders_status[order_data_id]['success']:
                     pay_order_taxes = pay_taxes.get(str(order_data['order_id']))
                     if pay_order_taxes is None:
                         pay_order_taxes = config_pay_taxes

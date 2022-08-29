@@ -18,10 +18,10 @@
 </div>
 <div class="row">
   <div class="col-md-6 col-sm-6">
-    <span class="h5">A summary of your order is shown below.</span>
+    <span class="h5">A summary of your order is shown below</span>
   </div>
   <div class="col-md-6 col-sm-6 text-right">
-    <p><b>Order #</b>{{ order.order_number }}</p>
+    <p><b>Order </b>{{ order.order_number }}</p>
     <span class="h5"><b>{{ shipping_address|key_value:'first_name' }} {{ shipping_address|key_value:'last_name' }}</b></span>
   </div>
 </div>
@@ -52,8 +52,8 @@
   <thead>
     <th>Item</th>
     <th>Title</th>
-    <th>Sku</th>
-    <th>Tracking NUmber</th>
+    <th>SKU</th>
+    <th>Tracking Number</th>
     <th>Price</th>
     <th>Total</th>
     <th></th>

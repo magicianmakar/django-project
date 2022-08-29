@@ -116,12 +116,12 @@ class FBUtils(SureDoneUtils):
 
         return resp.json().get('results', {})
 
-    def sync_fb_stores(self):
+    def sync_fb_stores(self, use_cached=False):
         if not self.api:
             return
 
         # 1. Get all suredone options
-        all_options_data = self.get_all_user_options(verify_custom_fields=True)
+        all_options_data = self.get_all_user_options(verify_custom_fields=True, use_cached=use_cached)
         if not isinstance(all_options_data, dict):
             return
 
@@ -1196,9 +1196,9 @@ class FBOrderItem:
 
 
 @add_to_class(UserProfile, 'sync_fb_stores')
-def user_sync_fb_stores(self):
+def user_sync_fb_stores(self, use_cached=False):
     if self.user:
-        FBUtils(self.user).sync_fb_stores()
+        FBUtils(self.user).sync_fb_stores(use_cached=use_cached)
 
 
 def get_store_from_request(request):

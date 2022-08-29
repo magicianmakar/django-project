@@ -524,6 +524,18 @@ class OrderPlaceRedirectView(RedirectView):
 
         redirect_url = affiliate_link_set_query(redirect_url, 'SAStore', 'gear')
 
+        # quick extension ordering url rewrite
+        if self.request.GET.get('quick-order'):
+            if not self.request.user.models_user.can('aliexpress_extension_quick_order.use'):
+                messages.error(self.request, "Extension Quick Ordering is not available on your current plan. "
+                                             "Please upgrade to use this feature")
+                return '/'
+
+            # redirect to shoppping cart directly
+            redirect_url = 'https://www.aliexpress.com/p/trade/confirm.html?objectId=' + self.request.GET.get('objectId') + \
+                           '&skuId=' + self.request.GET.get('skuId') + '&quantity=' + self.request.GET.get('quantity') + \
+                           '&SAConfirmOrder=' + self.request.GET.get('SAPlaceOrder') + '&quick-order=1'
+
         # Verify if the user didn't pass order limit
         parent_user = self.request.user.models_user
         plan = parent_user.profile.plan

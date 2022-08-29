@@ -323,6 +323,7 @@ HIJACK_USE_BOOTSTRAP = True
 HIJACK_ALLOW_GET_REQUESTS = True
 
 LOGIN_URL = '/accounts/login/user/'
+LOGIN_PAGE_WEBINAR_URL = os.environ.get('LOGIN_PAGE_WEBINAR_URL')
 
 if os.environ.get('SMTP_PROVIDER') == 'SES':
     EMAIL_HOST = 'email-smtp.us-east-1.amazonaws.com'

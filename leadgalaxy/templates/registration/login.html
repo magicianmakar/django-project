@@ -4,6 +4,7 @@
 {% load template_helper %}
 
 {% app_setting 'RECAPTCHA_SITE_KEY' as RECAPTCHA_SITE_KEY %}
+{% app_setting 'LOGIN_PAGE_WEBINAR_URL' as LOGIN_PAGE_WEBINAR_URL %}
 
 <html>
 
@@ -26,12 +27,31 @@
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     {% endcompress %}
 
+    {% if LOGIN_PAGE_WEBINAR_URL %}
+    <style type="text/css">
+        .spliter {
+            display: flex;
+            flex-direction: row;
+            height: 99.9%;
+        }
+        .spliter-left, .spliter-right {
+            width: 50%;
+        }
+        .support-footer {
+            position: initial;
+        }
+    </style>
+    {% endif %}
+
     {% include "partial/custom_tags.html" %}
 
 </head>
 
 <body class="login-body gray-bg">
 
+
+<div class="spliter">
+<div class="spliter-left">
     <div class="d-table">
     <div class="d-table-cell">
 
@@ -116,8 +136,8 @@
                 <img style="width:30px" src="{% static 'dropified-icon.png' %}">
             </h3>
             <p>
-                Need help? Visit our <a href="http://www.dropified.com/training-videos/" title="Training Center" class="big-btn btn btn-info">Training Center</a>
-                or create a ticket <a href="http://www.dropified.com/support/" title="Support Center" class="big-btn btn btn-info">Support Center</a>
+                Need help? Visit our <a href="https://learn.dropified.com" title="Training Center" class="big-btn btn btn-info">Training Center</a>
+                or create a ticket <a href="https://www.dropified.com/support/" title="Support Center" class="big-btn btn btn-info">Support Center</a>
                 <a href="https://www.facebook.com/dropified" target="_blank" title="Facebook" class="fa fa-facebook social"></a>
                 <a href="https://www.twitter.com/dropified" target="_blank" title="Twitter" class="fa fa-twitter social"></a>
             </p>
@@ -125,7 +145,15 @@
         </div>
     </div>
     {% endif %}
+</div>
 
+<div class="spliter-right">
+    {% if LOGIN_PAGE_WEBINAR_URL %}
+    <iframe src="{{ LOGIN_PAGE_WEBINAR_URL }}" frameborder="0" width="100%" height="100%" allowfullscreen></iframe>
+    {% endif %}
+</div>
+
+</div>
     <!-- Mainly scripts -->
     <script src="{% static 'js/jquery.min.js' %}"></script>
     <script src="{% static 'js/bootstrap.min.js' %}"></script>

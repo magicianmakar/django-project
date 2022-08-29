@@ -188,6 +188,15 @@ def generate_create_contact(user: User):
     data['properties']['dr_orders_30_day_sum'] = 0
     data['properties']['dr_orders_all_sum'] = 0
 
+    data['properties']['dr_facebook_orders_all_count'] = 0
+    data['properties']['dr_facebook_orders_30_day_count'] = 0
+
+    data['properties']['dr_google_orders_all_count'] = 0
+    data['properties']['dr_google_orders_30_day_count'] = 0
+
+    data['properties']['dr_ebay_orders_all_count'] = 0
+    data['properties']['dr_ebay_orders_30_day_count'] = 0
+
     shopify_orders_count = user.get_config('_shopify_orders_count')
     if shopify_orders_count:
         for stat_info_name in ['30', '-1']:
@@ -208,6 +217,27 @@ def generate_create_contact(user: User):
             for stat_info_name in ['count']:
                 if shopify_orders_stat.get(stat_info_name):
                     data['properties'][f'dr_orders_{name}_{stat_info_name}'] = int(shopify_orders_stat[stat_info_name][inter])
+
+    facebook_orders_count = user.get_config('_facebook_orders_count')
+    if facebook_orders_count:
+        for stat_info_name in ['30', '-1']:
+            name = f'{stat_info_name}_day' if stat_info_name != '-1' else 'all'
+            if facebook_orders_count.get(stat_info_name):
+                data['properties'][f'dr_facebook_orders_{name}_count'] = int(facebook_orders_count[stat_info_name])
+
+    google_orders_count = user.get_config('_google_orders_count')
+    if google_orders_count:
+        for stat_info_name in ['30', '-1']:
+            name = f'{stat_info_name}_day' if stat_info_name != '-1' else 'all'
+            if google_orders_count.get(stat_info_name):
+                data['properties'][f'dr_google_orders_{name}_count'] = int(google_orders_count[stat_info_name])
+
+    ebay_orders_count = user.get_config('_ebay_orders_count')
+    if ebay_orders_count:
+        for stat_info_name in ['30', '-1']:
+            name = f'{stat_info_name}_day' if stat_info_name != '-1' else 'all'
+            if ebay_orders_count.get(stat_info_name):
+                data['properties'][f'dr_ebay_orders_{name}_count'] = int(ebay_orders_count[stat_info_name])
 
     baremetrics_sub_stat = user.get_config('_baremetrics_sub')
     if baremetrics_sub_stat:

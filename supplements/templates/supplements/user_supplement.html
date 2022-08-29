@@ -63,7 +63,7 @@
     {% endif %}
 
     {% if request.user|can:'pls.use' %}
-    <input id="send_to_store" type="button" value="Send to Store" class="btn btn-primary {% if not is_approved %}disabled{% endif %}">
+    <input id="send_to_store" type="button" value="Send to Store" class="btn btn-primary {% if not can_send_to_store %}disabled{% endif %}">
     {% endif %}
 
     <input type="reset" value="Reset" class="btn btn-default">

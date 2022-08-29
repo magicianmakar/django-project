@@ -22,7 +22,7 @@
             {% if not item.pl_supplement.is_active %}
             {% elif item.current_label.status == "approved" %}
             label-primary
-            {% elif item.current_label.status == "awaiting" %}
+            {% elif item.current_label.status == "awaiting" or item.current_label.status == "qapassed" %}
             label-warning
             {% elif item.current_label.status == "rejected" %}
             label-danger

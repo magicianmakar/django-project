@@ -1996,7 +1996,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
             epacket_shipping=bool(self.models_user.get_config('epacket_shipping')),
             aliexpress_shipping_method=self.models_user.get_config('aliexpress_shipping_method'),
             auto_ordered_mark=bool(self.models_user.get_config('auto_ordered_mark', True)),
-            order_custom_line_attr=bool(self.models_user.get_config('order_custo_mline_attr')),
+            order_custom_line_attr=bool(self.models_user.get_config('order_custom_line_attr')),
             use_relative_dates=bool(self.models_user.get_config('use_relative_dates', True)),
             fix_order_variants=self.models_user.get_config('fix_order_variants'),
             aliexpress_fix_address=self.models_user.get_config('aliexpress_fix_address', True),
@@ -2009,6 +2009,7 @@ class OrdersView(AuthenticationMixin, TemplateView):
             use_aliexpress_api=self.models_user.can('aliexpress_api_integration.use'),
             aliexpress_account=AliexpressAccount.objects.filter(user=self.models_user),
             aliexpress_order_notes=self.models_user.get_config('aliexpress_order_notes'),
+            use_extension_quick=self.models_user.can('aliexpress_extension_quick_order.use'),
         )
 
         self.config['admitad_site_id'], self.config['user_admitad_credentials'] = utils.get_admitad_credentials(self.models_user)
@@ -2725,8 +2726,8 @@ class OrdersView(AuthenticationMixin, TemplateView):
                             'is_raw': True,
                             'order': {
                                 'phone': {
-                                    'number': logistics_address.get('phone'),
-                                    'country': logistics_address['country_code']
+                                    'number': logistics_address.get('phone') if logistics_address else None,
+                                    'country': logistics_address['country_code'] if logistics_address else None
                                 },
                             }
                         }
@@ -3244,6 +3245,18 @@ def orders_place(request):
     for k in list(request.GET.keys()):
         if k.startswith('SA') and k not in redirect_url and request.GET[k]:
             redirect_url = utils.affiliate_link_set_query(redirect_url, k, request.GET[k])
+
+    # quick extension ordering url rewrite
+    if request.GET.get('quick-order'):
+        if not request.user.models_user.can('aliexpress_extension_quick_order.use'):
+            messages.error(request, "Extension Quick Ordering is not available on your current plan. "
+                                    "Please upgrade to use this feature")
+            return HttpResponseRedirect('/')
+
+        # redirect to shoppping cart directly
+        redirect_url = 'https://www.aliexpress.com/p/trade/confirm.html?objectId=' + request.GET.get('objectId') + \
+                       '&skuId=' + request.GET.get('skuId') + '&quantity=' + request.GET.get('quantity') + \
+                       '&SAConfirmOrder=' + request.GET.get('SAPlaceOrder') + '&quick-order=1'
 
     # Verify if the user didn't pass order limit
     parent_user = request.user.models_user

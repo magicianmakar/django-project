@@ -228,9 +228,28 @@ $(document).ready(function(){
                 var form = document.getElementById('refund_form');
                 form.order_id.value = orderId;
                 var addLinesTemplate = Handlebars.compile($("#id-add-line-items-template").html());
+                Handlebars.registerHelper('ifeq', function (a, b, options) {
+                    if (a == b) { return options.fn(this); }
+                    return options.inverse(this);
+                });
                 var html = addLinesTemplate(data);
                 $('#modal-orders-refund tbody').empty().append(html);
                 $('#modal-orders-refund').modal('show');
+                $('#shipping_price').empty().text(data.shipping_price_string);
+                $('#id_shipping').val("");
+                $('#id_fee').val("");
+                $('#total_refund').val("");
+                if (data.transaction_status == "capturedPendingSettlement"){
+                    $('#id_shipping').prop('readonly', true);
+                    $('#id_shipping').val(data.shipping_price);
+                    $('#id_fee').prop('readonly', true);
+                    $('#total_refund').val(data.amount);
+                    $('#void_warning').show();
+                } else {
+                    $('#id_shipping').prop('readonly', false);
+                    $('#id_fee').prop('readonly', false);
+                    $('#void_warning').hide();
+                }
             }
         });
     });

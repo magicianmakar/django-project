@@ -7,6 +7,7 @@ from django.core.cache import caches
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+
 # import urllib.parse
 # from django.conf import settings
 from google_core.models import GoogleBoard, GoogleOrderTrack, GoogleProduct, GoogleProductVariant, GoogleStore, GoogleSupplier
@@ -117,12 +118,12 @@ class GoogleUtils(SureDoneUtils):
 
         return resp.json().get('results', {})
 
-    def sync_google_stores(self):
+    def sync_google_stores(self, use_cached=False):
         if not self.api:
             return
 
         # 1. Get all suredone options
-        all_options_data = self.get_all_user_options(verify_custom_fields=True)
+        all_options_data = self.get_all_user_options(verify_custom_fields=True, use_cached=use_cached)
         if not isinstance(all_options_data, dict):
             return
 
@@ -1192,9 +1193,9 @@ class GoogleOrderItem:
 
 
 @add_to_class(UserProfile, 'sync_google_stores')
-def user_sync_google_stores(self):
+def user_sync_google_stores(self, use_cached=False):
     if self.user:
-        GoogleUtils(self.user).sync_google_stores()
+        GoogleUtils(self.user).sync_google_stores(use_cached=use_cached)
 
 
 def get_store_from_request(request):

@@ -32,7 +32,7 @@
             <span class='label
             {% if label.status == label.APPROVED %}
             label-primary
-            {% elif label.status == label.AWAITING_REVIEW %}
+            {% elif label.status == label.AWAITING_REVIEW or label.status == label.QA_PASSED %}
             label-warning
             {% elif label.status == label.REJECTED %}
             label-danger
@@ -50,13 +50,13 @@
         </div>
 
         {% if user_buttons and label.current_label_of %}
+        {% if pls_admin or pls_staff or pls_supplier %}
         <div class="row m-t">
-          {% if pls_admin or pls_staff or pls_supplier %}
-          <div class="col-md-5">
+          <div class="col-md-6">
             <form method="POST" role="form">
               <input type="hidden" name="action" value="{{ label.REJECTED }}" />
               <button type="submit"
-              class="btn btn-default btn-outline btn-sm btn-block"
+              class="btn btn-danger btn-outline btn-sm btn-block"
               title="Reject"
               data-loading-text="Please wait..."><i class="fa fa-thumbs-down"></i> Reject</button>
             </form>
@@ -71,18 +71,29 @@
                       data-loading-text="Please wait..."><i class="fa fa-thumbs-up"></i> Approve</button>
             </form>
           </div>
-          {% endif %}
         </div>
+        <div class="row m-t">
+          <div class="col-md-6">
+            <form method="POST" role="form">
+              <input type="hidden" name="action" value="{{ label.QA_PASSED }}" />
+              <button type="submit"
+                      class="btn btn-warning btn-outline btn-sm btn-block"
+                      title="QA Passed"
+                      data-loading-text="Please wait..."><i class="fa fa-check"></i> QA Passed</button>
+            </form>
+          </div>
+        </div>
+        {% endif %}
         {% else %}
-        <div class="row">
-          <div class="col-md-5">
+        <div class="row m-t">
+          <div class="col-md-6">
             <a class="btn btn-default btn-outline btn-sm btn-block" href="{% url 'pls:user_supplement' supplement_id=label.user_supplement.id %}">View Product</a>
           </div>
         </div>
         {% endif %}
 
         <div class="row m-t">
-          <div class="col-md-5">
+          <div class="col-md-6">
             <a class="btn btn-default btn-outline btn-sm btn-block"
               title="Download"
               target="_blank"

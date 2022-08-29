@@ -353,6 +353,7 @@ class RefundPaymentsForm(forms.ModelForm):
         widgets = {
             'amount': forms.HiddenInput(),
             'order_shipped': forms.HiddenInput(),
+            'description': forms.Textarea(attrs={'rows': 1})
         }
 
     def __init__(self, *args, **kwargs):
