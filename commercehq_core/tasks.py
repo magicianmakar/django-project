@@ -13,6 +13,7 @@ import requests
 from lib.exceptions import capture_exception
 
 from app.celery_base import celery_app, CaptureFailure, retry_countdown
+from multichannel_products_core.utils import rewrite_master_variants_map
 from shopified_core import permissions
 from shopified_core.utils import (
     add_http_schema,
@@ -110,6 +111,7 @@ def product_save(req_data, user_id):
         product.update_data(data)
         product.store = store
 
+        rewrite_master_variants_map(product)
         product.save()
 
     else:  # New product to save
@@ -261,11 +263,11 @@ def product_export(store_id, product_id, user_id, publish=None):
         is_multi = len(p['variants']) > 0
 
         weight = p.get('weight', 1.0)
-        if p['weight_unit'] == 'g':
+        if p.get('weight_unit') == 'g':
             weight = safe_float(weight, 0.0) / 1000.0
-        elif p['weight_unit'] == 'lb':
+        elif p.get('weight_unit') == 'lb':
             weight = safe_float(weight, 0.0) * 0.45359237
-        elif p['weight_unit'] == 'oz':
+        elif p.get('weight_unit') == 'oz':
             weight = safe_float(weight, 0.0) * 0.0283495
         else:
             weight = safe_float(weight, 0.0)

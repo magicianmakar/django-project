@@ -335,22 +335,27 @@
         {% endblock breadcrumb-area %}
 
       <div class="wrapper wrapper-content">
-        {% if messages %}
-            {% for message in messages %}
-            <div class="alert
-                {% if message.tags %}
-                    {% if message.tags == 'error' %}
-                        alert-danger
-                    {% else %}
-                        alert-{{ message.tags }}
-                    {% endif %}
-                {% endif %}
-                alert-dismissable">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                {{ message|safe }}
-            </div>
-            {% endfor %}
-        {% endif %}
+          {% if messages %}
+              {% for message in messages %}
+                  {% if message.extra_tags != 'sd_product_details' or '/fb/product/' in request.path or '/ebay/product/' in request.path or '/google/product/' in request.path %}
+                      <div class="alert
+                        {% if message.level_tag %}
+                            {% if message.level_tag == 'error' %}
+                                alert-danger
+                            {% else %}
+                                alert-{{ message.level_tag }}
+                            {% endif %}
+                        {% endif %}
+                        {% if message.extra_tags == 'sd_product_details' or message.extra_tags == 'product_details' %}
+                            col-md-10 col-md-offset-1
+                        {% endif %}
+                            alert-dismissable">
+                          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                          {{ message|safe }}
+                      </div>
+                  {% endif %}
+              {% endfor %}
+          {% endif %}
 
         {% block main-container %}{% endblock %}
       </div>

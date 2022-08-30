@@ -295,7 +295,8 @@ def product_save(req_data, user_id, pusher_channel):
         result = GoogleUtils(user).product_save_draft(product_data,
                                                       store,
                                                       req_data.get('notes'),
-                                                      req_data.get('activate'))
+                                                      req_data.get('activate'),
+                                                      req_data.get('master_product'))
 
         if not result:
             sd_pusher.trigger(default_event, {

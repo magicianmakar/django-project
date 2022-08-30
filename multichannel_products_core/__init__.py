@@ -1,0 +1,1 @@
+default_app_config = 'multichannel_products_core.apps.MultichannelProductsConfig'

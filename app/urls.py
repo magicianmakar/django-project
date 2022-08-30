@@ -50,6 +50,7 @@ urlpatterns = [
     url(r'^insider-reports/', include('insider_reports.urls')),
     url(r'^loopedin/', include(('loopedin_core.urls', 'loopedin'), 'loopedin')),
     url(r'^fb-marketplace/', include(('fb_marketplace_core.urls', 'fb_marketplace'), 'fb_marketplace')),
+    url(r'^multichannel/', include(('multichannel_products_core.urls', 'multichannel_products_core'), 'multichannel')),
 ]
 
 if settings.DEBUG:

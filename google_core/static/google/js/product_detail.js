@@ -1606,6 +1606,119 @@ $('.variant-checkbox').on('click', function() {
     $('#all-variants-select-checkbox').prop('checked', allVariantsAreSelected());
 });
 
+$('.parent-product-disconnect').click(function(e) {
+    var btn = $(this);
+    btn.bootstrapBtn('loading');
+
+    $.ajax({
+        url: api_url('disconnect-parent-product', 'multichannel'),
+        type: 'POST',
+        data: JSON.stringify({
+            'product': $(this).attr('data-product-id'),
+            'store_type': 'fb',
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        context: { btn: btn },
+        success: function (data) {
+            if (data.status === 'ok') {
+                window.location.hash = 'connections';
+                window.location.reload();
+            } else {
+                btn.bootstrapBtn('reset');
+                displayAjaxError('Parent Disconnect', data);
+            }
+        },
+        error: function (data) {
+            btn.bootstrapBtn('reset');
+            displayAjaxError('Parent Disconnect', data);
+        }
+    });
+});
+
+$('.parent-product-create').click(function(e) {
+    var btn = $(this);
+    btn.bootstrapBtn('loading');
+
+    $.ajax({
+        url: api_url('parent-product', 'multichannel'),
+        type: 'POST',
+        data: JSON.stringify({
+            'product_id': $(this).attr('data-product-id'),
+            'store_type': 'fb',
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        context: { btn: btn },
+        success: function (data) {
+            if (data.status === 'ok') {
+                if (data.product) {
+                    window.location = data.product.url + '#children';
+                } else {
+                    window.location.hash = 'connections';
+                    window.location.reload();
+                }
+            } else {
+                btn.bootstrapBtn('reset');
+                displayAjaxError('Parent Create', data);
+            }
+        },
+        error: function (data) {
+            btn.bootstrapBtn('reset');
+            displayAjaxError('Parent Create', data);
+        }
+    });
+});
+
+$('.parent-product-link').click(function(e) {
+    e.preventDefault();
+
+    $('#modal-multichannel-product').modal('show');
+});
+
+window.multichannelProductSelected = function (master_id) {
+    $('#modal-multichannel-product').modal('hide');
+    $('.parent-product-link').bootstrapBtn('loading');
+
+    $.ajax({
+        url: api_url('link-product', 'multichannel'),
+        type: 'POST',
+        data: {
+            master_id: master_id,
+            product: config.product_guid,
+            store_type: 'google',
+        },
+        success: function (data) {
+            if ('product' in data) {
+                var channel_event = 'google-product-update';
+                var pusher = new Pusher(data.product.pusher.key);
+                var channel = pusher.subscribe(data.product.pusher.channel);
+
+                channel.bind(channel_event, function (data) {
+                    if (data.progress) {
+                        return;
+                    }
+                    pusher.unsubscribe(channel);
+                    if (data.success) {
+                        window.location.hash = 'connections';
+                        window.location.reload();
+                    } else {
+                        $('.parent-product-link').bootstrapBtn('reset');
+                        displayAjaxError('Link Product', data, true);
+                    }
+                });
+            } else {
+                $('.parent-product-link').bootstrapBtn('reset');
+                displayAjaxError('Link Product', data, true);
+            }
+        },
+        error: function (data) {
+            $('.parent-product-link').bootstrapBtn('reset');
+            displayAjaxError('Link Product', data, true);
+        }
+    });
+};
+
 (function() {
     setup_full_editor('product-description');
     showProductInfo(product);

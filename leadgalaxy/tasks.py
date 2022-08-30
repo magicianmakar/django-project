@@ -22,6 +22,7 @@ from django.utils.text import slugify
 
 from lib.exceptions import capture_exception, capture_message
 from app.celery_base import celery_app, CaptureFailure, retry_countdown, api_exceed_limits_countdown
+from multichannel_products_core.utils import rewrite_master_variants_map
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import (
@@ -181,6 +182,11 @@ def export_product(req_data, target, user_id):
 
                 if r.ok:
                     try:
+                        if product.master_product:
+                            # Link images with variants
+                            mapped = utils.shopify_link_images(store, r.json()['product'])
+                            if mapped:
+                                r = mapped
                         shopify_images = r.json()['product'].get('images', [])
                         product_images = api_data['product'].get('images', [])
                         if len(product_images) == len(shopify_images):
@@ -398,6 +404,7 @@ def export_product(req_data, target, user_id):
             pass
 
         product.update_data(data)
+        product.save()
 
     elif target == 'save-for-later':  # save for later
         if 'product' in req_data:
@@ -423,9 +430,10 @@ def export_product(req_data, target, user_id):
                     'error': "Product: {}".format(str(e))
                 }
 
-            product.update_data(data)
+            product.update_data(json.loads(data).get('product') or data)
             product.store = store
 
+            rewrite_master_variants_map(product)
             product.save()
 
             boards = parsed_data.get('boards', [])

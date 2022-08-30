@@ -1,0 +1,11 @@
+{% load home_helper %}
+
+<ul class="nav nav-tabs scrolling-tabs">
+{% for item in user_stores.all %}
+        {% if store == item %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% else %}
+            <li><a href="{% url 'multichannel:templates_list' %}?store={{item.id}}&store_type={{item.store_type}}">{{item.title}}</a></li>
+        {% endif %}
+{% endfor %}
+</ul>

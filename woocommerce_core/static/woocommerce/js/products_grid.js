@@ -4,6 +4,9 @@
 (function(boardsMenu) {
 'use strict';
 
+var selectedProducts = 0;
+var createdParents = 0;
+
 $('.bulk-action').on('click', function(e) {
     e.preventDefault();
     var action = $(this).attr('data-bulk-action');
@@ -56,6 +59,44 @@ $('.bulk-action').on('click', function(e) {
         return;
     } else if (action == 'woocommerce-send') {
         $('#modal-woocommerce-send').modal('show');
+        return;
+    } else if (action === 'create-parent') {
+        $('button.dropdown-toggle').button('loading');
+        var products = $('input.item-select[type=checkbox]:checked');
+        selectedProducts = products.length;
+        products.each(function (i, el) {
+            var product = $(el).parents('.product-box').attr('product-id');
+            $.ajax({
+                url: api_url('parent_product', 'multichannel'),
+                type: 'POST',
+                data: JSON.stringify({
+                    product_id: product,
+                    store_type: 'woo'
+                }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    if (data.status === 'ok') {
+                        createdParents += 1;
+                        if (selectedProducts === createdParents) {
+                            $('button.dropdown-toggle').button('reset');
+                            toastr.success('Parents for selected products were successfully created!', 'Parents Created');
+                            selectedProducts = 0;
+                            createdParents = 0;
+                        }
+                    } else {
+                        $('button.dropdown-toggle').button('reset');
+                        swal("Error", "Server Error", "error");
+                    }
+                },
+                error: function (data) {
+                    $('button.dropdown-toggle').button('reset');
+                    swal("Error", "Server Error", "error");
+                }
+            });
+
+            $(el).iCheck('uncheck');
+        });
         return;
     }
 

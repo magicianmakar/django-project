@@ -13,11 +13,13 @@
             class="btn btn-primary dropdown-toggle"
             data-toggle="dropdown"
             aria-haspopup="true"
-            aria-expanded="false">
+            aria-expanded="false"
+            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Creating"
+    >
         Bulk Actions
         <span class="dropified-icons di-bolt"></span>
     </button>
-    <ul class="dropdown-menu pull-right">
+    <ul class="dropdown-menu pull-right" style="width: 190px;">
       <li>
         <a href="#" class="bulk-action" data-bulk-action="board">Add to Board</a>
       </li>
@@ -36,6 +38,11 @@
         </a>
       </li>
       {% endif %}
+        <li>
+            <a href="#" class="bulk-action" data-bulk-action="create-parent" style="white-space: initial;">
+                Create Multi-Channel Product
+            </a>
+        </li>
       <li>
         <a href="#" class="bulk-action btn-danger btn-outline" data-bulk-action="delete"><i class="fa fa-remove"></i> Delete</a>
       </li>
@@ -146,7 +153,7 @@
                         {% for item in products %}
                         <div class="col-xs-12 col-md-3">
                             <div class="ibox">
-                                <div class="ibox-content product-box" product-id="{{item.guid}}">
+                                <div class="ibox-content product-box" product-id="{{item.guid}}" data-product-id="{{item.id}}">
                                     <div class="product-imitation" style="padding: 0;">
                                         <input class="item-select icheck" id="product_{{item.guid}}" name="product" value="{{item.guid}}" type="checkbox" style="position:absolute; left:20px;top:5px"/>
                                         <a href="{% url 'ebay:product_detail' store_index=item.store.id pk=item.guid %}">

@@ -10,6 +10,9 @@ class BigCommerceApiHelper(ApiHelperBase):
     def smart_board_sync(self, user, board):
         pass
 
+    def after_delete_product_connect(self, product, source_id):
+        pass
+
     def format_order_key(self, order_key):
         order_key = order_data_cache_key(order_key, prefix='bigcommerce_order')
 

@@ -294,7 +294,8 @@ def product_save(req_data, user_id, pusher_channel):
         result = FBUtils(user).product_save_draft(product_data,
                                                   store,
                                                   req_data.get('notes'),
-                                                  req_data.get('activate'))
+                                                  req_data.get('activate'),
+                                                  req_data.get('master_product'))
 
         if not result:
             sd_pusher.trigger(default_event, {
@@ -405,7 +406,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         product_data['mediax'] = '*'.join(mediax)
 
         # Fill images into variants
-        for variant in product_data['variants']:
+        for variant in product_data.get('variants', []):
             media1 = variant.pop('image')
             variant['media1'] = (media1 if variant['guid'] != variant['sku'] and media1 in media
                                  else product_data['media1'])
@@ -498,7 +499,7 @@ def product_duplicate(user_id, parent_sku, product_data, store_id):
 
 
 @celery_app.task(base=CaptureFailure)
-def product_delete(user_id, parent_guid, store_id):
+def product_delete(user_id, parent_guid, store_id, skip_all_channels=False):
     user = User.objects.get(id=user_id)
     store = FBStore.objects.get(id=store_id)
     product = FBProduct.objects.get(guid=parent_guid)
@@ -508,7 +509,7 @@ def product_delete(user_id, parent_guid, store_id):
         permissions.user_can_delete(user, product)
         fb_utils = FBUtils(user)
         is_connected = product.is_connected
-        sd_api_resp = fb_utils.delete_product_with_all_variations(parent_guid)
+        sd_api_resp = fb_utils.delete_product_with_all_variations(parent_guid, skip_all_channels=skip_all_channels)
 
         if not isinstance(sd_api_resp, dict):
             store.pusher_trigger(pusher_event, {

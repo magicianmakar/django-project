@@ -1705,6 +1705,104 @@ function clippingmagicEditImage(data, image) {
     });
 }
 
+$('.parent-product-disconnect').click(function(e) {
+    var btn = $(this);
+    btn.bootstrapBtn('loading');
+
+    $.ajax({
+        url: api_url('disconnect-parent-product', 'multichannel'),
+        type: 'POST',
+        data: JSON.stringify({
+            'product': config.product_id,
+            'store_type': 'shopify',
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        context: { btn: btn },
+        success: function (data) {
+            if (data.status === 'ok') {
+                window.location.hash = 'connections';
+                window.location.reload();
+            } else {
+                btn.bootstrapBtn('reset');
+                displayAjaxError('Parent Disconnect', data);
+            }
+        },
+        error: function (data) {
+            btn.bootstrapBtn('reset');
+            displayAjaxError('Parent Disconnect', data);
+        }
+    });
+});
+
+$('.parent-product-create').click(function(e) {
+    var btn = $(this);
+    btn.bootstrapBtn('loading');
+
+    $.ajax({
+        url: api_url('parent-product', 'multichannel'),
+        type: 'POST',
+        data: JSON.stringify({
+            'product_id': config.product_id,
+            'store_type': 'shopify',
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        context: { btn: btn },
+        success: function (data) {
+            if (data.status === 'ok') {
+                if (data.product) {
+                    window.location = data.product.url + '#children';
+                } else {
+                    window.location.hash = 'connections';
+                    window.location.reload();
+                }
+            } else {
+                btn.bootstrapBtn('reset');
+                displayAjaxError('Parent Create', data);
+            }
+        },
+        error: function (data) {
+            btn.bootstrapBtn('reset');
+            displayAjaxError('Parent Create', data);
+        }
+    });
+});
+
+$('.parent-product-link').click(function(e) {
+    e.preventDefault();
+
+    $('#modal-multichannel-product').modal('show');
+});
+
+window.multichannelProductSelected = function (master_id) {
+    $('#modal-multichannel-product').modal('hide');
+    $('.parent-product-link').bootstrapBtn('loading');
+
+    $.ajax({
+        url: api_url('link-product', 'multichannel'),
+        type: 'POST',
+        data: {
+            master_id: master_id,
+            product: config.product_id,
+            store_type: 'shopify',
+        },
+        success: function (data) {
+            if ('product' in data) {
+                window.location.hash = 'connections';
+                window.location.reload();
+            } else {
+                $('.parent-product-link').bootstrapBtn('reset');
+                displayAjaxError('Link Product', data, true);
+            }
+        },
+        error: function (data) {
+            $('.parent-product-link').bootstrapBtn('reset');
+            displayAjaxError('Link Product', data, true);
+        }
+    });
+};
+
 var PusherSubscription = {
     init: function() {
         if (!window.pusher || !window.channel) {

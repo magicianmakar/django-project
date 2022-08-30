@@ -17,6 +17,7 @@ from django.utils.functional import cached_property
 from lib.exceptions import capture_exception
 from data_store.models import DataStore
 from leadgalaxy.graphql import ShopifyGraphQL
+from multichannel_products_core.models import MasterProduct
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class
 from shopified_core.models import BoardBase, OrderTrackBase, ProductBase, StoreBase, SupplierBase, UserUploadBase
@@ -1508,6 +1509,9 @@ class ShopifyProduct(ProductBase):
     parent_product = models.ForeignKey('ShopifyProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
     default_supplier = models.ForeignKey('ProductSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
+    master_product = models.ForeignKey(MasterProduct, on_delete=models.SET_NULL, null=True, blank=True)
+    master_variants_map = models.TextField(blank=True, null=True, default='{}')
+
     def __str__(self):
         return f'<ShopifyProduct: {self.id}>'
 
@@ -2052,6 +2056,19 @@ class ShopifyProduct(ProductBase):
             inventory = inventories[0]
 
         return inventory.get('available', 0)
+
+    def get_master_variants_map(self):
+        try:
+            return json.loads(self.master_variants_map)
+        except:
+            return {}
+
+    def set_master_variants_map(self, mapping):
+        if type(mapping) is not str:
+            mapping = json.dumps(mapping)
+
+        self.master_variants_map = mapping
+        self.save()
 
 
 class ProductSupplier(SupplierBase):

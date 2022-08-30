@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404
 from facebook_core.models import FBBoard, FBOrderTrack, FBProduct, FBProductVariant, FBStore, FBSupplier
 from leadgalaxy.models import UserProfile
 from lib.exceptions import capture_exception
+from multichannel_products_core.utils import set_master_product, rewrite_master_variants_map
 from shopified_core import permissions
 from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
@@ -174,7 +175,7 @@ class FBUtils(SureDoneUtils):
                 creds=creds,
             )
 
-    def product_save_draft(self, product_data: dict, store: FBStore, notes: str, activate: bool):
+    def product_save_draft(self, product_data: dict, store: FBStore, notes: str, activate: bool, master_product=None):
         """
         Save a new poduct to SureDone without publishing it to any Facebook store.
         Parses the API request made by the extension.
@@ -209,6 +210,11 @@ class FBUtils(SureDoneUtils):
         # If the SureDone returns no data, then the product did not get imported
         if not created_product or not isinstance(created_product, FBProduct):
             return
+
+        if master_product is not None:
+            set_master_product(created_product, master_product, self.user)
+            rewrite_master_variants_map(created_product)
+            created_product.save()
 
         # Init the default supplier
         store_info = product_data.get('store', {})

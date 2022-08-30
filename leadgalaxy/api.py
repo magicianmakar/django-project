@@ -1268,6 +1268,9 @@ class ShopifyStoreApi(ApiBase):
         # Force settings captcha option
         config['aliexpress_solve_captcha'] = config.get('aliexpress_solve_captcha', True)
 
+        # Flag for whether the user can use multichannel products
+        config['multichannel_enabled'] = user.can('multichannel.use')
+
         return JsonResponse(config)
 
     def post_user_config(self, request, user, data):

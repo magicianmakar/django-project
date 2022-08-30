@@ -6,7 +6,19 @@
 {% load compress %}
 
 {% block main-container %}
-
+    {% if request.user|can:'multichannel.use' %}
+        {% if product.master_product %}
+        <div class="alert alert-warning col-md-10 col-md-offset-1" style="display:flex;align-items: center;">
+            <i class='fa fa-exclamation-triangle' style="font-size: 24px; margin-right: 1rem;"></i>
+            <div>
+                <div>You are editing a child product. Edit a child product only to customize the store-specific
+                    listing.
+                </div>
+                <div>Changes to this product won’t be synchronized to the parent or parent's other store listings.</div>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
     <div class="row">
         <div class="col-md-10 col-md-offset-1">
             <div class="tabs-container">
@@ -505,7 +517,61 @@
                                     </div>
                                 </div>
                             </div>
+                            {% if request.user|can:'multichannel.use' %}
+                            <div class="row">
+                    <div class="col-md-10 col-md-offset-1" style="padding-left:0;padding-right:0">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                Multi-Channel Product
+                                {% if product.master_product %}
+                                <i class="fa fa-question-circle itooltip"
+                                   style="cursor: pointer;opacity: 0.7;margin-left: 5px;"
+                                   title="View Multi-Channel Product &quot;Children&quot; tab to export to
+                                                multiple stores and platforms"></i>
+                                {% endif %}
+                            </div>
+                            <div class="panel-body">
+                                {% if product.master_product %}
+                                    <div class="row" style="display: flex; align-items: center; ">
+                                        <div class="col-md-1">
+                                            <img class="no-img no-img-sm" no-img-width="45px"
+                                                 style="width:50px"
+                                                 src="{{ product.master_product.media_links|first }}">
+                                        </div>
+                                        <div class="col-md-10">
+                                            <a href="{{ product.master_product.url }}"
+                                               target="_blank">{{ product.master_product.title }}</a>
+                                        </div>
+                                    </div>
 
+                                    <div class="row text-right">
+                                        <div class="col-md-12">
+                                            <a href="#" class="btn btn-danger btn-xs parent-product-disconnect"><i
+                                                    class="fa fa-chain-broken"></i> Disconnect</a>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="row m-t-xs">
+                                        <div class="col-md-12">
+                                            <p>The product does not have a parent. Create or link a multi-channel product to export to
+                                                multiple stores and platforms.</p>
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <a href="#" class="btn btn-success btn-xs parent-product-create" data-product-id="{{ product.guid }}">
+                                                <i class="fa fa-chain"></i> Create Multi-Channel Product
+                                            </a>
+                                            <a href="#" class="btn btn-success btn-xs parent-product-link">
+                                                <i class="fa fa-chain"></i> Link Multi-Channel Product
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                            {% endif %}
                             <div class="row">
                                 <div id="export-container" class="col-xs-10 col-xs-offset-1">
                                 </div>
@@ -913,6 +979,7 @@
         </div>
     </div>
     {% include "facebook/partial/fb_product_selector.html" %}
+    {% include "multichannel_products/partial/master_product_selector.html" %}
     {% if request.user|can:'image_uploader.use' %}
         <div id="modal-upload-image" class="modal fade" aria-hidden="true">
             <div class="modal-dialog modal-lg">
@@ -1239,6 +1306,7 @@
         <script type="text/javascript" src="{% static 'facebook/js/clippingmagic.js' %}"></script>
         <script type="text/javascript" src="{% static 'facebook/js/fb_product_selector.js' %}"></script>
         <script type="text/javascript" src="{% static 'facebook/js/product_detail.js' %}"></script>
+        <script type="text/javascript" src="{% static 'multichannel_products/js/master_product_selector.js' %}"></script>
 
     {% endcompress %}
 

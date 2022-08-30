@@ -439,7 +439,8 @@ def product_save(req_data, user_id, pusher_channel):
         result = EbayUtils(user).product_save_draft(product_data,
                                                     store,
                                                     req_data.get('notes'),
-                                                    req_data.get('activate'))
+                                                    req_data.get('activate'),
+                                                    req_data.get('master_product'))
 
         if not result:
             sd_pusher.trigger(default_event, {
@@ -498,7 +499,8 @@ def product_export(user_id, parent_guid, store_id):
                 'success': False,
                 'product': product.guid,
                 'error': api_error_message or default_error_message,
-                'parsed_ebay_errors_list': parsed_ebay_errors_list
+                'parsed_ebay_errors_list': parsed_ebay_errors_list,
+                'product_url': reverse('ebay:product_detail', kwargs={'pk': parent_guid, 'store_index': store.pk}),
             })
             return
 
@@ -530,7 +532,8 @@ def product_export(user_id, parent_guid, store_id):
                 'success': False,
                 'product': product.guid,
                 'error': error_message,
-                'parsed_ebay_errors_list': parsed_ebay_errors_list
+                'parsed_ebay_errors_list': parsed_ebay_errors_list,
+                'product_url': reverse('ebay:product_detail', kwargs={'pk': parent_guid, 'store_index': store.pk}),
             })
             return
 

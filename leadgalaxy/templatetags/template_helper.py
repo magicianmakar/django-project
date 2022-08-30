@@ -481,6 +481,14 @@ def compareatprice(price):
     return price if float(price) > 0 else ''
 
 
+@register.simple_tag
+def variant_mapping(dictionary, key, store, store_type):
+    mapping = dictionary.get(key, [])
+    mapping_title = next((item.get('variant') for item in mapping
+                          if store == item.get('store') and store_type == item.get('store_type')), None)
+    return mapping_title
+
+
 @register.filter
 def float_or_int(number):
     return float(number) if '.' in str(number) else int(number)

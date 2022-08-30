@@ -120,6 +120,7 @@ INSTALLED_APPS = (
     'logistics',
     'loopedin_core',
     'fb_marketplace_core',
+    'multichannel_products_core',
 )
 
 MIDDLEWARE = (
@@ -225,6 +226,7 @@ DROPIFIED_API = {
     'alibaba': 'alibaba_core.api.AlibabaApi',
     'aliexpress': 'aliexpress_core.api.AliexpressApi',
     'logistics': 'logistics.api.LogisticsApi',
+    'multichannel': 'multichannel_products_core.api.MasterProductApi',
 }
 
 # Database

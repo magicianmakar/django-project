@@ -17,6 +17,7 @@ from lib.exceptions import capture_exception
 from pusher import Pusher
 
 from app.celery_base import celery_app, CaptureFailure, retry_countdown
+from multichannel_products_core.utils import rewrite_master_variants_map
 
 from shopified_core import permissions
 from shopified_core import utils
@@ -92,6 +93,8 @@ def product_save(req_data, user_id):
 
         product.update_data(data)
         product.store = store
+
+        rewrite_master_variants_map(product)
         product.save()
 
     else:  # New product to save
@@ -108,6 +111,7 @@ def product_save(req_data, user_id):
             product.update_data(data)
             user_supplement_id = json.loads(data).get('user_supplement_id')
             product.user_supplement_id = user_supplement_id
+
             permissions.user_can_add(user, product)
             product.save()
 

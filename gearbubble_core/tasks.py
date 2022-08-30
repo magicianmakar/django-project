@@ -98,6 +98,7 @@ def product_save(req_data, user_id):
         try:
             product = GearBubbleProduct(store=store, user=user.models_user)
             product.update_data(data)
+
             permissions.user_can_add(user, product)
             product.save()
 

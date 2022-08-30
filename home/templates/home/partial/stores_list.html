@@ -1,4 +1,5 @@
 {% load home_helper %}
+{% load perms_helper %}
 
 <div class="row">
     <div class="col-md-12">
@@ -154,6 +155,12 @@
                                     </a>
                                 </li>
                                 {% endif %}
+                                {% if request.user|can:'multichannel.use' %}
+                                    <li>
+                                        <a href="{% url 'multichannel:templates_list' %}?store={{ item.id }}&store_type={{ item.store_type }}">
+                                            <i class="fa fa-file-text-o"></i> Templates</a>
+                                    </li>
+                                {% endif %}
 
                                 <li>
                                     <a class="delete-store btn-danger btn-outline" store-id="{{item.id}}" store-version="{{item.version}}">
@@ -224,6 +231,13 @@
                                     </a>
                                 </li>
 
+                                {% if request.user|can:'multichannel.use' %}
+                                    <li>
+                                        <a href="{% url 'multichannel:templates_list' %}?store={{ item.id }}&store_type={{ item.store_type }}">
+                                            <i class="fa fa-file-text-o"></i> Templates</a>
+                                    </li>
+                                {% endif %}
+
                                 <li>
                                     <a
                                         class="chq-delete-store-btn btn-danger btn-outline"
@@ -293,6 +307,13 @@
                                         <i class="fa fa-edit"></i> Edit
                                     </a>
                                 </li>
+
+                                {% if request.user|can:'multichannel.use' %}
+                                    <li>
+                                        <a href="{% url 'multichannel:templates_list' %}?store={{ item.id }}&store_type={{ item.store_type }}">
+                                            <i class="fa fa-file-text-o"></i> Templates</a>
+                                    </li>
+                                {% endif %}
 
                                 <li>
                                     <a
@@ -504,6 +525,13 @@
                                         </a>
                                     </li>
 
+                                    {% if request.user|can:'multichannel.use' %}
+                                        <li>
+                                            <a href="{% url 'multichannel:templates_list' %}?store={{ item.id }}&store_type={{ item.store_type }}"
+                                            ><i class="fa fa-file-text-o"></i> Templates</a>
+                                        </li>
+                                    {% endif %}
+
                                     <li>
                                         <a
                                             class="fb-delete-store-btn btn-danger btn-outline"
@@ -695,6 +723,13 @@
                                     </a>
                                 </li>
 
+                                {% if request.user|can:'multichannel.use' %}
+                                    <li>
+                                        <a href="{% url 'multichannel:templates_list' %}?store={{ item.id }}&store_type={{ item.store_type }}">
+                                            <i class="fa fa-file-text-o"></i> Templates</a>
+                                    </li>
+                                {% endif %}
+
                                 <li>
                                     <a
                                         class="gear-delete-store-btn btn-danger btn-outline"
@@ -767,6 +802,13 @@
                                     </a>
                                 </li>
 
+                                {% if request.user|can:'multichannel.use' %}
+                                    <li>
+                                        <a href="{% url 'multichannel:templates_list' %}?store={{ item.id }}&store_type={{ item.store_type }}">
+                                            <i class="fa fa-file-text-o"></i> Templates</a>
+                                    </li>
+                                {% endif %}
+
                                 <li>
                                     <a
                                         class="gk-delete-store-btn btn-danger btn-outline"
@@ -823,6 +865,13 @@
                                         <i class="fa fa-chain"></i> Custom Tracking URL
                                     </a>
                                 </li>
+
+                                {% if request.user|can:'multichannel.use' %}
+                                    <li>
+                                        <a href="{% url 'multichannel:templates_list' %}?store={{ item.id }}&store_type={{ item.store_type }}">
+                                            <i class="fa fa-file-text-o"></i> Templates</a>
+                                    </li>
+                                {% endif %}
 
                                 <li>
                                     <a class="bigcommerce-delete-store-btn btn-danger btn-outline" data-store-id="{{item.id}}">

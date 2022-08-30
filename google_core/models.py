@@ -8,6 +8,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
+from multichannel_products_core.models import MasterProduct
 from shopified_core.decorators import add_to_class
 from shopified_core.models import BoardBase, OrderTrackBase, UserUploadBase
 from shopified_core.utils import safe_json
@@ -146,6 +147,8 @@ class GoogleProduct(SureDoneProductBase):
                               verbose_name='Product publication status on Google')
     last_export_date = models.DateTimeField(null=True, blank=True,
                                             verbose_name='Datetime of product export to Google')
+    master_product = models.ForeignKey(MasterProduct, on_delete=models.SET_NULL, null=True, blank=True)
+    master_variants_map = models.TextField(blank=True, null=True, default='{}')
 
     def __str__(self):
         return f'<GoogleProduct: {self.id}>'
@@ -362,6 +365,19 @@ class GoogleProduct(SureDoneProductBase):
             }, countdown=5)
 
         super().save(*args, **kwargs)
+
+    def get_master_variants_map(self):
+        try:
+            return json.loads(self.master_variants_map)
+        except:
+            return {}
+
+    def set_master_variants_map(self, mapping):
+        if type(mapping) is not str:
+            mapping = json.dumps(mapping)
+
+        self.master_variants_map = mapping
+        self.save()
 
 
 class GoogleProductVariant(SureDoneProductVariantBase):
