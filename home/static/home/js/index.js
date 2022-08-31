@@ -87,6 +87,11 @@
         $('#modal-add-all-store-form').modal('show');
     });
 
+    $('#select-section input[type="radio"]').on('ifChecked', function (event) {
+        $('.store-box.active').removeClass('active');
+        $(event.target).parent().parent().parent().parent().addClass('active');
+    });
+
     $('#continue-btn').click(function(e) {
         e.preventDefault();
 
