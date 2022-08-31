@@ -243,9 +243,10 @@ CELERY_STATEMENT_TIMEOUT = os.environ.get('CELERY_STATEMENT_TIMEOUT')
 COMMAND_STATEMENT_TIMEOUT = os.environ.get('COMMAND_STATEMENT_TIMEOUT')
 
 SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE2 = 'none'
 SESSION_COOKIE_SAMESITE_FORCE_ALL = True
+SESSION_COOKIE_AGE = 172800
+CSRF_COOKIE_SECURE = True
 
 # Ignore urllib3 warnings
 warnings.filterwarnings('ignore', module='urllib3', message='Unverified HTTPS request')
