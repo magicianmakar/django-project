@@ -1,6 +1,7 @@
 (function() {
     'use strict';
 
+    window.refreshAfter = false;
     function processCustomInfo(wrapper, order) {
         var fromCountry = wrapper.find('[name="warehouse"] option:selected').data('country-code');
         var toCountry = wrapper.find('[name="to_address_country_code"]').val();
@@ -135,6 +136,7 @@
                         shipmentWrapper.append($('<input type="hidden" name="order_data_id">').val(item.order_data_id).data('json', item));
                     }
                 }
+
                 wrapper.find('.logistics-errors').empty();
                 if (order.shipment && order.shipment.errors) {
                     for (i = 0, iLength = order.shipment.errors.length; i < iLength; i++) {
@@ -142,9 +144,10 @@
                     }
                 }
 
+                wrapper.find('.logistics-address-errors').empty();
                 if (order.to_address.errors) {
                     for (i = 0, iLength = order.to_address.errors.length; i < iLength; i++) {
-                        wrapper.find('.logistics-errors').append($('<div class="alert alert-danger">').text(order.to_address.errors[i]));
+                        wrapper.find('.logistics-address-errors').append($('<div class="alert alert-danger">').text(order.to_address.errors[i]));
                     }
                 }
                 wrapper.find('[name="order_id"]').val(order.id);
@@ -284,6 +287,7 @@
             },
             function(isConfirm) {
                 extraParams['connect_products'] = isConfirm;
+                window.refreshAfter = true;
                 processOrders(orderDataIds, extraParams);
             });
         } else {
@@ -315,6 +319,12 @@
         $('#logistics-result').css('display', 'none');
         $('#logistics-info').addClass('col-md-12').removeClass('col-md-7');
         $('#modal-logistics-order-detail .modal-dialog').removeClass('modal-lg');
+    });
+
+    $('#modal-logistics-order-detail').on('hide.bs.modal', function() {
+        if (window.refreshAfter) {
+            window.location.reload();
+        }
     });
 
     $('#modal-logistics-order-detail .form').on('change', function() {

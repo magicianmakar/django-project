@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load url_tools static template_helper %}
+{% load url_tools static compress template_helper %}
 
 {% block main-container %}
 <div class="tabs-container">
@@ -35,7 +35,9 @@
                   <tbody>
                     {% for order in orders %}
                     <tr>
-                        <td>{{ order.store_order_number }}</td>
+                        <td>
+                            <a href="{{ order.store_order_url }}">{{ order.store_order_number }}</a>
+                        </td>
                         <td>{% date_humanize order.paid_at %}</td>
                         <td>{{ order.carrier }}</td>
                         <td>{{ order.service }}</td>
@@ -52,11 +54,38 @@
                             </div>
                         </td>
                         <td>
+                            {% if order.can_refund %}
+                            <div class="btn-group">
+                                {% if order.source_label_url %}
+                                <a class="btn btn-primary btn-xs" href="{{ order.label_url }}" download="{{ order.label_url }}" target="_blank">
+                                    <i class="fa fa-download"></i>
+                                    Download
+                                </a>
+                                {% endif %}
+                                <button type="button" class="btn btn-primary btn-xs dropdown-toggle"
+                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu pull-left" style="left:auto;right:0;">
+                                    <li>
+                                        <a href="#" class="order-refund" data-id="{{ order.id }}">
+                                            <i class="dropified-icons di-trash color-danger"></i>
+                                            {{ order.get_refund_status_display|default:"Refund" }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            {% else %}
                             {% if order.source_label_url %}
                             <a class="btn btn-primary btn-xs" href="{{ order.label_url }}" download="{{ order.label_url }}" target="_blank">
                                 <i class="fa fa-download"></i>
                                 Download
                             </a>
+                            {% endif %}
+                            {% endif %}
+
+                            {% if order.refund_status %}
+                            <label class="label label-danger">{{ order.get_refund_status_display }}</label>
                             {% endif %}
                         </td>
                     </tr>
@@ -75,4 +104,10 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extrajs %}
+{% compress js %}
+<script type="text/javascript" src="{% static 'logistics/js/orders.js' %}"></script>
+{% endcompress %}
 {% endblock %}

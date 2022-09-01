@@ -25,7 +25,6 @@ $('.connect').on('click', function(e) {
     var btn = $(this);
     var storeType = btn.data('store-type');
     var connectProduct = function (store, product_id, product_data) {
-        console.log('hey');
         $.ajax({
             type: 'POST',
             url: api_url('connect', 'logistics'),
@@ -105,16 +104,16 @@ $('.delete-product').on('click', function (e) {
     },
     function(isConfirm) {
         if (isConfirm) {
-
             $.ajax({
                 type: 'DELETE',
                 url: api_url('product', 'logistics'),
                 data: {'id': btn.data('id')},
                 context: btn,
                 success: function(data) {
+                    btn.parents('.row-slide-parent').nextUntil('.row-slide-parent').remove();
+                    btn.parents('tr').remove();
                     toastr.success('Product Deleted.');
                     swal.close();
-                    btn.parents('tr').remove();
                 },
                 error: function(data) {
                     displayAjaxError('Delete Product', data);
@@ -143,16 +142,16 @@ $('.delete-supplier').on('click', function (e) {
     },
     function(isConfirm) {
         if (isConfirm) {
-
             $.ajax({
                 type: 'DELETE',
                 url: api_url('supplier', 'logistics'),
                 data: {'id': btn.data('id')},
                 context: btn,
                 success: function(data) {
+                    btn.parents('.row-slide-parent').nextUntil('.row-slide-parent').remove();
+                    btn.parents('tr').remove();
                     toastr.success('Product Deleted.');
                     swal.close();
-                    btn.parents('tr').remove();
                 },
                 error: function(data) {
                     displayAjaxError('Delete Product', data);

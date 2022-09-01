@@ -57,6 +57,7 @@ class LogisticsApi(ApiResponseMixin):
             items__order_data_id__in=[f"{store_type}_{i.replace('raw_', '')}" for i in data.get('order_data_ids')])]
 
         for order_data_id in order_data_ids:
+            first_order = order_data_id == order_data_ids[0]
             order_data = get_cached_order(user, store_type, order_data_id)[1]
             if order_data is None:
                 order_data = get_cached_order(user, store_type, f'raw_{order_data_id}')[1]
@@ -81,7 +82,19 @@ class LogisticsApi(ApiResponseMixin):
             if warehouse_id:
                 warehouse = user.models_user.warehouses.get(id=warehouse_id)
 
-            supplier, listing = get_supplier_listing(store, order_data, warehouse, connect_product=connect_product)
+            try:
+                supplier, listing = get_supplier_listing(
+                    store,
+                    order_data,
+                    warehouse,
+                    connect_product=connect_product,
+                    change_warehouse=warehouse_id is not None and first_order and order is None
+                )
+                if supplier:
+                    warehouse = supplier.warehouse
+            except Exception as e:
+                return self.api_error(str(e), status=422)
+
             # TODO: handle inventory
             if listing and listing.inventory is not None:
                 pass
@@ -296,7 +309,7 @@ class LogisticsApi(ApiResponseMixin):
         if data.get('dropified_id'):
             result = supplier.connect_supplier(data['store_type'], data['store_id'], data['dropified_id'])
         elif data.get('product_id'):
-            result = supplier.connect_product(data['store_type'], data['store_id'], data['product_id'])
+            return self.api_error('Product without a warehouse')
         return self.api_success(result)
 
     def post_purchase_credits(self, request, user, data):
@@ -348,3 +361,21 @@ class LogisticsApi(ApiResponseMixin):
         AccountBalance.objects.filter(id=balance.id).update(balance=models.F('balance') + Decimal(credits))
         balance.refresh_from_db()
         return self.api_success({'balance': money_format(balance.balance)})
+
+    def post_refund(self, request, user, data):
+        try:
+            order = Order.objects.get(id=data['id'], warehouse__user=user.models_user)
+        except Order.DoesNotExist:
+            return self.api_error('Order not found', status=403)
+
+        if order.refund_status == 'refunded':
+            return self.api_error('Order already refunded', status=401)
+
+        try:
+            order.refund()
+            if order.refund_status == 'refunded':
+                order.refresh_refund_status()
+        except Exception as e:
+            return self.api_error(str(e))
+
+        return self.api_success({'order': order.to_dict()})

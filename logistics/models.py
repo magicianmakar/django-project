@@ -1,11 +1,15 @@
 import json
+from decimal import Decimal
+from urllib.parse import quote
 
+import arrow
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils.functional import cached_property
 
 from shopified_core.utils import app_link, get_store_api
+from shopified_core.models_utils import get_store_model
 from lib.exceptions import capture_exception
 
 
@@ -17,7 +21,8 @@ class AccountBalance(models.Model):
 class AccountCredit(models.Model):
     balance = models.ForeignKey(AccountBalance, related_name='credits', on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    stripe_charge_id = models.CharField(max_length=255, unique=True, editable=False, verbose_name='Stripe Charge ID')
+    stripe_charge_id = models.CharField(max_length=255, unique=True, null=True, verbose_name='Stripe Charge ID')
+    order = models.ForeignKey('logistics.Order', related_name='refunds', null=True, blank=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.balance.user.email} - ${self.amount:,.2f}"
@@ -37,9 +42,13 @@ class Account(models.Model):
         if self.source_id:
             return False
 
+        name = f"{self.user.first_name} {self.user.last_name}"
+        if ' ' not in name.strip():
+            name = f'Dropified {self.user.id}'
+
         from .utils import get_root_easypost_api
         result = get_root_easypost_api(debug=False).User.create(
-            name=f"{self.user.first_name} {self.user.last_name}"
+            name=name
         )
         self.source_id = result['id']
         self.source_data = json.dumps(result.to_dict())
@@ -457,6 +466,15 @@ class Order(models.Model):
     is_dropified = models.BooleanField(default=False)
     is_paid = models.BooleanField(default=False)
 
+    refund_at = models.DateTimeField(blank=True, null=True, verbose_name='Asked for refund at')
+    refunded_at = models.DateTimeField(blank=True, null=True, verbose_name='Refund processed at')
+    refund_status = models.CharField(max_length=255, blank=True, null=True, choices=(
+        ('submitted', 'Submitted'),
+        ('not_applicable', 'Not Applicable'),
+        ('refunded', 'Refunded'),
+        ('rejected', 'Rejected'),
+    ))
+
     @property
     def label_url(self):
         if not self.source_label_url:
@@ -472,6 +490,17 @@ class Order(models.Model):
             return 'D_PAID'
 
         return 'D_PENDING_PAYMENT'
+
+    @property
+    def can_refund(self):
+        return self.refund_status in [None, 'rejected']
+
+    @cached_property
+    def store_order_url(self):
+        store = get_store_model(self.store_type).objects.get(id=self.store_id)
+        url = store.get_page_url('orders_list')
+        query_param = f"query_order={quote(self.store_order_number)}"
+        return f"{url}&{query_param}" if '?' in url else f"{url}?{query_param}"
 
     def pack(self, package=None, force=False):
         if not package:
@@ -500,6 +529,37 @@ class Order(models.Model):
 
         return True
 
+    def refund(self):
+        from logistics.utils import Shipment
+        shipment = Shipment(self, user=self.warehouse.user)
+        shipment.refund()
+        return True
+
+    def refresh_refund_status(self):
+        from logistics.utils import Shipment
+        shipment = Shipment(self, user=self.warehouse.user)
+        shipment_data = shipment.retrieve()
+        self.refund_status = shipment_data['refund_status']
+        self.save()
+
+        if self.is_dropified and self.refunded_at is None and self.refund_status == 'refunded':
+            try:
+                balance = self.warehouse.user.models_user.logistics_balance
+            except AccountBalance.DoesNotExist:
+                balance = AccountBalance.objects.create(user=self.warehouse.user.models_user, balance=0)
+
+            AccountCredit.objects.create(
+                amount=self.shipment_cost,
+                balance=balance,
+                order=self,
+            )
+            AccountBalance.objects.filter(id=balance.id).update(balance=models.F('balance') + Decimal(self.shipment_cost))
+            balance.refresh_from_db()
+            self.refunded_at = arrow.get().datetime
+            self.save()
+
+        return True
+
     def get_address(self, address_type='to'):
         if address_type == 'to':
             address = self.to_address
@@ -520,6 +580,20 @@ class Order(models.Model):
     @cached_property
     def order_data_ids(self):
         return [item.order_data_id for item in self.items.all()]
+
+    def calc_inventory(self):
+        for item in self.items.all():
+            if item.is_inventory_tracked:
+                continue
+            if not item.listing:
+                continue
+            if item.listing.inventory is None:
+                continue
+
+            item.listing.inventory -= item.quantity
+            item.listing.save()
+            item.is_inventory_tracked = True
+            item.save()
 
     def to_dict(self):
         items = []
@@ -544,6 +618,7 @@ class Order(models.Model):
             'rate_id': self.rate_id,
             'shipment': self.get_shipment(),
             'label_url': self.label_url,
+            'refund_status': self.get_refund_status_display(),
         }
 
 
@@ -608,13 +683,7 @@ class OrderItem(models.Model):
 
     def save_order_track(self):
         if not self.order_track_id:
-            if not self.is_inventory_tracked and self.listing and self.listing.inventory is not None:
-                self.listing.inventory -= self.quantity
-                self.listing.save()
-                self.is_inventory_tracked = True
-                self.save()
             self.create_tracking()
-
         self.update_tracking()
         self.save()
 
@@ -641,6 +710,7 @@ class OrderItem(models.Model):
 
     def update_tracking(self):
         store_type, store_id, order_id, item_id = self.get_store_ids()
+
         api_data = {
             'store': store_id,
             'status': self.order.status,

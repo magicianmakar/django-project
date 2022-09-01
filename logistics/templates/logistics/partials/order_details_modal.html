@@ -15,7 +15,7 @@
           </div>
           <div class="row" style="display:flex;">
             <div class="col-md-7" id="logistics-info">
-              <div class="logistics-errors"></div>
+              <div class="logistics-address-errors"></div>
               <input type="hidden" name="refresh" value="">
               <h4>Ship To</h4>
               <input type="hidden" name="order_id">
@@ -137,7 +137,9 @@
             </div>
             <div class="col-md-5" id="logistics-result" style="position: relative;">
               <a href="#" class="btn btn-success btn-outline refresh-carriers hidden">Refresh Carriers</a>
-              <div class="logistics-carriers" style="position:absolute;top:0;bottom:170px;padding-bottom:10px;overflow-y:auto;right:15px;left:15px;">
+              <div style="position:absolute;top:0;bottom:170px;padding-bottom:10px;overflow-y:auto;right:15px;left:15px;">
+                <div class="logistics-errors"></div>
+                <div class="logistics-carriers"></div>
               </div>
               <div class="logistics-label-image" style="position: absolute;bottom:0;max-height:153px;overflow-y:auto;right:15px;left:15px;">
               </div>

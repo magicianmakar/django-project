@@ -63,6 +63,7 @@ CARRIERS = {
     'speedee': 'img/logistics-carriers/speedee.png',
     'spee-dee': 'img/logistics-carriers/speedee.png',
     'star-track': 'img/logistics-carriers/star-track.png',
+    'startrack': 'img/logistics-carriers/star-track.png',
     'tforce': 'img/logistics-carriers/tforce-logistics.png',
     'tforce-logistics': 'img/logistics-carriers/tforce-logistics.png',
     'uds': 'img/logistics-carriers/uds.png',

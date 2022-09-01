@@ -1118,19 +1118,18 @@ class OrdersList(ListView):
                 if variant_id == 0:
                     variant_id = -1
 
+                logistics_address = None
                 models_user = self.request.user.models_user
                 if models_user.can('logistics.use'):
                     logistics_address = woo_customer_address(
                         order=order,
                         german_umlauts=models_user.get_config('_use_german_umlauts', False),
                         shipstation_fix=True)[1]
-                else:
-                    logistics_address = None
 
-                if not product or not product.have_supplier():
-                    raw_order_data_id = f"raw_{store.id}_{order['id']}_{item['id']}"
-                    item['raw_order_data_id'] = raw_order_data_id
-                    raw_orders_cache[f"woo_order_{raw_order_data_id}"] = self.get_raw_order_data(order, item, logistics_address)
+                    if not product or not product.have_supplier():
+                        raw_order_data_id = f"raw_{store.id}_{order['id']}_{item['id']}"
+                        item['raw_order_data_id'] = raw_order_data_id
+                        raw_orders_cache[f"woo_order_{raw_order_data_id}"] = self.get_raw_order_data(order, item, logistics_address)
 
                 bundle_data = []
                 if product:

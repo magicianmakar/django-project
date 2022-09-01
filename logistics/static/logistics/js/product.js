@@ -1,4 +1,4 @@
-var variantTemplate = Handlebars.compile($("#variant").html());
+var variantTemplate = Handlebars.compile($('#variant').html());
 var lastVariantID = $('.variant').length;
 var groupTpl = Handlebars.compile($("#variant-group").html());
 
@@ -104,7 +104,22 @@ function updateBySku(variant) {
             titleElem.siblings('[name^="variant_sku_"]').val(variant.sku);
             return parent.find('[name="variant_ids"]').val();
         }
+
+        var variantId = null;
+        $('[data-variant-id]').each(function() {
+            if (variant.title === $(this).text()) {
+                variantId = $(this).attr('data-variant-id');
+                $('#variants').append(variantTemplate({
+                    'variant': $.extend({weight: 0, height: 0, width: 0, length: 0}, variant, {'id': variantId}),
+                    'config': userConfig,
+                }));
+            }
+        });
+        if (variantId) {
+            return variantId;
+        }
     }
+
     return false;
 }
 
@@ -164,9 +179,9 @@ function joinVariants(variantsMap) {
         if (!variantId) {
             lastVariantID += 1;
             variantId = lastVariantID * -1;
-            console.log('label', variant.label);
             $('#variants').append(variantTemplate({
-                'variant': $.extend({}, variant, {'id': variantId, 'config': userConfig})
+                'variant': $.extend({}, variant, {'id': variantId}),
+                'config': userConfig,
             }));
         }
         existingIds.push(variantId + '');

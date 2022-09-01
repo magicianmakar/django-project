@@ -173,7 +173,7 @@ def get_carrier_types(source='easypost'):
     return [c.to_dict() for c in carrier_types]
 
 
-def get_supplier_listing(store, order_data, warehouse, connect_product=False):
+def get_supplier_listing(store, order_data, warehouse, connect_product=False, change_warehouse=True):
     if not order_data.get('source_id') and not connect_product:
         return [None, None]
 
@@ -183,12 +183,14 @@ def get_supplier_listing(store, order_data, warehouse, connect_product=False):
     models_user = store.user.models_user
 
     product_source_id = f"{store_type}_{order_data['store']}_{order_data['product_id']}"  # Identifies store product
-    suppliers = Supplier.objects.filter(
-        models.Q(id=order_data.get('source_id'))
-        | models.Q(source_ids__icontains=product_source_id)
-    )
-    supplier = suppliers.first()
-    if supplier is None and connect_product:
+    supplier = Supplier.objects.filter(id=order_data.get('source_id')).first()
+    if supplier is None:
+        supplier = Supplier.objects.filter(source_ids__icontains=product_source_id).first()
+
+    if supplier is None and order_data.get('source_id'):
+        raise Exception(f"Connected product for \"{order_data['title']}\" not found")
+
+    elif supplier is None and connect_product:
         StoreProduct = get_product_model(store_type)
         try:
             store_product = StoreProduct.objects.get(id=order_data['product_id'], store=store)
@@ -196,7 +198,7 @@ def get_supplier_listing(store, order_data, warehouse, connect_product=False):
         except StoreProduct.DoesNotExist:
             defaults = {}
 
-        product, created = Product.objects.get_or_create(user=models_user, title=order_data['title'], defaults=defaults)
+        product, _ = Product.objects.get_or_create(user=models_user, title=order_data['title'], defaults=defaults)
         supplier, created = Supplier.objects.get_or_create(product=product, warehouse_id=warehouse.id, defaults={
             'source_ids': product_source_id
         })
@@ -206,38 +208,45 @@ def get_supplier_listing(store, order_data, warehouse, connect_product=False):
         if order_data.get('is_raw'):
             supplier.connect_product(store_type, order_data['store'], order_data['product_id'])
 
-    elif supplier.warehouse_id != warehouse.id:
+    elif supplier.warehouse_id != warehouse.id and change_warehouse:
         product = supplier.product
-        supplier = suppliers.filter(warehouse=warehouse).first()
-        # Suppliers can be added according to warehouse selected in UI
-        if supplier is None:
-            supplier = Supplier.objects.create(product=product, warehouse=warehouse, source_ids=product_source_id)
+        supplier, created = Supplier.objects.get_or_create(product=product, warehouse=warehouse)
 
     # Order of search for variants:
-    # 1. By store's SKU
-    # 2. Logistics variant ID
+    # 1. Logistics variant ID
+    # 2. By store's SKU
     # 3. Variant's title
+    listing = None
     variant = dict_val(order_data, ['variant', 'variants'])
-    titles, skus = get_variant_data(variant)
-    search_sku = models.Q()
-    for sku in skus:
-        search_sku &= models.Q(variant__sku=sku)
-    listing = supplier.listings.filter(search_sku).first()
+    variant_id = None
+    if isinstance(variant, dict) and variant.get('id'):
+        variant_id = variant.get('id')
+    elif isinstance(variant, list):
+        first_var = variant[0] or {}
+        if first_var.get('id'):
+            variant_id = first_var['id']
+    if variant_id:
+        listing = supplier.listings.filter(variant_id=variant_id).first()
+        if listing is None:
+            listing = Listing.objects.create(supplier=supplier, variant_id=variant_id)
 
     if listing is None:
-        if isinstance(variant, dict) and variant.get('id'):
-            listing = supplier.listings.filter(id=variant.get('id')).first()
+        titles, skus = get_variant_data(variant)
+        search_sku = models.Q()
+        for sku in skus:
+            search_sku &= models.Q(variant__sku__icontains=sku)
+        listing = supplier.listings.filter(search_sku).first()
 
     if listing is None:
         search_title = models.Q()
         for title in titles:
-            search_title &= models.Q(variant__title=title)
+            search_title &= models.Q(variant__title__icontains=title)
         listing = supplier.listings.filter(search_title).first()
 
     if listing is None:
         variant, created = Variant.objects.get_or_create(
             product=supplier.product,
-            title=' / '.join(titles),
+            title=' / '.join(titles) or 'Default',
             sku=';'.join(skus),
         )
         listing = Listing.objects.create(variant=variant, supplier=supplier)
@@ -311,7 +320,8 @@ class Address():
         return self._hash
 
     def _easypost(self):
-        address = get_easypost_api(self.user).Address.create(**self.to_easypost())
+        api = get_easypost_api(self.user)
+        address = api.Address.create(**self.to_easypost())
 
         self.errors = ''
         if not address['verifications']['delivery']['success']:
@@ -363,7 +373,7 @@ class Shipment():
         if not self.order.weight:
             return {'errors': ['Package weight is missing']}
 
-        if self.order.rate_id or self.order.is_paid:
+        if self.order.is_paid:
             return self._source_obj
 
         to_address = Address(user=self.user, **self.order.get_address())
@@ -438,6 +448,11 @@ class Shipment():
         } for r in root_shipment['rates'] if is_dropified(r['carrier'])]
 
         result['rates'] = sorted(result['rates'], key=lambda r: float(r['rate']))
+
+        if not result['rates']:
+            result['rates'] = []
+            result['errors'] = ['No carriers found']
+
         return result
 
     def to_dict(self):
@@ -526,6 +541,7 @@ class Shipment():
                         capture_message('Error paying for shipment', extra={'easypost_errors': shipment['errors']})
                         self._source_obj['errors'] = ['Error when selecting a rate']
                     else:
+                        self._source_obj['id'] = shipment['id']
                         self._source_obj['tracking_code'] = shipment['tracking_code']
                         self._source_obj['postage_label'] = shipment['postage_label']
                         self._source_obj['selected_rate'] = shipment['selected_rate']
@@ -553,6 +569,39 @@ class Shipment():
             if self.order.is_dropified:
                 AccountBalance.objects.filter(user=self.user).update(balance=models.F('balance') - self.order.shipment_cost)
             self.order.save()
+            self.order.calc_inventory()
             return True
         else:
             raise NotImplementedError('Source unknown')
+
+    def refund(self, source='easypost'):
+        if not self.order.is_paid:
+            return False
+
+        if self._source_obj.get('errors'):
+            return False
+        else:
+            self._source_obj['errors'] = []
+
+        if self.order.refund_status == 'not_applicable':
+            self._source_obj['errors'].append("Impossible to retry not applicable refunds")
+            self.order.shipment_data = json.dumps(self._source_obj)
+            self.order.save()
+            return False
+
+        if self.order.is_dropified:
+            shipment = get_root_easypost_api().Shipment.retrieve(self._source_obj['id'])
+        else:
+            shipment = get_easypost_api(self.user).Shipment.retrieve(self._source_obj['id'])
+
+        shipment = shipment.refund()
+        self.order.refund_status = shipment['refund_status']
+        self.order.refund_at = arrow.get().datetime
+        self.order.save()
+        return True
+
+    def retrieve(self, source='easypost'):
+        if self.order.is_dropified:
+            return get_root_easypost_api().Shipment.retrieve(self._source_obj['id'])
+        else:
+            return get_easypost_api(self.user).Shipment.retrieve(self._source_obj['id'])
