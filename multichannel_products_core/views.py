@@ -2,7 +2,6 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
-from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import prefetch_related_objects
 from django.forms import model_to_dict
