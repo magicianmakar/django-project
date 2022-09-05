@@ -336,3 +336,8 @@ $('#accounts-menu a').on('click', function(e) {
         $('a[href="' + menuLink + '"]').trigger('click');
     }
 });
+
+if (window.location.hash === '#user') {
+    $('[name="first_name"]').parent('.form-group').addClass('has-error');
+    $('[name="last_name"]').parent('.form-group').addClass('has-error');
+}

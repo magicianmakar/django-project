@@ -2695,44 +2695,43 @@ class OrdersView(AuthenticationMixin, TemplateView):
                 if not country_code:
                     country_code = order.get('customer', {}).get('default_address', {}).get('country_code')
 
+                logistics_address = None
                 if self.models_user.can('logistics.use'):
                     logistics_address = utils.shopify_customer_address(
                         order,
                         german_umlauts=self.config.german_umlauts,
                         shipstation_fix=True
                     )[1]
-                else:
-                    logistics_address = None
 
-                if not order['pending_payment'] and (not product or not product.have_supplier()):
-                    try:
-                        raw_order_id = f"raw_{self.store.id}_{order['id']}_{line_item['id']}"
-                        line_item['raw_order_data_id'] = raw_order_id
-                        raw_orders_cache[f"order_{raw_order_id}"] = {
-                            'id': '{}_{}_{}'.format(self.store.id, order['id'], line_item['id']),
-                            'order_name': order['name'],
-                            'title': line_item['title'],
-                            'quantity': line_item['quantity'],
-                            'weight': line_item.get('weight'),
-                            'logistics_address': logistics_address,
-                            'shipping_method': line_item.get('shipping_method'),
-                            'order_id': order['id'],
-                            'line_id': line_item['id'],
-                            'product_id': line_item['product_id'],
-                            'variants': (line_item['variant_title'] or '').split(' / '),
-                            'total': safe_float(line_item['price'], 0.0),
-                            'store': self.store.id,
-                            'is_refunded': line_item['refunded'],
-                            'is_raw': True,
-                            'order': {
-                                'phone': {
-                                    'number': logistics_address.get('phone') if logistics_address else None,
-                                    'country': logistics_address['country_code'] if logistics_address else None
-                                },
+                    if not order['pending_payment'] and (not product or not product.have_supplier()):
+                        try:
+                            raw_order_id = f"raw_{self.store.id}_{order['id']}_{line_item['id']}"
+                            line_item['raw_order_data_id'] = raw_order_id
+                            raw_orders_cache[f"order_{raw_order_id}"] = {
+                                'id': '{}_{}_{}'.format(self.store.id, order['id'], line_item['id']),
+                                'order_name': order['name'],
+                                'title': line_item['title'],
+                                'quantity': line_item['quantity'],
+                                'weight': line_item.get('weight'),
+                                'logistics_address': logistics_address,
+                                'shipping_method': line_item.get('shipping_method'),
+                                'order_id': order['id'],
+                                'line_id': line_item['id'],
+                                'product_id': line_item['product_id'],
+                                'variants': (line_item['variant_title'] or '').split(' / '),
+                                'total': safe_float(line_item['price'], 0.0),
+                                'store': self.store.id,
+                                'is_refunded': line_item['refunded'],
+                                'is_raw': True,
+                                'order': {
+                                    'phone': {
+                                        'number': logistics_address.get('phone') if logistics_address else None,
+                                        'country': logistics_address['country_code'] if logistics_address else None
+                                    },
+                                }
                             }
-                        }
-                    except:
-                        capture_exception()
+                        except:
+                            capture_exception()
 
                 supplier = None
                 bundle_data = []

@@ -49,6 +49,7 @@ class AccountCreditAdmin(admin.ModelAdmin):
         'balance__user__email',
         'balance__user_id',
     )
+    readonly_fields = ('stripe_charge_id',)
 
 
 class AccountCreditInline(admin.TabularInline):

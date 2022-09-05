@@ -28,7 +28,7 @@ $('#add-warehouse-modal form').on('submit', function(e) {
                 }
             } else {
                 for (var j = 0, jLength = data.errors.length; j < jLength; j++) {
-                    $('#add-warehouse-modal .modal-body').prepend($('<div class="alert alert-danger">').text(data.errors[j]));
+                    $('#add-warehouse-modal .modal-body').prepend($('<div class="alert alert-danger">').html(data.errors[j]));
                 }
             }
         },

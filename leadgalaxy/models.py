@@ -1470,6 +1470,11 @@ class ShopifyStore(StoreBase):
 
         return None
 
+    def get_page_url(self, url_name):
+        if url_name == 'orders_list':
+            url_name = 'orders'
+        return super().get_page_url(url_name)
+
 
 class AccessToken(models.Model):
     class Meta:

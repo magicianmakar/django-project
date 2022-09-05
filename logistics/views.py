@@ -179,7 +179,7 @@ class WarehousesListView(LoginRequiredMixin, ListView):
                 | models.Q(country__icontains=search_field)
             )
 
-        sorting = self.request.GET.get('sorting', 'name')
+        sorting = self.request.GET.get('sort', 'name')
         return warehouses.order_by(sorting)
 
     def get_context_data(self, **kwargs: dict) -> dict:
@@ -219,7 +219,7 @@ class CarriersListView(LoginRequiredMixin, ListView):
                 | models.Q(reference__icontains=search_field)
             )
 
-        sorting = self.request.GET.get('sorting', 'description')
+        sorting = self.request.GET.get('sort', 'description')
         return carriers.order_by(sorting)
 
     def get_context_data(self, **kwargs: dict) -> dict:
@@ -253,7 +253,7 @@ class OrdersListView(LoginRequiredMixin, ListView):
                 | models.Q(store_order_number__icontains=search_field)
             )
 
-        sorting = self.request.GET.get('sorting', 'warehouse__name')
+        sorting = self.request.GET.get('sort', '-paid_at')
         return orders.order_by(sorting)
 
     def get_context_data(self, **kwargs: dict) -> dict:

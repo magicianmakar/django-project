@@ -2901,6 +2901,14 @@ ul.tagit:focus {
   top: 6px;
 }
 
+.alert-danger a {
+    color: #d94442;
+}
+
+.alert-danger a:hover {
+    color: #894442;
+}
+
 .select-products-modal .container-fluid {
     padding:10px 20px;
 }
