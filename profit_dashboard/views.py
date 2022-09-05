@@ -74,18 +74,18 @@ def index(request, from_dashboard=False):
         context['api_error'] = 'Your orders are not synced yet'
         return render(request, 'profit_dashboard/index.html', context)
 
-    # Get correct timezone to properly sum order amounts
-    user_timezone = request.session.get('django_timezone', '')
-    if not user_timezone:
-        user_timezone = store.get_info['iana_timezone']
-        request.session['django_timezone'] = user_timezone
-
-        # Save timezone to profile
-        if not request.user.profile.timezone:
-            request.user.profile.timezone = user_timezone
-            request.user.profile.save()
-
     try:
+        # Get correct timezone to properly sum order amounts
+        user_timezone = request.session.get('django_timezone', '')
+        if not user_timezone:
+            user_timezone = store.get_info['iana_timezone']
+            request.session['django_timezone'] = user_timezone
+
+            # Save timezone to profile
+            if not request.user.profile.timezone:
+                request.user.profile.timezone = user_timezone
+                request.user.profile.save()
+
         start, end = get_date_range(request, user_timezone)
         limit = safe_int(request.GET.get('limit'), 31)
         current_page = safe_int(request.GET.get('page'), 1)
@@ -138,8 +138,11 @@ def index(request, from_dashboard=False):
         else:
             context['api_error'] = 'Unknown Error {}'.format(e.response.status_code)
             capture_exception()
-    except:
-        context['api_error'] = 'Shopify API Error'
+    except Exception as e:
+        if 'Unavailable Shop' in str(e):
+            context['api_error'] = 'Your Shopify store is locked and unreachable'
+        else:
+            context['api_error'] = 'Shopify API Error'
         capture_exception()
 
     return render(request, 'profit_dashboard/index.html', context)

@@ -311,19 +311,29 @@
 
                 {% if item|model_name == 'ebaystore' %}
                 <tr id="ebay-store-row-{{item.id}}" class="store-item" store-id="{{item.id}}" store-type="ebay">
-                    <td class="drag-show">
-                        <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
-                        <a class="store-link" href="{% url 'ebay:products_list' %}?store={{item.id}}">{{item.title}}</a>
-                    </td>
-                    <td class="no-wrap text-right">
-                        <a href="{% url 'ebay:products_list' %}?store={{ item.id }}" class="label">Products</a>
-                    </td>
-                    <td>
-                        <a href="{% url 'ebay:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
-                    </td>
-                    <td>
-                        <a href="{% url 'ebay:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
-                    </td>
+                    {% if not '(Store has been disabled)' in item.title %}
+                        <td class="drag-show">
+                            <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
+                            <a class="store-link" href="{% url 'ebay:products_list' %}?store={{item.id}}">{{item.title}}</a>
+                        </td>
+                        <td class="no-wrap text-right">
+                            <a href="{% url 'ebay:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                        </td>
+                        <td>
+                            <a href="{% url 'ebay:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                        </td>
+                        <td>
+                            <a href="{% url 'ebay:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                        </td>
+                    {% else %}
+                        <td class="drag-show">
+                            <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
+                            <a class="store-link" href="#" style="pointer-events: none">{{item.title}}</a>
+                        </td>
+                        <td class="no-wrap text-right" colspan="3">
+                            <a href="#" data-store-id="{{item.id}}" store-type="ebay" class="enable-store-btn label label-warning" style="background-color: #f0ad4e; color: white;">Enable Store</a>
+                        </td>
+                    {% endif %}
                     {% if not user.is_subuser %}
                     <td style="white-space:nowrap" class="hidden-sm hidden-xs">
                         <div class="btn-group ">

@@ -16,7 +16,7 @@
         id_fee = id_fee || 0
         var id_shippling = $('#id_shipping').val()
         id_shippling = id_shippling || 0
-        amount += parseFloat(id_fee);
+        amount -= parseFloat(id_fee);
         amount += parseFloat(id_shippling);
         amount = amount.toFixed(2)
         $('#total_refund').val(amount)
