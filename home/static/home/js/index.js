@@ -87,6 +87,11 @@
         $('#modal-add-all-store-form').modal('show');
     });
 
+    $('#select-section input[type="radio"]').on('ifChecked', function (event) {
+        $('.store-box.active').removeClass('active');
+        $(event.target).parent().parent().parent().parent().addClass('active');
+    });
+
     $('#continue-btn').click(function(e) {
         e.preventDefault();
 
@@ -2487,6 +2492,47 @@
                 $(this).attr('target', '_blank');
             });
         }
+    });
+
+    $('.enable-store-btn').click(function (e) {
+        var store = $(this).attr('store-type');
+        var store_id = $(this).attr('data-store-id');
+
+        swal({
+            title: "Enable Store",
+            text: "Are you sure that you want to enable this store?",
+            type: "warning",
+            showCancelButton: true,
+            closeOnCancel: true,
+            closeOnConfirm: false,
+            animation: false,
+            showLoaderOnConfirm: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Enable Store",
+            cancelButtonText: "Cancel"
+        }, function(isConfirmed) {
+            if (!isConfirmed) {
+                return;
+            }
+
+            $.ajax({
+                url: api_url('enable-store', 'ebay'),
+                type: 'POST',
+                data: {
+                    'store': store,
+                    'store_id': store_id,
+                },
+                success: function(data) {
+                    swal.close();
+                    toastr.success('Store has been enabled.', 'Enable Store');
+
+                    $('.reauthorize-ebay-store').trigger('click');
+                },
+                error: function(data) {
+                    displayAjaxError('Enable Store', data);
+                }
+            });
+        });
     });
 
 })(sub_conf, user_statistics);

@@ -173,7 +173,7 @@
                             {% for video in videos %}
                             <div class="col-md-6 training-video m-b-xl">
                                 <div class="embed-responsive embed-responsive-16by9" style="background-color:#93c47d">
-                                    <iframe class="embed-responsive-item" src="{{ video.url }}" allow="fullscreen" allowfullscreen></iframe>
+                                    <iframe referrerpolicy="strict-origin" class="embed-responsive-item" src="{{ video.url }}" allow="fullscreen" allowfullscreen></iframe>
                                 </div>
                                 <h3 class="text-center">
                                     <strong>{{ video.title }}</strong><br>

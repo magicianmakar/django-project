@@ -3,8 +3,9 @@
 
 {% if request.user|can:'facebook.use' %}
     <div id="fb-root"></div>
-    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v12.0&appId=911185429584823&autoLogAppEvents=1"
-        nonce="JLNkdJEJ"></script>
+    <script async defer crossorigin="anonymous"
+            src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v12.0&appId=911185429584823&autoLogAppEvents=1"
+            nonce="JLNkdJEJ"></script>
 {% endif %}
 {% if request.user|can:'google.use' %}
     <!-- some google JS code here -->
@@ -14,7 +15,8 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
                 <h4 class="modal-title">Add Store</h4>
             </div>
 
@@ -25,101 +27,253 @@
                     <li><a href="#chq-section" data-toggle="tab"></a></li>
                     <li><a href="#woo-section" data-toggle="tab"></a></li>
                     {% if request.user|can:'ebay.use' %}
-                    <li><a href="#ebay-section" data-toggle="tab"></a></li>
+                        <li><a href="#ebay-section" data-toggle="tab"></a></li>
                     {% endif %}
                     {% if request.user|can:'allow_groovekart.use' %}
-                    <li><a href="#gk-section" data-toggle="tab"></a></li>
-                    <li><a href="#gk-lite-section" data-toggle="tab"></a></li>
+                        <li><a href="#gk-section" data-toggle="tab"></a></li>
+                        <li><a href="#gk-lite-section" data-toggle="tab"></a></li>
                     {% endif %}
 
                     {% if request.user|can:'bigcommerce.use' %}
-                    <li><a href="#bigcommerce-section" data-toggle="tab"></a></li>
+                        <li><a href="#bigcommerce-section" data-toggle="tab"></a></li>
                     {% endif %}
 
                     {% if request.user|can:'facebook.use' %}
-                    <li><a href="#fb-section" data-toggle="tab"></a></li>
+                        <li><a href="#fb-section" data-toggle="tab"></a></li>
                     {% endif %}
 
                     {% if request.user|can:'fb_marketplace.use' %}
-                    <li><a href="#fb-mp-section" data-toggle="tab"></a></li>
+                        <li><a href="#fb-mp-section" data-toggle="tab"></a></li>
                     {% endif %}
 
                     {% if request.user|can:'google.use' %}
-                    <li><a href="#google-section" data-toggle="tab"></a></li>
+                        <li><a href="#google-section" data-toggle="tab"></a></li>
                     {% endif %}
                 </ul>
                 <div class="tab-content">
                     <div id="select-section" class="tab-pane fade in active">
                         <div class="row">
-                            <p>Select your store platform:</p>
-
-                            <fieldset class="radio-strip m-l" id="store-types">
-                                <label class="checked" style="display: block; margin-bottom: 5px;">
-                                    <input name="amt" value="#shopify-section" checked="" type="radio">
-                                    <span class="label-text">Shopify</span>
-                                </label>
-
-                                <label style="display: block; margin-bottom: 5px;">
-                                    <input name="amt" value="#chq-section" type="radio">
-                                    <span class="label-text">CommerceHQ</span>
-                                </label>
-
-                                <label style="display: block; margin-bottom: 5px;">
-                                    <input name="amt" value="#woo-section" type="radio">
-                                    <span class="label-text">Woocommerce</span>
-                                </label>
-
-                               {% if request.user|can:'allow_groovekart.use' %}
-                                <label style="display: block;">
-                                    <input name="amt" value="#gk-section" type="radio">
-                                    <span class="label-text">GrooveKart</span>
-                                </label>
-                                <label style="display: block;">
-                                    <input name="amt" value="#gk-lite-section" type="radio">
-                                    <span class="label-text">GrooveKart Lite</span>
-                                </label>
-                                {% endif %}
-
-                                {% if request.user|can:'bigcommerce.use' %}
-                                <label style="display: block;">
-                                    <input name="amt" value="#bigcommerce-section" type="radio">
-                                    <span class="label-text">BigCommerce</span>
-                                </label>
-                                {% endif %}
-
-                                {% if request.user|can:'ebay.use' %}
-                                <label style="display: block; margin-bottom: 5px;">
-                                    <input name="amt" value="#ebay-section" type="radio">
-                                    <span class="label-text">eBay</span>
-                                </label>
-                                {% endif %}
-
-                                {% if request.user|can:'facebook.use' %}
-                                <label style="display: block; margin-bottom: 5px;">
-                                    <input name="amt" value="#fb-section" type="radio">
-                                    <span class="label-text">Facebook & Instagram Shops</span>
-                                </label>
-                                {% endif %}
-
-                                {% if request.user|can:'fb_marketplace.use' %}
-                                <label style="display: block; margin-bottom: 5px;">
-                                    <input name="amt" value="#fb-mp-section" type="radio">
-                                    <span class="label-text">Facebook Marketplace</span>
-                                </label>
-                                {% endif %}
-
-                                {% if request.user|can:'google.use' %}
-                                <label style="display: block; margin-bottom: 5px;">
-                                    <input name="amt" value="#google-section" type="radio">
-                                    <span class="label-text">Google</span>
-                                </label>
-                                {% endif %}
+                            <fieldset class="radio-strip" id="store-types">
+                                <div class="row">
+                                    <div class="col-xs-12 col-sm-4">
+                                        <div class="ibox">
+                                            <label for="shopify-store" style="width: 100%;">
+                                                <div class="ibox-content store-box active" style="cursor: pointer;">
+                                                    <div class="product-imitation"
+                                                         style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                        <label class="control-label">
+                                                            <input name="amt" value="#shopify-section" checked=""
+                                                                   type="radio"
+                                                                   id="shopify-store"/>
+                                                        </label>
+                                                        <label for="shopify-store" style="margin-top: 10px;">
+                                                            <img height="25px"
+                                                                 src="{% static 'logo/shopify-logo.svg' %}"
+                                                                 alt="Shopify"
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-4">
+                                        <div class="ibox">
+                                            <label for="chq-store" style="width: 100%;">
+                                                <div class="ibox-content store-box" style="cursor: pointer;">
+                                                    <div class="product-imitation"
+                                                         style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                        <label class="control-label">
+                                                            <input name="amt" value="#chq-section"
+                                                                   type="radio"
+                                                                   id="chq-store"/>
+                                                        </label>
+                                                        <label for="chq-store" style="margin-top: 13px;">
+                                                            <img height="22px" src="{% static 'logo/chq-logo.svg' %}"
+                                                                 alt="CommerceHQ"
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-4">
+                                        <div class="ibox">
+                                            <label for="woo-store" style="width: 100%;">
+                                                <div class="ibox-content store-box" style="cursor: pointer;">
+                                                    <div class="product-imitation"
+                                                         style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                        <label class="control-label">
+                                                            <input name="amt" value="#woo-section"
+                                                                   type="radio"
+                                                                   id="woo-store"/>
+                                                        </label>
+                                                        <label for="woo-store" style="margin-top: 10px;">
+                                                            <img height="25px"
+                                                                 src="{% static 'logo/woocommerce-logo.svg' %}"
+                                                                 alt="Woocommerce"
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% if request.user|can:'allow_groovekart.use' %}
+                                        <div class="col-xs-12 col-sm-4">
+                                            <div class="ibox">
+                                                <label for="gk-store" style="width: 100%;">
+                                                    <div class="ibox-content store-box" style="cursor: pointer;">
+                                                        <div class="product-imitation"
+                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                            <label class="control-label">
+                                                                <input name="amt" value="#gk-section"
+                                                                       type="radio"
+                                                                       id="gk-store"/>
+                                                            </label>
+                                                            <label for="gk-store" style="margin-top: 10px;">
+                                                                <img height="25px"
+                                                                     src="{% static 'logo/gkart-logo.svg' %}"
+                                                                     alt="GrooveKart"
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    {% if request.user|can:'bigcommerce.use' %}
+                                        <div class="col-xs-12 col-sm-4">
+                                            <div class="ibox">
+                                                <label for="bigcommerce-store" style="width: 100%;">
+                                                    <div class="ibox-content store-box" style="cursor: pointer;">
+                                                        <div class="product-imitation"
+                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                            <label class="control-label">
+                                                                <input name="amt" value="#bigcommerce-section"
+                                                                       type="radio"
+                                                                       id="bigcommerce-store"/>
+                                                            </label>
+                                                            <label for="bigcommerce-store" style="margin-top: 10px;">
+                                                                <img height="25px"
+                                                                     src="{% static 'logo/bigcommerce-logo.svg' %}"
+                                                                     alt="BigCommerce"
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    {% if request.user|can:'ebay.use' %}
+                                        <div class="col-xs-12 col-sm-4">
+                                            <div class="ibox">
+                                                <label for="ebay-store" style="width: 100%;">
+                                                    <div class="ibox-content store-box" style="cursor: pointer;">
+                                                        <div class="product-imitation"
+                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                            <label class="control-label">
+                                                                <input name="amt" value="#ebay-section"
+                                                                       type="radio"
+                                                                       id="ebay-store"/>
+                                                            </label>
+                                                            <label for="ebay-store" style="margin-top: 10px;">
+                                                                <img height="25px"
+                                                                     src="{% static 'logo/ebay-logo.svg' %}"
+                                                                     alt="eBay"
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    {% if request.user|can:'facebook.use' %}
+                                        <div class="col-xs-12 col-sm-4">
+                                            <div class="ibox">
+                                                <label for="fb-store" style="width: 100%;">
+                                                    <div class="ibox-content store-box" style="cursor: pointer;">
+                                                        <div class="product-imitation"
+                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                            <label class="control-label">
+                                                                <input name="amt" value="#fb-section"
+                                                                       type="radio"
+                                                                       id="fb-store"/>
+                                                            </label>
+                                                            <label for="fb-store" style="margin-top: 10px;">
+                                                                <img height="25px"
+                                                                     src="{% static 'logo/facebook-logo.svg' %}"
+                                                                     alt="Facebook & Instagram Shops"
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    {% if request.user|can:'fb_marketplace.use' %}
+                                        <div class="col-xs-12 col-sm-4">
+                                            <div class="ibox">
+                                                <label for="fb-mp-store" style="width: 100%;">
+                                                    <div class="ibox-content store-box" style="cursor: pointer;">
+                                                        <div class="product-imitation"
+                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                            <label class="control-label">
+                                                                <input name="amt" value="#fb-mp-section"
+                                                                       type="radio"
+                                                                       id="fb-mp-store"/>
+                                                            </label>
+                                                            <label for="fb-mp-store" style="margin-top: 15px;">
+                                                                <img height="18px"
+                                                                     src="{% static 'logo/fb-mp-logo.svg' %}"
+                                                                     alt="Facebook Marketplace"
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    {% if request.user|can:'google.use' %}
+                                        <div class="col-xs-12 col-sm-4">
+                                            <div class="ibox">
+                                                <label for="google-store" style="width: 100%;">
+                                                    <div class="ibox-content store-box" style="cursor: pointer;">
+                                                        <div class="product-imitation"
+                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                            <label class="control-label">
+                                                                <input name="amt" value="#google-section"
+                                                                       type="radio"
+                                                                       id="google-store"/>
+                                                            </label>
+                                                            <label for="google-store" style="margin-top: 10px;">
+                                                                <img height="25px"
+                                                                     src="{% static 'logo/google-logo.svg' %}"
+                                                                     alt="Google"
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </fieldset>
 
                             <hr style="margin:20px -15px">
 
-                            <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
-                            <button id="continue-btn" class="btn btn-primary pull-right" type="button">Continue &gt;</button>
+                            <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">
+                                Cancel
+                            </button>
+                            <button id="continue-btn" class="btn btn-primary pull-right" type="button">Continue &gt;
+                            </button>
                         </div>
                     </div>
 
@@ -132,15 +286,20 @@
                                 <form class="install-store-form" role="form">
                                     <div class="form-group">
                                         <label for="shopify-shop-url">Enter your store's URL:</label>
-                                        <input type="text" id="shopify-shop-url" placeholder="your-shop-url.myshopify.com"
-                                                class="form-control" autocorrect="off" spellcheck="false">
+                                        <input type="text" id="shopify-shop-url"
+                                               placeholder="your-shop-url.myshopify.com"
+                                               class="form-control" autocorrect="off" spellcheck="false">
                                     </div>
                                 </form>
 
                                 <hr>
 
-                                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
-                                <button class="btn btn-primary pull-right install-store" type="button" data-store-type="shopify">Add store</button>
+                                <button type="button" class="btn btn-outline btn-default pull-left"
+                                        data-dismiss="modal">Cancel
+                                </button>
+                                <button class="btn btn-primary pull-right install-store" type="button"
+                                        data-store-type="shopify">Add store
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -153,25 +312,31 @@
                                 <form id="chq-store-create-form" method="post" role="form">
                                     <div class="form-group">
                                         <label>Title</label>
-                                        <input type="text" id="chq_store_title" name="title" placeholder="Store name" class="form-control" required />
+                                        <input type="text" id="chq_store_title" name="title" placeholder="Store name"
+                                               class="form-control" required/>
                                     </div>
                                     <div class="form-group">
                                         <label>API URL</label>
-                                        <input type="text" id="chq_store_api_url" name="api_url" placeholder="your-shop-url.commercehq.com" class="form-control" required />
+                                        <input type="text" id="chq_store_api_url" name="api_url"
+                                               placeholder="your-shop-url.commercehq.com" class="form-control"
+                                               required/>
                                     </div>
                                     <div class="form-group">
                                         <label>API Key</label>
-                                        <input type="text" id="chq_store_api_key" name="api_key" class="form-control" autocomplete="off"  required />
+                                        <input type="text" id="chq_store_api_key" name="api_key" class="form-control"
+                                               autocomplete="off" required/>
                                     </div>
                                     <div class="form-group">
                                         <label>API Password</label>
-                                        <input type="password" id="chq_store_api_password" name="api_password" class="form-control" autocomplete="off"  required />
+                                        <input type="password" id="chq_store_api_password" name="api_password"
+                                               class="form-control" autocomplete="off" required/>
                                     </div>
 
                                     <hr>
 
                                     <div>
-                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs"
+                                                type="button">
                                             Add store
                                         </button>
                                     </div>
@@ -188,14 +353,16 @@
                                 <form id="woo-store-create-form" method="post" role="form">
                                     <div class="form-group">
                                         <label>Title</label>
-                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
+                                        <input type="text" name="title" placeholder="Store name" class="form-control"/>
                                     </div>
                                     <div class="form-group">
                                         <label>Store URL</label>
-                                        <input type="url" name="api_url" placeholder="https://your-shop-url.com" class="form-control" required />
+                                        <input type="url" name="api_url" placeholder="https://your-shop-url.com"
+                                               class="form-control" required/>
                                     </div>
                                     <div>
-                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs"
+                                                type="button">
                                             Add store
                                         </button>
                                     </div>
@@ -205,63 +372,70 @@
                     </div>
 
                     {% if request.user|can:'allow_groovekart.use' %}
-                    <!-- GrooveKart -->
-                    <div id="gk-section" class="tab-pane fade">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <h3 class="m-t-none m-b">Add GrooveKart Store</h3>
-                                <form id="gk-store-create-form" method="post" role="form">
-                                    <div class="form-group">
-                                        <label>Title</label>
-                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Store URL</label>
-                                        <input type="url" name="api_url" placeholder="https://your-shop-url.com" class="form-control" required />
-                                    </div>
-                                    <div class="form-group">
-                                        <label>API Key</label>
-                                        <input type="password" name="api_key" class="form-control" autocomplete="off" required />
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Auth Token</label>
-                                        <input type="text" name="api_token" class="form-control" autocomplete="off" required />
-                                    </div>
+                        <!-- GrooveKart -->
+                        <div id="gk-section" class="tab-pane fade">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <h3 class="m-t-none m-b">Add GrooveKart Store</h3>
+                                    <form id="gk-store-create-form" method="post" role="form">
+                                        <div class="form-group">
+                                            <label>Title</label>
+                                            <input type="text" name="title" placeholder="Store name"
+                                                   class="form-control"/>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Store URL</label>
+                                            <input type="url" name="api_url" placeholder="https://your-shop-url.com"
+                                                   class="form-control" required/>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>API Key</label>
+                                            <input type="password" name="api_key" class="form-control"
+                                                   autocomplete="off" required/>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Auth Token</label>
+                                            <input type="text" name="api_token" class="form-control" autocomplete="off"
+                                                   required/>
+                                        </div>
 
-                                    <hr>
+                                        <hr>
 
-                                    <div>
-                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
-                                            Add store
-                                        </button>
-                                    </div>
-                                </form>
+                                        <div>
+                                            <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs"
+                                                    type="button">
+                                                Add store
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- GrooveKart Lite -->
-                    <div id="gk-lite-section" class="tab-pane fade">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <form id="gk-lite-store-create-form" method="post" role="form">
-                                    <input type="hidden" name="is_lite" value="1" />
-                                    <div class="form-group">
-                                        <label>Title</label>
-                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
-                                    </div>
+                        <!-- GrooveKart Lite -->
+                        <div id="gk-lite-section" class="tab-pane fade">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <form id="gk-lite-store-create-form" method="post" role="form">
+                                        <input type="hidden" name="is_lite" value="1"/>
+                                        <div class="form-group">
+                                            <label>Title</label>
+                                            <input type="text" name="title" placeholder="Store name"
+                                                   class="form-control"/>
+                                        </div>
 
-                                    <hr>
+                                        <hr>
 
-                                    <div>
-                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
-                                            Create GrooveKart Lite Account
-                                        </button>
-                                    </div>
-                                </form>
+                                        <div>
+                                            <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs"
+                                                    type="button">
+                                                Create GrooveKart Lite Account
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
                     {% endif %}
 
                     <!-- BigCommerce -->
@@ -273,20 +447,25 @@
                                 <form class="install-store-form" role="form">
                                     <div class="form-group">
                                         <label for="bigcommerce-shop-url">Enter your store's URL:</label>
-                                        <input type="text" id="bigcommerce-shop-url" placeholder="https://your-shop-url.mybigcommerce.com/"
-                                                class="form-control" autocorrect="off" spellcheck="false">
+                                        <input type="text" id="bigcommerce-shop-url"
+                                               placeholder="https://your-shop-url.mybigcommerce.com/"
+                                               class="form-control" autocorrect="off" spellcheck="false">
                                     </div>
                                 </form>
 
                                 <hr>
 
-                                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
-                                <button class="btn btn-primary pull-right install-store" type="button" data-store-type="bigcommerce">Add store</button>
+                                <button type="button" class="btn btn-outline btn-default pull-left"
+                                        data-dismiss="modal">Cancel
+                                </button>
+                                <button class="btn btn-primary pull-right install-store" type="button"
+                                        data-store-type="bigcommerce">Add store
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                     <!-- eBay -->
+                    <!-- eBay -->
                     <div id="ebay-section" class="tab-pane fade">
                         <div class="row">
                             <div class="col-sm-12" style="max-height: 500px; overflow-y: scroll;">
@@ -294,12 +473,14 @@
                                 <p class="m-b">
                                     <strong>Login with eBay & Grant Application Access</strong><br/>
                                     Click "Authorize eBay" below to start the authorization process.
-                                    Grant application access to Dropified to enable management of your listings and orders.
+                                    Grant application access to Dropified to enable management of your listings and
+                                    orders.
                                 </p>
                                 {% if not user.profile.get_sd_accounts|length %}
                                     <div class="alert alert-info" role="alert">
                                         <i class="fa fa-info-circle"></i>
-                                        Please note that eBay setup may take longer when adding an eBay store for the first time.
+                                        Please note that eBay setup may take longer when adding an eBay store for the
+                                        first time.
                                     </div>
                                 {% endif %}
 
@@ -313,10 +494,13 @@
                             <div class="col-xs-12">
                                 <hr>
 
-                                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary pull-right" id="ebay-store-create-submit-btn"
+                                <button type="button" class="btn btn-outline btn-default pull-left"
+                                        data-dismiss="modal">Cancel
+                                </button>
+                                <button type="button" class="btn btn-primary pull-right"
+                                        id="ebay-store-create-submit-btn"
                                         {% if not user.profile.get_sd_accounts|length %}data-loading-text="Setting up eBay configurations..."{% endif %}>
-                                        Add store
+                                    Add store
                                 </button>
                             </div>
                         </div>
@@ -329,20 +513,25 @@
                                 <h3 class="m-t-none m-b">Add Facebook Store</h3>
                                 <p class="m-b">
                                     <strong>1. Login with Facebook & Verify Business User</strong><br/>
-                                    Click "Continue with Facebook" below to start the authorization process. Verify that the user is connected to
-                                    the Facebook business page or Instagram business account that will be associated with the Dropified product catalog.
+                                    Click "Continue with Facebook" below to start the authorization process. Verify that
+                                    the user is connected to
+                                    the Facebook business page or Instagram business account that will be associated
+                                    with the Dropified product catalog.
                                 </p>
                                 <p class="m-b">
                                     <strong>2. Review & Grant Permissions</strong><br/>
                                     Dropified requires permissions to create & manage product catalogs, process orders,
-                                    manage the Facebook and/or Instagram page associated with the business as well as manage settings to
-                                    create a secure system user for a stable business integration. All requested permissions
+                                    manage the Facebook and/or Instagram page associated with the business as well as
+                                    manage settings to
+                                    create a secure system user for a stable business integration. All requested
+                                    permissions
                                     must be allowed for the Dropified Facebook integration to operate reliably.
                                 </p>
                                 {% if not user.profile.get_sd_accounts|length %}
                                     <div class="alert alert-info" role="alert">
                                         <i class="fa fa-info-circle"></i>
-                                        Please note that Facebook setup may take longer when adding a Facebook store for the first time.
+                                        Please note that Facebook setup may take longer when adding a Facebook store for
+                                        the first time.
                                     </div>
                                 {% endif %}
 
@@ -364,10 +553,13 @@
                             <div class="col-xs-12">
                                 <hr>
                                 <div style="display: flex; align-items: center; justify-content: space-between">
-                                    <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-outline btn-default pull-left"
+                                            data-dismiss="modal">Cancel
+                                    </button>
                                     <div id="fb-store-create-submit-btn" style="cursor:pointer;">
                                         <div class="fb-login-button" data-width="" data-size="medium"
-                                             data-button-type="continue_with" data-layout="default" data-auto-logout-link="false"
+                                             data-button-type="continue_with" data-layout="default"
+                                             data-auto-logout-link="false"
                                              href="https://app.dropified.com"
                                              style="pointer-events: none !important;"
                                              data-use-continue-as="true"></div>
@@ -384,11 +576,14 @@
                                 <form id="fb-mp-create-form" method="post" role="form">
                                     <div class="form-group">
                                         <label>Title</label>
-                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
+                                        <input type="text" name="title" placeholder="Store name" class="form-control"/>
                                     </div>
                                     <div>
-                                        <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                        <button type="button" class="btn btn-outline btn-default pull-left"
+                                                data-dismiss="modal">Cancel
+                                        </button>
+                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs"
+                                                type="button">
                                             Add store
                                         </button>
                                     </div>
@@ -404,16 +599,21 @@
                             <div class="col-sm-12" style="max-height: 500px; overflow-y: scroll;">
                                 <h3 class="m-t-none m-b">1. Login with Google & Verify Business User</h3>
                                 <p class="m-b">
-                                    Click "Sign in with Google" below to start the authorization process. Verify that the user authorizing has an existing Google Merchant Center account that will be associated with Dropified.
+                                    Click "Sign in with Google" below to start the authorization process. Verify that
+                                    the user authorizing has an existing Google Merchant Center account that will be
+                                    associated with Dropified.
                                 </p>
                                 <h3 class="m-t-none m-b">2. Review & Grant Permissions</h3>
                                 <p class="m-b">
-                                    Dropified requires the requested permissions to create & manage product catalogs and process orders for a stable business integration. Note that if you change your password on Google you may have to re-authorize your connection inside Dropified.
+                                    Dropified requires the requested permissions to create & manage product catalogs and
+                                    process orders for a stable business integration. Note that if you change your
+                                    password on Google you may have to re-authorize your connection inside Dropified.
                                 </p>
                                 {% if not user.profile.get_sd_accounts|length %}
                                     <div class="alert alert-info" role="alert">
                                         <i class="fa fa-info-circle"></i>
-                                        Please note that Google setup may take longer when adding a Google store for the first time.
+                                        Please note that Google setup may take longer when adding a Google store for the
+                                        first time.
                                     </div>
                                 {% endif %}
 
@@ -435,18 +635,18 @@
                             <div class="col-xs-12">
                                 <hr>
                                 <div style="display: flex; align-items: center; justify-content: space-between">
-                                    <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
-
-                                    <button type="button" class="btn pull-right" id="google-store-create-submit-btn" style="background-color: #1c73e8;color: #ffffff;padding: 6px;border-radius: 5px;box-shadow: 2px 2px #000000 .2;"
-                                        {% if not user.profile.get_sd_accounts|length %}data-loading-text="Setting up configurations..."{% endif %}>
-                                        <span style="background-color: #ffffff;padding: 3px;display: inline-block;margin-right: 4px;">
-                                            <img style="width: 21px;margin: 4px;" alt="Google login" src="{% static 'img/google/Google__G__Logo.svg.webp' %}" /></span>
-                                        Sign in with Google
+                                    <button type="button" class="btn btn-outline btn-default pull-left"
+                                            data-dismiss="modal">Cancel
                                     </button>
 
-
-
-
+                                    <button type="button" class="btn pull-right" id="google-store-create-submit-btn"
+                                            style="background-color: #1c73e8;color: #ffffff;padding: 6px;border-radius: 5px;box-shadow: 2px 2px #000000 .2;"
+                                            {% if not user.profile.get_sd_accounts|length %}data-loading-text="Setting up configurations..."{% endif %}>
+                                        <span style="background-color: #ffffff;padding: 3px;display: inline-block;margin-right: 4px;">
+                                            <img style="width: 21px;margin: 4px;" alt="Google login"
+                                                 src="{% static 'img/google/Google__G__Logo.svg.webp' %}"/></span>
+                                        Sign in with Google
+                                    </button>
                                 </div>
                             </div>
                         </div>

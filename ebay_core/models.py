@@ -69,6 +69,13 @@ class EbayStore(SureDoneStoreBase):
         # Get ebay account title
         self.title = instance_title
 
+        # Handle the case when the channel is disabled by errors
+        store_is_disabled_by_errors = options_data.get(
+            f'ebay{store_index_str}_description_about') == 'Channel has been disabled by errors'
+        if not channel_is_enabled and store_is_disabled_by_errors:
+            self.is_active = True
+            self.title = f'{instance_title} (Store has been disabled)'
+
         self.save()
 
     def get_store_url(self):

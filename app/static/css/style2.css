@@ -3089,3 +3089,38 @@ textarea.note {
 #loopedinSelector {
     margin-right: -3px;
 }
+
+.ibox-content.store-box {
+    padding: 0;
+}
+.ibox-content.store-box {
+    background-color: #ffffff;
+    border-radius: 6px;
+    position: relative;
+}
+.store-box:hover, .store-box.active {
+    border: 1px solid #93c47d;
+}
+.store-box {
+    overflow: hidden !important;
+}
+.store-box .product-imitation {
+    background-color: #ffffff;
+    padding: 0;
+    max-height: 100% !important;
+}
+
+#modal-add-all-store-form #select-section .col-xs-12,
+#modal-add-all-store-form #select-section .col-sm-4 {
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+#modal-add-all-store-form #select-section .ibox {
+    margin-bottom: 15px;
+}
+
+#modal-add-all-store-form #select-section .row {
+    margin-right: -10px;
+    margin-left: -10px;
+}

@@ -302,6 +302,33 @@ class EbayStoreApi(ApiBase):
 
         return self.api_success()
 
+    def post_enable_store(self, request, user, data):
+        """
+        Enable store that disabled by errors
+        """
+        data = data.dict()
+        store_id = data.pop('store_id')
+
+        if not store_id:
+            return self.api_error('Missing a required store parameter.')
+
+        store = get_object_or_404(EbayStore, id=store_id)
+        permissions.user_can_edit(user, store)
+
+        ebay_utils = EbayUtils(user)
+        ebay_prefix = ebay_utils.get_ebay_prefix(store.store_instance_id)
+
+        sd_api_request_data = {
+            f'site_{ebay_prefix}connect': 'on',
+            f'{ebay_prefix}_description_about': ''
+        }
+        sd_responce = ebay_utils.api.update_settings(sd_api_request_data)
+
+        if sd_responce.get('result') != 'success':
+            return self.api_error()
+
+        return self.api_success()
+
     def get_store_verify(self, request, user, data):
         try:
             store = EbayStore.objects.get(id=data.get('store'))
