@@ -30,4 +30,3 @@ class ProductTemplateAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'type', 'created_at', 'updated_at')
     ordering = ('-created_at',)
     search_fields = ('store_type', 'type')
-
