@@ -1,7 +1,5 @@
-import hmac
 import random
 import re
-from hashlib import sha1
 
 import arrow
 import simplejson as json
@@ -1422,35 +1420,7 @@ def activecampaign_trial(request):
 
 
 def intercom_activecampaign(request):
-    key = bytes(settings.AC_INTERCOM_SECRET, 'utf8')
-    digester = hmac.new(key=key, msg=request.body, digestmod=sha1)
-    signature = f"sha1={digester.hexdigest()}"
-    if request.META['HTTP_X_HUB_SIGNATURE'] != signature:
-        return HttpResponse(status=403)
-
-    payload = json.loads(request.body)
-    intercom_contact = payload['data']['item']
-    api = ActiveCampaignAPI()
-
-    if payload['topic'] == 'user.unsubscribed':
-        contact_data = {
-            'email': intercom_contact['email'],
-            'custom_fields': {
-                'SEND_EMAILS': not intercom_contact['unsubscribed_from_emails']
-            }
-        }
-        api.update_customer(contact_data, version='1')
-        return HttpResponse()
-
-    elif payload['topic'] in ['contact.created', 'contact.added_email']:
-        user = User.objects.filter(email=intercom_contact['email']).first()
-        if user is None:
-            contact_data = api.get_intercom_data(intercom_contact)
-        else:
-            contact_data = api.get_user_data(user)
-
-        api.update_customer(contact_data, version='1')
-        return HttpResponse()
+    return HttpResponse()
 
 
 def alibaba_webhook(request):

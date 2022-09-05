@@ -38,7 +38,6 @@ from leadgalaxy.models import (
     UserProfile
 )
 from lib.exceptions import capture_exception
-from metrics.tasks import activecampaign_update_plan, activecampaign_update_store_count
 from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
 from stripe_subscription.stripe_api import stripe
@@ -64,12 +63,6 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
 
         if not current_plan.support_addons or current_plan.is_active_free:
             cancel_all_addons.apply_async([user.id], countdown=5)
-
-        if not settings.DEBUG:
-            try:
-                activecampaign_update_plan.apply_async([user.id], expires=500)
-            except:
-                pass
 
         UserGoalRelationship.objects.filter(user=user).delete()
         for goal in Goal.objects.filter(plans=current_plan):
@@ -130,21 +123,11 @@ def userprofile_creation(sender, instance, created, **kwargs):
             capture_exception()
 
 
-def update_store_count_in_activecampaign(user_id):
-    if not settings.DEBUG:
-        try:
-            activecampaign_update_store_count.apply_async([user_id], expires=500)
-        except:
-            pass
-
-
 @receiver(post_save, sender=ShopifyStore)
 def add_store_permissions(sender, instance, created, **kwargs):
     if created:
         for codename, name in SUBUSER_STORE_PERMISSIONS:
             SubuserPermission.objects.create(store=instance, codename=codename, name=name)
-
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_stores.through)
@@ -154,8 +137,6 @@ def add_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs)
         for store in stores:
             permissions = store.subuser_permissions.all()
             instance.subuser_permissions.add(*permissions)
-
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_permissions.through)
@@ -175,8 +156,6 @@ def add_chq_store_permissions(sender, instance, created, **kwargs):
         for codename, name in SUBUSER_CHQ_STORE_PERMISSIONS:
             SubuserCHQPermission.objects.create(store=instance, codename=codename, name=name)
 
-        update_store_count_in_activecampaign(instance.user.id)
-
 
 @receiver(m2m_changed, sender=UserProfile.subuser_chq_stores.through)
 def add_chq_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
@@ -186,16 +165,12 @@ def add_chq_store_permissions_to_subuser(sender, instance, pk_set, action, **kwa
             permissions = store.subuser_chq_permissions.all()
             instance.subuser_chq_permissions.add(*permissions)
 
-        update_store_count_in_activecampaign(instance.user.id)
-
 
 @receiver(post_save, sender='woocommerce_core.WooStore')
 def add_woo_store_permissions(sender, instance, created, **kwargs):
     if created:
         for codename, name in SUBUSER_WOO_STORE_PERMISSIONS:
             SubuserWooPermission.objects.create(store=instance, codename=codename, name=name)
-
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_woo_stores.through)
@@ -205,8 +180,6 @@ def add_woo_store_permissions_to_subuser(sender, instance, pk_set, action, **kwa
         for store in stores:
             permissions = store.subuser_woo_permissions.all()
             instance.subuser_woo_permissions.add(*permissions)
-
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(post_save, sender='gearbubble_core.GearBubbleStore')
@@ -231,8 +204,6 @@ def add_gkart_store_permissions(sender, instance, created, **kwargs):
         for codename, name in SUBUSER_GKART_STORE_PERMISSIONS:
             SubuserGKartPermission.objects.create(store=instance, codename=codename, name=name)
 
-        update_store_count_in_activecampaign(instance.user.id)
-
 
 @receiver(m2m_changed, sender=UserProfile.subuser_gkart_stores.through)
 def add_gkart_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
@@ -242,16 +213,12 @@ def add_gkart_store_permissions_to_subuser(sender, instance, pk_set, action, **k
             permissions = store.subuser_gkart_permissions.all()
             instance.subuser_gkart_permissions.add(*permissions)
 
-        update_store_count_in_activecampaign(instance.user.id)
-
 
 @receiver(post_save, sender='bigcommerce_core.BigCommerceStore')
 def add_bigcommerce_store_permissions(sender, instance, created, **kwargs):
     if created:
         for codename, name in SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS:
             SubuserBigCommercePermission.objects.create(store=instance, codename=codename, name=name)
-
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_bigcommerce_stores.through)
@@ -261,8 +228,6 @@ def add_bigcommerce_store_permissions_to_subuser(sender, instance, pk_set, actio
         for store in stores:
             permissions = store.subuser_bigcommerce_permissions.all()
             instance.subuser_bigcommerce_permissions.add(*permissions)
-
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 def add_ebay_store_permissions_base(store):
@@ -274,7 +239,6 @@ def add_ebay_store_permissions_base(store):
 def add_ebay_store_permissions(sender, instance, created, **kwargs):
     if created:
         add_ebay_store_permissions_base(instance)
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_ebay_stores.through)
@@ -284,8 +248,6 @@ def add_ebay_store_permissions_to_subuser(sender, instance, pk_set, action, **kw
         for store in stores:
             permissions = store.subuser_ebay_permissions.all()
             instance.subuser_ebay_permissions.add(*permissions)
-
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 def add_fb_store_permissions_base(store):
@@ -297,7 +259,6 @@ def add_fb_store_permissions_base(store):
 def add_fb_store_permissions(sender, instance, created, **kwargs):
     if created:
         add_fb_store_permissions_base(instance)
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_fb_stores.through)
@@ -307,8 +268,6 @@ def add_fb_store_permissions_to_subuser(sender, instance, pk_set, action, **kwar
         for store in stores:
             permissions = store.subuser_fb_permissions.all()
             instance.subuser_fb_permissions.add(*permissions)
-
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 def add_google_store_permissions_base(store):
@@ -320,7 +279,6 @@ def add_google_store_permissions_base(store):
 def add_google_store_permissions(sender, instance, created, **kwargs):
     if created:
         add_google_store_permissions_base(instance)
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_google_stores.through)
@@ -330,8 +288,6 @@ def add_google_store_permissions_to_subuser(sender, instance, pk_set, action, **
         for store in stores:
             permissions = store.subuser_google_permissions.all()
             instance.subuser_google_permissions.add(*permissions)
-
-        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(post_save, sender=ShopifyOrderTrack, dispatch_uid='sync_aliexpress_fulfillment_cost')

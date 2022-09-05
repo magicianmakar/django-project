@@ -25,7 +25,6 @@ from app.celery_base import celery_app
 from ebay_core.utils import EbayUtils
 from fulfilment_fee.utils import process_sale_transaction_fee
 from lib.exceptions import capture_exception, capture_message
-from metrics.tasks import activecampaign_update_email
 from product_alerts.utils import unmonitor_store
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
@@ -2357,8 +2356,6 @@ class ShopifyStoreApi(ApiBase):
 
             email_change = (user.email != email)
             if email_change:
-                activecampaign_update_email.delay(user.email, email)
-
                 user.email = email
                 user.save()
 

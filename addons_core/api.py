@@ -4,7 +4,6 @@ from django.shortcuts import get_object_or_404
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
-from metrics.tasks import update_activecampaign_addons
 
 from .models import Addon, AddonBilling, AddonUsage
 from .utils import (
@@ -95,8 +94,6 @@ class AddonsApi(ApiResponseMixin):
 
             user.profile.addons.add(billing.addon)
 
-        update_activecampaign_addons.apply_async(args=[user.id], countdown=10)
-
         return self.api_success()
 
     def post_uninstall(self, request, user, data):
@@ -113,7 +110,5 @@ class AddonsApi(ApiResponseMixin):
             billing__addon=addon,
             cancelled_at__isnull=True,
         ))
-
-        update_activecampaign_addons.apply_async(args=[user.id], countdown=10)
 
         return self.api_success()
