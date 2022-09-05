@@ -217,7 +217,6 @@ DROPIFIED_API = {
     'supplements-public': 'supplements.api.SupplementsPublicApi',
     'profits': 'profits.api.ProfitsApi',
     'metrics': 'metrics.api.MetricsApi',
-    'hubspot': 'hubspot_core.api.HubSpotApi',
     'prints': 'prints.api.PrintsApi',
     'product_common': 'product_common.api.ProductCommonApi',
     'addons': 'addons_core.api.AddonsApi',

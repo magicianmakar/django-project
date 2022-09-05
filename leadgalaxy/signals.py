@@ -11,7 +11,6 @@ from django.dispatch import Signal, receiver
 
 from addons_core.tasks import cancel_all_addons
 from goals.models import Goal, UserGoalRelationship
-from hubspot_core.tasks import update_hubspot_user, update_plans_list_in_hubspot
 from leadgalaxy.models import (
     SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS,
     SUBUSER_CHQ_STORE_PERMISSIONS,
@@ -75,9 +74,6 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
         UserGoalRelationship.objects.filter(user=user).delete()
         for goal in Goal.objects.filter(plans=current_plan):
             UserGoalRelationship.objects.get_or_create(user=user, goal=goal)
-
-    if not settings.DEBUG and settings.HUPSPOT_API_KEY:
-        update_hubspot_user.apply_async([user.id], expires=500)
 
 
 @receiver(post_save, sender=UserProfile)
@@ -384,12 +380,6 @@ def shopify_send_keen_event_for_product(sender, instance, created, **kwargs):
         }
 
         keen_send_event.delay('product_save', keen_data)
-
-
-@receiver(post_save, sender=GroupPlan)
-def plan_update_hubspot_sync(sender, instance, created, **kwargs):
-    if not settings.DEBUG and settings.HUPSPOT_API_KEY:
-        update_plans_list_in_hubspot()
 
 
 main_subscription_canceled = Signal(providing_args=["stripe_sub"])
