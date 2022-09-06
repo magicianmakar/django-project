@@ -92,6 +92,11 @@
         $(event.target).parent().parent().parent().parent().addClass('active');
     });
 
+    $('#back-btn').click(function(e) {
+        e.preventDefault();
+        $('#wizard-nav a[href="#select-section"]').tab('show');
+    });
+
     $('#continue-btn').click(function(e) {
         e.preventDefault();
 
