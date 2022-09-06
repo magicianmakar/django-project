@@ -49,6 +49,8 @@
                     {% if request.user|can:'google.use' %}
                         <li><a href="#google-section" data-toggle="tab"></a></li>
                     {% endif %}
+
+                    <li><a href="#upgrade-section" data-toggle="tab"></a></li>
                 </ul>
                 <div class="tab-content">
                     <div id="select-section" class="tab-pane fade in active">
@@ -120,150 +122,144 @@
                                             </label>
                                         </div>
                                     </div>
-                                    {% if request.user|can:'allow_groovekart.use' %}
-                                        <div class="col-xs-12 col-sm-4">
-                                            <div class="ibox">
-                                                <label for="gk-store" style="width: 100%;">
-                                                    <div class="ibox-content store-box" style="cursor: pointer;">
-                                                        <div class="product-imitation"
-                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
-                                                            <label class="control-label">
-                                                                <input name="amt" value="#gk-section"
-                                                                       type="radio"
-                                                                       id="gk-store"/>
-                                                            </label>
-                                                            <label for="gk-store" style="margin-top: 10px;">
-                                                                <img height="25px"
-                                                                     src="{% static 'logo/gkart-logo.svg' %}"
-                                                                     alt="GrooveKart"
-                                                                />
-                                                            </label>
-                                                        </div>
+                                    <div class="col-xs-12 col-sm-4">
+                                        <div class="ibox">
+                                            <label for="gk-store" style="width: 100%;">
+                                                <div class="ibox-content store-box" style="cursor: pointer;">
+                                                    <div class="product-imitation"
+                                                         style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                        <label class="control-label">
+                                                            <input name="amt"
+                                                                   value="{% if request.user|can:'allow_groovekart.use' %}#gk-section{% else %}#upgrade-section{% endif %}"
+                                                                   type="radio"
+                                                                   id="gk-store"/>
+                                                        </label>
+                                                        <label for="gk-store" style="margin-top: 10px;">
+                                                            <img height="25px"
+                                                                 src="{% static 'logo/gkart-logo.svg' %}"
+                                                                 alt="GrooveKart"
+                                                            />
+                                                        </label>
                                                     </div>
-                                                </label>
-                                            </div>
+                                                </div>
+                                            </label>
                                         </div>
-                                    {% endif %}
-                                    {% if request.user|can:'bigcommerce.use' %}
-                                        <div class="col-xs-12 col-sm-4">
-                                            <div class="ibox">
-                                                <label for="bigcommerce-store" style="width: 100%;">
-                                                    <div class="ibox-content store-box" style="cursor: pointer;">
-                                                        <div class="product-imitation"
-                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
-                                                            <label class="control-label">
-                                                                <input name="amt" value="#bigcommerce-section"
-                                                                       type="radio"
-                                                                       id="bigcommerce-store"/>
-                                                            </label>
-                                                            <label for="bigcommerce-store" style="margin-top: 10px;">
-                                                                <img height="25px"
-                                                                     src="{% static 'logo/bigcommerce-logo.svg' %}"
-                                                                     alt="BigCommerce"
-                                                                />
-                                                            </label>
-                                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-4">
+                                        <div class="ibox">
+                                            <label for="bigcommerce-store" style="width: 100%;">
+                                                <div class="ibox-content store-box" style="cursor: pointer;">
+                                                    <div class="product-imitation"
+                                                         style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                        <label class="control-label">
+                                                            <input name="amt"
+                                                                   value="{% if request.user|can:'bigcommerce.use' %}#bigcommerce-section{% else %}#upgrade-section{% endif %}"
+                                                                   type="radio"
+                                                                   id="bigcommerce-store"/>
+                                                        </label>
+                                                        <label for="bigcommerce-store" style="margin-top: 10px;">
+                                                            <img height="25px"
+                                                                 src="{% static 'logo/bigcommerce-logo.svg' %}"
+                                                                 alt="BigCommerce"
+                                                            />
+                                                        </label>
                                                     </div>
-                                                </label>
-                                            </div>
+                                                </div>
+                                            </label>
                                         </div>
-                                    {% endif %}
-                                    {% if request.user|can:'ebay.use' %}
-                                        <div class="col-xs-12 col-sm-4">
-                                            <div class="ibox">
-                                                <label for="ebay-store" style="width: 100%;">
-                                                    <div class="ibox-content store-box" style="cursor: pointer;">
-                                                        <div class="product-imitation"
-                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
-                                                            <label class="control-label">
-                                                                <input name="amt" value="#ebay-section"
-                                                                       type="radio"
-                                                                       id="ebay-store"/>
-                                                            </label>
-                                                            <label for="ebay-store" style="margin-top: 10px;">
-                                                                <img height="25px"
-                                                                     src="{% static 'logo/ebay-logo.svg' %}"
-                                                                     alt="eBay"
-                                                                />
-                                                            </label>
-                                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-4">
+                                        <div class="ibox">
+                                            <label for="ebay-store" style="width: 100%;">
+                                                <div class="ibox-content store-box" style="cursor: pointer;">
+                                                    <div class="product-imitation"
+                                                         style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                        <label class="control-label">
+                                                            <input name="amt"
+                                                                   value="{% if request.user|can:'ebay.use' %}#ebay-section{% else %}#upgrade-section{% endif %}"
+                                                                   type="radio"
+                                                                   id="ebay-store"/>
+                                                        </label>
+                                                        <label for="ebay-store" style="margin-top: 10px;">
+                                                            <img height="25px"
+                                                                 src="{% static 'logo/ebay-logo.svg' %}"
+                                                                 alt="eBay"
+                                                            />
+                                                        </label>
                                                     </div>
-                                                </label>
-                                            </div>
+                                                </div>
+                                            </label>
                                         </div>
-                                    {% endif %}
-                                    {% if request.user|can:'facebook.use' %}
-                                        <div class="col-xs-12 col-sm-4">
-                                            <div class="ibox">
-                                                <label for="fb-store" style="width: 100%;">
-                                                    <div class="ibox-content store-box" style="cursor: pointer;">
-                                                        <div class="product-imitation"
-                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
-                                                            <label class="control-label">
-                                                                <input name="amt" value="#fb-section"
-                                                                       type="radio"
-                                                                       id="fb-store"/>
-                                                            </label>
-                                                            <label for="fb-store" style="margin-top: 10px;">
-                                                                <img height="25px"
-                                                                     src="{% static 'logo/facebook-logo.svg' %}"
-                                                                     alt="Facebook & Instagram Shops"
-                                                                />
-                                                            </label>
-                                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-4">
+                                        <div class="ibox">
+                                            <label for="fb-store" style="width: 100%;">
+                                                <div class="ibox-content store-box" style="cursor: pointer;">
+                                                    <div class="product-imitation"
+                                                         style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                        <label class="control-label">
+                                                            <input name="amt"
+                                                                   value="{% if request.user|can:'facebook.use' %}#fb-section{% else %}#upgrade-section{% endif %}"
+                                                                   type="radio"
+                                                                   id="fb-store"/>
+                                                        </label>
+                                                        <label for="fb-store" style="margin-top: 10px;">
+                                                            <img height="25px"
+                                                                 src="{% static 'logo/facebook-logo.svg' %}"
+                                                                 alt="Facebook & Instagram Shops"
+                                                            />
+                                                        </label>
                                                     </div>
-                                                </label>
-                                            </div>
+                                                </div>
+                                            </label>
                                         </div>
-                                    {% endif %}
-                                    {% if request.user|can:'fb_marketplace.use' %}
-                                        <div class="col-xs-12 col-sm-4">
-                                            <div class="ibox">
-                                                <label for="fb-mp-store" style="width: 100%;">
-                                                    <div class="ibox-content store-box" style="cursor: pointer;">
-                                                        <div class="product-imitation"
-                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
-                                                            <label class="control-label">
-                                                                <input name="amt" value="#fb-mp-section"
-                                                                       type="radio"
-                                                                       id="fb-mp-store"/>
-                                                            </label>
-                                                            <label for="fb-mp-store" style="margin-top: 15px;">
-                                                                <img height="18px"
-                                                                     src="{% static 'logo/fb-mp-logo.svg' %}"
-                                                                     alt="Facebook Marketplace"
-                                                                />
-                                                            </label>
-                                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-4">
+                                        <div class="ibox">
+                                            <label for="fb-mp-store" style="width: 100%;">
+                                                <div class="ibox-content store-box" style="cursor: pointer;">
+                                                    <div class="product-imitation"
+                                                         style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                        <label class="control-label">
+                                                            <input name="amt"
+                                                                   value="{% if request.user|can:'fb_marketplace.use' %}#fb-mp-section{% else %}#upgrade-section{% endif %}"
+                                                                   type="radio"
+                                                                   id="fb-mp-store"/>
+                                                        </label>
+                                                        <label for="fb-mp-store" style="margin-top: 15px;">
+                                                            <img height="18px"
+                                                                 src="{% static 'logo/fb-mp-logo.svg' %}"
+                                                                 alt="Facebook Marketplace"
+                                                            />
+                                                        </label>
                                                     </div>
-                                                </label>
-                                            </div>
+                                                </div>
+                                            </label>
                                         </div>
-                                    {% endif %}
-                                    {% if request.user|can:'google.use' %}
-                                        <div class="col-xs-12 col-sm-4">
-                                            <div class="ibox">
-                                                <label for="google-store" style="width: 100%;">
-                                                    <div class="ibox-content store-box" style="cursor: pointer;">
-                                                        <div class="product-imitation"
-                                                             style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
-                                                            <label class="control-label">
-                                                                <input name="amt" value="#google-section"
-                                                                       type="radio"
-                                                                       id="google-store"/>
-                                                            </label>
-                                                            <label for="google-store" style="margin-top: 10px;">
-                                                                <img height="25px"
-                                                                     src="{% static 'logo/google-logo.svg' %}"
-                                                                     alt="Google"
-                                                                />
-                                                            </label>
-                                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-4">
+                                        <div class="ibox">
+                                            <label for="google-store" style="width: 100%;">
+                                                <div class="ibox-content store-box" style="cursor: pointer;">
+                                                    <div class="product-imitation"
+                                                         style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                        <label class="control-label">
+                                                            <input name="amt"
+                                                                   value="{% if request.user|can:'google.use' %}#google-section{% else %}#upgrade-section{% endif %}"
+                                                                   type="radio"
+                                                                   id="google-store"/>
+                                                        </label>
+                                                        <label for="google-store" style="margin-top: 10px;">
+                                                            <img height="25px"
+                                                                 src="{% static 'logo/google-logo.svg' %}"
+                                                                 alt="Google"
+                                                            />
+                                                        </label>
                                                     </div>
-                                                </label>
-                                            </div>
+                                                </div>
+                                            </label>
                                         </div>
-                                    {% endif %}
+                                    </div>
                                 </div>
                             </fieldset>
 
@@ -274,6 +270,28 @@
                             </button>
                             <button id="continue-btn" class="btn btn-primary pull-right" type="button">Continue &gt;
                             </button>
+                        </div>
+                    </div>
+
+                    <div id="upgrade-section" class="tab-pane fade">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="middle-box text-center" style="padding-bottom: 40px;">
+                                    <h3 class="font-bold">Your plan doesn't support this store.</h3>
+                                    <div class="error-desc">
+                                        Your current plan doesn't allow you to use this store type. Please upgrade your
+                                        plan to start using it.
+                                        <br/><a href="/user/profile#plan" class="btn btn-primary m-t">Upgrade Now</a>
+                                    </div>
+                                </div>
+                                <hr>
+                                <a data-toggle="tab"
+                                   class="btn btn-outline btn-default pull-left"
+                                   id="back-btn"
+                                >
+                                    Cancel
+                                </a>
+                            </div>
                         </div>
                     </div>
 

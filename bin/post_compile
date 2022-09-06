@@ -9,3 +9,6 @@ if [ ! "$DISABLE_COLLECTSTATIC" ]; then
 else
     echo "\n*** NOTE ***\nEscape Running compress and migrate commands\n*** NOTE ***"
 fi
+
+echo ' * Loading supplement mockup types'
+python manage.py loaddata mockuptype
