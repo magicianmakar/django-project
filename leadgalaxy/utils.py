@@ -403,19 +403,30 @@ def verify_shopify_webhook(store, request, throw_excption=True):
     return webhook_hash == request_hash
 
 
-def aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry='CN'):
-    shippement_key = f'ali_shipping_info_{aliexpress_id}_{country_code}'
+def aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry='CN', iteration=0):
+    shippement_key = f'ali_shipping_info__{aliexpress_id}_{country_code}'
     freight_data = cache.get(shippement_key)
 
-    if freight_data is not None:
-        return freight_data
+    if freight_data is not None and freight_data:
+        return {
+            **freight_data,
+            'cached': True
+        }
+
+    provinceCode = ''
+    cityCode = ''
+
+    if iteration > 0:
+        if country_code == 'US':
+            provinceCode = '922865760000000000'
+            cityCode = '922865766013000000'
 
     params = {
         "productId": aliexpress_id,
         "count": 1,
         "country": country_code,
-        "provinceCode": '',
-        "cityCode": '',
+        "provinceCode": provinceCode,
+        "cityCode": cityCode,
         "tradeCurrency": 'USD',
         "minPrice": 0.01,
         "maxPrice": 0.01,
@@ -423,6 +434,10 @@ def aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry='CN')
         "userScene": 'PC_DETAIL_SHIPPING_PANEL',
         "sendGoodsCountry": sendGoodsCountry,
     }
+
+    if iteration > 1:
+        del params['minPrice']
+        del params['maxPrice']
 
     headers = {
         'referer': f'https://www.aliexpress.com/item/{aliexpress_id}.html'
@@ -456,9 +471,17 @@ def aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry='CN')
             'isTracked': i['tracking'],
         })
 
-    cache.set(shippement_key, shippement_data, timeout=43200)
+    if len(shippement_data['freight']):
+        cache.set(shippement_key, shippement_data, timeout=43200)
+    else:
+        if iteration < 2:
+            return aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry, iteration + 1)
 
-    return shippement_data
+    return {
+        **shippement_data,
+        'iterations': iteration,
+        'cached': False
+    }
 
 
 def ebay_shipping_info(item_id, country_name, zip_code=''):
