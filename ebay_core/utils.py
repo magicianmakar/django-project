@@ -117,7 +117,10 @@ class EbayUtils(SureDoneUtils):
 
         # 2. Extract a list of all ebay channels
         plugin_settings = safe_json(all_options_data.pop('plugin_settings', '{}'))
-        additional_ebay_channels = list(plugin_settings.get('channel', {}).get('ebay', {}).values())
+        try:
+            additional_ebay_channels = list(plugin_settings.get('channel', {}).get('ebay', {}).values())
+        except AttributeError:
+            additional_ebay_channels = []
 
         # 3. Sync all store instances
         # 3.1. Check the first and default ebay instance
