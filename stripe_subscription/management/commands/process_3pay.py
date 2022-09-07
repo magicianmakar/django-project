@@ -52,8 +52,8 @@ class Command(DropifiedBaseCommand):
                     stripe_subscription = user.stripesubscription_set.get(subscription_id=current_stripe_sub['id'])
                     stripe_subscription.refresh()
 
-                    # check if today is the last subscription day and need to add invoice item for multi-pay product
-                    close_to_renewal = stripe_subscription.period_end.timestamp() - datetime.datetime.now().timestamp() <= 86400
+                    # check it is close to subscription renewal day and need to add invoice item for multi-pay product
+                    close_to_renewal = stripe_subscription.period_end.timestamp() - datetime.datetime.now().timestamp() <= 86400 * 3
 
                     # check if far from last charge\invoice date (to prevent duplicating script runs)
                     lastcharge_timestamp = user.profile.get_config_value(f'{product_to_process["config_prefix"]}-lastcharge-timestamp', False)
@@ -82,7 +82,7 @@ class Command(DropifiedBaseCommand):
                                 user.profile.set_config_value(f'{product_to_process["config_prefix"]}-charges',
                                                               tracked_charges + 1)
                                 user.profile.set_config_value(f'{product_to_process["config_prefix"]}-lastcharge-timestamp',
-                                                              datetime.datetime.now().timestamp())
+                                                              stripe_subscription.period_end.timestamp())
                         except:
                             capture_exception()
 
