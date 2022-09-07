@@ -472,9 +472,9 @@ class AliexpressFulfillHelper():
                                 if service:
                                     break
                                 for data in shipping_data:
-                                    if service_name == data['service_name']:
-                                        service = data['service_name']
-                                        item.logistics_service_name = data['service_name']
+                                    if service_name == data['service_code']:
+                                        service = data['service_code']
+                                        item.logistics_service_name = service
                                         break
                     try:
                         if len(line_item['variant']) == 1:
