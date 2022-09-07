@@ -666,13 +666,14 @@ class SupplementsApi(ApiResponseMixin, View):
         else:
             # clear basket items
             user.basket_items.all().delete()
+            orderlines = PLSOrderLine.objects.filter(pls_order=pls_order.id)
+            for order_line in orderlines:
+                shipstation_acc = order_line.label.user_supplement.pl_supplement.shipstation_account
+                create_shipstation_order(pls_order, shipstation_acc)
+                basket_order.set_paid(True)
+                basket_order.save()
 
-            shipstation_acc = order_line['label'].user_supplement.pl_supplement.shipstation_account
-            create_shipstation_order(pls_order, shipstation_acc)
-            basket_order.set_paid(True)
-            basket_order.save()
-
-            util.store.create_order_tracks(pls_order, basket_order)
+                util.store.create_order_tracks(pls_order, basket_order)
 
         success_data = {
             'success': "Order has been sent to fulfilment",

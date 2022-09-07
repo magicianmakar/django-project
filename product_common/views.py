@@ -215,7 +215,6 @@ class OrdersShippedWebHookView(View, BaseMixin):
             items = shipment.get('shipmentItems', [])
             self.order_model.objects.filter(order_items__shipstation_key__in=[i['lineItemKey'] for i in items]).update(
                 status=self.order_model.SHIPPED if shipment['trackingNumber'] else F('status'),
-                batch_number=shipment['batchNumber'],
                 is_fulfilled=True,
             )
 
@@ -223,6 +222,7 @@ class OrdersShippedWebHookView(View, BaseMixin):
                 try:
                     line = self.order_line_model.objects.get(shipstation_key=item['lineItemKey'])
                     line.tracking_number = shipment['trackingNumber']
+                    line.batch_number = shipment['batchNumber']
                     line.save_order_track()
 
                 except self.order_line_model.DoesNotExist:
@@ -491,7 +491,10 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
 
             batch_number = form.cleaned_data['batch_number']
             if batch_number:
-                queryset = queryset.filter(pls_order__batch_number=batch_number)
+                queryset = queryset.filter(
+                    Q(pls_order__batch_number=batch_number)
+                    | Q(batch_number=batch_number)
+                )
 
             shipstation_status = form.cleaned_data['shipstation_status']
             if shipstation_status:

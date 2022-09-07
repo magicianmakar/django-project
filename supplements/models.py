@@ -438,6 +438,7 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
     shipping_service_id = models.CharField(max_length=255, blank=True, default='')
     is_bundled = models.BooleanField(default=False)
     order_track_id = models.BigIntegerField(null=True, blank=True)
+    batch_number = models.CharField(max_length=30, null=True, blank=True)
 
     label = models.ForeignKey(UserSupplementLabel,
                               on_delete=models.SET_NULL,
