@@ -162,7 +162,7 @@ class CommerceHQMasterProductHelper(MasterProductHelperBase):
         else:
             product_data = self.product.parsed
             variants = product_data.get('variants', [])
-            variants_images = list(product_data.get('variants_images', {}).items())
+            variants_images = (product_data.get('variants_images') or {}).items()
             image_url_by_hash = get_image_url_by_hash(product_data)
 
             titles, values = [], []
