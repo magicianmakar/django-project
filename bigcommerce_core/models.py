@@ -12,7 +12,6 @@ from django.urls import reverse
 
 from pusher import Pusher
 
-from multichannel_products_core.models import MasterProduct
 from shopified_core.utils import (
     get_domain,
     safe_str,
@@ -192,9 +191,6 @@ class BigCommerceProduct(ProductBase):
     default_supplier = models.ForeignKey('BigCommerceSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
     parent_product = models.ForeignKey('BigCommerceProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
-
-    master_product = models.ForeignKey(MasterProduct, on_delete=models.SET_NULL, null=True, blank=True)
-    master_variants_map = models.TextField(blank=True, null=True, default='{}')
 
     def __str__(self):
         return f'<BigCommerceProduct: {self.id}'

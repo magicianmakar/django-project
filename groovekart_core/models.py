@@ -15,7 +15,6 @@ from django.utils.crypto import get_random_string
 from django.utils.functional import cached_property
 from lib.exceptions import capture_exception
 
-from multichannel_products_core.models import MasterProduct
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class
 from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
@@ -198,9 +197,6 @@ class GrooveKartProduct(ProductBase):
     default_supplier = models.ForeignKey('GrooveKartSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
     parent_product = models.ForeignKey('GrooveKartProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Duplicate of product')
-
-    master_product = models.ForeignKey(MasterProduct, on_delete=models.SET_NULL, null=True, blank=True)
-    master_variants_map = models.TextField(blank=True, null=True, default='{}')
 
     def __str__(self):
         return f'<GrooveKartProduct: {self.id}>'

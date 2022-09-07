@@ -13,7 +13,6 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.urls import reverse
 
-from multichannel_products_core.models import MasterProduct
 from shopified_core.utils import (
     get_domain,
     safe_str,
@@ -211,9 +210,6 @@ class WooProduct(ProductBase):
     default_supplier = models.ForeignKey('WooSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
     parent_product = models.ForeignKey('WooProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Duplicate of product')
-
-    master_product = models.ForeignKey(MasterProduct, on_delete=models.SET_NULL, null=True, blank=True)
-    master_variants_map = models.TextField(blank=True, null=True, default='{}')
 
     def __str__(self):
         return f'<WooProduct: {self.id}>'

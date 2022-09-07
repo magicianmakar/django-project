@@ -11,7 +11,6 @@ from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
 from django.urls import reverse
 
-from multichannel_products_core.models import MasterProduct
 from shopified_core.utils import get_domain, safe_str
 from shopified_core.decorators import add_to_class
 from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
@@ -120,8 +119,6 @@ class GearBubbleProduct(ProductBase):
 
     default_supplier = models.ForeignKey('GearBubbleSupplier', on_delete=models.SET_NULL, null=True, blank=True)
     parent_product = models.ForeignKey('GearBubbleProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Duplicate of product')
-
-    master_product = models.ForeignKey(MasterProduct, on_delete=models.SET_NULL, null=True, blank=True)
 
     @staticmethod
     def update_variant_properties(product_data):

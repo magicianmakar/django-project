@@ -13,7 +13,6 @@ from urllib.parse import urlparse
 import requests
 from pusher import Pusher
 
-from multichannel_products_core.models import MasterProduct
 from shopified_core.utils import (
     hash_url_filename,
     get_domain,
@@ -185,9 +184,6 @@ class CommerceHQProduct(ProductBase):
 
     source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='CommerceHQ Product ID')
     default_supplier = models.ForeignKey('CommerceHQSupplier', on_delete=models.SET_NULL, null=True, blank=True)
-
-    master_product = models.ForeignKey(MasterProduct, on_delete=models.SET_NULL, null=True, blank=True)
-    master_variants_map = models.TextField(blank=True, null=True, default='{}')
 
     def __str__(self):
         return f'<CommerceHQProduct: {self.id}'

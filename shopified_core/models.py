@@ -159,6 +159,9 @@ class ProductBase(models.Model):
 
     user_supplement = models.ForeignKey(UserSupplement, null=True, on_delete=models.SET_NULL)
 
+    master_product = models.ForeignKey('multichannel_products_core.MasterProduct', on_delete=models.SET_NULL, null=True, blank=True)
+    master_variants_map = models.TextField(blank=True, null=True, default='{}')
+
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
