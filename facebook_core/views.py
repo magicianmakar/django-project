@@ -1016,3 +1016,62 @@ class CompleteAuthView(DetailView):
             messages.error(self.request, error)
 
         return context
+
+
+class ProductsImportView(ListView):
+    model = None
+    store = None
+    template_name = 'facebook/products_import.html'
+    context_object_name = 'products'
+    _fb_utils = None
+
+    @method_decorator(login_required)
+    def dispatch(self, request, store, *args, **kwargs):
+        if not request.user.can('fb.use'):
+            raise permissions.PermissionDenied()
+
+        self.store = get_object_or_404(FBStore, id=store)
+
+        permissions.user_can_view(self.request.user, self.store)
+
+        return super().dispatch(request, *args, **kwargs)
+
+    @property
+    def fb_utils(self):
+        if not hasattr(self, '_fb_utils') or not self._fb_utils:
+            self._fb_utils = FBUtils(self.request.user)
+
+        return self._fb_utils
+
+    def get_queryset(self):
+        return []
+
+    def get_context_data(self, **kwargs):
+        api_error = None
+        context = {}
+
+        try:
+            context = super().get_context_data(**kwargs)
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
+            api_error = f'HTTP Error: {http_excption_status_code(e)}'
+        except:
+            api_error = 'Store API Error'
+            capture_exception()
+
+        context['ppp'] = min(safe_int(self.request.GET.get('ppp'), 50), 100)
+        context['items_per_page_list'] = [20, 50, 100]
+        context['current_page'] = self.request.GET.get('page', '1')
+
+        fb_products_url = reverse('fb:products_list')
+
+        context['store'] = self.store
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': fb_products_url},
+            {'title': self.store.title, 'url': f'{fb_products_url}?store={self.store.id}'}]
+
+        if api_error:
+            messages.error(self.request, f'Error while trying to load your products for import: {api_error}')
+
+        context['api_error'] = api_error
+
+        return context

@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^product/mapping/supplier/(?P<store>[0-9]+)/(?P<pk>(.*?))', fb_views.MappingSupplierView.as_view(), name='mapping_supplier'),
     url(r'^product/mapping/bundle/(?P<pk>[0-9]+)$', fb_views.MappingBundleView.as_view(), name='mapping_bundle'),
     url(r'^product/variants/(?P<store_id>[0-9]+)/(?P<pk>(.*?))$', fb_views.VariantsEditView.as_view(), name='variants_edit'),
+    url(r'^products/(?P<store>[0-9]+)/import', fb_views.ProductsImportView.as_view(), name='products_import'),
     url(r'^orders$', fb_views.OrdersList.as_view(), name='orders_list'),
     url(r'^orders/track$', fb_views.OrdersTrackList.as_view(), name='orders_track'),
     url(r'^profit-dashboard$', fb_views.ProfitDashboardView.as_view(), name='profits'),

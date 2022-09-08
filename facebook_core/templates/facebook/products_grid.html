@@ -137,6 +137,13 @@
             <li class="pull-right">
                 {% include 'home/partial/platform_selection_dropdown.html' with section='Facebook' %}
             </li>
+            {% if store.id and request.user|can:'product_supplier.use' %}
+            <li class="pull-right">
+                <a class="btn btn-success btn-outline" href="{% url 'fb:products_import' store=store.id %}">
+                    Import From Facebook <i class="fa fa-plus"></i>
+                </a>
+            </li>
+            {% endif %}
         </ul>
         {% endif %}
         <div class="tab-content">

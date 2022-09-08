@@ -543,7 +543,10 @@ class SureDoneApiHandler:
         return requests.post(url, json=data, headers=headers)
 
     def get_import_options(self, store_prefix: str):
-        url = f'{self.API_ENDPOINT}/v1/options/{store_prefix}_attribute_mapping'
+        if 'ebay' in store_prefix:
+            url = f'{self.API_ENDPOINT}/v1/options/{store_prefix}_attribute_mapping'
+        else:
+            url = f'{self.API_ENDPOINT}/v1/options/plugin_settings_{store_prefix}'
 
         return requests.get(url, headers=self.HEADERS)
 
@@ -559,6 +562,45 @@ class SureDoneApiHandler:
             f'{store_prefix}_import_fileonly': 'true',
             f'{store_prefix}_import_action': 'match',
             f'{store_prefix}_import_email': 'suredone@universium.co',
+        })
+        return requests.post(url, data=data, headers=self.HEADERS)
+
+    def post_new_products_import_job(self, store_prefix: str):
+        url = f'{self.API_ENDPOINT}/v1/settings'
+        name = store_prefix.rstrip('0123456789')
+        try:
+            instance = int(store_prefix[len(name):])
+        except ValueError:
+            instance = 0
+
+        plugin_settings = [
+            {
+                "name": name,
+                "instance": instance,
+                "set": "import_products_set_mode",
+                "value": "file"
+            },
+            {
+                "name": name,
+                "instance": instance,
+                "set": "import_products_set_action",
+                "value": "update"
+            },
+            {
+                "name": name,
+                "instance": instance,
+                "set": "import_products_set_email",
+                "value": "suredone@universium.co"
+            },
+            {
+                "name": name,
+                "instance": instance,
+                "set": "import_products_set_run",
+                "value": True
+            }
+        ]
+        data = param({
+            'plugin_settings': plugin_settings
         })
         return requests.post(url, data=data, headers=self.HEADERS)
 
