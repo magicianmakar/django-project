@@ -167,11 +167,11 @@ class SettingsPageView(HomePageMixing):
 class DashboardView(HomePageMixing):
     template_name = 'home/dashboard.html'
 
-    def dispatch(self, request, *args, store_type='shopify', **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         if request.user.profile.plan.is_research:
             return super().dispatch(request, *args, **kwargs)
 
-        store_type = store_type or 'shopify'
+        store_type = kwargs.get('store_type') or 'shopify'
         store = get_store_from_request(request, store_type)
         if store:
             store_type = store.store_type
