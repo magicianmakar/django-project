@@ -432,7 +432,11 @@ class AliexpressFulfillHelper():
                         item = ProductBaseItem()
                         item.product_count = i['quantity']
                         item.product_id = i['source_id']
-                        sku_attr = self.find_ds_product_sku(i, aliexpress_account)
+                        sku_attr = i.get('sku')
+                        if sku_attr is not None and sku_attr == '<none>':
+                            sku_attr = ''
+                        else:
+                            sku_attr = self.find_ds_product_sku(i, aliexpress_account)
                         if sku_attr is not None:
                             item.sku_attr = sku_attr
                         else:
@@ -841,13 +845,23 @@ class AliexpressApi(ApiResponseMixin):
         product_data = self.import_ali_product_data(user, data)
         return self.api_success({**shipping_data, **product_data})
 
+    def post_import_aliexpress_data_bundle(self, request, user, data):
+        temp_data = data
+        for count, i in enumerate(data['order']['order_data']['products']):
+            temp_data['order']['order_data']['source_id'] = i.get('source_id')
+            temp_data['order']['order_data']['quantity'] = i.get('quantity')
+            temp_data['order']['order_data']['variant'] = i.get('variants')
+            shipping_services = self.import_shipping_method(user, temp_data)
+            data['order']['order_data']['products'][count]['shipping_services'] = shipping_services['data']
+            data['order']['order_data']['products'][count]['shipping_setting'] = shipping_services['shipping_setting']
+            product_data = self.import_ali_product_data(user, temp_data)
+            data['order']['order_data']['products'][count]['variant_price'] = product_data.get('price')
+            data['order']['order_data']['products'][count]['sku'] = product_data.get('sku')
+            data['order']['order_data']['products'][count]['stock'] = product_data.get('stock')
+        return self.api_success({'data': data})
+
     def import_shipping_method(self, user, data):
         try:
-            cache_key = f"aliexpress_shipping_method_{data['order']['store']}_{data['order']['order_id']}_{data['order']['order_data']['source_id']}"
-            aliexpress_shipping_result = cache.get(cache_key, {})
-            if aliexpress_shipping_result:
-                return aliexpress_shipping_result
-
             priority_service_list = []  # saves the list of Shipping methods in order of priority from Settings under AliExpress tab
             service = ''
             config = json.loads(user.profile.config)
@@ -881,7 +895,6 @@ class AliexpressApi(ApiResponseMixin):
                     if service_name == data.get('service_code'):
                         service = data.get('service_code')
                         break
-            cache.set(cache_key, {'data': shipping_data, 'shipping_setting': service}, timeout=600)
 
             return {'data': shipping_data, 'shipping_setting': service}
         except:
