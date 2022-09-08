@@ -639,11 +639,26 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="col-md-3 pull-right text-right no-padding">
+
+                                    <div class="col-md-3 header-column p-r-none">
+                                        <label class="pull-left">
+                                            <p>Price:</p>
+                                        </label>
+
+                                        <div class="no-text-overflow" style="width: calc(100% - 150px);float: left;">
+                                            <p>
+                                                {% money_format item.price store %}
+                                            </p>
+                                        </div>
+
+                                        <div class="pull-right text-right no-padding">
                                         {% if not item.is_pls %}
                                             {% include 'facebook/partial/place_order_btn.html' %}
                                         {% endif %}
+                                        </div>
+
                                     </div>
+
 
                                     {% for bundle in item.bundles %}
                                     <div class="col-md-12 p-r-none">

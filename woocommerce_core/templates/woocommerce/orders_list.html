@@ -527,6 +527,7 @@
                                 raw-order-data-id="{{ item.raw_order_data_id }}"
                                 order-number="{{order.id}}"
                                 line-title="{{item.title}}"
+
                                 supplier-type="{{item.supplier_type}}"
                                 {% if not excluded_product %}line-data="{{item.order_data_id|default:''}}"{% endif %}
                                 line-track="{{item.order_track.id|default:''}}"
@@ -560,6 +561,7 @@
                                         <span title="{{item.name}}" class="multi-line-text-overflow" style="-webkit-line-clamp: 3;">
                                             {{item.name}}
                                         </span>
+
                                         {% endif %}
                                     </div>
                                     <div class="col-md-3 header-column">
@@ -608,7 +610,7 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 header-column p-r-none">
+                                    <div class="col-md-3 header-column p-r-none">
                                         <label class="pull-left">
                                             <p>Variant:</p>
                                             <p>Tracking:</p>
@@ -633,10 +635,21 @@
                                                 {% endif %}
                                             </p>
                                         </div>
+
+                                    </div>
+                                    <div class="col-md-3 header-column p-r-none">
+                                        <label class="pull-left">
+                                            <p>Price:</p>
+                                        </label>
+
+                                        <div class="no-text-overflow" style="width: calc(100% - 150px);float: left;">
+                                            <p>
+                                                {% money_format item.price store %}
+                                            </p>
+                                        </div>
                                         <div class="pull-right text-right no-padding">
                                             {% if not item.is_pls %}
                                                 {% include 'woocommerce/partial/place_order_btn.html' %}
-
                                                 {% if item.is_bundle %}
                                                 <button class="pull-right btn btn-success small order-bundle {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
                                                         store-type="woo"
@@ -649,6 +662,7 @@
                                             {% endif %}
                                         </div>
                                     </div>
+
 
                                     {% for bundle in item.bundles %}
                                     <div class="col-md-12 p-r-none">

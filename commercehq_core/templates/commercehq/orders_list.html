@@ -465,7 +465,7 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 header-column p-r-none">
+                                    <div class="col-md-3 header-column p-r-none">
                                         <label class="pull-left">
                                             <p>Variant:</p>
                                             <p>Tracking:</p>
@@ -490,10 +490,22 @@
                                                 {% endif %}
                                             </p>
                                         </div>
+                                    </div>
+
+                                    <div class="col-md-3 header-column p-r-none">
+                                        <label class="pull-left">
+                                            <p>Price:</p>
+                                        </label>
+
+                                        <div class="no-text-overflow" style="width: calc(100% - 150px);float: left;">
+                                            <p>
+                                                {% money_format item.price store %}
+                                            </p>
+                                        </div>
                                         <div class="pull-right text-right no-padding">
                                             {% if not item.is_pls %}
                                                 {% include 'commercehq/partial/place_order_btn.html' %}
-
+                                            
                                                 {% if item.is_bundle %}
                                                 <button class="pull-right btn btn-success small order-bundle {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
                                                         store-type="chq"
