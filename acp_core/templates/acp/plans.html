@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load acp_helper %}
 
 {% load static %}
 {% load url_tools %}
@@ -42,6 +43,7 @@
                             <th>Active Users</th>
                             <td>Visible to Users</td>
                             <td>PLoD Plan</td>
+                            <td>SureDone Product Update Limit %</td>
                             <td>Fulfillment Fee %</td>
                             {% if user.is_staff %}
                             <th></th>
@@ -67,6 +69,7 @@
                             <td><a href="{% url 'acp_search_view' %}?plan={{item.id}}">{{item.userprofile_set.count}}</a></td>
                             <td>{{item.hidden|yesno:'No,Yes'}}</td>
                             <td>{{item.private_label|yesno:'Yes,No'}}</td>
+                            <td>{{logs_count|as_percentage_of:item.product_update_limit}}</td>
                             <td>{{item.sales_fee_config.fee_percent|default:''}}</td>
                             {% if user.is_staff or user|has_group:'Plan Inviter' %}
                             <td>

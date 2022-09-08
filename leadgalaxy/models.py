@@ -931,6 +931,14 @@ class UserProfile(models.Model):
 
         return orders_count
 
+    def get_product_update_limit(self):
+        if self.is_subuser:
+            user = self.subuser_parent
+        else:
+            user = self.user
+        plan = user.profile.get_plan()
+        return plan.product_update_limit
+
     @property
     def is_black(self):
         return self.can('pls.use')
@@ -2357,6 +2365,7 @@ class GroupPlan(models.Model):
     extra_subuser_cost = models.DecimalField(decimal_places=2, max_digits=9, null=True, default=0.00,
                                              verbose_name='Extra sub user cost per user(in USD)')
     auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
+    product_update_limit = models.IntegerField(default=10000, verbose_name="Product Update Limit")
     suredone_orders_limit = models.IntegerField(default=-1, verbose_name="Suredone Orders Limit")
 
     support_addons = models.BooleanField(default=False)

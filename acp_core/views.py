@@ -1,6 +1,7 @@
 import arrow
 import json
 import requests
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.contrib import messages
@@ -16,6 +17,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 
+from acp_core.utils import AcpUtils
 from addons_core.models import AddonUsage
 from last_seen.models import LastSeen, UserIpRecord
 from leadgalaxy.models import AccountRegistration, AdminEvent, FeatureBundle, GroupPlan, PlanRegistration
@@ -348,6 +350,12 @@ class ACPPlansView(BaseTemplateView):
 
         ctx['plans'] = plans
 
+        today = datetime.today()
+        thirty_days_ago = today - timedelta(days=30)
+        params = {'timestamp_start': thirty_days_ago, 'timestamp_end': today}
+        logs = AcpUtils(self.request.user).get_logs(params)
+        ctx['logs_count'] = logs
+
         return ctx
 
 
@@ -363,6 +371,7 @@ class ACPAddPlanView(BaseTemplateView):
         products_limit = safe_float(request.POST['products_limit'])
         boards_limit = safe_float(request.POST['boards_limit'])
         auto_fulfill_limit = safe_float(request.POST['fulfill_limit'])
+        product_update_limit = safe_float(request.POST['product_update_limit'])
         suredone_orders_limit = safe_float(request.POST['suredone_orders_limit'])
         unique_supplements_limit = safe_float(request.POST['supplements_limit'])
         user_supplements_limit = safe_float(request.POST['user_supplements'])
@@ -412,6 +421,7 @@ class ACPAddPlanView(BaseTemplateView):
                         unique_supplements=unique_supplements_limit,
                         user_supplements=user_supplements_limit,
                         auto_fulfill_limit=auto_fulfill_limit,
+                        product_update_limit=product_update_limit,
                         suredone_orders_limit=suredone_orders_limit,
 
                         extra_stores=support_adding_extra_stores,

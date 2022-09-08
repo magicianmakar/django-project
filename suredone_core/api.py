@@ -495,11 +495,10 @@ class SureDoneApiHandler:
             else:
                 return {"result": "error", "message": "Something went wrong, please try again."}
 
-    def get_logs(self, data=None):
-        url = f'{self.API_ENDPOINT}/v1/logs'
-        data = param(data)
+    def get_logs(self, params=None):
+        url = f'{self.API_ENDPOINT}/v3/logs'
 
-        response = requests.post(url, data=data, headers=self.HEADERS)
+        response = requests.post(url, params=params, headers=self.HEADERS)
         if response.ok:
             try:
                 return response.json()

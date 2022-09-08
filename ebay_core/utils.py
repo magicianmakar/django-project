@@ -1428,6 +1428,10 @@ class EbayUtils(SureDoneUtils):
 
         return resp_body
 
+    def get_logs(self, params):
+        logs_count = self.get_suredone_product_updates_logs_count(params)
+        return logs_count
+
 
 class EbayOrderUpdater:
     def __init__(self, user=None, store: EbayStore = None, order_id: int = None):

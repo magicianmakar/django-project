@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import arrow
 import itertools
 import json
@@ -285,6 +287,39 @@ class SureDoneUtils:
                     item['media'] = 'https://cdn.dropified.com/static/img/no-image.png'
 
         return all_orders, total_products_count
+
+    def get_suredone_product_updates_logs_count(self, query_params: dict) -> int:
+        """
+        Get all suredone logs
+        :param query_params : extra filtering for getting logs
+        """
+        res = self.api.get_logs(query_params)
+
+        # Extract logs from the SD response,
+        all_logs = res.get('results', []).get('logs', [])
+        if len(all_logs) > 0:
+            suredone_logs = list(filter(lambda log: (log['action'] in ['edit', 'relist', 'sold']
+                                                     and log['result'] in ['success']),
+                                        all_logs))
+        else:
+            suredone_logs = []
+        return len(suredone_logs)
+
+    def check_product_update_limit(self, sd_pusher, default_event):
+        product_update_limit = self.user.profile.get_product_update_limit()
+        today = datetime.today()
+        thirty_days_ago = today - timedelta(days=30)
+        params = {'timestamp_start': thirty_days_ago, 'timestamp_end': today}
+        logs_count = self.get_suredone_product_updates_logs_count(params)
+        if product_update_limit <= logs_count:
+            sd_pusher.trigger(default_event, {
+                'success': False,
+                'error': "Woohoo! 🎉. You are growing and you've hit your account limit for product updates. "
+                         "Upgrade your plan to keep updating your products"
+            })
+            return "Limit Reached", product_update_limit, logs_count
+        else:
+            return "OK", product_update_limit, logs_count
 
     def get_orders_count_and_limit_date(self, user: User, start_date: str, end_date: str):
         time_filters = [self.format_filters({'date': {'value': end_date, 'relation': ':<='}}),

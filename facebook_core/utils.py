@@ -807,6 +807,10 @@ class FBUtils(SureDoneUtils):
             capture_exception()
         return updated_product
 
+    def get_logs(self, params):
+        logs_count = self.get_suredone_product_updates_logs_count(params)
+        return logs_count
+
 
 class FBOrderUpdater(SureDoneOrderUpdater):
     store_model = FBStore

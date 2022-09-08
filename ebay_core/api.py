@@ -23,6 +23,7 @@ from shopified_core.api_base import ApiBase
 from shopified_core.decorators import HasSubuserPermission
 from shopified_core.utils import CancelledOrderAlert, clean_tracking_number, dict_val, get_domain, remove_link_query, safe_float, safe_int
 from suredone_core.models import SureDoneAccount
+from suredone_core.utils import SureDonePusher
 
 from . import tasks
 from .api_helper import EbayApiHelper
@@ -487,6 +488,14 @@ class EbayStoreApi(ApiBase):
         product = get_object_or_404(EbayProduct, guid=parent_guid)
         permissions.user_can_view(user, store)
         permissions.user_can_edit(user, product)
+
+        sd_pusher = SureDonePusher(store.pusher_channel())
+        default_event = 'ebay-product-update'
+        update_product_limit_check, product_limit_check, logs_count = EbayUtils(user).check_product_update_limit(
+            sd_pusher, default_event)
+        if update_product_limit_check == "Limit Reached":
+            return self.api_error(f'Your current plan allows up to {product_limit_check} product update(s).'
+                                  f' Currently you have {logs_count} updated products.', status=401)
 
         tasks.product_update.apply_async(kwargs={
             'user_id': user.id,
