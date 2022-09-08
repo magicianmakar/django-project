@@ -159,7 +159,7 @@ class SureDoneUtils:
 
         return skip_channels_config
 
-    def get_sd_account(self, user, account_id=None):
+    def get_sd_account(self, user, account_id=None, filter_active=True):
         sd_account = None
         if account_id is not None:
             try:
@@ -168,7 +168,10 @@ class SureDoneUtils:
                 sd_account = None
         elif user is not None:
             try:
-                sd_account = SureDoneAccount.objects.filter(user=user.models_user).filter(is_active=True).first()
+                if filter_active:
+                    sd_account = SureDoneAccount.objects.filter(user=user.models_user).filter(is_active=True).first()
+                else:
+                    sd_account = SureDoneAccount.objects.filter(user=user.models_user).first()
             except SureDoneAccount.DoesNotExist:
                 sd_account = None
 

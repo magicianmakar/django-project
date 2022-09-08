@@ -756,3 +756,5 @@ LIFETIME3PAY_PRODUCTS = [
     {"title": "retro elite lifetime 3-pay", "charges": 3, "config_prefix": "3pay-elite"},
     {"title": "retro unlimited pass 3-pay", "charges": 3, "config_prefix": "3pay-unlimited"},
 ]
+
+SUREDONE_CHANNELS = os.environ.get('SUREDONE_CHANNELS', 'google,facebook,ebay').split(',')

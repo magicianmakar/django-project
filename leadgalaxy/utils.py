@@ -2461,6 +2461,79 @@ def generate_user_activity(user, output=None):
     return url
 
 
+def deactivate_suredone_account(sd_account):
+    from suredone_core.api import SureDoneAdminApiHandler
+    utils = SureDoneAdminApiHandler()
+    manage_sd_api_request_data = {
+        'status': 'suspend',
+        'notes': 'deactivating-user'
+    }
+
+    sd_auth_channel_resp = utils.authorize_user(username=sd_account.api_username, password=sd_account.password)
+    if sd_auth_channel_resp.ok:
+        try:
+            sd_auth_channel_resp = sd_auth_channel_resp.json()
+        except ValueError:
+            pass
+
+    if not isinstance(sd_auth_channel_resp, dict) or sd_auth_channel_resp.get('result') == 'failure':
+        message = ''
+        if isinstance(sd_auth_channel_resp, dict):
+            message = sd_auth_channel_resp.get('message', '')
+        capture_message(
+            'Error authorizing SureDone account when deactivating it.',
+            level='error',
+            extra={
+                'sd_account': sd_account.api_username,
+                'message': message,
+            })
+        return
+
+    user_id = sd_auth_channel_resp.get('userid')
+    sd_auth_channel_resp = utils.manage_user(manage_sd_api_request_data, user_id)
+    if isinstance(sd_auth_channel_resp, dict) and sd_auth_channel_resp.get('result') == 'success':
+        sd_account.is_active = False
+        sd_account.save()
+    else:
+        message = ''
+        if isinstance(sd_auth_channel_resp, dict) and sd_auth_channel_resp.get('result') == 'error':
+            message = sd_auth_channel_resp.get('message')
+        capture_message(
+            'Error deactivating SureDone account',
+            level='error',
+            extra={
+                'sd_account': sd_account.api_username,
+                'message': message,
+            }
+        )
+
+
+def activate_suredone_account(sd_account):
+    from suredone_core.api import SureDoneAdminApiHandler
+    utils = SureDoneAdminApiHandler()
+    manage_sd_api_request_data = {
+        'status': 'active',
+        'notes': 'activating-user'
+    }
+    user_id = sd_account.sd_id
+    sd_auth_channel_resp = utils.manage_user(manage_sd_api_request_data, user_id)
+    if isinstance(sd_auth_channel_resp, dict) and sd_auth_channel_resp.get('result') == 'success':
+        sd_account.is_active = True
+        sd_account.save()
+    else:
+        message = ''
+        if isinstance(sd_auth_channel_resp, dict) and sd_auth_channel_resp.get('result') == 'error':
+            message = sd_auth_channel_resp.get('message')
+        capture_message(
+            'Error activating SureDone account',
+            level='error',
+            extra={
+                'sd_account': sd_account.api_username,
+                'message': message,
+            }
+        )
+
+
 class ShopifyOrderUpdater:
 
     def __init__(self, store=None, order_id=None):

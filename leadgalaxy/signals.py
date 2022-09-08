@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
 from django.db.models import Q
-from django.db.models.signals import m2m_changed, post_delete, post_save
+from django.db.models.signals import m2m_changed, post_delete, post_save, pre_delete, pre_save
 from django.dispatch import Signal, receiver
 
 from addons_core.tasks import cancel_all_addons
@@ -37,12 +37,14 @@ from leadgalaxy.models import (
     SubuserGooglePermission,
     UserProfile
 )
+from leadgalaxy.utils import deactivate_suredone_account, activate_suredone_account
 from lib.exceptions import capture_exception
 from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
 from stripe_subscription.stripe_api import stripe
 from shopified_core.tasks import keen_send_event
 from shopified_core.utils import get_domain
+from suredone_core.utils import SureDoneUtils
 
 
 @receiver(post_save, sender=UserProfile)
@@ -67,6 +69,19 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
         UserGoalRelationship.objects.filter(user=user).delete()
         for goal in Goal.objects.filter(plans=current_plan):
             UserGoalRelationship.objects.get_or_create(user=user, goal=goal)
+
+        sd_account = SureDoneUtils(user).get_sd_account(user, None, filter_active=False)
+        if sd_account:
+            sd_perm = False
+            for channel in settings.SUREDONE_CHANNELS:
+                if user.can(f'{channel}.use'):
+                    sd_perm = True
+                    break
+
+            if sd_perm:
+                activate_suredone_account(sd_account)
+            else:
+                deactivate_suredone_account(sd_account)
 
 
 @receiver(post_save, sender=UserProfile)
@@ -336,6 +351,26 @@ def shopify_send_keen_event_for_product(sender, instance, created, **kwargs):
         }
 
         keen_send_event.delay('product_save', keen_data)
+
+
+@receiver(pre_delete, sender=User)
+def deactivate_sd_account_on_user_delete(sender, instance, **kwargs):
+    sd_account = SureDoneUtils(instance).get_sd_account(instance, None, filter_active=False)
+    if sd_account:
+        deactivate_suredone_account(sd_account)
+
+
+@receiver(pre_save, sender=User)
+def change_sd_account_status_on_user_save(sender, instance, **kwargs):
+    user = User.objects.filter(pk=instance.pk)
+    if user:
+        user = user.first()
+        sd_account = SureDoneUtils(instance).get_sd_account(instance, None, filter_active=False)
+        if sd_account:
+            if not instance.is_active and user.is_active:
+                deactivate_suredone_account(instance)
+            elif instance.is_active and not user.is_active:
+                activate_suredone_account(instance)
 
 
 main_subscription_canceled = Signal(providing_args=["stripe_sub"])

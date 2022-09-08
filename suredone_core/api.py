@@ -663,3 +663,33 @@ class SureDoneAdminApiHandler:
         }
 
         return requests.post(url, data=data, headers=cls.HEADERS)
+
+    @classmethod
+    def auth_channel_v1(cls, request_data: dict):
+        url = f'{cls.API_ENDPOINT}/v1/auth'
+        data = param(request_data)
+
+        response = requests.post(url, data=data, headers=cls.HEADERS)
+
+        if response.ok:
+            try:
+                return response.json()
+            except ValueError:
+                pass
+        else:
+            pass
+
+    @classmethod
+    def manage_user(cls, request_data: dict, sd_user_id: str):
+        url = f'{cls.API_ENDPOINT}/v1/profile/manage/{sd_user_id}'
+        data = param(request_data)
+
+        response = requests.post(url, data=data, headers=cls.HEADERS)
+
+        if response.ok:
+            try:
+                return response.json()
+            except ValueError:
+                pass
+        else:
+            pass
