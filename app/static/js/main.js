@@ -1469,8 +1469,22 @@ function adddQuickBundleOrders(btn) {
             'order_data': JSON.parse(atob(btn.attr('order-data')))
         },
     };
-    document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
-    toastr.success("Items added to Queue");
+    $.ajax({
+        url: api_url('import-aliexpress-data-bundle', 'aliexpress'),
+        type: "POST",
+        data: JSON.stringify(msg),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function (response) {
+            btn.button('reset');
+            document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(response.data), '*');
+            toastr.success("Items added to Queue");
+        },
+        error: function (response) {
+            document.getElementById('orders-aliexpress-frm').contentWindow.postMessage(JSON.stringify(msg), '*');
+            toastr.success("Items added to Queue");
+        },
+    });
 }
 
 window.onmessage = function (e) {
