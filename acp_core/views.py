@@ -347,15 +347,13 @@ class ACPPlansView(BaseTemplateView):
         ctx['breadcrumbs'].extend(["Plans"])
 
         plans = GroupPlan.objects.all().order_by('-id')
-
-        ctx['plans'] = plans
-
         today = datetime.today()
         thirty_days_ago = today - timedelta(days=30)
         params = {'timestamp_start': thirty_days_ago, 'timestamp_end': today}
-        logs = AcpUtils(self.request.user).get_logs(params)
-        ctx['logs_count'] = logs
+        ctx['product_updates_logs_count'] = AcpUtils(self.request.user).get_product_updates_logs(params)
+        ctx['product_creation_logs_count'] = AcpUtils(self.request.user).get_suredone_product_creation_logs_count(params)
 
+        ctx['plans'] = plans
         return ctx
 
 
@@ -369,6 +367,7 @@ class ACPAddPlanView(BaseTemplateView):
 
         stores_limit = safe_float(request.POST['stores_limit'])
         products_limit = safe_float(request.POST['products_limit'])
+        product_create_limit = safe_float(request.POST['product_create_limit'])
         boards_limit = safe_float(request.POST['boards_limit'])
         auto_fulfill_limit = safe_float(request.POST['fulfill_limit'])
         product_update_limit = safe_float(request.POST['product_update_limit'])
@@ -417,6 +416,7 @@ class ACPAddPlanView(BaseTemplateView):
 
                         stores=stores_limit,
                         products=products_limit,
+                        product_create_limit=product_create_limit,
                         boards=boards_limit,
                         unique_supplements=unique_supplements_limit,
                         user_supplements=user_supplements_limit,

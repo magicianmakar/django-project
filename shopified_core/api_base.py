@@ -574,6 +574,11 @@ class ApiBase(ApiResponseMixin, View):
                 raise PermissionDenied()
 
         result = self.helper.product_save(data, user.id, self.target, request)
+        if result:
+            error = result.get('product').get('error')
+            if error:
+                return self.api_error(error, status=500)
+
         return self.api_success(result)
 
     def post_suppliers_mapping(self, request, user, data):

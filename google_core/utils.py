@@ -1,6 +1,7 @@
 import arrow
 import json
 import re
+
 from requests.exceptions import HTTPError
 
 from django.core.cache import caches
@@ -19,7 +20,8 @@ from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import fix_order_data, products_filter, safe_float, safe_int, safe_json, safe_str
 from suredone_core.models import SureDoneAccount
-from suredone_core.utils import SureDoneOrderUpdater, SureDoneUtils, parse_suredone_date, sd_customer_address
+from suredone_core.utils import SureDoneOrderUpdater, SureDoneUtils, parse_suredone_date, sd_customer_address, \
+    SureDonePusher
 
 
 class GoogleUtils(SureDoneUtils):
@@ -731,6 +733,18 @@ class GoogleUtils(SureDoneUtils):
         """
         if not self.api:
             return
+
+        pusher_channel = store.pusher_channel()
+        sd_pusher = SureDonePusher(pusher_channel)
+        default_event = 'product-duplicate'
+        create_product_limit_check, product_limit_check, logs_count = self.check_product_create_limit(
+            sd_pusher, default_event)
+
+        if create_product_limit_check == 'Limit Reached':
+            return {
+                'error': f'Your current plan allows up to {product_limit_check} created product(s).'
+                         f' Currently you have {logs_count} created products.'
+            }
 
         # Prepare product_data for SureDone format
         variants = product_data.pop('attributes', {})

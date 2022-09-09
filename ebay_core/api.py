@@ -575,6 +575,14 @@ class EbayStoreApi(ApiBase):
                 f'Your current plan allows up to {total_allowed} saved product(s). Currently you '
                 f'have {user_count} saved products.', status=401)
 
+        sd_pusher = SureDonePusher(f'user_{user.id}')
+        default_event = 'ebay-product-save'
+        create_product_limit_check, product_limit_check, logs_count = EbayUtils(user).check_product_create_limit(
+            sd_pusher, default_event)
+        if create_product_limit_check == "Limit Reached":
+            return self.api_error(f'Your current plan allows up to {product_limit_check} created product(s).'
+                                  f' Currently you have {logs_count} created products.', status=401)
+
         tasks.product_duplicate.apply_async(kwargs={
             'user_id': user.id,
             'parent_sku': parent_sku,
@@ -640,6 +648,14 @@ class EbayStoreApi(ApiBase):
             if not can_add:
                 return self.api_error(f'Your current plan allows up to {total_allowed} saved product(s).'
                                       f' Currently you have {user_count} saved products.', status=401)
+
+            sd_pusher = SureDonePusher(f'user_{user.id}')
+            default_event = 'ebay-product-save'
+
+            create_product_limit_check, product_limit_check, logs_count = EbayUtils(user).check_product_create_limit(sd_pusher, default_event)
+            if create_product_limit_check == "Limit Reached":
+                return self.api_error(f'Your current plan allows up to {product_limit_check} created product(s).'
+                                      f' Currently you have {logs_count} created products.', status=401)
 
             # Create the product from orders' data
             product_data = {

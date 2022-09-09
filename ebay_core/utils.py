@@ -32,7 +32,7 @@ from shopified_core.utils import (
     safe_str
 )
 from suredone_core.models import InvalidSureDoneStoreInstanceId, SureDoneAccount
-from suredone_core.utils import SureDoneUtils, get_or_create_suredone_account, parse_suredone_date, sd_customer_address
+from suredone_core.utils import SureDonePusher, SureDoneUtils, get_or_create_suredone_account, parse_suredone_date, sd_customer_address
 
 
 class EbayUtils(SureDoneUtils):
@@ -1115,6 +1115,18 @@ class EbayUtils(SureDoneUtils):
         if not self.api:
             return
 
+        pusher_channel = store.pusher_channel()
+        sd_pusher = SureDonePusher(pusher_channel)
+        default_event = 'product-duplicate'
+        create_product_limit_check, product_limit_check, logs_count = self.check_product_create_limit(
+            sd_pusher, default_event)
+
+        if create_product_limit_check == 'Limit Reached':
+            return {
+                'error': f'Your current plan allows up to {product_limit_check} created product(s).'
+                         f' Currently you have {logs_count} created products.'
+            }
+
         # Prepare product_data for SureDone format
         variants = product_data.pop('attributes', {})
         sd_product_data = [product_data, *list(variants.values())]
@@ -1427,10 +1439,6 @@ class EbayUtils(SureDoneUtils):
             raise Exception('Failed to get product details.', updated_product)
 
         return resp_body
-
-    def get_logs(self, params):
-        logs_count = self.get_suredone_product_updates_logs_count(params)
-        return logs_count
 
 
 class EbayOrderUpdater:

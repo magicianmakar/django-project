@@ -517,6 +517,15 @@ class UserProfile(models.Model):
 
         return stores
 
+    def get_product_create_limit(self):
+        if self.is_subuser:
+            user = self.subuser_parent
+        else:
+            user = self.user
+        plan = user.profile.get_plan()
+
+        return plan.product_create_limit
+
     def get_installed_addon_titles(self):
         return list(self.addons.values_list('title', flat=True))
 
@@ -2352,6 +2361,7 @@ class GroupPlan(models.Model):
 
     stores = models.IntegerField(default=0, verbose_name="Stores Limit")
     products = models.IntegerField(default=0, verbose_name="Products Limit")
+    product_create_limit = models.IntegerField(default=10000, verbose_name="Products Create Limit")
     boards = models.IntegerField(default=0, verbose_name="Boards Limit")
     unique_supplements = models.IntegerField(default=0, verbose_name="Unique Supplements Limit")
     user_supplements = models.IntegerField(default=0, verbose_name="User Supplements Limit")
