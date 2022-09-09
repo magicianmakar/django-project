@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .forms import AdminCarrierForm
+from .forms import AdminCarrierForm, OrderAdminForm
 from .models import (
     Account,
     CarrierType,
@@ -85,11 +85,48 @@ class CarrierAdmin(admin.ModelAdmin):
     )
 
 
+class PaidFilter(admin.SimpleListFilter):
+    title = 'is paid'
+    parameter_name = 'is_paid'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('0', 'Paid'),
+            ('1', 'Unpaid'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value:
+            value = True if value == '1' else False
+            return queryset.filter(paid_at__isnull=value)
+
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('store_id', 'store_order_number', 'paid_at', 'carrier', 'service', 'weight', 'shipment_cost', 'warehouse')
+    list_filter = (PaidFilter, 'store_type', 'refund_status')
+    search_fields = (
+        'store_id',
+        'store_order_number',
+        'paid_at',
+        'carrier',
+        'rate_id',
+        'service',
+        'weight',
+        'warehouse__id',
+        'warehouse__user__id',
+        'warehouse__user__email',
+        'warehouse__user__username',
+    )
+
+    form = OrderAdminForm
+
+
 admin.site.register(Warehouse)
 admin.site.register(Product)
 admin.site.register(Variant)
 admin.site.register(Supplier)
 admin.site.register(Listing)
 admin.site.register(Package)
-admin.site.register(Order)
 admin.site.register(OrderItem)

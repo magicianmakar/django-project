@@ -164,6 +164,9 @@ class Warehouse(models.Model):
     phone = models.CharField(max_length=100, blank=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
+    def __str__(self):
+        return f"{self.id} - {self.get_full_name()}"
+
     @property
     def logistics_address(self):
         from logistics.utils import Address
@@ -443,8 +446,8 @@ class Order(models.Model):
     package = models.ForeignKey(Package, related_name='orders', null=True, blank=True, on_delete=models.SET_NULL)
     warehouse = models.ForeignKey(Warehouse, related_name='orders', on_delete=models.CASCADE)
     store_type = models.CharField(max_length=15, choices=STORE_TYPES, default=SHOPIFY)
-    store_id = models.IntegerField()
-    store_order_number = models.CharField(max_length=30, blank=True, default='')
+    store_id = models.IntegerField(verbose_name='Store')
+    store_order_number = models.CharField(max_length=30, blank=True, default='', verbose_name='Order')
     created_at = models.DateTimeField(auto_now_add=True)
 
     to_address_hash = models.CharField(max_length=255)
