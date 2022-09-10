@@ -125,6 +125,11 @@
                     displayAjaxError('3PL', data.error, true);
                 }
                 var order = data.orders[0];
+                if (!order) {
+                    displayAjaxError('3PL', 'No orders found');
+                    $('#modal-logistics-order-detail').modal('show');
+                    return true;
+                }
                 var wrapper = $('#modal-logistics-order-detail .logistics-order');
 
                 var shipmentWrapper = wrapper.find('.logistics-shipment');
