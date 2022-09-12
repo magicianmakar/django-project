@@ -34,13 +34,15 @@ class Command(DropifiedBaseCommand):
         for user in users.iterator():
             current_stripe_sub = user.stripe_customer.current_subscription
             if not current_stripe_sub:
-                print(f'Updating user {user}')
+
                 try:
                     stripe_customer_data = user.stripe_customer.retrieve()
                     stripe_subscription_id = stripe_customer_data.subscriptions.data[0].id
                     sub = stripe.Subscription.retrieve(stripe_subscription_id)
                     update_subscription(user, plan, sub)
-
+                    print(f'Updated user {user}')
+                except IndexError:
+                    print(f'Skip user {user} (no stripe sub)')
                 except:
-                    print(f'Skip user {user}')
+                    print(f'Skip user {user} (other error)')
                     capture_exception()
