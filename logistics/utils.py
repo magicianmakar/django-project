@@ -518,8 +518,8 @@ class Shipment():
                     balance = AccountBalance.objects.create(user=self.user, balance=0)
 
                 if Decimal(rate['rate']) > balance.balance:
-                    link = f'<a href="{reverse("logistics:orders")}#showBalance" target="_blank">Dropified balance</a>'
-                    raise OrderError(f'Add funds to your {link} to use our discounted USPS rates')
+                    link = f'<a href="{reverse("logistics:carriers")}#showBalance" target="_blank">Dropified balance</a>'
+                    raise OrderError(f'Add funds to your {link} and use our discounted USPS rates')
 
                 shipment = get_root_easypost_api().Shipment.retrieve(rate['shipment_id'])
             else:

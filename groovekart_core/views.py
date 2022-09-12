@@ -554,7 +554,7 @@ class OrdersList(ListView):
                                                     variant_id=variant_id,
                                                     country_code=country_code)
 
-    def get_order_data(self, order, item, product, supplier):
+    def get_order_data(self, order, item, product, supplier, logistics_address=None):
         store = self.get_store()
         models_user = self.request.user.models_user
         aliexpress_fix = models_user.get_config('aliexpress_fix_city', True)
@@ -569,6 +569,7 @@ class OrdersList(ListView):
                 aliexpress_fix=aliexpress_fix,
                 shipstation_fix=supplier.is_pls if supplier else False
             ),
+            'logistics_address': logistics_address,
             'order_id': safe_int(order['id']),
             'line_id': safe_int(item['id']),
             'product_id': product.id,
@@ -583,6 +584,30 @@ class OrdersList(ListView):
                 'epacket': bool(models_user.get_config('epacket_shipping')),
                 'aliexpress_shipping_method': models_user.get_config('aliexpress_shipping_method'),
                 'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
+                'phone': {
+                    'number': order.get('shipping_address', {}).get('phone'),
+                    'country': order.get('shipping_address', {}).get('country'),
+                },
+            },
+        }
+
+    def get_raw_order_data(self, order, item, logistics_address):
+        store = self.get_store()
+
+        return {
+            'id': '{}_{}_{}'.format(store.id, order['id'], item['id']),
+            'order_name': order['id'],
+            'title': item['title'],
+            'quantity': safe_int(item['quantity']),
+            'logistics_address': logistics_address,
+            'order_id': order['id'],
+            'line_id': item['id'],
+            'product_id': item['product_id'],
+            'variants': ' / '.join([o.get('value') for o in item.get('variants', {}).get('options', [])]),
+            'total': safe_float(item['price'], 0.0),
+            'store': store.id,
+            'is_raw': True,
+            'order': {
                 'phone': {
                     'number': order.get('shipping_address', {}).get('phone'),
                     'country': order.get('shipping_address', {}).get('country'),
@@ -647,6 +672,7 @@ class OrdersList(ListView):
 
     def normalize_orders(self, context):
         orders_cache = {}
+        raw_orders_cache = {}
         store = self.get_store()
         orders = context.get('orders', [])
         groovekart_site = store.get_store_url()
@@ -657,7 +683,7 @@ class OrdersList(ListView):
         order_tracks_by_item = self.get_order_tracks_by_item(order_ids)
         unfulfilled_supplement_items = self.get_unfulfilled_supplement_items(order_ids)
         context['has_print_on_demand'] = False
-
+        models_user = self.request.user.models_user
         for order in orders:
             order_id = order.get('id')
             date_created = self.get_order_date_created(order)
@@ -697,6 +723,11 @@ class OrdersList(ListView):
                 item['variant_link'] = '{}/v2/index.php/product/form/{}'.format(groovekart_admin, product_id)
                 if variant_id == 0:
                     variant_id = -1
+
+                if models_user.can('logistics.use'):
+                    logistics_address = gkart_customer_address(order, shipstation_fix=True)[1]
+                else:
+                    logistics_address = None
 
                 bundle_data = []
                 if product:
@@ -793,7 +824,7 @@ class OrdersList(ListView):
                         item['is_paid'] = False
                         item['supplier_type'] = supplier.supplier_type()
                         order['supplier_types'].add(item['supplier_type'])
-                        order_data = self.get_order_data(order, item, product, supplier)
+                        order_data = self.get_order_data(order, item, product, supplier, logistics_address=logistics_address)
                         order_data['products'] = bundle_data
                         order_data['is_bundle'] = len(bundle_data) > 0
                         order_data['variant'] = self.get_order_data_variant(item, product=product)
@@ -815,6 +846,11 @@ class OrdersList(ListView):
                 key = '{}_{}'.format(order['id'], item['id'])
                 item['order_track'] = order_tracks_by_item.get(key)
 
+            if not product or not product.have_supplier():
+                raw_order_data_id = f"raw_{store.id}_{order['id']}_{item['id']}"
+                item['raw_order_data_id'] = raw_order_data_id
+                raw_orders_cache[f"gkart_order_{raw_order_data_id}"] = self.get_raw_order_data(order, item, logistics_address)
+
             order['mixed_supplier_types'] = len(order['supplier_types']) > 1
 
             if shipstation_address_changed:
@@ -827,6 +863,7 @@ class OrdersList(ListView):
 
         bulk_queue = bool(self.request.GET.get('bulk_queue'))
         caches['orders'].set_many(orders_cache, timeout=86400 if bulk_queue else 21600)
+        caches['orders'].set_many(raw_orders_cache, timeout=86400 if bulk_queue else 21600)
 
         return orders
 

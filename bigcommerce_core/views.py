@@ -883,7 +883,7 @@ class OrdersList(ListView):
                                                     variant_id=variant_id,
                                                     country_code=country_code)
 
-    def get_order_data(self, order, item, product, supplier):
+    def get_order_data(self, order, item, product, supplier, logistics_address=None):
         store = self.get_store()
         models_user = self.request.user.models_user
         aliexpress_fix_address = models_user.get_config('aliexpress_fix_address', True)
@@ -908,6 +908,7 @@ class OrdersList(ListView):
             'title': item['title'],
             'quantity': item['quantity'],
             'shipping_address': shipping_address,
+            'logistics_address': logistics_address,
             'order_id': order['id'],
             'line_id': item['id'],
             'product_id': product.id,
@@ -926,6 +927,33 @@ class OrdersList(ListView):
                 'epacket': bool(models_user.get_config('epacket_shipping')),
                 'aliexpress_shipping_method': models_user.get_config('aliexpress_shipping_method'),
                 'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
+            },
+        }
+
+    def get_raw_order_data(self, order, item, logistics_address):
+        store = self.get_store()
+        country = order['billing_address']['country_iso2']
+        if len(order['shipping_addresses']) > 0:
+            country = order['shipping_addresses'][0]['country_iso2']
+
+        return {
+            'id': '{}_{}_{}'.format(store.id, order['id'], item['id']),
+            'order_name': order['id'],
+            'title': item['title'],
+            'quantity': item['quantity'],
+            'logistics_address': logistics_address,
+            'order_id': order['id'],
+            'line_id': item['id'],
+            'product_id': item['product_id'],
+            'variants': [{'title': meta['value']} for meta in item.get('meta_data', []) if meta['value']],
+            'total': safe_float(item['base_price'], 0.0),
+            'store': store.id,
+            'is_raw': True,
+            'order': {
+                'phone': {
+                    'number': order['billing'].get('phone'),
+                    'country': country,
+                },
             },
         }
 
@@ -1017,6 +1045,7 @@ class OrdersList(ListView):
 
     def normalize_orders(self, context):
         orders_cache = {}
+        raw_orders_cache = {}
         store = self.get_store()
         admin_url = store.get_admin_url()
         orders = context.get('orders', [])
@@ -1029,6 +1058,7 @@ class OrdersList(ListView):
         order_ids = self.get_order_ids(orders)
         order_track_by_item = self.get_order_track_by_item(order_ids)
         unfulfilled_supplement_items = self.get_unfulfilled_supplement_items(order_ids)
+        models_user = self.request.user.models_user
 
         for order in orders:
             order['name'] = order.get('id')
@@ -1067,6 +1097,14 @@ class OrdersList(ListView):
                 item['product'] = product
                 item['image'] = next(iter(data['images']), {}).get('url_standard') if data else None
                 variant_id = item.get('variant_id')
+
+                if models_user.can('logistics.use'):
+                    logistics_address = bigcommerce_customer_address(
+                        order=order,
+                        german_umlauts=models_user.get_config('_use_german_umlauts', False),
+                        shipstation_fix=True)[1]
+                else:
+                    logistics_address = None
 
                 bundle_data = []
                 if product:
@@ -1128,7 +1166,7 @@ class OrdersList(ListView):
 
                     if product.have_supplier():
                         supplier = self.get_product_supplier(product, variant_id)
-                        order_data = self.get_order_data(order, item, product, supplier)
+                        order_data = self.get_order_data(order, item, product, supplier, logistics_address=logistics_address)
                         order_data['products'] = bundle_data
                         order_data['is_bundle'] = len(bundle_data) > 0
                         order_data['variant'] = self.get_order_data_variant(product, item)
@@ -1193,6 +1231,11 @@ class OrdersList(ListView):
                     if item['order_track']:
                         order['tracked_lines'] += 1
 
+            if not product or not product.have_supplier():
+                raw_order_data_id = f"raw_{store.id}_{order['id']}_{item['id']}"
+                item['raw_order_data_id'] = raw_order_data_id
+                raw_orders_cache[f"bigcommerce_order_{raw_order_data_id}"] = self.get_raw_order_data(order, item, logistics_address)
+
             if order['tracked_lines'] != 0 and \
                     order['tracked_lines'] < order['lines_count'] and \
                     order['placed_orders'] < order['lines_count']:
@@ -1206,6 +1249,7 @@ class OrdersList(ListView):
                         countdown=5
                     )
         caches['orders'].set_many(orders_cache, timeout=86400 if self.bulk_queue else 21600)
+        caches['orders'].set_many(raw_orders_cache, timeout=86400 if self.bulk_queue else 21600)
 
 
 class OrdersTrackList(ListView):
