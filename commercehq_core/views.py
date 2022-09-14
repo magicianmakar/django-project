@@ -1078,7 +1078,7 @@ class OrdersList(ListView):
                         'order': {
                             'phone': {
                                 'number': order['address'].get('phone'),
-                                'country': logistics_address['country_code']
+                                'country': order['address']['shipping'].get('country')
                             },
                         },
                         'is_refunded': line['refunded']
