@@ -1061,7 +1061,7 @@ class OrdersList(ListView):
 
                 else:
                     raw_order_data_id = f"raw_{store.id}_{order['id']}_{line['id']}"
-                    item['raw_order_data_id'] = raw_order_data_id
+                    line['raw_order_data_id'] = raw_order_data_id
                     raw_orders_cache[f"chq_order_{raw_order_data_id}"] = {
                         'id': '{}_{}_{}'.format(self.store.id, order['id'], line['id']),
                         'order_name': order['id'],
