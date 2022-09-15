@@ -62,7 +62,7 @@ class EbayStoreApi(ApiBase):
         if user.is_subuser:
             return self.api_error('Sub-Users can not add new stores.', status=401)
 
-        can_add, total_allowed, user_count = permissions.can_add_store(user)
+        can_add, total_allowed, user_count = permissions.can_add_suredone_store(user)
 
         if not can_add:
             if user.profile.plan.is_free and user.can_trial() and not user.profile.from_shopify_app_store():

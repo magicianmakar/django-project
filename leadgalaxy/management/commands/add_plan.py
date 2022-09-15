@@ -43,6 +43,7 @@ class Command(DropifiedBaseCommand):
 
         self.write('\n[*] Plan Limits')
         stores_limit = self.get_float('Stores Limit:')
+        suredone_stores_limit = self.get_float('SureDone Stores Limit:')
         products_limit = self.get_float('Products Limit:')
         boards_limit = self.get_float('Boards Limit:')
         auto_fulfill_limit = self.get_float('Auto Fulfill Limit:')
@@ -91,6 +92,7 @@ class Command(DropifiedBaseCommand):
 
                         stores=stores_limit,
                         products=products_limit,
+                        suredone_stores=suredone_stores_limit,
                         boards=boards_limit,
                         unique_supplements=unique_supplements_limit,
                         user_supplements=user_supplements_limit,

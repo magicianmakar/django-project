@@ -277,6 +277,40 @@ def can_add_store(user):
     return can_add, total_allowed, user_count
 
 
+def can_add_suredone_store(user):
+    """ Check if the user plan allow them to add a new SureDone store """
+
+    profile = user.profile
+
+    if profile.is_subuser:
+        return can_add_suredone_store(profile.subuser_parent)
+
+    user_sd_stores = int(profile.suredone_stores)
+    if user_sd_stores == -2:  # Use GroupPlan.suredone_stores limit (default)
+        total_allowed = profile.plan.suredone_stores  # if equal -1 that mean user can add unlimited store
+    else:
+        # Unlimited (-1) Or a positive number of allowed stores defined on this profile (0 or more)
+        total_allowed = user_sd_stores
+
+    if total_allowed > -1 and profile.plan.support_addons:
+        # Addons doesn't support unlimited stores
+        addons_store_limit = profile.addons.all().aggregate(Sum('suredone_stores'))['suredone_stores__sum'] or 0
+        total_allowed += addons_store_limit
+
+    user_count = profile.get_suredone_stores_count()
+
+    can_add = True
+
+    if (total_allowed > -1) and (user_count + 1 > total_allowed):
+        if not profile.can('unlimited_stores.use'):
+            can_add = False
+
+    if not can_add and profile.plan.is_stripe() and profile.plan.extra_stores:
+        can_add = not profile.plan.is_free
+
+    return can_add, total_allowed, user_count
+
+
 def can_add_product(user, ignore_daily_limit=False):
     """ Check if the user plan allow one more product saving """
 

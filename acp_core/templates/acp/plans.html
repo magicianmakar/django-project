@@ -39,6 +39,7 @@
                             <th>Revision</th>
                             <th>Description</th>
                             <th>Stores</th>
+                            <th>SureDone Channels</th>
                             <th>Products</th>
                             <td>SureDone Product Create Limit %</td>
                             <th>Boards</th>
@@ -66,6 +67,7 @@
                             <td>{{item.revision|default:''}}</td>
                             <td>{{item.get_description}}</td>
                             <td>{% if item.stores == -1 %}Unlimited{% else %}{{item.stores}}{% endif %}</td>
+                            <td>{% if item.suredone_stores == -1 %}Unlimited{% else %}{{item.suredone_stores}}{% endif %}</td>
                             <td>{% if item.products == -1 %}Unlimited{% else %}{{item.products}}{% endif %}</td>
                             <td>{{product_creation_logs_count|as_percentage_of:item.product_create_limit}}</td>
 

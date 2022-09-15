@@ -156,6 +156,7 @@ class UserProfile(models.Model):
                                                            blank=True, related_name='subuser_fb_marketplace_stores')
 
     stores = models.IntegerField(default=-2)
+    suredone_stores = models.IntegerField(default=-2)
     products = models.IntegerField(default=-2)
     boards = models.IntegerField(default=-2)
     unique_supplements = models.IntegerField(default=-2)
@@ -541,6 +542,13 @@ class UserProfile(models.Model):
             self.get_gkart_stores().count(),
             self.get_bigcommerce_stores().count(),
             self.get_fb_marketplace_stores().count(),
+        ])
+
+    def get_suredone_stores_count(self):
+        return sum([
+            self.get_ebay_stores().count(),
+            self.get_fb_stores().count(),
+            self.get_google_stores().count(),
         ])
 
     def get_sd_accounts(self, flat=False):
@@ -2360,6 +2368,7 @@ class GroupPlan(models.Model):
     hubspot_title = models.CharField(max_length=512, blank=True, default='')
 
     stores = models.IntegerField(default=0, verbose_name="Stores Limit")
+    suredone_stores = models.IntegerField(default=0, verbose_name="SureDone Channels Limit")
     products = models.IntegerField(default=0, verbose_name="Products Limit")
     product_create_limit = models.IntegerField(default=10000, verbose_name="Products Create Limit")
     boards = models.IntegerField(default=0, verbose_name="Boards Limit")

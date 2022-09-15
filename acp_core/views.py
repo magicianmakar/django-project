@@ -366,6 +366,12 @@ class ACPAddPlanView(BaseTemplateView):
         payment_interval = request.POST.getlist('interval')
 
         stores_limit = safe_float(request.POST['stores_limit'])
+        suredone_stores_limit = safe_float(request.POST['suredone_stores_limit'])
+
+        if stores_limit < suredone_stores_limit:
+            messages.error(self.request, 'SureDone Channels Limit should be less or equal to Stores Limit')
+            return HttpResponseRedirect(self.request.path_info)
+
         products_limit = safe_float(request.POST['products_limit'])
         product_create_limit = safe_float(request.POST['product_create_limit'])
         boards_limit = safe_float(request.POST['boards_limit'])
@@ -415,12 +421,13 @@ class ACPAddPlanView(BaseTemplateView):
                         slug=slug,
 
                         stores=stores_limit,
+                        suredone_stores=suredone_stores_limit,
                         products=products_limit,
-                        product_create_limit=product_create_limit,
                         boards=boards_limit,
                         unique_supplements=unique_supplements_limit,
                         user_supplements=user_supplements_limit,
                         auto_fulfill_limit=auto_fulfill_limit,
+                        product_create_limit=product_create_limit,
                         product_update_limit=product_update_limit,
                         suredone_orders_limit=suredone_orders_limit,
 
