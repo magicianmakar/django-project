@@ -404,7 +404,7 @@ def verify_shopify_webhook(store, request, throw_excption=True):
 
 
 def aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry='CN', iteration=0):
-    shippement_key = f'ali_shipping_info__{aliexpress_id}_{country_code}'
+    shippement_key = f'ali_shipping_info__{aliexpress_id}_{country_code}_{sendGoodsCountry}'
     freight_data = cache.get(shippement_key)
 
     if freight_data is not None and freight_data:
@@ -435,7 +435,7 @@ def aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry='CN',
         "sendGoodsCountry": sendGoodsCountry,
     }
 
-    if iteration > 1:
+    if iteration > 1 or country_code == 'US':
         del params['minPrice']
         del params['maxPrice']
 
