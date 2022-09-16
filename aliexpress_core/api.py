@@ -733,7 +733,7 @@ class ShippingMethods():
 
         send_goods_country_code = 'CN'
         if isinstance(self.variant, str):
-            if self.variant.lower() == 'united states':
+            if "united states" in self.variant.lower():
                 send_goods_country_code = 'US'
         for v in self.variant:
             if isinstance(v, dict):
