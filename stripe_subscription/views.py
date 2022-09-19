@@ -8,7 +8,7 @@ import arrow
 import simplejson as json
 from lib.exceptions import capture_exception
 
-from shopified_core.utils import app_link
+from shopified_core.utils import app_link, send_email_from_template
 from leadgalaxy.models import GroupPlan
 from leadgalaxy.models import ClippingMagic, ClippingMagicPlan, CaptchaCredit, CaptchaCreditPlan
 
@@ -287,11 +287,22 @@ def clippingmagic_subscription(request):
             'credits': clippingmagic_plan.allowed_credits
         }
 
+        title = f"Dropified Clipping Magic - {clippingmagic_plan.allowed_credits} Credits"
         charge = store.shopify.ApplicationCharge.create({
-            "name": "Dropified Clipping Magic - {} Credits".format(clippingmagic_plan.allowed_credits),
+            "name": title,
             "price": clippingmagic_plan.amount,
             "return_url": app_link(reverse('shopify_subscription.views.subscription_charged', kwargs={'store': store.id})),
         })
+
+        send_email_from_template(
+            tpl='shopify_charge.html',
+            subject='Dropified Purchase - Shopify Charge',
+            recipient='support@dropified.com',
+            data={
+                'email': user.email,
+                'title': title,
+            }
+        )
 
         return JsonResponse({
             'status': 'ok',
@@ -380,11 +391,22 @@ def captchacredit_subscription(request):
             'credits': captchacredit_plan.allowed_credits
         }
 
+        title = f"Dropified Captcha - {captchacredit_plan.allowed_credits} Credits"
         charge = store.shopify.ApplicationCharge.create({
-            "name": "Dropified Auto Captcha - {} Credits".format(captchacredit_plan.allowed_credits),
+            "name": title,
             "price": captchacredit_plan.amount,
             "return_url": app_link(reverse('shopify_subscription.views.subscription_charged', kwargs={'store': store.id})),
         })
+
+        send_email_from_template(
+            tpl='shopify_charge.html',
+            subject='Dropified Purchase - Shopify Charge',
+            recipient='support@dropified.com',
+            data={
+                'email': user.email,
+                'title': title,
+            }
+        )
 
         return JsonResponse({
             'status': 'ok',
@@ -579,11 +601,22 @@ def callflexcredit_subscription(request):
             'credits': callflexcredit_plan.allowed_credits
         }
 
+        title = f"CallFlex - {callflexcredit_plan.allowed_credits} Minutes",
         charge = store.shopify.ApplicationCharge.create({
-            "name": "CallFlex - {} Minutes".format(callflexcredit_plan.allowed_credits),
+            "name": title,
             "price": callflexcredit_plan.amount,
             "return_url": app_link(reverse('shopify_subscription.views.subscription_charged', kwargs={'store': store.id})),
         })
+
+        send_email_from_template(
+            tpl='shopify_charge.html',
+            subject='Dropified Purchase - Shopify Charge',
+            recipient='support@dropified.com',
+            data={
+                'email': user.email,
+                'title': title,
+            }
+        )
 
         return JsonResponse({
             'status': 'ok',
