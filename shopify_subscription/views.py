@@ -10,7 +10,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic.base import RedirectView
 
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_exception, capture_message
 
 from shopified_core import permissions
 from shopified_core.utils import app_link
@@ -206,7 +206,20 @@ def subscription_activated(request):
 
 @login_required
 def subscription_charged(request, store):
-    charge_id = request.GET['charge_id']
+    charge_id = request.GET.get('charge_id')
+    if not charge_id and 'shopify_charge_id' in request.session:
+        charge_id = request.session['shopify_charge_id']
+        del request.session['shopify_charge_id']
+
+    if not charge_id:
+        capture_message('No charge_id in request', level='error', extra={
+            'user': request.user.id,
+            'charge_id': charge_id
+        })
+
+        messages.error(request, 'Something went wrong, please try again later')
+
+        return HttpResponseRedirect('/')
 
     store = ShopifyStore.objects.get(id=store)
     permissions.user_can_view(request.user, store)

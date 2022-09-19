@@ -294,6 +294,8 @@ def clippingmagic_subscription(request):
             "return_url": app_link(reverse('shopify_subscription.views.subscription_charged', kwargs={'store': store.id})),
         })
 
+        request.session['shopify_charge_id'] = charge.id
+
         send_email_from_template(
             tpl='shopify_charge.html',
             subject='Dropified Purchase - Shopify Charge',
@@ -397,6 +399,8 @@ def captchacredit_subscription(request):
             "price": captchacredit_plan.amount,
             "return_url": app_link(reverse('shopify_subscription.views.subscription_charged', kwargs={'store': store.id})),
         })
+
+        request.session['shopify_charge_id'] = charge.id
 
         send_email_from_template(
             tpl='shopify_charge.html',
@@ -607,6 +611,8 @@ def callflexcredit_subscription(request):
             "price": callflexcredit_plan.amount,
             "return_url": app_link(reverse('shopify_subscription.views.subscription_charged', kwargs={'store': store.id})),
         })
+
+        request.session['shopify_charge_id'] = charge.id
 
         send_email_from_template(
             tpl='shopify_charge.html',
