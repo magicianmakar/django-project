@@ -141,6 +141,7 @@ def subscription_plan(request):
         request.session['active_subscription'] = sub.id
         request.session['active_plan'] = plan.id
         request.session['charge_type'] = charge_type
+        request.session['shopify_charge_id'] = charge.id
 
     PlanSelectionEvent.objects.create(user=request.user)
 
@@ -152,7 +153,17 @@ def subscription_plan(request):
 
 @login_required
 def subscription_activated(request):
-    charge_id = request.GET['charge_id']
+    charge_id = request.GET.get('charge_id')
+    if not charge_id and 'shopify_charge_id' in request.session:
+        charge_id = request.session['shopify_charge_id']
+        del request.session['shopify_charge_id']
+
+    if not charge_id:
+        capture_message('Charge ID not found', level='error')
+        messages.error(request, 'Could not complete subscription, please try again')
+
+        return HttpResponseRedirect('/')
+
     sub = ShopifySubscription.objects.get(subscription_id=charge_id)
 
     permissions.user_can_view(request.user, sub)
@@ -212,11 +223,7 @@ def subscription_charged(request, store):
         del request.session['shopify_charge_id']
 
     if not charge_id:
-        capture_message('No charge_id in request', level='error', extra={
-            'user': request.user.id,
-            'charge_id': charge_id
-        })
-
+        capture_message('No charge_id in request', level='error')
         messages.error(request, 'Something went wrong, please try again later')
 
         return HttpResponseRedirect('/')
