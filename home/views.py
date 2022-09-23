@@ -167,6 +167,7 @@ class SettingsPageView(HomePageMixing):
 class DashboardView(HomePageMixing):
     template_name = 'home/dashboard.html'
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.plan.is_research:
             return super().dispatch(request, *args, **kwargs)
