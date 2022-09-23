@@ -364,6 +364,11 @@ class AliexpressFulfillHelper():
             address.province = 'Other'
         address.zip = self.shipping_address['zip']
 
+        if address.country == 'BR' or address.country == 'CL':
+            if address.full_name.strip().endswith(self.shipping_address['company']):
+                address.full_name = address.full_name.strip().replace(f"- {self.shipping_address['company']}", '').strip()
+                address.contact_person = address.full_name
+
         if address.country == 'BR':
             try:
                 cpf = self.shipping_address['company'].strip()
