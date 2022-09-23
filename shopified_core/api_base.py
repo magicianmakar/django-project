@@ -568,7 +568,7 @@ class ApiBase(ApiResponseMixin, View):
         return self.post_product_save(request, user, data)
 
     def post_product_save(self, request, user, data):
-        if data.get('store'):
+        if safe_int(data.get('store')):
             store = self.store_model.objects.get(pk=data.get('store'))
             if not user.can('save_for_later.sub', store):
                 raise PermissionDenied()
