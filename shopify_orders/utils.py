@@ -63,7 +63,7 @@ def sort_es_orders(orders, hits, db_orders):
         order = shopify_orders_map.get(i['_source']['order_id'])
         db_order = db_orders_map.get(i['_source']['order_id'])
 
-        if order:
+        if order and db_order:
             order['es_updated_at'] = arrow.get(i['_source']['updated_at']).timestamp
             order['db_updated_at'] = arrow.get(db_order.updated_at).timestamp
 
