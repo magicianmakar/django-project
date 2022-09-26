@@ -193,9 +193,21 @@ function confirmDeleteOrderID(e) {
     var source_url = btn.attr('source-url');
     var line_id = btn.attr('line-id');
     var html = '<ul>';
-    html += '<li style="list-style:none">Supplier Order ID: <a target="_blank" ' +
+    var is_bundle = source_id.indexOf(",") == -1 ? false : true;
+    if (is_bundle) {
+        source_id = source_id.split(",");
+        for (var x in source_id) {
+            var new_source_url = source_url.replace(source_id, source_id[x]);
+            html += '<li style="list-style:none">Supplier Order ID: <a target="_blank" ' +
+            'href="' + new_source_url + '">' + source_id[x] + '</a></li>';
+            html += '<li style="list-style:none">Order date: ' + btn.attr('order-date') + '</li>';
+        }
+    } else {
+        html += '<li style="list-style:none">Supplier Order ID: <a target="_blank" ' +
         'href="' + source_url + '">' + source_id + '</a></li>';
-    html += '<li style="list-style:none">Order date: ' + btn.attr('order-date') + '</li>';
+        html += '<li style="list-style:none">Order date: ' + btn.attr('order-date') + '</li>';
+    }
+
     html += '</ul';
 
     swal({
