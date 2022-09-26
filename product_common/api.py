@@ -13,6 +13,7 @@ from stripe_subscription.stripe_api import stripe
 
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
 from .models import Order, OrderLine
+from supplements.models import PLSOrderLine, PLSReview
 
 
 def complete_payment(transaction_id, order_id):
@@ -173,3 +174,20 @@ class ProductCommonApi(ApiResponseMixin, View):
 
         data = {'success': success, 'error': error, 'successIds': success_ids}
         return self.api_success(data)
+
+    def post_review_order(self, request, user, data):
+        pls_order_line = PLSOrderLine.objects.get(
+            store_id=int(data['review-store']),
+            store_order_id=int(data['review-order-id']),
+            line_id=int(data['review-line-id']))
+        pl_supplement = pls_order_line.label.user_supplement.pl_supplement
+        PLSReview.objects.create(
+            user=user,
+            pl_supplement=pl_supplement,
+            pls_order_line=pls_order_line,
+            product_quality_rating=int(data['product-quality-rating']),
+            label_quality_rating=int(data['label-quality-rating']),
+            delivery_rating=int(data['delivery-rating']),
+            comment=data['review-comment'],
+        )
+        return self.api_success()

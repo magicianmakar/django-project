@@ -62,6 +62,7 @@ from .utils import (
     OrderListPaginator,
 )
 from addons_core.models import Addon
+from product_common.utils import get_order_reviews
 
 
 def autocomplete(request, target):
@@ -737,6 +738,7 @@ class OrdersTrackList(ListView):
             {'title': store.title, 'url': '{}?store={}'.format(reverse('gear:orders_list'), store.id)},
         ]
 
+        context['orders'] = get_order_reviews(self.request.user.models_user, context['orders'])
         return context
 
     def get_store(self):

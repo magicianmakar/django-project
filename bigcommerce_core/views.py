@@ -83,6 +83,7 @@ from .utils import (
 
 from . import utils
 from addons_core.models import Addon
+from product_common.utils import get_order_reviews
 
 
 @login_required
@@ -1381,6 +1382,7 @@ class OrdersTrackList(ListView):
         context['use_aliexpress_api'] = self.request.user.models_user.can('aliexpress_api_integration.use')
         context['aliexpress_account_count'] = AliexpressAccount.objects.filter(user=self.request.user.models_user).count()
 
+        context['orders'] = get_order_reviews(self.request.user.models_user, context['orders'])
         return context
 
     def get_store(self):

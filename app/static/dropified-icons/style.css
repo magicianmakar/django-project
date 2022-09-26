@@ -1,9 +1,9 @@
 @font-face {
   font-family: 'dropified-icons';
   src:
-    url('fonts/dropified-icons.ttf?9kvd12') format('truetype'),
-    url('fonts/dropified-icons.woff?9kvd12') format('woff'),
-    url('fonts/dropified-icons.svg?9kvd12#dropified-icons') format('svg');
+    url('fonts/dropified-icons.ttf?l6e7v5') format('truetype'),
+    url('fonts/dropified-icons.woff?l6e7v5') format('woff'),
+    url('fonts/dropified-icons.svg?l6e7v5#dropified-icons') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -24,6 +24,44 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.di-star-1 .path1:before {
+  content: "\e918";
+  color: ;
+}
+.di-star-1 .path2:before {
+  content: "\e919";
+  margin-left: -1em;
+  color: ;
+}
+.di-star-1 .path3:before {
+  content: "\e91a";
+  margin-left: -1em;
+  color: ;
+}
+.di-star-1 .path4:before {
+  content: "\e91b";
+  margin-left: -1em;
+  color: ;
+}
+.di-star-2 .path1:before {
+  content: "\e91c";
+  color: ;
+}
+.di-star-2 .path2:before {
+  content: "\e91d";
+  margin-left: -1em;
+  color: ;
+}
+.di-star-2 .path3:before {
+  content: "\e91e";
+  margin-left: -1em;
+  color: ;
+}
+.di-star-2 .path4:before {
+  content: "\e91f";
+  margin-left: -1em;
+  color: ;
+}
 .di-perms:before {
   content: "\e916";
 }

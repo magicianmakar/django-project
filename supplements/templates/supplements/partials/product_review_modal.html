@@ -1,0 +1,89 @@
+<div id="product-review-modal" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog" style="width: 470px;">
+    <div class="modal-content">
+      <div class="m-t-none modal-header" style="text-align: center;">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Check Feedback</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="tabs-container">
+            <ul class="nav nav-tabs" style="border: none;">
+              <li class="nav-item active">
+                <a class="nav-link" data-toggle="tab" href="#rating">Rating</a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" data-toggle="tab" href="#comments">Comments <span id="comment_count" class="badge badge-success"></span></a>
+                </li>
+            </ul>
+            <div class="tab-content">
+              <div class="tab-pane fade in active m-t" id="rating">
+                <div class="panel-body" style="border: none;">
+                  <div class="row">
+                    <div class="col-xs-12">
+                      <div class="row" style="display:flex;align-items:center;justify-content:start;margin:8px 0;flex-direction:column">
+                        <div style="font-size: xxx-large">
+                          <div id="avg_rating" style="
+                            text-align: center;
+                            color: black;"></div>
+                          <span class="dropified-icons di-star-1 product-rating-star" rating=1><span class="path1"></span></span>
+                          <span class="dropified-icons di-star-1 product-rating-star" rating=2><span class="path1"></span></span>
+                          <span class="dropified-icons di-star-1 product-rating-star" rating=3><span class="path1"></span></span>
+                          <span class="dropified-icons di-star-1 product-rating-star" rating=4><span class="path1"></span></span>
+                          <span class="dropified-icons di-star-1 product-rating-star" rating=5><span class="path1"></span></span>
+                        </div>
+                        <div class="form-group"><span id="count"></span><span> people have voted</span></div>
+                        <div class="form-group" style="text-align: center; width: 100%;">
+                          <label for="review-product-quality">Product Quality</label>
+                          <div id="review-product-quality" class="progress">
+                            <div class="progress-bar progress-bar-success" style="width: 35%" role="progressbar" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
+                          </div>
+                        </div>
+                        <div class="form-group" style="text-align: center; width: 100%;">
+                          <label for="review-label-quality">Label Quality</label>
+                            <div id="review-label-quality" class="progress">
+                              <div class="progress-bar progress-bar-success" style="width: 35%" role="progressbar" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="text-align: center; width: 100%;">
+                          <label for="review-delivery">Delivery</label>
+                          <div id="review-delivery" class="progress">
+                            <div class="progress-bar progress-bar-success" style="width: 35%" role="progressbar" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="tab-pane fade in m-t" id="comments">
+                <div class="panel-body" style="border: none;">
+                  <div id="comment-template" style="display: none;">
+                    <div style="margin-bottom: 20px;">
+                      <div class="fa fa-user neutral-color" style="float: left; font-size: 40px; padding-right: 5px;"></div>
+                      <div style="font-weight: 500;color: black;">
+                        <span id="first_name"></span> <span id="last_name"></span>
+                      </div>
+                      <div style="font-size: large;">
+                        <span class="dropified-icons di-star-1 product-rating-star-user" rating="1"><span class="path1"></span></span>
+                        <span class="dropified-icons di-star-1 product-rating-star-user" rating="2"><span class="path1"></span></span>
+                        <span class="dropified-icons di-star-1 product-rating-star-user" rating="3"><span class="path1"></span></span>
+                        <span class="dropified-icons di-star-1 product-rating-star-user" rating="4"><span class="path1"></span></span>
+                        <span class="dropified-icons di-star-1 product-rating-star-user" rating="5"><span class="path1"></span></span>
+                      </div>
+                      <div id="comment" style="margin-top: 5px;"></div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-xs-12" id="comment-list">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

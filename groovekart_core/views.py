@@ -83,6 +83,7 @@ from .utils import (
     get_store_categories,
 )
 from addons_core.models import Addon
+from product_common.utils import get_order_reviews
 
 
 @login_required
@@ -1061,6 +1062,7 @@ class OrdersTrackList(ListView):
         if not self.request.GET.get('query'):
             context['date'] = self.request.GET.get('date', '{}-'.format(arrow.get(timezone.now()).replace(days=-30).format('MM/DD/YYYY')))
 
+        context['orders'] = get_order_reviews(self.request.user.models_user, context['orders'])
         return context
 
     def get_store(self):

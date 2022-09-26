@@ -924,6 +924,11 @@ li.border-right {
     color: #6baa55;
 }
 
+#product-review-modal .nav-tabs > li > a:hover,
+#product-review-modal .nav-tabs > li > a:focus {
+    color: #1d84c6;
+}
+
 .tabs-container .nav-tabs > li.active > a,
 .tabs-container .nav-tabs > li.active > a:hover,
 .tabs-container .nav-tabs > li.active > a:focus {
@@ -936,6 +941,13 @@ li.border-right {
     padding-top: 10px;
 }
 
+#product-review-modal .tabs-container .nav-tabs > li.active > a,
+#product-review-modal .tabs-container .nav-tabs > li.active > a:hover,
+#product-review-modal .tabs-container .nav-tabs > li.active > a:focus {
+    color: #1d84c6;
+    border-bottom-color: #1d84c6;
+
+}
 .nav.nav-pills {
     padding: 0;
 }
@@ -3131,4 +3143,18 @@ textarea.note {
 #modal-add-all-store-form #select-section .row {
     margin-right: -10px;
     margin-left: -10px;
+}
+
+.progress {
+    width: 100%;
+}
+
+#product-review-modal .comment-box {
+    margin-bottom: 20px;
+}
+
+.multi-color{
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
 }

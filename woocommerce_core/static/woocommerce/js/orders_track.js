@@ -1,6 +1,5 @@
 (function() {
     'use strict';
-
     $('.fulfill-btn').click(function(e) {
         $('#modal-fulfillment #fulfill-order-id').val($(this).attr('order-id'));
         $('#modal-fulfillment #fulfill-line-id').val($(this).attr('line-id'));

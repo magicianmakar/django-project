@@ -89,6 +89,7 @@ from .utils import (
 
 from . import utils
 from addons_core.models import Addon
+from product_common.utils import get_order_reviews
 
 
 @ajax_only
@@ -1639,6 +1640,7 @@ class OrdersTrackList(ListView):
         context['aliexpress_account_count'] = AliexpressAccount.objects.filter(user=self.request.user.models_user).count()
         context['rejected_status'] = ALIEXPRESS_REJECTED_STATUS
 
+        context['orders'] = get_order_reviews(self.request.user.models_user, context['orders'])
         return context
 
     def get_store(self):

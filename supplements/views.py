@@ -37,6 +37,7 @@ from product_common import views as common_views
 from product_common.lib import views as common_lib_views
 from product_common.lib.views import PagingMixin, upload_image_to_aws, upload_object_to_aws
 from product_common.models import ProductImage, ProductSupplier
+from product_common.utils import get_product_reviews
 from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 from shopified_core import permissions
@@ -63,7 +64,6 @@ from supplements.models import (
     UserSupplementImage,
     UserSupplementLabel
 )
-
 from .forms import (
     AllLabelFilterForm,
     BillingForm,
@@ -152,7 +152,7 @@ class Index(common_views.IndexView):
         context['limit_reached'] = not can_add
         context['total_allowed'] = total_allowed
         context['user_count'] = user_count
-
+        context['supplements'] = get_product_reviews(context['supplements'])
         return context
 
 
