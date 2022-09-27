@@ -346,14 +346,16 @@ class ACPPlansView(BaseTemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx['breadcrumbs'].extend(["Plans"])
 
-        plans = GroupPlan.objects.all().order_by('-id')
-        today = datetime.today()
-        thirty_days_ago = today - timedelta(days=30)
-        params = {'timestamp_start': thirty_days_ago, 'timestamp_end': today}
-        ctx['product_updates_logs_count'] = AcpUtils(self.request.user).get_product_updates_logs(params)
-        ctx['product_creation_logs_count'] = AcpUtils(self.request.user).get_suredone_product_creation_logs_count(params)
+        try:
+            today = datetime.today()
+            thirty_days_ago = today - timedelta(days=30)
+            params = {'timestamp_start': thirty_days_ago, 'timestamp_end': today}
+            ctx['product_updates_logs_count'] = AcpUtils(self.request.user).get_product_updates_logs(params)
+            ctx['product_creation_logs_count'] = AcpUtils(self.request.user).get_suredone_product_creation_logs_count(params)
+        except:
+            pass
 
-        ctx['plans'] = plans
+        ctx['plans'] = GroupPlan.objects.all().order_by('-id')
         return ctx
 
 
