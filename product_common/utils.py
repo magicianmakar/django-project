@@ -49,7 +49,7 @@ def get_order_reviews(user, orders):
 def get_product_reviews(supplements):
     supplements_with_reviews = []
     for supplement in supplements:
-        supplement_reviews = PLSReview.objects.filter(pl_supplement=supplement.id)
+        supplement_reviews = PLSReview.objects.filter(pl_supplement=supplement.id).order_by('-id')
         reviews = json.dumps(list(supplement_reviews.exclude(comment="").values(
             'user__first_name', 'user__last_name', 'product_quality_rating', 'label_quality_rating', 'delivery_rating', 'comment')))
         reviews_agg = supplement_reviews.aggregate(
@@ -68,3 +68,21 @@ def get_product_reviews(supplements):
             supplement.count = reviews_agg['count']
         supplements_with_reviews.append(supplement)
     return supplements_with_reviews
+
+
+def get_supplier_reviews(supplier):
+    supplier_ratings = {}
+    supplier_reviews = PLSReview.objects.filter(pl_supplement__supplier__id=supplier.id).order_by('-id')
+    reviews = json.dumps(list(supplier_reviews.exclude(comment="").values(
+        'user__first_name', 'user__last_name', 'product_quality_rating', 'label_quality_rating', 'delivery_rating', 'comment')))
+    reviews_agg = supplier_reviews  .aggregate(
+        count=Count('pl_supplement'),
+        pq_rating=Avg('product_quality_rating'),
+        lq_rating=Avg('label_quality_rating'),
+        dl_rating=Avg('delivery_rating')
+    )
+    if reviews_agg['count'] > 5:
+        supplier_ratings['reviews'] = reviews
+        supplier_ratings['avg_rating'] = round(
+            (reviews_agg['pq_rating'] + reviews_agg['lq_rating'] + reviews_agg['dl_rating']) / 3, 1)
+    return supplier_ratings

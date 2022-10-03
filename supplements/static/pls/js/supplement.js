@@ -70,8 +70,4 @@ $(document).ready(function(){
         history.replaceState("", document.title, window.location.pathname);
     }
 
-    $("#supplier_profile").click(function() {
-        $('#modal-supplier_profile').modal({backdrop: 'static', keyboard: false});
-    });
-
 });

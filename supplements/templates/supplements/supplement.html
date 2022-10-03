@@ -162,7 +162,7 @@
         <div class="col-md-10">
           <label class="col-sm-3 col-xs-12 control-label">Supplier:</label>
           <div class="col-sm-9 col-xs-12">
-            <a id="supplier_profile" href="#">{{ supplier }}</a>
+            <a id="supplier_profile" reviews="{{ review.reviews }}" href="#">{{ supplier }}</a>
           </div>
         </div>
       </div>
@@ -182,7 +182,7 @@
       {% endif %}
     </div>
   </div>
-  {% include "supplements/partials/supplier_profile_modal.html" with supplier=supplier %}
+  {% include "supplements/partials/supplier_profile_modal.html" with supplier=supplier reviews=reviews %}
   {% include "supplements/partials/mockup_images_modal.html" with label_url=label_url approved_label_url=approved_label_url %}
   {% endblock %}
 </div>
@@ -235,5 +235,6 @@ window.plupload_Config = {
 <script type="text/javascript" src="{% static 'pls/js/supplement.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/send_to_store.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/mockup_editor.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/review_modal.js' %}"></script>
 {% endcompress %}
 {% endblock %}
