@@ -299,6 +299,7 @@ def clippingmagic_subscription(request):
         send_email_from_template(
             tpl='shopify_charge.html',
             subject='Dropified Purchase - Shopify Charge',
+            from_email='notifications@dropified.com',
             recipient='support@dropified.com',
             data={
                 'email': user.email,
@@ -405,6 +406,7 @@ def captchacredit_subscription(request):
         send_email_from_template(
             tpl='shopify_charge.html',
             subject='Dropified Purchase - Shopify Charge',
+            from_email='notifications@dropified.com',
             recipient='support@dropified.com',
             data={
                 'email': user.email,
@@ -617,6 +619,7 @@ def callflexcredit_subscription(request):
         send_email_from_template(
             tpl='shopify_charge.html',
             subject='Dropified Purchase - Shopify Charge',
+            from_email='notifications@dropified.com',
             recipient='support@dropified.com',
             data={
                 'email': user.email,
