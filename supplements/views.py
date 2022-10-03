@@ -1266,7 +1266,7 @@ class Order(common_views.OrderView):
 
                     transaction_id = None
                     if order.stripe_transaction_id:
-                        transaction_id, errors = request.user.authorize_net_customer.refund(
+                        transaction_id, errors = order.user.authorize_net_customer.refund(
                             refund.amount - refund.fee + refund.shipping,
                             order.stripe_transaction_id,
                         )

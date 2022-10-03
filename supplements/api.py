@@ -22,7 +22,7 @@ from shopified_core.mixins import ApiResponseMixin
 
 from .lib.image import get_order_number_label
 from .lib.shipstation import create_shipstation_order, send_shipstation_orders
-from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel, BasketItem, PLSupplement
+from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel, BasketItem, PLSupplement, AuthorizeNetCustomer
 from .utils import user_can_download_label
 from .utils.payment import Util, get_shipping, get_shipping_costs
 from .utils.basket import BasketStore
@@ -37,6 +37,7 @@ from my_basket.models import BasketOrderTrack
 from fulfilment_fee.utils import process_sale_transaction_fee
 from basicauth.decorators import basic_auth_required
 from django.utils.decorators import method_decorator
+from supplements.lib.authorizenet import create_customer_profile
 
 
 class SupplementsApi(ApiResponseMixin, View):
@@ -386,6 +387,16 @@ class SupplementsApi(ApiResponseMixin, View):
             line_total=(i.amount * i.quantity) / 100.,
             line_total_string="${:.2f}".format((i.amount * i.quantity) / 100.)
         ) for i in order.order_items.all()]
+
+        try:
+            customer_id = request.user.authorize_net_customer.customer_id
+        except AuthorizeNetCustomer.DoesNotExist:
+            customer_id = create_customer_profile(request.user)
+            auth_net_user = AuthorizeNetCustomer(
+                user=request.user,
+            )
+            auth_net_user.customer_id = customer_id
+            auth_net_user.save()
 
         transaction_status = request.user.authorize_net_customer.status(order.stripe_transaction_id)
 
