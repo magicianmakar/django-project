@@ -397,7 +397,7 @@ class UserProfile(models.Model):
         else:
             return False
 
-    def get_stores(self, request=None, sync=False):
+    def get_stores(self, request=None, sync=True):
         platforms = ['shopify', 'woo', 'chq', 'bigcommerce', 'gear', 'gkart', 'ebay', 'fb', 'google']
 
         onboarded = bool(re.match(f"/({'|'.join(platforms)})?/?$", request.path)) if request else False
