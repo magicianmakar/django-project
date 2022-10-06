@@ -27,8 +27,6 @@ from ebay_core.views import ProfitDashboardView as EBayProfitDashboardView
 from facebook_core.views import ProfitDashboardView as FBProfitDashboardView
 from google_core.views import ProfitDashboardView as GoogleProfitDashboardView
 
-from .context_processors import all_stores
-
 
 class HomePageMixing(TemplateView):
     @method_decorator(login_required)
@@ -159,7 +157,7 @@ class DashboardView(HomePageMixing):
             return view
 
         try:
-            store = all_stores(request)['user_stores']['all'][0]
+            store = request.user.profile.get_stores(request)['all'][0]
         except:
             store = None
 
@@ -180,7 +178,7 @@ class GotoPage(View):
             return self.get_failure_url()
 
         try:
-            stores = all_stores(self.request)['user_stores']['all']
+            stores = request.user.profile.get_stores(self.request)['all']
         except:
             stores = []
 

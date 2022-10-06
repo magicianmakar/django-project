@@ -10,7 +10,6 @@ from django.utils.decorators import method_decorator
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 
-from home.context_processors import all_stores
 from lib.exceptions import capture_exception
 from profits.utils import get_stores
 from shopified_core import permissions
@@ -90,7 +89,7 @@ class ProductDetailView(DetailView):
 
         context['upsell_alerts'] = not self.request.user.can('price_changes.use')
         context['config'] = self.request.user.get_config()
-        context['user_stores'] = all_stores(self.request, do_sync=False)['user_stores']['all']
+        context['user_stores'] = self.request.user.profile.get_stores(self.request, do_sync=False)['all']
 
         context['connected_stores'] = []
         for store in context['user_stores']:
@@ -156,7 +155,8 @@ class VariantsMappingView(DetailView):
         context = super(VariantsMappingView, self).get_context_data(**kwargs)
         product = self.object
         context['product'] = product
-        context['user_stores'] = all_stores(self.request, do_sync=False)['user_stores']['all']
+        context['user_stores'] = self.request.user.profile.get_stores(self.request, do_sync=False)['all']
+
         context['variants'] = product.get_variants_titles() or []
         context['suredone_channels'] = ['fb', 'ebay', 'google']
 
