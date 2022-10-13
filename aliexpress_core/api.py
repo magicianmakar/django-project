@@ -848,6 +848,7 @@ class AliexpressApi(ApiResponseMixin):
 
     def import_shipping_method(self, user, data):
         try:
+            user = user.models_user
             cache_key = f"aliexpress_shipping_method_{data['order']['store']}_{data['order']['order_id']}_{data['order']['order_data']['source_id']}"
             aliexpress_shipping_result = cache.get(cache_key, {})
             if aliexpress_shipping_result:
@@ -861,7 +862,7 @@ class AliexpressApi(ApiResponseMixin):
                 shipping_method = config.get(method_key)
                 if shipping_method:
                     priority_service_list.append(shipping_method)
-            aliexpress_account = AliexpressAccount.objects.filter(user=user.models_user).first()
+            aliexpress_account = AliexpressAccount.objects.filter(user=user).first()
 
             try:
                 variant_title = "/".join(data['order']['order_data']['variant'])
