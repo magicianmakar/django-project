@@ -324,6 +324,12 @@
                                     </div>
                                     {% endif %}
 
+                                    {% if user|can:'logistics.use' %}
+                                    <a class="btn btn-primary pull-right small create-logistics-order" href="#">
+                                        Buy Shipping
+                                    </a>
+                                    {% endif %}
+
                                     <div class="note-panel">
                                         <div class="note-preview">
                                             <span class="note-text multi-line-text-overflow">{{order.notes|default:'' }}</span>
@@ -375,6 +381,7 @@
                                 line-id="{{item.id}}"
                                 order-id="{{order.id}}"
                                 order-data-id="{{ item.order_data_id }}"
+                                raw-order-data-id="{{ item.raw_order_data_id }}"
                                 order-number="{{order.id}}"
                                 line-title="{{item.title}}"
                                 supplier-type="{{item.supplier_type}}"
@@ -683,6 +690,7 @@
 {% include "fb_marketplace/partial/fb_marketplace_product_selector.html" %}
 {% include "supplements/partials/order_details_modal.html" %}
 {% include 'alibaba/partials/orders.html' %}
+{% include "logistics/partials/order_details_modal.html" %}
 {% endblock %}
 
 
@@ -730,6 +738,7 @@
     <script type="text/javascript" src="{% static 'prints/js/track_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'prints/js/place_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'alibaba/js/orders.js' %}"></script>
+    <script type="text/javascript" src="{% static 'logistics/js/shipment.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/bulk_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/order_items.js' %}"></script>
     <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>

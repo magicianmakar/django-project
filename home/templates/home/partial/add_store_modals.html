@@ -276,11 +276,15 @@
                     <div id="upgrade-section" class="tab-pane fade">
                         <div class="row">
                             <div class="col-sm-12">
-                                <div class="middle-box text-center" style="padding-bottom: 40px;">
-                                    <h3 class="font-bold">Your plan doesn't support this store.</h3>
+                                <div class="middle-box text-center" style="padding-top: 0;">
+                                    <h3 class="font-bold">You’ve just discovered a Premium Feature!</h3>
                                     <div class="error-desc">
-                                        Your current plan doesn't allow you to use this store type. Please upgrade your
-                                        plan to start using it.
+                                        {% if request.user.profile.plan.is_free %}
+                                            <p>To unlock all stores & 25+ features you must upgrade your account.</p>
+                                        {% else %}
+                                            <p>To unlock all stores & each of our advanced features you must upgrade your account.</p>
+                                        {% endif %}
+                                        <img src="{% static 'img/upgrade-cog.png' %}" height="200">
                                         <br/><a href="/user/profile#plan" class="btn btn-primary m-t">Upgrade Now</a>
                                     </div>
                                 </div>

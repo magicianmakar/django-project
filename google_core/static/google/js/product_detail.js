@@ -1614,8 +1614,8 @@ $('.parent-product-disconnect').click(function(e) {
         url: api_url('disconnect-parent-product', 'multichannel'),
         type: 'POST',
         data: JSON.stringify({
-            'product': $(this).attr('data-product-id'),
-            'store_type': 'fb',
+            'product': config.product_guid,
+            'store_type': 'google',
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",

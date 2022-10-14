@@ -475,10 +475,10 @@ def product_duplicate(user_id, parent_sku, product_data, store_id):
     try:
         result = FBUtils(user).duplicate_product(product_data, store)
 
-        if not result:
+        if not result or isinstance(result, dict) and result.get('error'):
             store.pusher_trigger(pusher_event, {
                 'success': False,
-                'error': "Something went wrong. Please try again."
+                'error': result.get('error') if result else "Something went wrong. Please try again."
             })
             return
 

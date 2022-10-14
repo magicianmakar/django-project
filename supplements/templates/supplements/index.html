@@ -25,6 +25,7 @@
 
 {% include "product_common/partials/paging.html" %}
 {% include "supplements/partials/limit_reached_modal.html" with title="Product" %}
+{% include "supplements/partials/product_review_modal.html" %}
 {% endblock %}
 
 {% block extrajs %}
@@ -34,5 +35,6 @@
 
 {% compress js %}
 <script type="text/javascript" src="{% static 'pls/js/limit_reached.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/review_modal.js' %}"></script>
 {% endcompress %}
 {% endblock %}

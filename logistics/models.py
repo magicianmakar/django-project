@@ -248,10 +248,10 @@ class Variant(models.Model):
     product = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE)
     title = models.CharField(max_length=512)
     sku = models.CharField(max_length=512)
-    weight = models.DecimalField(decimal_places=3, max_digits=6, default=0, verbose_name='Weight (oz)')
-    length = models.DecimalField(decimal_places=3, max_digits=6, default=0, verbose_name='Length (inches)')
-    width = models.DecimalField(decimal_places=3, max_digits=6, default=0, verbose_name='Width (inches)')
-    height = models.DecimalField(decimal_places=3, max_digits=6, default=0, verbose_name='Height (inches)')
+    weight = models.DecimalField(decimal_places=6, max_digits=12, default=0, verbose_name='Weight (oz)')
+    length = models.DecimalField(decimal_places=6, max_digits=12, default=0, verbose_name='Length (inches)')
+    width = models.DecimalField(decimal_places=6, max_digits=12, default=0, verbose_name='Width (inches)')
+    height = models.DecimalField(decimal_places=6, max_digits=12, default=0, verbose_name='Height (inches)')
 
     def save(self, *args, **kwargs):
         from .utils import unit_to_ounce
@@ -634,13 +634,14 @@ class OrderItem(models.Model):
     quantity = models.IntegerField(default=1)
     is_inventory_tracked = models.BooleanField(default=False)
     title = models.TextField(blank=True, default='')
-    weight = models.DecimalField(decimal_places=3, max_digits=6, default=0, verbose_name='Weight (oz)')
+    weight = models.DecimalField(decimal_places=6, max_digits=12, default=0, verbose_name='Weight (oz)')
     hs_tariff = models.CharField(max_length=32, blank=True, default='')  # hs_code
     country_code = models.CharField(max_length=10, blank=True, default='')
 
     def save(self, *args, **kwargs):
         from .utils import unit_to_ounce
         self.weight = unit_to_ounce(self.weight, self.order.warehouse.user)
+        print('weight', self.weight)
         super().save(*args, **kwargs)
 
     @property

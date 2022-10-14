@@ -191,6 +191,7 @@ class SupplementTestCase(PLSBaseTestCase):
             weight='1',
             label_template_url='http://example.com',
             mockup_type=self.mockup_type,
+            supplier=self.supplier
         )
 
         kwargs = {'supplement_id': new_supplement.id}

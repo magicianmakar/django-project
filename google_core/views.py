@@ -53,6 +53,7 @@ from suredone_core.utils import get_daterange_filters
 
 from .models import GoogleBoard, GoogleOrderTrack, GoogleProduct, GoogleStore, GoogleSupplier
 from .utils import GoogleListPaginator, GoogleOrderListQuery, GoogleUtils, get_store_from_request
+from product_common.utils import get_order_reviews
 
 
 class ProductsList(ListView):
@@ -623,6 +624,7 @@ class OrdersTrackList(ListView):
 
         context['rejected_status'] = ALIEXPRESS_REJECTED_STATUS
 
+        context['orders'] = get_order_reviews(self.request.user.models_user, context['orders'])
         return context
 
     def get_store(self):

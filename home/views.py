@@ -11,12 +11,11 @@ from alibaba_core.utils import get_access_token_url as get_alibaba_access_token_
 from ebay_core.utils import EbayUtils, get_ebay_currencies_list
 from goals.utils import get_dashboard_user_goals
 from leadgalaxy.models import DashboardVideo, DescriptionTemplate, GroupPlan, PriceMarkupRule
-from leadgalaxy.shopify import ShopifyAPI
 from lib.exceptions import capture_message
 from shopified_core import permissions
 from shopified_core.mocks import get_mocked_config_alerts
 from shopified_core.shipping_helper import get_counrties_list
-from shopified_core.utils import last_executed, jwt_encode
+from shopified_core.utils import jwt_encode
 from aliexpress_core.models import AliexpressAccount
 from profit_dashboard.views import index
 from profits.utils import get_store_from_request
@@ -27,8 +26,6 @@ from bigcommerce_core.views import ProfitDashboardView as BigCommerceProfitDashb
 from ebay_core.views import ProfitDashboardView as EBayProfitDashboardView
 from facebook_core.views import ProfitDashboardView as FBProfitDashboardView
 from google_core.views import ProfitDashboardView as GoogleProfitDashboardView
-
-from .context_processors import all_stores
 
 
 class HomePageMixing(TemplateView):
@@ -75,42 +72,6 @@ class HomePageMixing(TemplateView):
         platform_videos = {t[0]: [] for t in DashboardVideo.STORE_TYPES}
         for video in videos:
             platform_videos[video.store_type].append(video)
-
-        plan = user.models_user.profile.plan
-        if plan.is_shopify() and not plan.is_free and not last_executed(f'recurring_charges_check_{user.models_user.id}', 3600):
-            stores = user.profile.get_shopify_stores()
-            if len(stores) == 0:
-                capture_message(
-                    'Shopify Subscription - Missing Stores',
-                    level='warning',
-                    tags={
-                        'user': user.models_user.email,
-                        'store': 'none',
-                        'count': len(stores)
-                    })
-            elif len(stores) > 1:
-                capture_message(
-                    'Shopify Subscription - Many Stores',
-                    level='warning',
-                    tags={
-                        'user': user.models_user.email,
-                        'store': 'none',
-                        'count': len(stores)
-                    })
-            else:
-                try:
-                    charges = ShopifyAPI(stores[0])
-                    if not charges.recurring_charges(active=True):
-                        capture_message(
-                            'Shopify Subscription - Missing Subscription',
-                            level='warning',
-                            tags={
-                                'user': user.models_user.email,
-                                'store': 'none',
-                                'count': len(stores)
-                            })
-                except:
-                    pass
 
         upsell_alerts = False
         if not user.can('price_changes.use'):
@@ -167,6 +128,7 @@ class SettingsPageView(HomePageMixing):
 class DashboardView(HomePageMixing):
     template_name = 'home/dashboard.html'
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.plan.is_research:
             return super().dispatch(request, *args, **kwargs)
@@ -195,7 +157,7 @@ class DashboardView(HomePageMixing):
             return view
 
         try:
-            store = all_stores(request)['user_stores']['all'][0]
+            store = request.user.profile.get_stores(request)['all'][0]
         except:
             store = None
 
@@ -216,7 +178,7 @@ class GotoPage(View):
             return self.get_failure_url()
 
         try:
-            stores = all_stores(self.request)['user_stores']['all']
+            stores = request.user.profile.get_stores(self.request)['all']
         except:
             stores = []
 

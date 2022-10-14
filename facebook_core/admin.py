@@ -24,7 +24,7 @@ class FBStoreAdmin(admin.ModelAdmin):
         'updated_at',
         'store_name',
     )
-    list_filter = ('is_active', 'created_at', 'updated_at', 'user')
+    list_filter = ('is_active', 'created_at', 'updated_at')
     raw_id_fields = ('sd_account', 'user')
     date_hierarchy = 'created_at'
 

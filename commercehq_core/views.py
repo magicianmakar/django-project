@@ -89,6 +89,7 @@ from .utils import (
 
 from . import utils
 from addons_core.models import Addon
+from product_common.utils import get_order_reviews
 
 
 @ajax_only
@@ -841,6 +842,7 @@ class OrdersList(ListView):
 
         products_cache = {}
         orders_cache = {}
+        raw_orders_cache = {}
 
         orders_ids = []
         products_ids = []
@@ -988,6 +990,14 @@ class OrdersList(ListView):
                 bundle_data = []
                 country_code = order['address']['shipping'].get('country')
 
+                if models_user.can('logistics.use'):
+                    logistics_address = chq_customer_address(
+                        order=order,
+                        german_umlauts=german_umlauts,
+                        shipstation_fix=True)[1]
+                else:
+                    logistics_address = None
+
                 if product and product.have_supplier():
                     variant_id = product.get_real_variant_id(variant_id)
                     supplier = product.get_supplier_for_variant(variant_id)
@@ -1049,6 +1059,31 @@ class OrdersList(ListView):
                         mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
                         if not mapped:
                             utils.fix_order_variants(self.store, order, product)
+
+                else:
+                    raw_order_data_id = f"raw_{store.id}_{order['id']}_{line['id']}"
+                    line['raw_order_data_id'] = raw_order_data_id
+                    raw_orders_cache[f"chq_order_{raw_order_data_id}"] = {
+                        'id': '{}_{}_{}'.format(self.store.id, order['id'], line['id']),
+                        'order_name': order['id'],
+                        'title': line['title'],
+                        'quantity': line['quantity'],
+                        'logistics_address': logistics_address,
+                        'order_id': order['id'],
+                        'line_id': line['id'],
+                        'product_id': line['product_id'],
+                        'variants': line.get('variant', {}).get('variant', ''),
+                        'total': safe_float(line['price'], 0.0),
+                        'store': self.store.id,
+                        'is_raw': True,
+                        'order': {
+                            'phone': {
+                                'number': order['address'].get('phone'),
+                                'country': order['address']['shipping'].get('country')
+                            },
+                        },
+                        'is_refunded': line['refunded']
+                    }
 
                 if product:
                     bundles = product.get_bundle_mapping(variant_id)
@@ -1128,6 +1163,7 @@ class OrdersList(ListView):
                     'title': line['title'],
                     'quantity': line['quantity'],
                     'weight': line.get('weight'),
+                    'logistics_address': logistics_address,
                     'shipping_address': customer_address,
                     'shipping_method': line.get('shipping_method'),
                     'order_id': order['id'],
@@ -1197,6 +1233,7 @@ class OrdersList(ListView):
 
         bulk_queue = bool(self.request.GET.get('bulk_queue'))
         caches['orders'].set_many(orders_cache, timeout=86400 if bulk_queue else 21600)
+        caches['orders'].set_many(raw_orders_cache, timeout=86400 if bulk_queue else 21600)
 
         return orders
 
@@ -1603,6 +1640,7 @@ class OrdersTrackList(ListView):
         context['aliexpress_account_count'] = AliexpressAccount.objects.filter(user=self.request.user.models_user).count()
         context['rejected_status'] = ALIEXPRESS_REJECTED_STATUS
 
+        context['orders'] = get_order_reviews(self.request.user.models_user, context['orders'])
         return context
 
     def get_store(self):

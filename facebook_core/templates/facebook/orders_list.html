@@ -412,6 +412,12 @@
                                     </div>
                                     {% endif %}
 
+                                    {% if user|can:'logistics.use' %}
+                                    <a class="btn btn-primary pull-right small create-logistics-order" href="#">
+                                        Buy Shipping
+                                    </a>
+                                    {% endif %}
+
                                     <div class="note-panel">
                                         <div class="note-preview">
                                             <span class="note-text multi-line-text-overflow">{{order.last_note|default:'' }}</span>
@@ -533,6 +539,7 @@
                                 line-id="{{item.id}}"
                                 order-id="{{order.id}}"
                                 order-data-id="{{ item.order_data_id }}"
+                                raw-order-data-id="{{ item.raw_order_data_id }}"
                                 order-number="{{order.id}}"
                                 line-title="{{item.title}}"
                                 supplier-type="{{item.supplier_type}}"
@@ -797,6 +804,7 @@
 {% include "facebook/partial/fb_product_selector.html" %}
 {% include "supplements/partials/order_details_modal.html" %}
 {% include 'alibaba/partials/orders.html' %}
+{% include "logistics/partials/order_details_modal.html" %}
 {% endblock %}
 
 
@@ -851,6 +859,7 @@
     <script type="text/javascript" src="{% static 'prints/js/track_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'prints/js/place_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'alibaba/js/orders.js' %}"></script>
+    <script type="text/javascript" src="{% static 'logistics/js/shipment.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/order_items.js' %}"></script>
     <script src="{% static 'pls/js/pls_payment.js' %}" type="text/javascript"></script>
     <script src="{% static 'libs/bower_components/jquery.steps/build/jquery.steps.js' %}" type="text/javascript"></script>

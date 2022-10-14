@@ -30,7 +30,8 @@ from .models import (
     UserSupplement,
     UserSupplementImage,
     UserSupplementLabel,
-    UserUnpaidOrder
+    UserUnpaidOrder,
+    PLSReview
 )
 
 
@@ -460,3 +461,19 @@ class ShipStationAccountAdmin(admin.ModelAdmin):
         'created_at',
         'updated_at'
     )
+
+
+@admin.register(PLSReview)
+class PLSReviewAdmin(admin.ModelAdmin):
+    list_display = (
+        '__str__',
+        'id',
+        'user',
+        'pl_supplement',
+        'product_quality_rating',
+        'label_quality_rating',
+        'delivery_rating',
+        'created_at',
+        'updated_at'
+    )
+    raw_id_fields = ('user', 'pl_supplement', 'pls_order_line')

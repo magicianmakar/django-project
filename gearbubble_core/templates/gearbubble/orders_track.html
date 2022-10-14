@@ -259,6 +259,7 @@
 {% endcache %}
 
 {% include 'partial/tracking_update_modal.html' with store=store only %}
+{% include 'common/partial/review_modal.html' %}
 
 {% endblock %}
 
@@ -289,6 +290,7 @@
     <script src="{% static 'js/daterangepicker.js' %}" type="text/javascript"></script>
     <script src="{% static 'gearbubble/js/orders_track.js' %}" type="text/javascript"></script>
     <script src="{% static 'gearbubble/js/orders_track_update.js' %}" type="text/javascript"></script>
+    <script src="{% static 'product_common/js/review.js' %}" type="text/javascript"></script>
 {% endcompress %}
 
 {% endblock %}

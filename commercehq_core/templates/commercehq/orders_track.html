@@ -105,6 +105,7 @@
 {% endcache %}
 
 {% include 'partial/tracking_update_modal.html' with store=store use_aliexpress_api=use_aliexpress_api aliexpress_account_count=aliexpress_account_count only %}
+{% include 'common/partial/review_modal.html' %}
 
 {% endblock %}
 
@@ -150,6 +151,7 @@
     <script src="{% static 'prints/js/track_orders.js' %}" type="text/javascript"></script>
     <script src="{% static 'commercehq/js/orders_track.js' %}" type="text/javascript"></script>
     <script src="{% static 'commercehq/js/orders_track_update.js' %}" type="text/javascript"></script>
+    <script src="{% static 'product_common/js/review.js' %}" type="text/javascript"></script>
 {% endcompress %}
 
 {% endblock %}

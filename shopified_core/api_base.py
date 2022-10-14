@@ -568,12 +568,17 @@ class ApiBase(ApiResponseMixin, View):
         return self.post_product_save(request, user, data)
 
     def post_product_save(self, request, user, data):
-        if data.get('store'):
+        if safe_int(data.get('store')):
             store = self.store_model.objects.get(pk=data.get('store'))
             if not user.can('save_for_later.sub', store):
                 raise PermissionDenied()
 
         result = self.helper.product_save(data, user.id, self.target, request)
+        if result:
+            error = result.get('product').get('error')
+            if error:
+                return self.api_error(error, status=500)
+
         return self.api_success(result)
 
     def post_suppliers_mapping(self, request, user, data):

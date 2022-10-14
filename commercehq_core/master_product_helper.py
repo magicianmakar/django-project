@@ -140,10 +140,10 @@ class CommerceHQMasterProductHelper(MasterProductHelperBase):
             'original_url': parsed_data.get('original_url'),
             'vendor': parsed_data.get('vendor'),
             'published': parsed_data.get('published'),
-            'variants_images': parsed_data.get('variants_images'),
-            'variants_sku': parsed_data.get('variants_sku'),
-            'variants': parsed_data.get('variants'),
-            'variants_info': parsed_data.get('variants_info'),
+            'variants_images': parsed_data.get('variants_images') or {},
+            'variants_sku': parsed_data.get('variants_sku') or {},
+            'variants': parsed_data.get('variants') or [],
+            'variants_info': parsed_data.get('variants_info') or {},
             'store': {
                 'name': product.default_supplier.supplier_name,
                 'url': product.default_supplier.supplier_url,
@@ -162,7 +162,7 @@ class CommerceHQMasterProductHelper(MasterProductHelperBase):
         else:
             product_data = self.product.parsed
             variants = product_data.get('variants', [])
-            variants_images = (product_data.get('variants_images') or {}).items()
+            variants_images = (product_data.get('variants_images', {}) or {}).items()
             image_url_by_hash = get_image_url_by_hash(product_data)
 
             titles, values = [], []

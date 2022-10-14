@@ -22,7 +22,7 @@ class FBMarketplaceStoreAdmin(admin.ModelAdmin):
         'is_active',
         'created_at',
     )
-    list_filter = ('is_active', 'created_at', 'updated_at', 'user')
+    list_filter = ('is_active', 'created_at', 'updated_at')
     raw_id_fields = ('user',)
     date_hierarchy = 'created_at'
 

@@ -37,6 +37,7 @@ from product_common import views as common_views
 from product_common.lib import views as common_lib_views
 from product_common.lib.views import PagingMixin, upload_image_to_aws, upload_object_to_aws
 from product_common.models import ProductImage, ProductSupplier
+from product_common.utils import get_product_reviews, get_supplier_reviews
 from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 from shopified_core import permissions
@@ -63,7 +64,6 @@ from supplements.models import (
     UserSupplementImage,
     UserSupplementLabel
 )
-
 from .forms import (
     AllLabelFilterForm,
     BillingForm,
@@ -152,7 +152,7 @@ class Index(common_views.IndexView):
         context['limit_reached'] = not can_add
         context['total_allowed'] = total_allowed
         context['user_count'] = user_count
-
+        context['supplements'] = get_product_reviews(context['supplements'])
         return context
 
 
@@ -515,7 +515,8 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             mockup_layers=supplement.mockup_type.get_layers(),
             total_allowed_label=total_allowed_label,
             label_limit_left=label_limit_left,
-            supplier=supplement.supplier
+            supplier=supplement.supplier,
+            review=get_supplier_reviews(supplement.supplier)
         )
 
         if 'label_url' in form_data:
@@ -744,7 +745,8 @@ class UserSupplementView(Supplement):
             mockup_layers=supplement.pl_supplement.mockup_type.get_layers(),
             comment_form=CommentForm(initial=comment_form_data),
             user_buttons=True,
-            supplier=supplement.pl_supplement.supplier
+            supplier=supplement.pl_supplement.supplier,
+            review=get_supplier_reviews(supplement.pl_supplement.supplier)
         )
 
         if 'label_url' in form_data:
@@ -1266,7 +1268,7 @@ class Order(common_views.OrderView):
 
                     transaction_id = None
                     if order.stripe_transaction_id:
-                        transaction_id, errors = request.user.authorize_net_customer.refund(
+                        transaction_id, errors = order.user.authorize_net_customer.refund(
                             refund.amount - refund.fee + refund.shipping,
                             order.stripe_transaction_id,
                         )

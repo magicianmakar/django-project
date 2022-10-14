@@ -777,3 +777,23 @@ class ShipStationAccount(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class PLSReview(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    pl_supplement = models.ForeignKey(PLSupplement,
+                                      on_delete=models.SET_NULL,
+                                      null=True,
+                                      related_name='pl_review')
+    pls_order_line = models.ForeignKey(PLSOrderLine,
+                                       on_delete=models.SET_NULL,
+                                       null=True)
+    product_quality_rating = models.PositiveSmallIntegerField()
+    label_quality_rating = models.PositiveSmallIntegerField()
+    delivery_rating = models.PositiveSmallIntegerField()
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'<PLSReview: {self.id}>'

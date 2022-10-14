@@ -430,11 +430,14 @@
             </button>
         </div>
         <hr>
+        {% app_setting 'DROPIFIED_ORDERS_URL' as DROPIFIED_ORDERS_URL %}
+        {% if DROPIFIED_ORDERS_URL %}
         <iframe
             id="orders-aliexpress-frm"
-            src="{% app_setting 'DROPIFIED_ORDERS_URL' %}/?token={{ user.get_jwt_access_token }}"
+            src="{{ DROPIFIED_ORDERS_URL }}/?token={{ user.get_jwt_access_token }}"
             style=" width:100%; padding: 0; margin: 0; border: 0px solid #655858cc;">
         </iframe>
+        {% endif %}
     </div>
 </div> <!-- /order-content-list-iframe -->
 

@@ -4,6 +4,24 @@
 <div class="ibox">
   <div class="ibox-content product-box" product-id="{{item.id}}" product-title="{{item.title}}">
     <div class="product-imitation pls">
+      {% if item.avg_rating %}
+        <a class="product-review"
+          avg-rating="{{item.avg_rating}}"
+          reviews="{{item.supplement_reviews}}"
+          pq-rating="{{item.product_quality_rating}}"
+          lq-rating="{{item.label_quality_rating}}"
+          dl-rating="{{item.delivery_rating}}"
+          count="{{item.count}}"
+          >
+          <span class='label review-label label-warning'>
+            <span class="dropified-icons di-star-1">
+              <span class="path1"></span>
+            </span>
+            <span>{{ item.avg_rating }}
+            </span>
+          </span>
+        </a>
+      {% endif %}
       <a href="{{ item.get_url }}" class="limit-reached">
         <img src="{{ item.thumbnail }}">
       </a>

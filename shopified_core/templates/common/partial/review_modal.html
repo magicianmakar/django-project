@@ -1,0 +1,59 @@
+<div id="modal-review" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" style="width: 530px;">
+        <div class="modal-content">
+            <div class="m-t-none modal-header" style="text-align: center;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Rate this product</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="row" style="display:flex;align-items:center;justify-content:start;margin:8px 0;flex-direction:column">
+                        <div class="form-group" style="text-align: center;">
+                            <label for="review-product-quality">Product Quality</label>
+                            <div id="review-product-quality" style="font-size: xxx-large">
+                                <span class="dropified-icons di-star-1 rating-star" rating=1><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-1 rating-star" rating=2><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-1 rating-star" rating=3><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-1 rating-star" rating=4><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-2 rating-star" rating=5><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                            </div>
+                        </div>
+                        <div class="form-group" style="text-align: center;">
+                            <label for="review-label-quality">Label Quality</label>
+                            <div id="review-label-quality" style="font-size: xxx-large">
+                                <span class="dropified-icons di-star-1 rating-star" rating=1><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-1 rating-star" rating=2><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-1 rating-star" rating=3><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-1 rating-star" rating=4><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-2 rating-star" rating=5><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                            </div>
+                        </div>
+                        <div class="form-group" style="text-align: center;">
+                            <label for="review-delivery">Delivery</label>
+                            <div id="review-delivery" style="font-size: xxx-large">
+                                <span class="dropified-icons di-star-1 rating-star" rating=1><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-1 rating-star" rating=2><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-1 rating-star" rating=3><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-1 rating-star" rating=4><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                                <span class="dropified-icons di-star-2 rating-star" rating=5><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <textarea name="review-comment" placeholder="Add your comment" cols="63" rows="7"></textarea>
+                        </div>
+                    </div>
+                    <input type="hidden" id="review-order-id" name="review-order-id">
+                    <input type="hidden" id="review-line-id" name="review-line-id">
+                    <input type="hidden" id="review-store" name="review-store">
+                    <input type="hidden" id="review-product-id" name="review-product-id">
+                    <input type="hidden" id="product-quality-rating" name="product-quality-rating">
+                    <input type="hidden" id="label-quality-rating" name="label-quality-rating">
+                    <input type="hidden" id="delivery-rating" name="delivery-rating">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="review-order-btn" class="btn btn-primary" type="button" style="width:100%;">Rate Product</button>
+            </div>
+        </div>
+    </div>
+</div>

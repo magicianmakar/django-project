@@ -1,6 +1,7 @@
 import arrow
 import json
 import re
+
 from requests.exceptions import HTTPError
 
 from django.core.cache import caches
@@ -19,7 +20,8 @@ from shopified_core.decorators import add_to_class
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import fix_order_data, products_filter, safe_float, safe_int, safe_json, safe_str
 from suredone_core.models import SureDoneAccount
-from suredone_core.utils import SureDoneOrderUpdater, SureDoneUtils, parse_suredone_date, sd_customer_address
+from suredone_core.utils import SureDoneOrderUpdater, SureDoneUtils, parse_suredone_date, sd_customer_address, \
+    SureDonePusher
 
 
 class GoogleUtils(SureDoneUtils):
@@ -633,6 +635,7 @@ class GoogleUtils(SureDoneUtils):
 
         normalized_orders = []
         orders_cache = {}
+        raw_orders_cache = {}
         if isinstance(sd_orders, list):
             for order in sd_orders:
                 norm_item = GoogleOrderItem(self.user, store, order)
@@ -644,9 +647,14 @@ class GoogleUtils(SureDoneUtils):
                         order_data = fix_order_data(self.user, order_data)
                         orders_cache[f'google_order_{order_data_id}'] = order_data
 
+                    raw_order_data = item.get('raw_order_data')
+                    if raw_order_data:
+                        raw_orders_cache[f"fb_order_{item['raw_order_data_id']}"] = raw_order_data
+
                 normalized_orders.append(norm_item)
 
         caches['orders'].set_many(orders_cache, timeout=86400 if filters.get('bulk_queue') else 21600)
+        caches['orders'].set_many(raw_orders_cache, timeout=86400 if filters.get('bulk_queue') else 21600)
 
         return normalized_orders, total_products_count
 
@@ -731,6 +739,18 @@ class GoogleUtils(SureDoneUtils):
         """
         if not self.api:
             return
+
+        pusher_channel = store.pusher_channel()
+        sd_pusher = SureDonePusher(pusher_channel)
+        default_event = 'product-duplicate'
+        create_product_limit_check, product_limit_check, logs_count = self.check_product_create_limit(
+            sd_pusher, default_event)
+
+        if create_product_limit_check == 'Limit Reached':
+            return {
+                'error': f'Your current plan allows up to {product_limit_check} created product(s).'
+                         f' Currently you have {logs_count} created products.'
+            }
 
         # Prepare product_data for SureDone format
         variants = product_data.pop('attributes', {})
@@ -959,14 +979,15 @@ class GoogleOrderItem:
             is_pls = False
             item_id = item.get('sku')
             attributes = ''
+            attr_list = []
 
             if product_variant:
                 var_attributes_keys = self.get_attribute_keys_from_var_config(product_variant)
                 var_attributes_keys = google_utils.convert_to_default_and_custom_fields(var_attributes_keys)
                 if var_attributes_keys:
                     var_data = product_variant.parsed_variant_data
-                    attributes = [var_data.get(key) for key in var_attributes_keys if var_data.get(key)]
-                    attributes = ', '.join(attributes)
+                    attr_list = [var_data.get(key) for key in var_attributes_keys if var_data.get(key)]
+                    attributes = ', '.join(attr_list)
                 supplier = self.get_product_supplier(product_variant)
                 if supplier:
                     is_pls = supplier.is_pls
@@ -1001,9 +1022,19 @@ class GoogleOrderItem:
 
             self.update_placed_orders(current_item, fulfillment_per_sku)
 
+            if self.user.models_user.can('logistics.use'):
+                logistics_address = sd_customer_address(
+                    self.shipping,
+                    self.billing.get('phone'),
+                    german_umlauts=self.user.models_user.get_config('_use_german_umlauts', False),
+                    shipstation_fix=True
+                )
+            else:
+                logistics_address = None
+
             if supplier:
                 # Calculate order data
-                order_data = self.get_order_data(current_item, product_variant, supplier)
+                order_data = self.get_order_data(current_item, product_variant, supplier, logistics_address=logistics_address)
                 order_data.update({
                     'products': [],
                     'is_bundle': False,
@@ -1026,6 +1057,11 @@ class GoogleOrderItem:
                     order_data.update({
                         'weight': weight,
                     })
+            else:
+                raw_order_data = self.get_raw_order_data(current_item, logistics_address)
+                raw_order_data['variants'] = attr_list
+                current_item['raw_order_data'] = raw_order_data
+                current_item['raw_order_data_id'] = f"raw_{raw_order_data['id']}"
 
             self.items.append(current_item)
 
@@ -1068,7 +1104,7 @@ class GoogleOrderItem:
             var_attributes_keys = [i.get('title') for i in variants_config]
         return var_attributes_keys
 
-    def get_order_data(self, item: dict, product: GoogleProductVariant, supplier: GoogleSupplier):
+    def get_order_data(self, item: dict, product: GoogleProductVariant, supplier: GoogleSupplier, logistics_address: dict = None):
         store = self.store
         models_user = self.user.models_user
         aliexpress_fix_address = models_user.get_config('aliexpress_fix_address', True)
@@ -1091,6 +1127,7 @@ class GoogleOrderItem:
             'title': item['title'],
             'quantity': item['quantity'],
             'shipping_address': shipping_address,
+            'logistics_address': logistics_address,
             'order_id': self.id,
             'line_id': item['id'],
             'product_id': product.id,
@@ -1109,6 +1146,28 @@ class GoogleOrderItem:
                 'epacket': bool(models_user.get_config('epacket_shipping')),
                 'aliexpress_shipping_method': models_user.get_config('aliexpress_shipping_method'),
                 'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
+            },
+        }
+
+    def get_raw_order_data(self, item: dict, logistics_address: dict = None):
+        return {
+            'id': f'{self.store.id}_{self.id}_{item["id"]}',
+            'order_name': self.google_order_id,
+            'title': item['title'],
+            'quantity': item['quantity'],
+            'logistics_address': logistics_address,
+            'order_id': self.id,
+            'line_id': item['id'],
+            'total': safe_float(item['price'], 0.0),
+            'store': self.store.id,
+            'product_id': item['product_id'],
+            'variants': [],  # Filled afterwards
+            'is_raw': True,
+            'order': {
+                'phone': {
+                    'number': self.billing.get('phone'),
+                    'country': self.shipping.get('country') or self.billing.get('country'),
+                },
             },
         }
 

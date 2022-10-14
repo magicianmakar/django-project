@@ -5,6 +5,7 @@ import requests
 import simplejson as json
 from pusher import Pusher
 from urllib.parse import urlparse
+from operator import attrgetter
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -156,6 +157,7 @@ class UserProfile(models.Model):
                                                            blank=True, related_name='subuser_fb_marketplace_stores')
 
     stores = models.IntegerField(default=-2)
+    suredone_stores = models.IntegerField(default=-2)
     products = models.IntegerField(default=-2)
     boards = models.IntegerField(default=-2)
     unique_supplements = models.IntegerField(default=-2)
@@ -395,6 +397,42 @@ class UserProfile(models.Model):
         else:
             return False
 
+    def get_stores(self, request=None, sync=True):
+        platforms = ['shopify', 'woo', 'chq', 'bigcommerce', 'gear', 'gkart', 'ebay', 'fb', 'google']
+
+        onboarded = bool(re.match(f"/({'|'.join(platforms)})?/?$", request.path)) if request else False
+
+        stores = {
+            'shopify': list(self.get_shopify_stores()),
+            'chq': list(self.get_chq_stores()),
+            'woo': list(self.get_woo_stores()),
+            'ebay': list(self.get_ebay_stores(do_sync=sync)),
+            'fb': list(self.get_fb_stores(do_sync=sync, include_non_onboarded=onboarded, use_cached=True)),
+            'google': list(self.get_google_stores(do_sync=sync, use_cached=True)),
+            'gear': list(self.get_gear_stores()),
+            'gkart': list(self.get_gkart_stores()),
+            'bigcommerce': list(self.get_bigcommerce_stores()),
+            'fb_marketplace': list(self.get_fb_marketplace_stores()),
+            'all': [],
+            'grouped': {},
+            'type_count': 0,
+        }
+
+        for key, val in stores.items():
+            if key not in ['all', 'type_count'] and len(val):
+                stores['all'].extend(val)
+                stores['type_count'] += 1
+
+        sort_key = 'list_index' if any([v.list_index for v in stores['all']]) else 'created_at'
+        stores['all'] = sorted(stores['all'], key=attrgetter(sort_key))
+        stores['first'] = stores['all'][0] if stores['type_count'] > 0 else None
+
+        for platform in platforms:
+            if len(stores[platform]):
+                stores['grouped'][platform] = stores[platform]
+
+        return stores
+
     def get_shopify_stores(self, flat=False):
         if self.is_subuser:
             stores = self.subuser_stores.filter(is_active=True)
@@ -429,13 +467,14 @@ class UserProfile(models.Model):
         return stores
 
     def get_ebay_stores(self, flat=False, do_sync=False, use_cached=False):
-        if do_sync:
-            # The function is defined in ebay_core.utils.py
-            self.sync_ebay_stores(use_cached=use_cached)
         if self.is_subuser:
             stores = self.subuser_ebay_stores.filter(is_active=True)
         else:
             stores = self.user.ebaystore_set.filter(is_active=True)
+
+        if do_sync and len(stores):
+            # The function is defined in ebay_core.utils.py
+            self.sync_ebay_stores(use_cached=use_cached)
 
         if flat:
             stores = stores.values_list('id', flat=True)
@@ -443,9 +482,7 @@ class UserProfile(models.Model):
         return stores
 
     def get_fb_stores(self, flat=False, do_sync=False, include_non_onboarded=False, use_cached=False):
-        if do_sync:
-            # The function is defined in facebook_core.utils.py
-            self.sync_fb_stores(use_cached=use_cached)
+
         if self.is_subuser:
             stores = self.subuser_fb_stores.filter(is_active=True)
         else:
@@ -454,19 +491,24 @@ class UserProfile(models.Model):
         if not include_non_onboarded:
             stores = stores.exclude(creds__system_token__value=False)
 
+        if do_sync and len(stores):
+            # The function is defined in facebook_core.utils.py
+            self.sync_fb_stores(use_cached=use_cached)
+
         if flat:
             stores = stores.values_list('id', flat=True)
 
         return stores
 
     def get_google_stores(self, flat=False, do_sync=False, use_cached=False):
-        if do_sync:
-            # The function is defined in facebook_core.utils.py
-            self.sync_google_stores(use_cached=use_cached)
         if self.is_subuser:
             stores = self.subuser_google_stores.filter(is_active=True)
         else:
             stores = self.user.googlestore_set.filter(is_active=True)
+
+        if do_sync and len(stores):
+            # The function is defined in facebook_core.utils.py
+            self.sync_google_stores(use_cached=use_cached)
 
         if flat:
             stores = stores.values_list('id', flat=True)
@@ -517,6 +559,15 @@ class UserProfile(models.Model):
 
         return stores
 
+    def get_product_create_limit(self):
+        if self.is_subuser:
+            user = self.subuser_parent
+        else:
+            user = self.user
+        plan = user.profile.get_plan()
+
+        return plan.product_create_limit
+
     def get_installed_addon_titles(self):
         return list(self.addons.values_list('title', flat=True))
 
@@ -532,6 +583,13 @@ class UserProfile(models.Model):
             self.get_gkart_stores().count(),
             self.get_bigcommerce_stores().count(),
             self.get_fb_marketplace_stores().count(),
+        ])
+
+    def get_suredone_stores_count(self):
+        return sum([
+            self.get_ebay_stores().count(),
+            self.get_fb_stores().count(),
+            self.get_google_stores().count(),
         ])
 
     def get_sd_accounts(self, flat=False):
@@ -2351,7 +2409,9 @@ class GroupPlan(models.Model):
     hubspot_title = models.CharField(max_length=512, blank=True, default='')
 
     stores = models.IntegerField(default=0, verbose_name="Stores Limit")
+    suredone_stores = models.IntegerField(default=0, verbose_name="SureDone Channels Limit")
     products = models.IntegerField(default=0, verbose_name="Products Limit")
+    product_create_limit = models.IntegerField(default=10000, verbose_name="Products Create Limit")
     boards = models.IntegerField(default=0, verbose_name="Boards Limit")
     unique_supplements = models.IntegerField(default=0, verbose_name="Unique Supplements Limit")
     user_supplements = models.IntegerField(default=0, verbose_name="User Supplements Limit")

@@ -163,6 +163,8 @@ class Command(DropifiedBaseCommand):
                 self.plan_count[plan.title] += 1
                 self.stores_to_delete.append(store)
 
+        self.stores_to_delete.sort(key=lambda x: x.uninstalled_at)
+
     def load_orders_count(self, stores_filter):
         self.write(f'Load orders count for {len(self.stores_to_delete)} stores')
 

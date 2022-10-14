@@ -172,7 +172,7 @@ def get_description_simplified(description):
 
     for tr in soup.table:
         for row in tr:
-            line = [td.get_text() for td in row]
+            line = [td.get_text() for td in row if type(td) is not str]
             name = line[0]
             value = ' '.join(line[1:])
             desc.append(f'<b>{name}:</b> {value}<br />')

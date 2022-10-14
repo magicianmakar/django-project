@@ -1,11 +1,10 @@
-from datetime import datetime, timedelta
-
 import arrow
 import itertools
 import json
 import re
 import uuid
 from copy import deepcopy
+from datetime import datetime, timedelta
 from pusher import Pusher
 from requests.exceptions import HTTPError
 from tenacity import RetryError, retry, stop_after_attempt, wait_fixed
@@ -339,6 +338,24 @@ class SureDoneUtils:
             else:
                 limit_date = sd_orders[:sd_order_limit][-1].get('date')
         return len(sd_orders), limit_date
+
+    def get_suredone_product_creation_logs_count(self, query_params=None) -> int:
+        """
+        Get all suredone logs
+        :param query_params : extra filtering for getting logs
+        """
+        res = self.api.get_logs(query_params)
+
+        # Extract logs from the SD response,
+        all_logs = res.get('results', []).get('logs', [])
+        if len(all_logs) > 0:
+            suredone_logs = list(filter(lambda log: (log['action'] in ['add']
+                                                     and log['result'] in ['success']
+                                                     and log['context'] in ['suredone']),
+                                        all_logs))
+        else:
+            suredone_logs = []
+        return len(suredone_logs)
 
     def format_filters(self, filter_map: dict) -> str:
         """
@@ -1320,6 +1337,22 @@ class SureDoneUtils:
                 'value': status,  # Can be either 'off' or 'on'
             }]
         })
+
+    def check_product_create_limit(self, sd_pusher, default_event):
+        product_create_limit = self.user.profile.get_product_create_limit()
+        today = datetime.today()
+        thirty_days_ago = today - timedelta(days=30)
+        params = {'timestamp_start': thirty_days_ago, 'timestamp_end': today}
+        logs_count = self.get_suredone_product_creation_logs_count(params)
+        if product_create_limit < 0 or logs_count >= product_create_limit:
+            sd_pusher.trigger(default_event, {
+                'success': False,
+                'error': "Woohoo! 🎉. You are growing and you've hit your account limit for creating products. "
+                         "Upgrade your plan to keep updating your products"
+            })
+            return "Limit Reached", product_create_limit, logs_count
+        else:
+            return "OK", product_create_limit, logs_count
 
 
 class SureDoneAdminUtils:

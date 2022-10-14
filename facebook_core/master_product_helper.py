@@ -137,6 +137,14 @@ class FBMasterProductHelper(MasterProductHelperBase):
     def get_product_mapped_data(self):
         product = self.product
         parsed_data = product.parsed
+        variants_info = {item.get('varianttitle'): {
+            'price': item.get('price'),
+            'compare_at': item.get('compareatprice'),
+            'sku': item.get('suppliersku'),
+            'image': item.get('image'),
+        } for item in self.product.variants_for_details_view}
+        variants_sku = {item.get('varianttitle'): item.get('suppliersku') for item in
+                        self.product.variants_for_details_view}
         data = {
             'title': product.title,
             'description': product.product_description,
@@ -149,10 +157,10 @@ class FBMasterProductHelper(MasterProductHelperBase):
             'original_url': parsed_data.get('originalurl'),
             'vendor': product.default_supplier.supplier_name if product.default_supplier else '',
             'published': product.some_variants_are_connected,
-            'variants_images': parsed_data.get('variants_images'),
-            'variants_sku': parsed_data.get('variants_sku'),
-            'variants': parsed_data.get('variants'),
-            'variants_info': parsed_data.get('variants_info'),
+            'variants_images': {},
+            'variants_sku': variants_sku,
+            'variants': json.loads(self.product.variants_config),
+            'variants_info': variants_info,
             'store': {
                 'name': product.default_supplier.supplier_name,
                 'url': product.default_supplier.supplier_url,
