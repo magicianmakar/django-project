@@ -13,6 +13,7 @@ from django.urls import reverse
 from lib.exceptions import capture_exception
 
 from leadgalaxy import utils
+from profits.utils import get_onboarding_tasks
 from shopified_core.utils import safe_int
 from shopified_core.paginators import SimplePaginator
 from shopified_core.mocks import get_mocked_profits
@@ -63,6 +64,7 @@ def index(request, from_dashboard=False):
         'breadcrumbs': ['Profit Dashboard'],
         'from_dashboard': from_dashboard,
         'base_template': 'base.html' if not request.GET.get('iframe') else 'base_empty.html',
+        'tasks': get_onboarding_tasks(request.user),
     }
     if from_dashboard:
         context['page'] = 'dashboard'

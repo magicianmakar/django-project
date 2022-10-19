@@ -273,3 +273,11 @@ class ProfitsApi(ApiResponseMixin, View):
         access.save()
 
         return JsonResponse({'success': True})
+
+    def post_user_level(self, request, user, data):
+        level = safe_int(data.get('level'))
+        if level:
+            user.profile.onboarding_level = level
+            user.profile.save()
+
+        return JsonResponse({'status': 'ok'})

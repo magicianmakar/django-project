@@ -85,6 +85,7 @@ class ProfitDashboardMixin():
             'show_facebook_connection': self.request.user.get_config('_show_facebook_connection', 'true') == 'true',
             'breadcrumbs': ['Profit Dashboard'],
             'from_dashboard': self.from_dashboard,
+            'tasks': utils.get_onboarding_tasks(self.request.user),
         }
         if self.from_dashboard:
             context['page'] = 'dashboard'

@@ -10,6 +10,10 @@
 
 {% block main-container %}
 
+    {% if from_dashboard %}
+        {% include 'profits/partial/onboarding.html' %}
+    {% endif %}
+
 <div class="tabs-container">
   {% include 'home/partial/tabs/profit_dashboard.html' %}
 

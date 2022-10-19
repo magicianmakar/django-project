@@ -1,0 +1,55 @@
+{% load static %}
+{% load compress %}
+{% load template_helper %}
+
+{% if request.user.profile.onboarding_level < 4 %}
+<div class="row">
+    <div class="col-xs-12 m-b-md onboarding-main-header">
+        <p class="title">Build Your Business With Dropified</p>
+        <p>Below is a short checklist that we recommend in order to give yourself the best chance of success!</p>
+    </div>
+</div>
+{% endif %}
+<div id="onboarding-container"></div>
+
+{% block extracss %}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Archivo:800,900">
+    {% compress css %}
+        <link href="{% static 'onboarding/css/onboarding_container.css' %}" rel="stylesheet">
+    {% endcompress %}
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        var tasks = {% json_dumps tasks %};
+        var level = {{ request.user.profile.onboarding_level }};
+        var level_1 = "{% static 'img/onboarding/level_1.svg' %}";
+        var level_2 = "{% static 'img/onboarding/level_2.svg' %}";
+        var level_3 = "{% static 'img/onboarding/level_3.svg' %}";
+
+        var uncompleted_task = "{% static 'img/onboarding/uncompleted_task.svg' %}";
+
+        var setup_extension = "{% static 'img/onboarding/setup_extension.png' %}";
+        var connect_platform = "{% static 'img/onboarding/connect_platform.png' %}";
+        var import_products = "{% static 'img/onboarding/import_products.png' %}";
+        var get_assistance = "{% static 'img/onboarding/get_assistance.png' %}";
+
+        var send_product = "{% static 'img/onboarding/send_product.png' %}";
+        var process_first_order = "{% static 'img/onboarding/process_first_order.png' %}";
+        var create_bundle = "{% static 'img/onboarding/create_bundle.png' %}";
+        var process_100_orders = "{% static 'img/onboarding/process_100_orders.png' %}";
+
+        var connect_sales_channel = "{% static 'img/onboarding/connect_sales_channel.png' %}";
+        var create_supplement = "{% static 'img/onboarding/create_supplement.png' %}";
+
+        var ali_logo = "{% static 'img/onboarding/ali.svg' %}";
+        var alibaba_logo = "{% static 'img/onboarding/alibaba.svg' %}";
+        var ebay_logo = "{% static 'img/onboarding/ebay.svg' %}";
+        var is_extension_installed = "{{ request.COOKIES.ext_installed }}";
+    </script>
+    <script src="//unpkg.com/react@17.0.1/umd/react.production.min.js"></script>
+    <script src="//unpkg.com/react-dom@17.0.1/umd/react-dom.production.min.js"></script>
+    <script src="//unpkg.com/@babel/standalone@7.15.2/babel.min.js"></script>
+
+    <script type="text/babel" src="{% static 'onboarding/js/react/onboarding_container.jsx' %}"></script>
+{% endblock %}
