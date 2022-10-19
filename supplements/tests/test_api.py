@@ -751,6 +751,7 @@ class BasketTestCase(PLSBaseTestCase):
             'shipping_country': 'US',
             'shipping_state': 'California',
             'shipping_service': 'UPS',
+            'shipping_address': 'true',
         }
 
         with patch('leadgalaxy.models.requests.get',

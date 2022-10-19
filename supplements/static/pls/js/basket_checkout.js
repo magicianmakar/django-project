@@ -61,6 +61,11 @@ function basketMakePayment() {
     if (shippingService) {
         data+='&shipping_service='+shippingService;
     }
+    if ($('#shipping_address').prop('checked') == false ){
+        data+='&shipping_address='+false;
+    } else {
+        data+='&shipping_address='+true;
+    }
 
     $.ajax({
         url: api_url('basket-make-payment', 'supplements'),
@@ -90,6 +95,20 @@ function basketMakePayment() {
     });
 }
 
+$("#shipping_address").click(function () {
+    if ($('#shipping_address').prop('checked') == false ){
+        $('.shipping-form').show();
+        $("input[name=shipping_address_line1]").attr("required", true);
+        $("input[name=shipping_state]").attr("required", true);
+        $("input[name=shipping_zip_code]").attr("required", true);
+    } else {
+        $('.shipping-form').hide();
+        $("input[name=shipping_address_line1]").attr("required", false);
+        $("input[name=shipping_state]").attr("required", false);
+        $("input[name=shipping_zip_code]").attr("required", false);
+    }
+});
+
 $(document).ready(function () {
     'use strict';
 
@@ -98,6 +117,8 @@ $(document).ready(function () {
     });
 
     $('.select-country').trigger('change');
+    $('.shipping-form').hide();
+    $('#shipping_address').prop('checked', true);
 
     $(".basket-checkout").click(function () {
         var country_code = $('#shipping_country').val();
