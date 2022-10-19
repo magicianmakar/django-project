@@ -428,7 +428,12 @@ def product_update(product_id, data):
         r.raise_for_status()
 
         variants = []
+        new_variants = []
         for variant in data.get('variants'):
+            if not variant.get('id'):
+                new_variants.append(variant)
+                continue
+
             info = {
                 'id': variant.get('id'),
                 'price': f'{variant.get("price"):,.2f}',
@@ -449,6 +454,44 @@ def product_update(product_id, data):
         r.raise_for_status()
 
         update_product_images(product, data.get('images', []))
+
+        # prepare and create new variants in store
+        if new_variants:
+            variants = []
+            for variant in new_variants:
+                info = {
+                    'weight': data.get('weight', 0),
+                    'default_on': 0,
+                    'variant_values': {},
+                    'sku': [],
+                }
+
+                image = variant.get('image')
+                if not image and data.get('images', []):
+                    image = data['images'][0]
+
+                for option in variant.get('variant_values', []):
+                    label, value = option.get('label'), option.get('value')
+                    if label == 'Color':
+                        label, value = ('Color', {'variant_group_type': 'color', 'variant_name': value, 'texture': image})
+                    else:
+                        label, value = (label, {'variant_group_type': 'radio', 'variant_name': value})
+                    info['variant_values'][label] = value
+
+                info['price'] = f'{variant.get("price"):,.2f}'
+
+                if variant.get('compare_at_price'):
+                    info['compare_at_price'] = f'{variant.get("compare_at_price"):,.2f}'
+                variants.append(info)
+
+            api_data = {
+                'action': 'add',
+                'product_id': product.source_id,
+                'variants': variants,
+            }
+            variants_endpoint = store.get_api_url('variants.json')
+            r = store.request.post(variants_endpoint, json=api_data)
+            r.raise_for_status()
 
         pusher_data['success'] = True
 

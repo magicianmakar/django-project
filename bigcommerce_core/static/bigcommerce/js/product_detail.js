@@ -6,6 +6,15 @@
 
 var image_cache = {};
 
+/* jshint ignore:start */
+function uuidv4() {
+    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function (c) {
+            return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+        }
+    );
+}
+/* jshint ignore:end */
+
 function showProductInfo(rproduct) {
     product = rproduct;
     if (product) {
@@ -16,7 +25,7 @@ function showProductInfo(rproduct) {
         $('#product-vendor').val(product.vendor);
         $('#product-compare-at').val(product.compare_at_price);
 
-        if (product.variants.length && !config.connected) {
+        if (product.variants && product.variants.length && !config.connected) {
             $.each(product.variants, function(i, el) {
                 var v = $('#variants .variant-simple').clone();
                 v.removeClass('variant-simple');
@@ -75,6 +84,178 @@ function removeVariant(e) {
 
     $(e.target).parent().remove();
 }
+
+$('#modal-add-variant-options .save-add-options').click(function (e) {
+    var options = $('#modal-add-variant-options #product-variant-options').val();
+    if (options) {
+        product.options = options.split(',').map(function(name) {
+            return {id: null, display_name: name, option_values: []};
+        });
+        $('#modal-add-variant-options').modal('hide');
+        $("a.add-new-variant").trigger('click');
+    }
+});
+
+$("a.add-new-variant").click(function (e) {
+    e.preventDefault();
+    if (!product.options.length) {
+        $('#modal-add-variant-options').modal('show');
+        $('#modal-add-variant-options #product-variant-options').tagit({
+            allowSpaces: true,
+            availableTags: ['Color', 'Size'],
+            placeholderText: 'Enter new options',
+        });
+        return;
+    }
+
+    var uuid = uuidv4();
+    product.variants.push({id: uuid, compare_at_price: '', price: '', sku: '', option_values: [], image: ''});
+
+    var row = $('<tr>');
+    row.addClass('bigcommerce-variant');
+    row.attr('variant-id', uuid);
+    row.append(
+        '<td class="add-variant-image">' +
+        '<img class="unveil" src="" data-src="" product="' + uuid + '" style="width:64px;cursor:pointer;"/>' +
+        '<a href="#" class="itooltip add-variant-image">+ Add image</a>' +
+        '</td>');
+
+    var nameCell = $('<td>');
+    nameCell.css('white-space', 'nowrap');
+    row.append(nameCell);
+
+    var displayElement = $('<div>');
+    displayElement.addClass('variant-name');
+    nameCell.append(displayElement);
+
+    displayElement.append(
+        '<span data-name="title"></span>'
+    );
+    displayElement.hide();
+
+    var editElement = $('<div>');
+    editElement.css('display', 'flex');
+    editElement.css('align-items', 'center');
+    editElement.append(
+        '<a href="#" class="itooltip save-variant-name" title="Save" style="margin-right: 8px;">' +
+        '<i class="fa fa-check" style="font-size: 18px;"></i>' +
+        '</a>'
+    );
+    nameCell.append(editElement);
+
+    var el = $('<div>').addClass('editable-variant-name');
+    el.css('display', 'flex');
+    el.css('align-items', 'center');
+    product.options.forEach(function (option) {
+        var select = $('<input>');
+        select.css('margin-right', '10px').addClass('form-control').prop('name', option.display_name).attr('placeholder', option.display_name);
+        el.append(select);
+    });
+    editElement.prepend(el);
+
+    var inputs =
+        '<td><div class="input-group" style="width:120px">' +
+        '<span class="input-group-addon input-sm">$</span>' +
+        '<input type="number" name="price" value="" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" />' +
+        '</div></td>' +
+        '<td><div class="input-group" style="width:120px">' +
+        '<span class="input-group-addon input-sm">$</span>' +
+        '<input type="number" name="compare_at_price" value="" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" />' +
+        '</div></td>' +
+        '<td><input class="var-input form-control" type="text" name="sku" value="" style="border-right:1px solid #ddd;width:120px"/></td>';
+    row.append(inputs);
+    row.append(
+        '<td><a href="#" class="itooltip delete-variant" title="Remove" style="margin-right: 8px;">' +
+        '<i class="fa fa-times" style="font-size: 18px;"></i>' +
+        '</a></td>');
+
+    $('#bigcommerce-variants tbody').append(row);
+});
+
+$('body').on('click', 'tr.bigcommerce-variant td.add-variant-image', function(e) {
+    e.preventDefault();
+    $('#modal-add-variant-image #images-row').empty();
+    product.images.forEach(function(image) {
+        $('#modal-add-variant-image #images-row').append(
+            '<div class="col-xs-3">' +
+            '<img src="'+ image + '" data-src="'+ image + '" class="unveil add-variant-image-block" />' +
+            '</div>'
+        );
+    });
+    $('#modal-add-variant-image').attr('variant-id', $(this).closest('tr').attr('variant-id'));
+    $('#modal-add-variant-image').modal('show');
+});
+
+$('#modal-add-variant-image').on('click', '.add-variant-image-block', function(e) {
+    var id = $('#modal-add-variant-image').attr('variant-id');
+    var img = $('#bigcommerce-variants tr[variant-id="' + id + '"]').find('.add-variant-image img');
+    img.attr('src', $(this).prop('src'));
+    img.data('src', $(this).prop('src'));
+    if (img.next()) {
+        img.next().remove();
+    }
+    var variant = product.variants.find(function (item) {
+        if (item.id === id) {
+            return item;
+        }
+    });
+    variant.image = $(this).prop('src');
+    $('#modal-add-variant-image').modal('hide');
+});
+
+$('body').on('click', 'tr.bigcommerce-variant .delete-variant', function(e) {
+    e.preventDefault();
+
+    var id = $(this).parent().parent().attr('variant-id');
+    product.variants = product.variants.filter(function(item) {
+        if (item.id !== id) {
+            return item;
+        }
+    });
+    $(this).parent().parent().remove();
+});
+
+$('body').on('click', 'tr.bigcommerce-variant .save-variant-name', function(e) {
+    e.preventDefault();
+
+    var el = $(this).prev();
+    var editElement = $(this).parent();
+    var displayElement = $(this).parent().prev();
+
+    var row = $(this).parent().parent().parent();
+    var variant = {variant: []};
+    var id = +row.attr('variant-id');
+    if (isNaN(id)) {
+        id = row.attr('variant-id');
+    }
+    variant = product.variants.find(function (item) {
+        if (item.id === id) {
+            return item;
+        }
+    });
+
+    variant.option_values = [];
+    variant.sku = '';
+    editElement.find('input').each(function() {
+        var value = $(this).val();
+        if (value) {
+            variant.option_values.push({option_display_name: $(this).attr('name'), label: value});
+            if (variant.sku) {
+                variant.sku += ' | ' + $(this).attr('name') + ': ' + value;
+            } else {
+                variant.sku = config.product_id + ' | ' + $(this).attr('name') + ': ' + value;
+            }
+        }
+    });
+
+    displayElement.find('span').text(variant.sku);
+
+    displayElement.show();
+    el.remove();
+    editElement.hide();
+
+    row.find('input[name="sku"]').val(variant.sku);
+});
 
 $('#product-export-btn').click(function (e) {
     e.preventDefault();
@@ -171,14 +352,19 @@ $('#product-update-btn').click(function (e) {
 
         'variants': [],
         'images': product.images,
+        'options': [],
     };
 
     if (product.variants.length > 0) {
         $('#bigcommerce-variants tr.bigcommerce-variant').each(function(j, tr) {
 
-            var variant_data = {
-                id: parseInt($(tr).attr('variant-id'))
-            };
+            var variant_data = {};
+            var id = +$(tr).attr('variant-id');
+            if (!isNaN(id)) {
+                variant_data.id = parseInt($(tr).attr('variant-id'));
+            } else {
+                id = $(tr).attr('variant-id');
+            }
 
             var attrs = [
                 'price', 'compare_at_price', 'sku'
@@ -194,6 +380,30 @@ $('#product-update-btn').click(function (e) {
                     variant_data[att] = att_val;
                 } else {
                     variant_data[att] = '';
+                }
+            });
+
+            var variant = product.variants.find(function(item) {
+                if (item.id === id) {
+                    return item;
+                }
+            });
+
+            if (variant) {
+                variant_data.option_values = variant.option_values;
+                variant_data.image = variant.image;
+            }
+
+            variant.option_values.forEach(function(option, index) {
+                var optionValues = product.options[index].option_values.map(function(value) {
+                    return value.label;
+                });
+                if (!optionValues.includes(option.label)) {
+                    api_data.options.push({
+                        option_id: product.options[index].id,
+                        label: option.label,
+                        display_name: option.option_display_name
+                    });
                 }
             });
 

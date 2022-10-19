@@ -161,6 +161,7 @@
                                                             <th>SKU</th>
                                                             <th>Stock</th>
                                                             <th>Weight</th>
+                                                            <th></th>
                                                         </tr>
                                                         </thead>
                                                         <tbody>
@@ -181,7 +182,27 @@
                                                                     {% endif %}
                                                                 </td>
                                                                 <td style="white-space:nowrap">
-                                                                    <span>{{ variant_item.varianttitle|safe|truncatechars:60 }}</span>
+                                                                    <div class="variant-name">
+                                                                        <span>{{ variant_item.varianttitle|safe|truncatechars:60 }}</span>
+                                                                    </div>
+                                                                    <div style="display: none;">
+                                                                        <a href="#"
+                                                                           class="itooltip save-variant-name"
+                                                                           title="Save"
+                                                                           style="margin-right: 8px;"
+                                                                        >
+                                                                            <i class="fa fa-check"
+                                                                               style="font-size: 18px;"></i>
+                                                                        </a>
+                                                                        <a href="#"
+                                                                           class="itooltip cancel-variant-name"
+                                                                           title="Cancel"
+                                                                           style="margin-right: 8px;"
+                                                                        >
+                                                                            <i class="fa fa-times"
+                                                                               style="font-size: 18px;"></i>
+                                                                        </a>
+                                                                    </div>
                                                                 </td>
 
                                                                 <td>
@@ -250,6 +271,12 @@
                                                         {% endfor %}
                                                         </tbody>
                                                     </table>
+                                                </div>
+                                                <div>
+                                                    <div class="col-xs-12" style="margin: 10px 0;text-align: right">
+                                                        <a href="#" class="btn btn-success btn-xs add-new-variant">Add
+                                                            New Variant</a>
+                                                    </div>
                                                 </div>
                                                 <div id="variants" class="row" style="margin:5px 0 10px 0;padding: 20px 0 0; {% if product.some_variants_are_connected %}display:none{% endif %}">
 
@@ -975,6 +1002,47 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline btn-default" data-dismiss="modal">Close</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-variant-image" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Select Image</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="row" id="images-row">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-add-variant-options" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Add Variation Options</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <p>Choose which options this product varies on (eg. Color), or type in a custom option.</p>
+                            <input type="text" class="form-control" id="product-variant-options" placeholder="Enter new options">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary save-add-options">Save</button>
+                <button type="button" class="btn btn-outline btn-default cancel-add-options" data-dismiss="modal">Cancel</button>
+              </div>
             </div>
         </div>
     </div>

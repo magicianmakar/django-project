@@ -440,12 +440,33 @@ def product_update(product_id, data):
             if textarea['name'] == 'Description':
                 p['textareas'][idx]['text'] = data['description']
 
+        p['is_multi'] = len(data.get('variants', [])) > 0
+
         for idx, variant in enumerate(p.get('variants', [])):
             for v in data['variants']:
-                if v['id'] == variant['id']:
+                if v.get('id') == variant.get('id'):
                     p['variants'][idx]['price'] = v['price']
                     p['variants'][idx]['compare_price'] = v['compare_price']
                     p['variants'][idx]['sku'] = v['sku']
+                    p['variants'][idx]['variant'] = v['variant']
+
+        # prepare new variants
+        new_variants = []
+        for idx, v in enumerate(data['variants']):
+            if not v.get('id'):
+                new_variants.append({
+                    'default': idx == 0,
+                    'price': v['price'],
+                    'compare_price': v['compare_price'],
+                    'shipping_weight': p['shipping_weight'],
+                    'variant': v['variant'],
+                    'images': [v['image']] if v.get('image') else [],
+                    'sku': v['sku'],
+                })
+        if p.get('variants', []):
+            p['variants'] += new_variants
+        else:
+            p['variants'] = new_variants
 
         product_images = [j['path'] for j in p['images']]
         variant_images = []
@@ -529,6 +550,28 @@ def product_update(product_id, data):
             for j, thumb in enumerate(option['thumbnails']):
                 if type(thumb.get('image')) is dict:
                     p['options'][i]['thumbnails'][j]['image'] = thumb['image']['id']
+
+        for i, option in enumerate(data.get('options', [])):
+            for j, thumb in enumerate(option['thumbnails']):
+                if type(thumb.get('image')) is dict:
+                    data['options'][i]['thumbnails'][j]['image'] = thumb['image']['id']
+
+        variant_options = p.get('options', [])
+        new_variant_options = data.get('options', [])
+
+        # check if any variants options were added or deleted
+        is_changed = len(variant_options) != len(new_variant_options) or not all(
+            x in new_variant_options for x in variant_options)
+        if not is_changed:
+            for option in new_variant_options:
+                old_option = next(
+                    (item for item in variant_options if item.get('title') == option.get('title')), None)
+                if not old_option or sorted(old_option.get('values')) != sorted(old_option.get('values')):
+                    is_changed = True
+                    break
+
+        if is_changed:
+            p['options'] = data.get('options', [])
 
         rep = store.request.patch(
             url='{}/{}'.format(store.get_api_url('products'), product.source_id),

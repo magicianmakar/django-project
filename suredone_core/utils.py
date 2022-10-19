@@ -396,7 +396,7 @@ class SureDoneUtils:
         return media_links
 
     def update_product_details(self, updated_product_data: dict, store_type: str, store_instance_id: int,
-                               old_product_data=None, skip_all_channels=False):
+                               old_product_data=None, skip_all_channels=False, variants_config=None):
         """
         Updates the product on SureDone. If the old_product_data param is provided, it verifies that no variations
         got deleted via UI. If some variation got deleted this function will also delete the deleted variations from
@@ -423,7 +423,9 @@ class SureDoneUtils:
             product_data.update(skip_channels_config)
 
         # Step 1: Get variants
-        variants = product_data.pop('variants', [])
+        all_variants = product_data.pop('variants', [])
+        variants = [variant for variant in all_variants if variant.get('guid')]
+        new_variants = [variant for variant in all_variants if not variant.get('guid')]
         total_new_variants_count = len(variants) if variants else 1
 
         # Step 2: Verify that no variations got deleted, handle if any got deleted, then split into per-variant data
@@ -462,6 +464,43 @@ class SureDoneUtils:
         # Case 3: The new number of the variants is the same as before
         else:
             data_per_variant = self.generate_data_per_variant(product_data, variants)
+
+        # prepare and create new variants in store
+        if new_variants:
+            if variants_config is None:
+                variants_config = []
+            for variant in new_variants:
+                var_config = variant.pop('variantsconfig', [])
+                for item in var_config:
+                    option_idx = next((idx for idx, option in enumerate(variants_config)
+                                       if option.get('title') == item.get('label').lower()), None)
+                    if option_idx is not None:
+                        if item.get('value') not in variants_config[option_idx]['values']:
+                            variants_config[option_idx]['values'].append(item.get('value'))
+                    else:
+                        variants_config.append({
+                            'title': item.get('label').lower(),
+                            'values': [item.get('value')]
+                        })
+                for config in var_config:
+                    variant[config['label']] = config['value']
+                variant['sku'] = data_per_variant[0]['guid']
+                variant['guid'] = f"{data_per_variant[0]['guid'].split('-')[0]}-{len(data_per_variant) + 1}"
+
+            new_data_per_variant = self.generate_data_per_variant(product_data, new_variants)
+
+            # assign new variant options/option values if were added
+            for variant in data_per_variant + new_data_per_variant:
+                variant['variantsconfig'] = variants_config
+            api_request_data = self.transform_variant_data_into_sd_list_format(new_data_per_variant)
+            api_response = self.api.add_products_bulk(api_request_data, skip_all_channels)
+
+            # If the product was not successfully posted
+            if not api_response.get('result') != 'success':
+                capture_message('Error creating new variants', extra={
+                    'error': api_response.get('message'),
+                    'sd_account_id': self.sd_account.id
+                })
 
         # Step 3: Transform data into array-based data
         # Exclude 'sku' field in the final request to SureDone because the field is readonly

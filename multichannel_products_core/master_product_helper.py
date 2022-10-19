@@ -140,14 +140,16 @@ class MasterProductHelperBase:
         child_variants = self.get_variants()
         mapping = {} if overwrite else self.product.get_master_variants_map()
         if not overwrite:
-            for key in mapping.keys():
+            for key in list(mapping.keys()):
                 if key not in [item.get('title') for item in child_variants]:
                     del mapping[key]
 
         for variant in child_variants:
             if not mapping.get(variant.get('title')):
                 related_master_variant = next(
-                    (item.get('title') for item in parent.variants_data if item.get('title') == variant.get('title')),
+                    (item.get('title') for item in parent.variants_data if
+                     item.get('title') == variant.get('title') or item.get('title') in variant.get(
+                         'title') or variant.get('title') in item.get('title')),
                     None)
                 mapping[variant.get('title')] = related_master_variant
         self.product.set_master_variants_map(mapping)

@@ -4,6 +4,15 @@
 (function(config, product) {
 'use strict';
 
+/* jshint ignore:start */
+function uuidv4() {
+    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function (c) {
+            return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+        }
+    );
+}
+/* jshint ignore:end */
+
 function showProductInfo(rproduct) {
     product = rproduct;
     if (product) {
@@ -14,7 +23,7 @@ function showProductInfo(rproduct) {
         $('#product-vendor').val(product.vendor);
         $('#product-compare-at').val(product.compare_at_price);
 
-        if (product.variants.length) {
+        if (product.variants && product.variants.length) {
             $.each(product.variants, function(i, el) {
                 var v = $('#variants .variant-simple').clone();
                 v.removeClass('variant-simple');
@@ -221,6 +230,218 @@ function removeVariant(e) {
     $(e.target).parent().remove();
 }
 
+$('#modal-add-variant-options .save-add-options').click(function (e) {
+    var options = $('#modal-add-variant-options #product-variant-options').val();
+    if (options) {
+        config.shopify_options = options.split(',').map(function(name) {
+            return {name: name, values: []};
+        });
+        $('#modal-add-variant-options').modal('hide');
+        $("a.add-new-variant").trigger('click');
+    }
+});
+
+$("a.add-new-variant").click(function (e) {
+    e.preventDefault();
+    if (!config.shopify_options.length) {
+        $('#modal-add-variant-options').modal('show');
+        $('#modal-add-variant-options #product-variant-options').tagit({
+            allowSpaces: true,
+            availableTags: ['Color', 'Size'],
+            placeholderText: 'Enter new options',
+        });
+        return;
+    }
+
+    var uuid = uuidv4();
+    var newVariant = {
+        id: uuid,
+        compare_at_price: '',
+        price: '',
+        sku: '',
+        option1: '',
+        option2: '',
+        option3: '',
+        title: '',
+        weight_unit: 'lb',
+        weight: 0.0,
+        image: ''
+    };
+    product.product.variants.push(newVariant);
+
+    var row = $('<tr>');
+    row.addClass('shopify-variant');
+    row.attr('variant-id', uuid);
+    row.append(
+        '<td class="add-variant-image">' +
+        '<img class="unveil" src="" data-src="" product="' + uuid + '" style="width:64px;cursor:pointer;"/>' +
+        '<a href="#" class="itooltip add-variant-image">+ Add image</a>' +
+        '</td>');
+
+    var nameCell = $('<td>');
+    nameCell.css('white-space', 'nowrap');
+    nameCell.append(
+        '<input type="hidden" name="variant" value="' + newVariant.id + '">' +
+        '<input type="hidden" name="option1" value="' + newVariant.option1 + '">' +
+        '<input type="hidden" name="option2" value="' + newVariant.option2 + '">' +
+        '<input type="hidden" name="option3" value="' + newVariant.option3 + '">' +
+        '<input type="hidden" name="title" value="' + newVariant.title + '">' +
+        '<input type="hidden" name="image" value="' + newVariant.image + '">'
+    );
+    row.append(nameCell);
+
+    var displayElement = $('<div>');
+    displayElement.addClass('variant-name');
+    nameCell.append(displayElement);
+
+    displayElement.append(
+        '<span data-name="title"></span>'
+    );
+    displayElement.hide();
+
+    var editElement = $('<div>');
+    editElement.css('display', 'flex');
+    editElement.css('align-items', 'center');
+    editElement.append(
+        '<a href="#" class="itooltip save-variant-name" title="Save" style="margin-right: 8px;">' +
+        '<i class="fa fa-check" style="font-size: 18px;"></i>' +
+        '</a>'
+    );
+    nameCell.append(editElement);
+
+    var el = $('<div>').addClass('editable-variant-name');
+    el.css('display', 'flex');
+    el.css('align-items', 'center');
+    config.shopify_options.forEach(function (option) {
+        var select = $('<input>');
+        select.css('margin-right', '10px').addClass('form-control').prop('name', option.name).attr('placeholder', option.name);
+        el.append(select);
+    });
+    editElement.prepend(el);
+
+    var inputs =
+        '<td><div class="input-group" style="width:120px">' +
+        '<span class="input-group-addon input-sm">$</span>' +
+        '<input type="number" name="price" value="" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" />' +
+        '</div></td>' +
+        '<td><div class="input-group" style="width:120px">' +
+        '<span class="input-group-addon input-sm">$</span>' +
+        '<input type="number" name="compare_at_price" value="" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" />' +
+        '</div></td>' +
+        '<td><input class="form-control" type="text" name="sku" value="" style="border-right:1px solid #ddd;"/></td>' +
+        '<td style="white-space:nowrap"><input class="form-control" type="number" name="weight" value="' + newVariant.weight +'" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" style="display:inline-block;width:100px;">' +
+        '<select class="form-control" name="weight_unit" style="width:65px;display:inline-block;">';
+
+    var weight_unit_array = ['g', 'kg', 'oz', 'lb'];
+    var weight_unit_str = '';
+    for (var unit in weight_unit_array) {
+        if (newVariant.weight_unit === weight_unit_array[unit]) {
+            weight_unit_str += '<option selected="selected" value="' + newVariant.weight_unit + '">' + newVariant.weight_unit + '</option>';
+        } else {
+            weight_unit_str += '<option value="' + weight_unit_array[unit] + '">' + weight_unit_array[unit] + '</option>';
+        }
+    }
+    inputs = inputs + weight_unit_str + '</select></td>' + '</tr>';
+
+    row.append(inputs);
+    row.append(
+        '<td><a href="#" class="itooltip delete-variant" title="Remove" style="margin-right: 8px;">' +
+        '<i class="fa fa-times" style="font-size: 18px;"></i>' +
+        '</a></td>');
+
+    $('#shopify-variants tbody').append(row);
+});
+
+$('body').on('click', 'tr.shopify-variant td.add-variant-image', function(e) {
+    e.preventDefault();
+    $('#modal-add-variant-image #images-row').empty();
+    product.images.forEach(function(image) {
+        $('#modal-add-variant-image #images-row').append(
+            '<div class="col-xs-3">' +
+            '<img src="'+ image + '" data-src="'+ image + '" class="unveil add-variant-image-block"/>' +
+            '</div>'
+        );
+    });
+    $('#modal-add-variant-image').attr('variant-id', $(this).closest('tr').attr('variant-id'));
+    $('#modal-add-variant-image').modal('show');
+});
+
+$('#modal-add-variant-image').on('click', '.add-variant-image-block', function(e) {
+    var id = $('#modal-add-variant-image').attr('variant-id');
+    var img = $('#shopify-variants tr[variant-id="' + id + '"]').find('.add-variant-image img');
+    img.attr('src', $(this).prop('src'));
+    img.data('src', $(this).prop('src'));
+    if (img.next()) {
+        img.next().remove();
+    }
+    var variant = product.product.variants.find(function (item) {
+        if (item.id === id) {
+            return item;
+        }
+    });
+    variant.image = $(this).prop('src');
+    $('#modal-add-variant-image').modal('hide');
+});
+
+$('body').on('click', 'tr.shopify-variant .delete-variant', function(e) {
+    e.preventDefault();
+
+    var id = $(this).parent().parent().attr('variant-id');
+    product.product.variants = product.product.variants.filter(function(item) {
+        if (item.id !== id) {
+            return item;
+        }
+    });
+    $(this).parent().parent().remove();
+});
+
+$('body').on('click', 'tr.shopify-variant .save-variant-name', function(e) {
+    e.preventDefault();
+
+    var el = $(this).prev();
+    var editElement = $(this).parent();
+    var displayElement = $(this).parent().prev();
+
+    var row = $(this).parent().parent().parent();
+    var id = +row.attr('variant-id');
+    if (isNaN(id)) {
+        id = row.attr('variant-id');
+    }
+    var variant = product.product.variants.find(function (item) {
+        if (item.id === id) {
+            return item;
+        }
+    });
+
+    var title = '';
+    editElement.find('input').each(function(index) {
+        var value = $(this).val();
+        var name = $(this).attr('name');
+        if (value) {
+            config.shopify_options = config.shopify_options.map(function (item) {
+                if (item.name === name && !item.values.includes(value)) {
+                    item.values.push(value);
+                }
+                return item;
+            });
+            variant['option' + (index + 1)] = value;
+            displayElement.parent().find('input[name="option' + (index + 1) + '"]').val(value);
+            if (title) {
+                title += ' / ' + value;
+            } else {
+                title = value;
+            }
+        }
+    });
+    variant.title = title;
+    displayElement.parent().find('input[name="title"]').val(title);
+    displayElement.find('span').text(title);
+
+    displayElement.show();
+    el.remove();
+    editElement.hide();
+});
+
 function productExported(data, target, btn) {
     if ('product' in data) {
         if (data.product.data) {
@@ -312,7 +533,7 @@ $('#export-btn').click(function () {
         "published": $('#product-visible')[0].checked,
         "tags": $('#product-tag').val(),
         "variants": [],
-        "options": [],
+        "options": config.shopify_options,
         "images" :[]
       }
     };
@@ -448,9 +669,13 @@ $('#export-btn').click(function () {
     } else {
         $('#shopify-variants tr.shopify-variant').each(function(j, tr) {
 
-            var variant_data = {
-                id: $(tr).attr('variant-id')
-            };
+            var variant_data = {};
+            var id = +$(tr).attr('variant-id');
+            if (!isNaN(id)) {
+                variant_data.id = parseInt($(tr).attr('variant-id'));
+            } else {
+                id = $(tr).attr('variant-id');
+            }
 
             var attrs = [
                 'option1', 'option2', 'option3', 'title', 'weight_unit',
@@ -469,6 +694,16 @@ $('#export-btn').click(function () {
                     variant_data[att] = '';
                 }
             });
+
+            var variant = product.product.variants.find(function(item) {
+                if (item.id === id) {
+                    return item;
+                }
+            });
+
+            if (variant) {
+                variant_data.image = variant.image;
+            }
 
             api_data.product.variants.push(variant_data);
         });

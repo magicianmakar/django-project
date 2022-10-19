@@ -24,7 +24,7 @@ from shopified_core.utils import (
     http_exception_response,
     http_excption_status_code,
     get_fileext_from_url,
-    safe_str
+    safe_str,
 )
 from .models import WooStore, WooProduct, WooSupplier
 from .utils import (
@@ -296,8 +296,29 @@ def product_update(product_id, data):
         api_data = add_store_tags_to_api_data(api_data, store, data.get('tags', []))
         api_data = update_product_images_api_data(api_data, data)
 
-        variants_data = data.get('variants', [])
-        if variants_data:
+        # create new variant options/option values if were added
+        attributes = api_data.get('attributes', [])
+        new_variants = [variant for variant in data.get('variants', []) if not variant.get('id')]
+        for variant in new_variants:
+            for option in variant.get('option_values', []):
+                attribute_id = next(
+                    (attribute.get('id') for attribute in attributes if attribute.get('name') == option.get('label')),
+                    None)
+                if not attribute_id:
+                    attribute = {
+                        'position': len(attributes) + 1,
+                        'variation': True,
+                        'name': option.get('label'),
+                        'options': [option.get('value')]
+                    }
+
+                    if api_data.get('attributes', []):
+                        api_data['attributes'].append(attribute)
+                    else:
+                        api_data['attributes'] = [attribute]
+
+        variants_data = [variant for variant in data.get('variants', []) if variant.get('id')]
+        if data.get('variants', []):
             api_data['type'] = 'variable'
 
         r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).put('products/{}'.format(product.source_id), api_data)
@@ -311,6 +332,34 @@ def product_update(product_id, data):
             variants = update_variants_api_data(variants_data)
             path = 'products/%s/variations/batch' % product.source_id
             r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post(path, {'update': variants})
+            r.raise_for_status()
+
+        # prepare and create new variants in store
+        for variant in new_variants:
+            if variant.get('compare_at_price'):
+                variant['regular_price'] = str(variant['compare_at_price'])
+                variant['sale_price'] = str(variant['price'])
+            else:
+                variant['regular_price'] = str(variant['price'])
+
+            descriptions = []
+            variant['attributes'] = []
+            for option in variant.get('option_values', []):
+                descriptions.append('{}: {}'.format(option.get('label'), option.get('value')))
+                attribute_id = next((attribute.get('id') for attribute in attributes if attribute.get('name') == option.get('label')), None)
+                if attribute_id:
+                    variant['attributes'].append({'id': attribute_id, 'option': option.get('value')})
+                else:
+                    variant['attributes'].append({'name': option.get('label'), 'option': option.get('value')})
+            variant['description'] = ' | '.join(descriptions)
+
+            if variant.get('image'):
+                variant['image'] = {'src': variant.get('image')}
+            elif api_data.get('images'):
+                variant['image'] = api_data['images'][0]
+
+            path = 'products/%s/variations' % product.source_id
+            r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post(path, variant)
             r.raise_for_status()
 
         store.pusher_trigger('product-update', {

@@ -38,8 +38,8 @@
         $.fn.bootstrapTooltip = $.fn.tooltip.noConflict();
 
         var product_id = {{product.id}};
-        var connected_stores = {{ connected_stores|safe }};
-        var master_variants = {{ variants|safe }};
+        var connected_stores = {% json_dumps connected_stores %};
+        var master_variants = {% json_dumps variants %}
     </script>
 
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>

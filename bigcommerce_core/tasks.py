@@ -297,7 +297,10 @@ def product_update(product_id, data):
         deleted_images = get_deleted_product_images(api_data, data)
         api_data = update_product_api_data(api_data, data)
         api_data = update_product_images_api_data(api_data, data)
-        api_data['variants'] = update_variants_api_data(api_data.get('variants', []), data.get('variants', []))
+
+        # filter out already existing variants
+        variants = [variant for variant in data.get('variants', []) if variant.get('id')]
+        api_data['variants'] = update_variants_api_data(api_data.get('variants', []), variants)
 
         r = store.request.put(
             url=store.get_api_url('v3/catalog/products/%s' % product.source_id),
@@ -306,8 +309,87 @@ def product_update(product_id, data):
         r.raise_for_status()
         product.source_id = r.json()['data']['id']
 
+        # filter out new variants
+        new_variants = [variant for variant in data.get('variants', []) if not variant.get('id')]
+
+        # create new variant options/option values if were added
+        new_options = data.get('options')
+        for option in new_options:
+            if not option.get('option_id'):
+                r = store.request.post(
+                    url=store.get_api_url(
+                        f'v3/catalog/products/{product.source_id}/options'),
+                    json={
+                        'display_name': option.get('display_name'),
+                        'type': 'rectangles',
+                        'option_values': [{
+                            "label": option.get('label'),
+                            "sort_order": 0,
+                        }],
+                        'sort_order': 0,
+                    }
+                )
+                r.raise_for_status()
+                api_data['options'].append(r.json()['data'])
+                option['option_id'] = r.json()['data']['id']
+                option['id'] = r.json()['data']['option_values'][0]['id']
+            else:
+                r = store.request.post(
+                    url=store.get_api_url(
+                        f'v3/catalog/products/{product.source_id}/options/{option.get("option_id")}/values'),
+                    json={
+                        'label': option.get('label'),
+                        'sort_order': 0,
+                    }
+                )
+                r.raise_for_status()
+                option['id'] = r.json()['data']['id']
+
+            for item in api_data.get('options', []):
+                if item['id'] == option.get('option_id'):
+                    value = {
+                        'id': option['id'],
+                        'label': option['label'],
+                        'sort_order': 0,
+                        'value_data': None,
+                        'is_default': False
+                    }
+                    if item.get('option_values'):
+                        item.get('option_values').append(value)
+                    else:
+                        item['option_values'] = [value]
+
+        # prepare and create new variants in store
+        for variant in new_variants:
+            for idx, option_value in enumerate(variant.get('option_values', [])):
+                for option in api_data.get('options', []):
+                    item = next((value for value in option.get('option_values', [])
+                                 if value.get('label') == option_value.get('label')
+                                 and option.get('display_name') == option_value.get('option_display_name')), None)
+                    if item:
+                        variant['option_values'][idx]['id'] = item.get('id')
+                        variant['option_values'][idx]['option_id'] = option.get('id')
+                        break
+            if variant.get('image'):
+                variant['image_url'] = variant.get('image')
+            elif data.get('images'):
+                variant['image_url'] = data['images'][0]
+
+            if variant.get('compare_at_price'):
+                variant['price'] = str(variant['compare_at_price'])
+                variant['sale_price'] = str(variant['price'])
+            else:
+                variant['price'] = str(variant['price'])
+
+            r = store.request.post(
+                url=store.get_api_url(f'v3/catalog/products/{product.source_id}/variants'),
+                json=variant
+            )
+            r.raise_for_status()
+
         for image_id in deleted_images:
-            r = store.request.delete(url=store.get_api_url(f'v3/catalog/products/{product.source_id}/images/{image_id}'))
+            r = store.request.delete(
+                url=store.get_api_url(f'v3/catalog/products/{product.source_id}/images/{image_id}'))
             r.raise_for_status()
 
         product.save()

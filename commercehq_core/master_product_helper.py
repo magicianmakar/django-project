@@ -95,7 +95,13 @@ class CommerceHQMasterProductHelper(MasterProductHelperBase):
                 },
             }, countdown=0, expires=120)
         else:
-            product_data = self.get_master_product_mapped_data(parent, product_data=product_data)
+            product_data = self.get_master_product_mapped_data(
+                parent, product_data=product_data, override_fields={
+                    'variants_images': product_data.get('variants_images'),
+                    'variants_sku': product_data.get('variants_sku'),
+                    'variants': product_data.get('variants'),
+                    'variants_info': product_data.get('variants_info'),
+                })
             product_data = apply_templates(product_data, self.product.store)
 
             tasks.product_save(
@@ -158,7 +164,13 @@ class CommerceHQMasterProductHelper(MasterProductHelperBase):
             for variant in product_data.get('variants'):
                 options = variant.get('variant')
                 item = ' / '.join(options)
-                variants_list.append({'title': item, 'image': variant.get('images', [])[0].get('path')})
+                image = ''
+                if variant.get('images', []):
+                    if isinstance(variant.get('images', [])[0], dict):
+                        image = variant.get('images', [])[0].get('path')
+                    elif isinstance(variant.get('images', [])[0], str):
+                        image = variant.get('images', [])[0]
+                variants_list.append({'title': item, 'image': image})
         else:
             product_data = self.product.parsed
             variants = product_data.get('variants', [])

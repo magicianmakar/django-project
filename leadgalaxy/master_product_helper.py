@@ -78,17 +78,14 @@ class ShopifyMasterProductHelper(MasterProductHelperBase):
         permissions.user_can_edit(user, self.product)
 
         product_data = self.product.parsed
-        product_data = self.get_master_product_mapped_data(parent, product_data=product_data)
+        product_data = self.get_master_product_mapped_data(
+            parent, product_data=product_data, override_fields={
+                'variants_images': product_data.get('variants_images'),
+                'variants_sku': product_data.get('variants_sku'),
+                'variants': product_data.get('variants'),
+                'variants_info': product_data.get('variants_info'),
+            })
         product_data = apply_templates(product_data, self.product.store)
-
-        if not self.product.is_connected:
-            product_data = {
-                **product_data,
-                'variants_images': json.loads(parent.variants_config).get('variants_images'),
-                'variants_sku': json.loads(parent.variants_config).get('variants_sku'),
-                'variants': json.loads(parent.variants_config).get('variants'),
-                'variants_info': json.loads(parent.variants_config).get('variants_info'),
-            }
 
         tasks.export_product(
             req_data={
