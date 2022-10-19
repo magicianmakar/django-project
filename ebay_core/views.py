@@ -141,6 +141,20 @@ class ProductDetailView(DetailView):
         product_data_dict = {k: v for k, v in product_data_dict.items()
                              if k not in ['sd_updated_at', 'updated_at', 'created_at']}
         product_data_dict['status'] = context.get('product').parsed.get('status')
+        context['conditions'] = ['Acceptable',
+                                 'Broken',
+                                 'For Parts or Not Working',
+                                 'Good',
+                                 'Like New',
+                                 'Manufacturer Refurbished',
+                                 'New',
+                                 'New Other',
+                                 'New with Defects',
+                                 'Pre-owned',
+                                 'Re-manufactured',
+                                 'Seller Refurbished',
+                                 'Used',
+                                 'Very Good']
 
         context['product_data'] = json.dumps(product_data_dict)
         context['variants'] = json.dumps(self.object.variants_for_details_view)

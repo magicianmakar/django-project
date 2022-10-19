@@ -62,6 +62,7 @@ function prepareApiData(productData, variants) {
         ebay_category_id: productData.ebay_category_id,
         status: productData.status,
         vendor: $('#product-vendor').val(),
+        condition: $('#product-condition').val(),
         published: $('#product-visible').prop('checked'),
         images: productData.images,
         variants: []

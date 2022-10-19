@@ -734,6 +734,12 @@ SUREDONE_CUSTOM_FIELDS_CONFIG = [
         'name': ['dropifiedgoogleproductlink'],
         'type': 'varchar',
         'length': 510,
+    },
+    # eBay Internal Notes
+    {
+        'label': ['eBay Internal Notes'],
+        'name': ['dropifiedinternalnotes'],
+        'type': 'text',
     }
 ]
 SUREDONE_DEFAULT_VARIANTS_FIELDS_CONFIG = [
