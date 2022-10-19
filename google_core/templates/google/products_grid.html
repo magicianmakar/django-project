@@ -137,6 +137,13 @@
             <li class="pull-right">
                 {% include 'home/partial/platform_selection_dropdown.html' with section='Google' %}
             </li>
+            {% if store.id and request.user|can:'product_supplier.use' %}
+            <li class="pull-right">
+                <a class="btn btn-success btn-outline" href="{% url 'google:products_import' store=store.id %}">
+                    Import From Google <i class="fa fa-plus"></i>
+                </a>
+            </li>
+            {% endif %}
         </ul>
         {% endif %}
         <div class="tab-content">
