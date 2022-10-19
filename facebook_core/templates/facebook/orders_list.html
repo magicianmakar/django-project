@@ -585,6 +585,18 @@
                                             <p>Status:</p>
                                         </label>
 
+                                        <div class="pull-right open-order" style="padding-top: 7px;">
+                                            {% if item.order_track %}
+                                                <a href="{{ item.order_track.get_source_url }}"
+                                                   class="itooltip"
+                                                   title="Open Order"
+                                                   target="_blank"
+                                                >
+                                                    <i class="fa fa-external-link" style="font-size: 16px; color: #2c5de5;"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+
                                         <div>
                                             <p class="line-order-id">
                                                 {% if item.order_track %}

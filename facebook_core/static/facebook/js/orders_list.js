@@ -184,9 +184,9 @@ function confirmDeleteOrderID(e) {
     var source_id = btn.attr('source-order-id');
     var source_url = btn.attr('source-url');
     var line_id = btn.attr('line-id');
-    var html = '<ul>';
-    html += '<li style="list-style:none">Supplier Order ID: <a target="_blank" ' +
-        'href="' + source_url + '">' + source_id + '</a></li>';
+    var html = '<ul class="p-none">';
+    html += '<li style="list-style:none">Supplier Order ID: <a target="_blank" href="' + source_url + '">' +
+        '' + source_id + '<i class="fa fa-external-link m-l-xs" style="font-size: 16px;"></i></a></li>';
     html += '<li style="list-style:none">Order date: ' + btn.attr('order-date') + '</li>';
     html += '</ul';
 
@@ -735,6 +735,11 @@ function pusherSub() {
         if (!line.length) {
             return;
         }
+
+        line.find('.open-order').append(
+            '<a href="'+ data.source_url + '" class="itooltip" title="Open Order" target="_blank">' +
+            '<i class="fa fa-external-link m-r-xs" style="font-size: 16px; color: #2c5de5;"></i>' +
+            '</a>');
 
         line.attr('line-track', data.track);
         line.find('.line-order-id').find('a').remove();
