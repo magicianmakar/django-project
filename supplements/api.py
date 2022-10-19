@@ -546,7 +546,25 @@ class SupplementsApi(ApiResponseMixin, View):
         else:
             return self.api_success({'shippings': shippings})
 
+    def copy_billing_address(self, data):
+        data = data.copy()
+        data['shipping_first_name'] = data['billing_first_name']
+        data['shipping_last_name'] = data['billing_last_name']
+        data['shipping_country'] = data['billing_country']
+        data['shipping_company_name'] = data['billing_company_name']
+        data['shipping_phone'] = data['billing_phone']
+        data['shipping_address_line1'] = data['billing_address_line1']
+        data['shipping_address_line2'] = data['billing_address_line2']
+        data['shipping_city'] = data['billing_city']
+        data['shipping_state'] = data['billing_state']
+        data['shipping_zip_code'] = data['billing_zip_code']
+        data['shipping_email'] = data['billing_email']
+        return data
+
     def post_basket_make_payment(self, request, user, data):
+        if data['shipping_address'] == 'true':
+            data = self.copy_billing_address(data)
+
         country_code = data['shipping_country']
         province = data['shipping_state']
         billing_country_code = data['billing_country']

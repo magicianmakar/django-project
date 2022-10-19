@@ -10,7 +10,8 @@
     <form id="checkout-form" class="form-horizontal">
         <div class="row">
             <div class="col-md-6 row">
-                <h3>Billing Details:</h3>
+
+                <h3>Billing address</h3>
 
                             <div class="form-group"><label class="col-sm-2 control-label">Name</label>
                                 <div class="col-sm-4">
@@ -76,7 +77,13 @@
             </div>
 
             <div class="col-md-6">
-                <h3>Shipping Details:</h3>
+                <div style="position: absolute;right: 20%;">
+                    <input type="checkbox" id="shipping_address" name="shipping_address" value="" style="Cursor: pointer;">
+                    <label for="shipping_address">Same as billing address </label>
+                </div>
+                <h3>Shipping address</h3>
+                        <div class="shipping-form">
+
                              <div class="form-group"><label class="col-sm-2 control-label">Name</label>
                                 <div class="col-sm-4">
                                     <input type="text" name="shipping_first_name" value="{{ user.first_name }}" class="form-control" placeholder="First Name">
@@ -109,7 +116,7 @@
                             </div>
                             <div class="form-group"><label class="col-sm-2 control-label">Address</label>
                                 <div class="col-sm-4">
-                                    <input type="text" name="shipping_address_line1" required value="{{ user.profile.company.address_line1 }}" class="form-control" placeholder="Address line 1">
+                                    <input type="text" name="shipping_address_line1" value="{{ user.profile.company.address_line1 }}" class="form-control" placeholder="Address line 1">
                                 </div>
                                 <div class="col-sm-4">
                                     <input type="text" name="shipping_address_line2" value="{{ user.profile.company.address_line2 }}" class="form-control" placeholder="Address line 2">
@@ -120,12 +127,12 @@
                                     <input type="text" name="shipping_city" value="{{ user.profile.company.city }}" class="form-control" placeholder="City">
                                 </div>
                                 <div class="col-sm-4">
-                                    <input id="shipping_state" type="text" required name="shipping_state" value="{{ user.profile.company.state }}" class="form-control" placeholder="State or Province">
+                                    <input id="shipping_state" type="text" name="shipping_state" value="{{ user.profile.company.state }}" class="form-control" placeholder="State or Province">
                                 </div>
                             </div>
                             <div class="form-group"><label class="col-sm-2 control-label"></label>
                                 <div class="col-sm-4">
-                                    <input type="text" name="shipping_zip_code" required value="{{ user.profile.company.zip_code }}" class="form-control" placeholder="Zip or Postal">
+                                    <input type="text" name="shipping_zip_code" value="{{ user.profile.company.zip_code }}" class="form-control" placeholder="Zip or Postal">
                                 </div>
 
                             </div>
@@ -137,6 +144,7 @@
                                 </div>
 
                             </div>
+                    </div>
 
             </div>
         </div>
