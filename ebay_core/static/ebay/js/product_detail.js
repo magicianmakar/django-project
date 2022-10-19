@@ -295,7 +295,7 @@ function productExport(btn) {
                     window.location.reload(true);
                 }, 1500);
             } else {
-                if (eventData.parsed_ebay_errors_list.length) {
+                if (eventData.parsed_ebay_errors_list && eventData.parsed_ebay_errors_list.length) {
                     eventData = handleEbayErrorsList(eventData.parsed_ebay_errors_list);
                 }
                 displayAjaxError('eBay Export', eventData, true);

@@ -421,7 +421,7 @@ class GoogleStoreApi(ApiBase):
 
         pusher_channel = f'user_{user.id}'
         sd_pusher = SureDonePusher(pusher_channel)
-        default_event = 'fb-product-update'
+        default_event = 'google-product-update'
         update_product_limit_check, product_limit_check, logs_count = GoogleUtils(user).check_product_update_limit(
             sd_pusher, default_event)
         if update_product_limit_check == "Limit Reached":

@@ -434,7 +434,7 @@ class GoogleUtils(SureDoneUtils):
         google_product_id = safe_int(sd_product_data.get(f'{google_prefix}productid'), 0)
 
         # Get google category ID
-        google_category_id = safe_int(sd_product_data.get(f'{google_prefix}category'), None)
+        google_category_id = safe_int(sd_product_data.get(f'{google_prefix}productcategory'), None)
 
         # Get google product status ('active', 'pending' or '')
         product_status = sd_product_data.get(f'{google_prefix}status', '')

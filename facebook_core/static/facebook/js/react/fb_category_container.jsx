@@ -6,7 +6,6 @@
     const TIMEOUT_BETWEEN_CATEGORY_SEARCHES = 1000;
 
     class FBCategorySelector extends React.Component {
-        searchCategoryTimeout;
 
         constructor(props) {
             super(props);
@@ -31,109 +30,57 @@
                 fieldsToHide: variantsConfig?.map(el => el?.title?.replace(' ', '')?.toLowerCase()),
                 isLoading: false,
             };
-            this.handleCatIdChange = this.handleCatIdChange.bind(this);
-            this.handleCatSearchTermChange = this.handleCatSearchTermChange.bind(this);
-            this.getCategoryOptions = this.getCategoryOptions.bind(this);
-            this.handleSearchCategoriesResponse = this.handleSearchCategoriesResponse.bind(this);
-            this.handleCategorySelectionChange = this.handleCategorySelectionChange.bind(this);
-            this.handleSearchButtonClick = this.handleSearchButtonClick.bind(this);
         }
 
         componentDidMount() {
-            const { categorySearchTerm } = this.state;
-            if (categorySearchTerm) {
-                this.getCategoryOptions();
-            }
-        }
-
-        handleCatIdChange(category_id, category_name='') {
-            if(category_name == '') {
-                const { categoryOptions } = this.state;
-                category_name = categoryOptions.find(({ id }) => id == category_id)?.name ?? '';
-            }
-            category_name = category_name.split(" > ").slice(-1).toString();
-            product.fb_category_id = category_id;
-            product.fb_category_name = category_name;
-            this.setState({
-                fbCategoryId: category_id,
-                fbCategoryName: category_name,
-            });
-        }
-
-        handleCatSearchTermChange(value) {
-            this.setState({
-                categorySearchTerm: value,
-                isLoading: !!value,
-            });
-            // Add timeout not to get throttled by SureDone API
-            clearTimeout(this.searchCategoryTimeout);
-            this.searchCategoryTimeout = setTimeout(() => {
-                const { categorySearchTerm } = this.state;
-                if (categorySearchTerm)
-                    this.getCategoryOptions()
-            }, TIMEOUT_BETWEEN_CATEGORY_SEARCHES);
-        }
-
-        handleSearchButtonClick() {
-            this.getCategoryOptions();
-        }
-
-        handleSearchCategoriesResponse(response) {
-            this.setState({ isLoading: false });
-
-            if ('status' in response && response.status === 'ok') {
-                const { fbCategoryId } = this.state;
-                const categoryOptions = response.data?.categories ?? [];
-
-                // If the fb category is not selected then set the category to the first recommended category
-                if (!fbCategoryId && categoryOptions.length) {
-                    this.setState({
-                        categoryOptions,
-                        fbCategoryId: categoryOptions[0]?.id,
-                        fbCategoryName: categoryOptions[0]?.name,
-                    });
-                    product.fb_category_id = categoryOptions[0]?.id;
-                    product.fb_category_name = categoryOptions[0]?.name;
-                } else {
-                    this.setState({
-                        categoryOptions,
-                    });
+            const { fbCategoryId, fbCategoryName } = this.state;
+            var self = this;
+            $('.fb-category').select2({
+                placeholder: 'Select a category',
+                ajax: {
+                    url: api_url('search-categories', 'fb'),
+                    delay: TIMEOUT_BETWEEN_CATEGORY_SEARCHES,
+                    dataType: 'json',
+                    data: function (params) {
+                        return {
+                            'search_term':  params.term,
+                            'store_index': product.fb_store_index,
+                        };
+                    },
+                    processResults: function (response) {
+                        var categories = response.data?.categories ?? [];
+                        self.setState({
+                            categoryOptions: categories,
+                        });
+                        return {
+                            results: categories.map(function(item) {
+                                return {
+                                    id: item.id,
+                                    text: item.name,
+                                }
+                            })
+                        };
+                    },
+                    allowClear: true,
+                },
+                templateResult: function (data, container) {
+                    $(container).css('height', 'auto').css('margin', '0');
+                    return data.text;
                 }
-            } else {
-                displayAjaxError('Facebook Category Options', response);
-            }
-        }
+            }).on('select2:select', function (e) {
+                var data = e.params.data;
 
-        handleCategorySelectionChange(event) {
-            const newCategoryId = event.nativeEvent.target.value;
-            const index = event.nativeEvent.target.selectedIndex;
-            const newCategoryName = event.nativeEvent.target[index].text;
-            if (newCategoryId === 'Select a category') {
-                this.handleCatIdChange('', '');
-            } else {
-                this.handleCatIdChange(newCategoryId, newCategoryName);
-            }
-        }
-
-        getCategoryOptions() {
-            this.setState({ isLoading: true });
-
-            const { categorySearchTerm } = this.state;
-            const searchTerm = categorySearchTerm?.replace('&', '');
-            const data = {
-                'search_term': searchTerm,
-                'store_index': product.fb_store_index,
-            };
-            $.ajax({
-                url: api_url('search-categories', 'fb'),
-                type: 'GET',
-                data: data,
-                success: this.handleSearchCategoriesResponse,
-                error: function (data) {
-                    this.setState({ isLoading: false });
-                    displayAjaxError('Facebook Category Options', data);
-                }
+                product.fb_category_id = data.id;
+                product.fb_category_name = data.text;
+                self.setState({
+                    fbCategoryId: data.id,
+                    fbCategoryName: data.text,
+                });
             });
+            if (fbCategoryId) {
+                var option = $('<option selected>' + fbCategoryName + '</option>').val(fbCategoryId);
+            }
+            $('.fb-category').append(option).trigger('change');
         }
 
         getCategorySpecifics() {
@@ -143,92 +90,21 @@
 
         render() {
             const {
-                categoryOptions,
                 categorySearchTerm,
-                fbCategoryId,
-                fbCategoryName,
                 fieldsToHide,
-                isLoading,
             } = this.state;
 
             return (
                 <React.Fragment>
                     <div className="row">
-                    <div className='form-group required col-xs-3'>
-                        <label class="control-label" htmlFor='fb-category-id'>Facebook Category ID</label>
-                        <input
-                            required
-                            className='form-control'
-                            id='fb-category-id'
-                            name='fb-category-id'
-                            onChange={({target: {value}}) => this.handleCatIdChange(value)}
-                            type='number'
-                            value={fbCategoryId}
-                            placeholder='Facebook Category ID'
-                        />
-
-                        <small className="form-text text-muted">
-                            {fbCategoryName}
-                        </small>
-
-                    </div>
-                    <div className='form-group col-xs-3'>
-                        <label htmlFor='category-search-term'>Search Categories</label>
-                        <div className='input-group'>
-                            <input
-                                className='form-control'
-                                id='category-search-term'
-                                name='category-search-term'
-                                onChange={({target: {value}}) => this.handleCatSearchTermChange(value)}
-                                placeholder='Search for a category'
-                                type='text'
-                                value={categorySearchTerm}
-                            />
-                            <span className='input-group-btn'>
-                                <button
-                                    className='btn btn-default'
-                                    type='button'
-                                    onClick={() => this.handleSearchButtonClick()}
-                                >
-                                    <i className='fa fa-search'/>
-                                </button>
-                            </span>
+                        <div className='form-group col-xs-12'>
+                            <label htmlFor="fb-category" style={{width: '100%'}} className="control-label">
+                                Facebook Category <span style={{color: '#ed5565'}}>*</span>
+                            </label>
+                            <select className="fb-category" id="fb-category"
+                                    data-value={categorySearchTerm} required>
+                            </select>
                         </div>
-                        {
-                            categorySearchTerm
-                            && !categoryOptions.length
-                            && !isLoading
-                            &&
-                            <small className="form-text text-danger">
-                                No categories found, please try a different/broader keyword
-                            </small>
-                        }
-                    </div>
-
-                    <div className='form-group col-xs-6'>
-                        <label htmlFor='category-select'>Category</label>
-                        <select
-                            id='category-select'
-                            value={fbCategoryId}
-                            className='form-control'
-                            placeholder='Select a category'
-                            onChange={(event) => this.handleCategorySelectionChange(event)}
-                        >
-                            <option key='default-option'>
-                                Select a category
-                            </option>
-                            {
-                                categoryOptions.map(category => (
-                                    <option key={category.id} value={category.id}>
-                                        {category.name}
-                                    </option>
-                                ))
-                            }
-                        </select>
-                        <small className="form-text text-muted">
-                            Select a relevant Facebook category to set the Facebook category ID
-                        </small>
-                    </div>
                     </div>
                     <div className="row">
                         <FBCategorySpecifics

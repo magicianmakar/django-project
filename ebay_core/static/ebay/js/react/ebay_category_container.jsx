@@ -6,8 +6,6 @@
     const TIMEOUT_BETWEEN_CATEGORY_SEARCHES = 1000;
 
     class EbayCategorySelector extends React.Component {
-        searchCategoryTimeout;
-        getCategorySpecificsTimeout;
 
         constructor(props) {
             super(props);
@@ -24,110 +22,89 @@
                 fieldsToHide: variantsConfig?.map(el => el?.title?.replace(' ', '')?.toLowerCase()),
                 isLoading: false,
             };
-            this.handleCatIdChange = this.handleCatIdChange.bind(this);
-            this.handleCatSearchTermChange = this.handleCatSearchTermChange.bind(this);
-            this.getCategoryOptions = this.getCategoryOptions.bind(this);
-            this.handleSearchCategoriesResponse = this.handleSearchCategoriesResponse.bind(this);
-            this.handleCategorySelectionChange = this.handleCategorySelectionChange.bind(this);
-            this.handleSearchButtonClick = this.handleSearchButtonClick.bind(this);
             this.handleGetCategorySpecificsResponse = this.handleGetCategorySpecificsResponse.bind(this);
         }
 
         componentDidMount() {
-            const { categorySearchTerm, ebayCategoryId } = this.state;
-            if (categorySearchTerm) {
-                this.getCategoryOptions();
-            }
+            const { ebayCategoryId } = this.state;
+            var self = this;
+            $('.ebay-category').select2({
+                placeholder: 'Select a category',
+                ajax: {
+                    url: function (params) {
+                        if (params.term && /^\d+$/.test(params.term)) {
+                            return api_url('category-specifics', 'ebay');
+                        } else {
+                            return api_url('search-categories', 'ebay');
+                        }
+                    },
+                    delay: TIMEOUT_BETWEEN_CATEGORY_SEARCHES,
+                    dataType: 'json',
+                    cache: true,
+                    data: function (params) {
+                        if (params.term && /^\d+$/.test(params.term)) {
+                            return {
+                                'category_id': params.term,
+                                'site_id': product.ebay_site_id,
+                            };
+                        } else {
+                            return {
+                                'search_term': params.term,
+                                'store_index': product.ebay_store_index,
+                            };
+                        }
+                    },
+                    processResults: function (response) {
+                        if (response.data.categories) {
+                            var categories = response.data.categories ? Object.values(response.data.categories) : [];
+                            self.setState({
+                                categoryOptions: response,
+                            });
+                            return {
+                                results: categories.map(function (item) {
+                                    return {
+                                        id: item.id,
+                                        text: item.name,
+                                    }
+                                })
+                            };
+                        } else if (response.data.data) {
+                            return {
+                                results: [
+                                    {
+                                        id: response.data.id,
+                                        text: response.data.display_name,
+                                    },
+                                ]
+                            };
+                        }
+                        return {
+                            results: [],
+                        };
+                    },
+                    allowClear: true,
+                },
+                templateResult: function (data, container) {
+                    $(container).css('height', 'auto').css('margin', '0');
+                    return data.text;
+                }
+            }).on('select2:select', function (e) {
+                var data = e.params.data;
+
+                product.ebay_category_id = data.id;
+                self.setState({
+                    ebayCategoryId: data.id,
+                });
+                self.getCategorySpecifics();
+            });
             if (ebayCategoryId) {
-                this.getCategorySpecifics();
+                self.getCategorySpecifics();
+                setTimeout(function () {
+                    const { categorySpecifics } = self.state;
+                    var option = new Option(categorySpecifics ? categorySpecifics.display_name : ebayCategoryId, ebayCategoryId, true, true)
+                    $('.ebay-category').append(option).trigger('change');
+                }, 1000)
             }
-        }
-
-        handleCatIdChange(value) {
-            product.ebay_category_id = value;
-            this.setState({
-                ebayCategoryId: value,
-            });
-
-            clearTimeout(this.getCategorySpecificsTimeout);
-            this.getCategorySpecificsTimeout = setTimeout(() => {
-                const { ebayCategoryId } = this.state;
-                if (ebayCategoryId) {
-                    this.getCategorySpecifics();
-                }
-            }, TIMEOUT_BETWEEN_CATEGORY_SEARCHES)
-        }
-
-        handleCatSearchTermChange(value) {
-            this.setState({
-                categorySearchTerm: value,
-                isLoading: !!value,
-            });
-            // Add timeout not to get throttled by SureDone API
-            clearTimeout(this.searchCategoryTimeout);
-            this.searchCategoryTimeout = setTimeout(() => {
-                const { categorySearchTerm } = this.state;
-                if (categorySearchTerm)
-                    this.getCategoryOptions()
-            }, TIMEOUT_BETWEEN_CATEGORY_SEARCHES);
-        }
-
-        handleSearchButtonClick() {
-            this.getCategoryOptions();
-        }
-
-        handleSearchCategoriesResponse(response) {
-            this.setState({ isLoading: false });
-
-            if ('status' in response && response.status === 'ok') {
-                const { ebayCategoryId } = this.state;
-                const categoryOptions = response.data.categories ? Object.values(response.data.categories) : [];
-
-                // If the ebay category is not selected then set the category to the first recommended category
-                if (!ebayCategoryId && categoryOptions.length) {
-                    this.setState({
-                        categoryOptions,
-                        ebayCategoryId: categoryOptions[0]?.id
-                    });
-                    product.ebay_category_id = categoryOptions[0]?.id;
-                    this.getCategorySpecifics();
-                } else {
-                    this.setState({
-                        categoryOptions,
-                    });
-                }
-            } else {
-                displayAjaxError('eBay Category Options', response);
-            }
-        }
-
-        handleCategorySelectionChange(newCategoryId) {
-            if (newCategoryId === 'Select a category') {
-                this.handleCatIdChange('');
-            } else {
-                this.handleCatIdChange(newCategoryId);
-            }
-        }
-
-        getCategoryOptions() {
-            this.setState({ isLoading: true });
-
-            const { categorySearchTerm } = this.state;
-            const searchTerm = categorySearchTerm?.replace('&', '');
-            const data = {
-                'search_term': searchTerm,
-                'store_index': product.ebay_store_index,
-            };
-            $.ajax({
-                url: api_url('search-categories', 'ebay'),
-                type: 'GET',
-                data: data,
-                success: this.handleSearchCategoriesResponse,
-                error: function (data) {
-                    this.setState({ isLoading: false });
-                    displayAjaxError('eBay Category Options', data);
-                }
-            });
         }
 
         getCategorySpecifics() {
@@ -156,96 +133,28 @@
 
         render() {
             const {
-                categoryOptions,
                 categorySearchTerm,
                 categorySpecifics,
-                ebayCategoryId,
                 fieldsToHide,
-                isLoading,
             } = this.state;
             return (
                 <React.Fragment>
                     <div className="row">
-                    <div className='form-group required col-xs-3'>
-                        <label class="control-label" htmlFor='ebay-category-id'>eBay Category ID</label>
-                        <input
-                            required
-                            className='form-control'
-                            id='ebay-category-id'
-                            name='ebay-category-id'
-                            onChange={({target: {value}}) => this.handleCatIdChange(value)}
-                            type='number'
-                            value={ebayCategoryId}
-                            placeholder='eBay Category ID'
-                        />
-                        {
-                            categorySpecifics
-                            && 'display_name' in categorySpecifics
-                            && 'id' in categorySpecifics
-                            && categorySpecifics.id == ebayCategoryId
-                            && (
-                                <small className="form-text text-muted">
-                                    {categorySpecifics.display_name}
-                                </small>
-                            )
-                        }
-                    </div>
-                    <div className='form-group col-xs-3'>
-                        <label htmlFor='category-search-term'>Search Categories</label>
-                        <div className='input-group'>
-                            <input
-                                className='form-control'
-                                id='category-search-term'
-                                name='category-search-term'
-                                onChange={({target: {value}}) => this.handleCatSearchTermChange(value)}
-                                placeholder='Search for a category'
-                                type='text'
-                                value={categorySearchTerm}
-                            />
-                            <span className='input-group-btn'>
-                                <button
-                                    className='btn btn-default'
-                                    type='button'
-                                    onClick={() => this.handleSearchButtonClick()}
-                                >
-                                    <i className='fa fa-search'/>
-                                </button>
-                            </span>
+                        <div className='form-group col-xs-12'>
+                            <label htmlFor="ebay-category" style={{width: '100%'}} className="control-label">
+                                eBay Category <span style={{color: '#ed5565'}}>*</span>
+                            </label>
+                            <select className="ebay-category" id="ebay-category"
+                                    data-value={categorySearchTerm} required>
+                            </select>
                         </div>
-                        {
-                            categorySearchTerm
-                            && !categoryOptions.length
-                            && !isLoading
-                            &&
-                            <small className="form-text text-danger">
-                                No categories found, please try a different/broader keyword
-                            </small>
-                        }
-                    </div>
-                    <div className='form-group col-xs-6'>
-                        <label htmlFor='category-select'>Category</label>
-                        <select
-                            id='category-select'
-                            value={ebayCategoryId}
-                            className='form-control'
-                            placeholder='Select a category'
-                            onChange={({target: {value}}) => this.handleCategorySelectionChange(value)}
-                        >
-                            <option key='default-option'>
-                                Select a category
-                            </option>
-                            {
-                                categoryOptions.map(category => (
-                                    <option key={category.id} value={category.id}>
-                                        {category.name}
-                                    </option>
-                                ))
-                            }
-                        </select>
-                        <small className="form-text text-muted">
-                            Search and select a relevant eBay category to set the eBay category ID
-                        </small>
-                    </div>
+                        { categorySpecifics?.data && !categorySpecifics?.data.variationsEnabled &&
+                        <div className='col-xs-12'>
+                            <div className="alert alert-warning" role="alert" style={{ width: 'fit-content' }}>
+                                <i className="fa fa-exclamation-triangle"/>&nbsp;
+                                Variants are not supported in selected category.
+                            </div>
+                        </div>}
                     </div>
                     <div className="row">
                         <EbayCategorySpecifics
