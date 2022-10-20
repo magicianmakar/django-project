@@ -17,7 +17,6 @@ from commercehq_core.models import CommerceHQOrderTrack
 from ebay_core import utils as ebay_utils
 from ebay_core.models import EbayOrderTrack
 from facebook_core import utils as fb_utils
-from gearbubble_core.models import GearBubbleOrderTrack
 from google_core import utils as google_utils
 from facebook_core.models import FBOrderTrack
 from google_core.models import GoogleOrderTrack
@@ -25,8 +24,6 @@ from gearbubble_core import utils as gear_utils
 from groovekart_core import utils as gkart_utils
 from groovekart_core.models import GrooveKartOrderTrack
 from leadgalaxy import utils as shopify_utils
-from leadgalaxy.models import UserProfile, ShopifyOrderTrack
-from my_basket.models import BasketOrderTrack
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import safe_float
 from woocommerce_core import utils as woo_utils
@@ -673,50 +670,3 @@ def get_facebook_ads(facebook_access_id, verbosity=1):
             create_facebook_ads(account, insight)
 
         account.save()
-
-
-def get_all_orders_count(user_profile: UserProfile):
-    return sum([
-        user_profile.get_orders_count(ShopifyOrderTrack),
-        user_profile.get_orders_count(CommerceHQOrderTrack),
-        user_profile.get_orders_count(WooOrderTrack),
-        user_profile.get_orders_count(EbayOrderTrack),
-        user_profile.get_orders_count(FBOrderTrack),
-        user_profile.get_orders_count(GoogleOrderTrack),
-        user_profile.get_orders_count(GearBubbleOrderTrack),
-        user_profile.get_orders_count(GrooveKartOrderTrack),
-        user_profile.get_orders_count(BigCommerceOrderTrack),
-        user_profile.get_orders_count(BasketOrderTrack),
-    ])
-
-
-def get_onboarding_tasks(user):
-    user_tasks = {}
-    level = user.profile.onboarding_level
-    if level == 1:
-        user_tasks['Setup the Google Chrome Extension'] = False  # FE side
-        user_tasks['Connect Your Store Platform'] = user.profile.get_stores_count() > 0
-        user_tasks['Import Products'] = user.profile.has_product
-        user_tasks['Get Additional Assistance and Resources'] = False  # FE side
-    elif level == 2:
-        user_tasks['Send a Product to Your Store'] = user.profile.has_connected_product()
-        user_tasks['Process Your First Order'] = get_all_orders_count(user.profile) > 0
-        user_tasks['Create a Bundle'] = user.profile.has_bundle()
-        user_tasks['Process and Track 100 Orders'] = get_all_orders_count(user.profile) >= 100
-    elif level == 3:
-        user_tasks['Connect Aliexpress Account'] = user.aliexpress_account.exists()
-        user_tasks['Create a Print on Demand Supplement'] = user.pl_supplements.count() > 0
-        user_tasks['Process and Track 1000 Orders'] = get_all_orders_count(user.profile) >= 1000
-    elif level == 4:
-        user_tasks['Setup the Google Chrome Extension'] = True
-        user_tasks['Connect Your Store Platform'] = user.profile.get_stores_count() > 0
-        user_tasks['Import Products'] = user.profile.has_product
-        user_tasks['Get Additional Assistance and Resources'] = True
-        user_tasks['Send a Product to Your Store'] = user.profile.has_connected_product()
-        user_tasks['Process Your First Order'] = get_all_orders_count(user.profile) > 0
-        user_tasks['Create a Bundle'] = user.profile.has_bundle()
-        user_tasks['Process and Track 100 Orders'] = get_all_orders_count(user.profile) >= 100
-        user_tasks['Connect Aliexpress Account'] = user.aliexpress_account.exists()
-        user_tasks['Create a Print on Demand Supplement'] = user.pl_supplements.count() > 0
-        user_tasks['Process and Track 1000 Orders'] = get_all_orders_count(user.profile) >= 1000
-    return user_tasks

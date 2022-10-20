@@ -183,10 +183,7 @@ class ProductBase(models.Model):
         bundle_map = self.get_bundle_mapping()
         bundle_map.update(mapping)
 
-        if bundle_map and not any(bundle_map.values()):
-            self.bundle_map = None
-        else:
-            self.bundle_map = json.dumps(bundle_map)
+        self.bundle_map = json.dumps(bundle_map)
 
     def get_real_variant_id(self, variant_id):
         """

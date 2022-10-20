@@ -573,50 +573,6 @@ class UserProfile(models.Model):
     def get_installed_addon_titles(self):
         return list(self.addons.values_list('title', flat=True))
 
-    def has_connected_product(self):
-        return any([
-            self.user.shopifyproduct_set.exclude(shopify_id__isnull=True)
-                .exclude(shopify_id=0)
-                .exists(),
-            self.user.commercehqproduct_set.exclude(source_id__isnull=True)
-                .exclude(source_id=0)
-                .exists(),
-            self.user.wooproduct_set.exclude(source_id__isnull=True)
-                .exclude(source_id=0)
-                .exists(),
-            self.user.ebayproduct_set.exclude(source_id__isnull=True)
-                .exclude(source_id=0)
-                .exists(),
-            self.user.fbproduct_set.exclude(source_id__isnull=True)
-                .exclude(source_id=0)
-                .exists(),
-            self.user.googleproduct_set.exclude(source_id__isnull=True)
-                .exclude(source_id=0)
-                .exists(),
-            self.user.gearbubbleproduct_set.exclude(source_id__isnull=True)
-                .exclude(source_id=0)
-                .exists(),
-            self.user.groovekartproduct_set.exclude(source_id__isnull=True)
-                .exclude(source_id=0)
-                .exists(),
-            self.user.bigcommerceproduct_set.exclude(source_id__isnull=True)
-                .exclude(source_id=0)
-                .exists(),
-        ])
-
-    def has_bundle(self):
-        return any([
-            self.user.shopifyproduct_set.exclude(bundle_map__isnull=True).exists(),
-            self.user.commercehqproduct_set.exclude(bundle_map__isnull=True).exists(),
-            self.user.wooproduct_set.exclude(bundle_map__isnull=True).exists(),
-            self.user.ebayproduct_set.exclude(bundle_map__isnull=True).exists(),
-            self.user.fbproduct_set.exclude(bundle_map__isnull=True).exists(),
-            self.user.googleproduct_set.exclude(bundle_map__isnull=True).exists(),
-            self.user.gearbubbleproduct_set.exclude(bundle_map__isnull=True).exists(),
-            self.user.groovekartproduct_set.exclude(bundle_map__isnull=True).exists(),
-            self.user.bigcommerceproduct_set.exclude(bundle_map__isnull=True).exists(),
-        ])
-
     def get_stores_count(self):
         return sum([
             self.get_shopify_stores().count(),
