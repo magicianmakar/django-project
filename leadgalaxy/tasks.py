@@ -170,9 +170,6 @@ def export_product(req_data, target, user_id):
                 product = ShopifyProduct.objects.get(id=req_data['product'])
                 permissions.user_can_edit(user, product)
 
-                variants = parsed_data['product'].get('variants', [])
-                # filter out already existing variants
-                parsed_data['product']['variants'] = [variant for variant in variants if variant.get('id')]
                 parsed_data = link_variants_to_new_images(product,
                                                           parsed_data,
                                                           req_data)
@@ -198,21 +195,6 @@ def export_product(req_data, target, user_id):
                                     update_product_data_images(product, image['src'], shopify_images[i]['src'])
                     except:
                         capture_exception(level='warning')
-
-                # prepare and create new variants in store
-                new_variants = [variant for variant in variants if not variant.get('id')]
-                shopify_images = r.json()['product'].get('images', [])
-                for variant in new_variants:
-                    variant_image = variant.pop('image')
-                    if variant_image:
-                        image_id = next((image['id'] for image in shopify_images if image['src'] == variant_image), '')
-                        variant['image_id'] = image_id
-                    elif shopify_images:
-                        variant['image_id'] = shopify_images[0]['id']
-
-                    create_endpoint = store.api('products', product.get_shopify_id(), 'variants.json')
-                    response = requests.post(create_endpoint, json={'variant': variant})
-                    response.raise_for_status()
 
                 del api_data
             else:

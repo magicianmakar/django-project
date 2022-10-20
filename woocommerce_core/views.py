@@ -408,17 +408,14 @@ class ProductDetailView(DetailView):
         context = super(ProductDetailView, self).get_context_data(**kwargs)
         permissions.user_can_view(self.request.user, self.object)
         products = reverse('woo:products_list')
-        options = {}
 
         if self.object.source_id:
             try:
                 context['woocommerce_product'] = self.object.sync()
-                options = context['woocommerce_product']['attributes']
             except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
                 messages.warning(self.request, f'Product details was not synced with your store (HTTP Error: {http_excption_status_code(e)})')
 
         context['product_data'] = self.object.parsed
-        context['product_data']['options'] = options
         context['breadcrumbs'] = [{'title': 'Products', 'url': products}, self.object.title]
 
         if self.object.store:

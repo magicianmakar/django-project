@@ -53,7 +53,7 @@ class GoogleMasterProductHelper(MasterProductHelperBase):
         product_data = self.get_master_product_mapped_data(parent, override_fields)
         product_data = apply_templates(product_data, store)
 
-        for variant in (product_data.get('variants_info', {}) or {}).keys():
+        for variant in product_data.get('variants_info', {}).keys():
             price = product_data['variants_info'][variant]['price']
             compare_at = product_data['variants_info'][variant]['compare_at']
 

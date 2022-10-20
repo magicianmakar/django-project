@@ -94,13 +94,13 @@
                         <div class="row">
                             <div id="more-options" class="col-xs-12">
                                 <div class="childs" style="">
+                                {% if product.variants_data %}
                                     <div class="panel panel-default m-b-lg">
                                         <div class="panel-heading" style="height: 40px;">
                                             <div class="col-xs-6"> Variants </div>
                                         </div>
-                                        <div class="panel-body" style="padding-bottom:0;overflow-x: auto;">
-                                            <table id="parent-variants" class="table table-condensed no-border"
-                                                   style="margin-bottom:0;white-space: nowrap;">
+                                        <div class="panel-body" style="padding-bottom:0">
+                                            <table id="parent-variants" class="table table-condensed no-border" style="margin-bottom:0">
                                                 <thead>
                                                     <tr>
                                                         <th>Image</th>
@@ -110,7 +110,6 @@
                                                         {% comment %}
                                                         <th>SKU</th>
                                                         {% endcomment %}
-                                                        <th></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -124,27 +123,7 @@
                                                             {% endif %}
                                                         </td>
                                                         <td style="white-space:nowrap">
-                                                            <div class="variant-name">
-                                                                <span data-name="title">{{ item.title|safe }}</span>
-                                                            </div>
-                                                            <div style="display: none;">
-                                                                <a href="#"
-                                                                   class="itooltip save-variant-name"
-                                                                   title="Save"
-                                                                   style="margin-right: 8px;"
-                                                                >
-                                                                    <i class="fa fa-check"
-                                                                       style="font-size: 18px;"></i>
-                                                                </a>
-                                                                <a href="#"
-                                                                   class="itooltip cancel-variant-name"
-                                                                   title="Cancel"
-                                                                   style="margin-right: 8px;"
-                                                                >
-                                                                    <i class="fa fa-times"
-                                                                       style="font-size: 18px;"></i>
-                                                                </a>
-                                                            </div>
+                                                            <span>{{ item.title|safe }}</span>
                                                         </td>
 
                                                         <td>
@@ -159,7 +138,7 @@
                                                         <td>
                                                             <div class="input-group" style="width:120px">
                                                                <span class="input-group-addon input-sm">{% money_format None product.store %}</span>
-                                                               <input type="number" name="compare_at" value="{{item.compare_at|default:''}}"
+                                                               <input type="number" name="compare_at_price" value="{{item.compare_at_price|default:''}}"
                                                                       min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100"
                                                                       class="form-control currency" />
                                                             </div>
@@ -171,19 +150,13 @@
                                                                    style="border-right:1px solid #ddd;width:120px"/>
                                                         </td>
                                                         {% endcomment %}
-                                                        <td></td>
                                                     </tr>
                                                     {% endfor %}
                                                 </tbody>
                                             </table>
-                                            <div class="row">
-                                                <div class="col-xs-12" style="margin: 10px 0;text-align: right">
-                                                    <a href="#" class="btn btn-success btn-xs add-new-variant">Add New
-                                                        Variant</a>
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
+                                {% endif %}
                                     <div id="variants" class="row well"
                                          style="margin:5px 0px 10px 0;padding: 20px 0 0px;display: none;">
 
@@ -574,46 +547,6 @@
         </div>
     </div>
 </div>
-    <div id="modal-add-variant-image" class="modal fade" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Select Image</h4>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <div class="row" id="images-row">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="modal-add-variant-options" class="modal fade" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Add Variation Options</h4>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <p>Choose which options this product varies on (eg. Color), or type in a custom option.</p>
-                            <input type="text" class="form-control" id="product-variant-options" placeholder="Enter new options">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary save-add-options">Save</button>
-                <button type="button" class="btn btn-outline btn-default cancel-add-options" data-dismiss="modal">Cancel</button>
-              </div>
-            </div>
-        </div>
-    </div>
 {% if request.user|can:'image_uploader.use' %}
 <div id="modal-upload-image" class="modal fade" aria-hidden="true">
     <div class="modal-dialog modal-lg">

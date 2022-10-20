@@ -175,9 +175,8 @@
                                 {% include 'aliextractor/get_pricing_data.html' %}
                             {% endif %}
                             </div>
-                            <div class="panel-body" style="padding-bottom:0;overflow-x: auto;">
-                        <table id="shopify-variants" class="table table-condensed no-border"
-                               style="margin-bottom:0;white-space: nowrap;">
+                            <div class="panel-body" style="padding-bottom:0">
+                        <table id="shopify-variants" class="table table-condensed no-border" style="margin-bottom:0">
                             <thead>
                                 <tr>
                                     <th style="width:64px">Image</th>
@@ -186,7 +185,6 @@
                                     <th>Compare at price</th>
                                     <th>SKU</th>
                                     <th>Weight</th>
-                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -207,27 +205,7 @@
                                         <input type="hidden" name="option3" value="{{item.option3|default:''}}">
                                         <input type="hidden" name="title" value="{{item.title}}"/>
                                         <!-- <input class="var-input var-input-title" type="text" name="title" value="{{item.title}}" /> -->
-                                        <div class="variant-name">
                                         <span>{{item.title}}</span>
-                                        </div>
-                                        <div style="display: none;">
-                                                    <a href="#"
-                                                       class="itooltip save-variant-name"
-                                                       title="Save"
-                                                       style="margin-right: 8px;"
-                                                    >
-                                                        <i class="fa fa-check"
-                                                           style="font-size: 18px;"></i>
-                                                    </a>
-                                                    <a href="#"
-                                                       class="itooltip cancel-variant-name"
-                                                       title="Cancel"
-                                                       style="margin-right: 8px;"
-                                                    >
-                                                        <i class="fa fa-times"
-                                                           style="font-size: 18px;"></i>
-                                                    </a>
-                                                </div>
                                     </td>
 
                                     <td style="white-space:nowrap">
@@ -269,16 +247,10 @@
                                             <option value="lb" {% if item.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
                                         </select>
                                     </td>
-                                    <td></td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
-                                <div class="row">
-                                    <div class="col-xs-12" style="margin: 10px 0;text-align: right">
-                                        <a href="#" class="btn btn-success btn-xs add-new-variant">Add New Variant</a>
-                                    </div>
-                                </div>
                         </div>
                     </div>
                     {% endif %}
@@ -1031,49 +1003,7 @@
         </div>
     </div>
 </div>
-<div id="modal-add-variant-image" class="modal fade" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Select Image</h4>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <div class="row" id="images-row">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-<div id="modal-add-variant-options" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Add Variation Options</h4>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <p>Choose which options this product varies on (eg. Color), or type in a custom option.</p>
-                        <input type="text" class="form-control" id="product-variant-options"
-                               placeholder="Enter new options">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary save-add-options">Save</button>
-                <button type="button" class="btn btn-outline btn-default cancel-add-options" data-dismiss="modal">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+
 {% include "partial/shopify_product_selector.html" %}
 {% include "multichannel_products/partial/master_product_selector.html" %}
 {% if request.user|can:'image_uploader.use' %}

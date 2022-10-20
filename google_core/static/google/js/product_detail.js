@@ -6,15 +6,6 @@
 
 var image_cache = {};
 
-/* jshint ignore:start */
-function uuidv4() {
-    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function (c) {
-            return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
-        }
-    );
-}
-/* jshint ignore:end */
-
 function showProductInfo(rproduct) {
     product = rproduct;
     if (product) {
@@ -85,9 +76,6 @@ function prepareApiData(productData, variants) {
         /*if (config.connected || $('#advanced_variants').prop('checked')) {*/
         $('#google-variants tr.google-variant').each(function(j, tr) {
             var variant_data = variants[j];
-            if (!variant_data.sku) {
-                delete variant_data.guid;
-            }
 
             $.each(attrs, function(k, att) {
                 var att_val = $('[name="' + att + '"]', tr).val();
@@ -418,202 +406,6 @@ function productErrorLog() {
     });
 }
 
-$('#modal-add-variant-options .save-add-options').click(function (e) {
-    var options = $('#modal-add-variant-options #product-variant-options').val();
-    if (options) {
-        variantsConfig = options.split(',').map(function(name) {
-            return {title: name, option_values: []};
-        });
-        $('#modal-add-variant-options').modal('hide');
-        $("a.add-new-variant").trigger('click');
-    }
-});
-
-$("a.add-new-variant").click(function (e) {
-    e.preventDefault();
-    if (!variantsConfig.length) {
-        $('#modal-add-variant-options').modal('show');
-        $('#modal-add-variant-options #product-variant-options').tagit({
-            allowSpaces: true,
-            availableTags: ['Color', 'Size'],
-            placeholderText: 'Enter new options',
-        });
-        return;
-    }
-
-    var uuid = uuidv4();
-    var newVariant = {
-        guid: uuid,
-        compareatprice: '',
-        price: '',
-        suppliersku: '',
-        weight: '',
-        weightunit: 'g',
-        stock: '',
-        variantsconfig: [],
-        image: '',
-    };
-    variants.push(newVariant);
-
-    var row = $('<tr>');
-    row.addClass('google-variant');
-    row.attr('variant-id', uuid);
-    row.append(
-        '<td><input class="variant-checkbox" type="checkbox" name="variant-selected"></td>' +
-        '<td class="add-variant-image">' +
-        '<img class="unveil" src="" data-src="" product="' + uuid + '" style="width:64px;cursor:pointer;"/>' +
-        '<a href="#" class="itooltip add-variant-image">+ Add image</a>' +
-        '</td>');
-
-    var nameCell = $('<td>');
-    nameCell.css('white-space', 'nowrap');
-    row.append(nameCell);
-
-    var displayElement = $('<div>');
-    displayElement.addClass('variant-name');
-    nameCell.append(displayElement);
-
-    displayElement.append(
-        '<span data-name="title"></span>'
-    );
-    displayElement.hide();
-
-    var editElement = $('<div>');
-    editElement.css('display', 'flex');
-    editElement.css('align-items', 'center');
-    editElement.append(
-        '<a href="#" class="itooltip save-variant-name" title="Save" style="margin-right: 8px;">' +
-        '<i class="fa fa-check" style="font-size: 18px;"></i>' +
-        '</a>'
-    );
-    nameCell.append(editElement);
-
-    var el = $('<div>').addClass('editable-variant-name');
-    el.css('display', 'flex');
-    el.css('align-items', 'center');
-    variantsConfig.forEach(function (option) {
-        var select = $('<input>');
-        select.css('margin-right', '10px').addClass('form-control').prop('name', option.title).attr('placeholder', option.title);
-        el.append(select);
-    });
-    editElement.prepend(el);
-
-    var inputs =
-        '<td><div class="input-group" style="width:120px">' +
-        '<span class="input-group-addon input-sm">$</span>' +
-        '<input type="number" name="price" value="" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" />' +
-        '</div></td>' +
-        '<td><div class="input-group" style="width:120px">' +
-        '<span class="input-group-addon input-sm">$</span>' +
-        '<input type="number" name="compareatprice" value="" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" />' +
-        '</div></td>' +
-        '<td><input class="form-control" type="text" name="suppliersku" value=""/></td>' +
-        '<td><input class="form-control" type="number" name="stock" value="" min="0" step="1" style="min-width: 50px; max-width: 80px;"/></td>' +
-        '<td style="white-space:nowrap">' +
-        '<input class="form-control" type="number" name="weight" value="" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" style="display:inline-block;width:80px;">' +
-        '<select class="form-control" name="weight_unit" style="width:65px;display:inline-block;">';
-    var weight_unit_array = ['g', 'kg', 'oz', 'lb'];
-    var weight_unit_str = '';
-    for (var unit in weight_unit_array) {
-        if (newVariant.weightunit === weight_unit_array[unit]) {
-            weight_unit_str += '<option selected="selected" value="' + newVariant.weightunit + '">' + newVariant.weightunit + '</option>';
-        } else {
-            weight_unit_str += '<option value="' + weight_unit_array[unit] + '">' + weight_unit_array[unit] + '</option>';
-        }
-    }
-    inputs = inputs + weight_unit_str + '</select></td>' + '</tr>';
-
-    row.append(inputs);
-    row.append(
-        '<td><a href="#" class="itooltip delete-variant" title="Remove" style="margin-right: 8px;">' +
-        '<i class="fa fa-times" style="font-size: 18px;"></i>' +
-        '</a></td>');
-
-    $('#google-variants tbody').append(row);
-    $('#google-variants-panel-container').animate({ scrollTop: $('#google-variants-panel-container').prop('scrollHeight')}, 1000);
-});
-
-$('body').on('click', 'tr.google-variant td.add-variant-image', function(e) {
-    e.preventDefault();
-    $('#modal-add-variant-image #images-row').empty();
-    product.allImages.forEach(function(image) {
-        $('#modal-add-variant-image #images-row').append(
-            '<div class="col-xs-3">' +
-            '<img src="'+ image + '" data-src="'+ image + '" class="unveil add-variant-image-block"/>' +
-            '</div>'
-        );
-    });
-    $('#modal-add-variant-image').attr('variant-id', $(this).closest('tr').attr('variant-id'));
-    $('#modal-add-variant-image').modal('show');
-});
-
-$('#modal-add-variant-image').on('click', '.add-variant-image-block', function(e) {
-    var id = $('#modal-add-variant-image').attr('variant-id');
-    var img = $('#google-variants tr[variant-id="' + id + '"]').find('.add-variant-image img');
-    img.attr('src', $(this).prop('src'));
-    img.data('src', $(this).prop('src'));
-    if (img.next()) {
-        img.next().remove();
-    }
-    var variant = variants.find(function (item) {
-        if (item.guid === id) {
-            return item;
-        }
-    });
-    variant.image = $(this).prop('src');
-    $('#modal-add-variant-image').modal('hide');
-});
-
-$('body').on('click', 'tr.google-variant .delete-variant', function(e) {
-    e.preventDefault();
-
-    var id = $(this).parent().parent().attr('variant-id');
-    variants = variants.filter(function(item) {
-        if (item.guid !== id) {
-            return item;
-        }
-    });
-    $(this).parent().parent().remove();
-});
-
-$('body').on('click', 'tr.google-variant .save-variant-name', function(e) {
-    e.preventDefault();
-
-    var el = $(this).prev();
-    var editElement = $(this).parent();
-    var displayElement = $(this).parent().prev();
-
-    var row = $(this).parent().parent().parent();
-    var id = +row.attr('variant-id');
-    if (isNaN(id)) {
-        id = row.attr('variant-id');
-    }
-    var variant = variants.find(function (item) {
-        if (item.guid === id) {
-            return item;
-        }
-    });
-
-    var title = '';
-    variant.variantsconfig = [];
-    editElement.find('input').each(function() {
-        var value = $(this).val();
-        if (value) {
-            variant.variantsconfig.push({label: $(this).attr('name'), value: value});
-            if (title) {
-                title += ' / ' + value;
-            } else {
-                title = value;
-            }
-        }
-    });
-    variant.varianttitle = title;
-    displayElement.find('span').text(title);
-
-    displayElement.show();
-    el.remove();
-    editElement.hide();
-});
 
 $('#product-update-btn').click(function (e) {
     e.preventDefault();
@@ -1853,7 +1645,7 @@ $('.parent-product-create').click(function(e) {
         type: 'POST',
         data: JSON.stringify({
             'product_id': $(this).attr('data-product-id'),
-            'store_type': 'google',
+            'store_type': 'fb',
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",

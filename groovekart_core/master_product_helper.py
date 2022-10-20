@@ -20,7 +20,7 @@ def map_variants(parent, product_data, mapping, store=None):
                         'compare_at_price': parent_variants[item]['compare_at'],
                         } for item in parent_variants.keys()]
     for variant in product_data.get('variants'):
-        parent_variant = list(filter(lambda x: x['variant'] == mapping.get(variant['description']),
+        parent_variant = list(filter(lambda x: x['variant'] == mapping[variant['description']],
                                      parent_variants))
         if parent_variant:
             parent_variant = parent_variant[0]
@@ -96,13 +96,7 @@ class GrooveKartMasterProductHelper(MasterProductHelperBase):
                 },
             }, countdown=0, expires=120)
         else:
-            product_data = self.get_master_product_mapped_data(
-                parent, product_data=product_data, override_fields={
-                    'variants_images': product_data.get('variants_images'),
-                    'variants_sku': product_data.get('variants_sku'),
-                    'variants': product_data.get('variants'),
-                    'variants_info': product_data.get('variants_info'),
-                })
+            product_data = self.get_master_product_mapped_data(parent, product_data=product_data)
             product_data = apply_templates(product_data, self.product.store)
 
             tasks.product_save(

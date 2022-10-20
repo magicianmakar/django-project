@@ -1,5 +1,5 @@
 /* global $, master_variants, connected_stores, displayAjaxError */
-(function (master_variants, connected_stores) {
+(function () {
     'use strict';
 
     const e = React.createElement;
@@ -44,7 +44,7 @@
         constructor(props) {
             super(props);
             this.state = {
-                store: {id: null, type: '', title: '', variants_map: []},
+                store: {id: null, type: '', title: ''},
                 isChanged: false,
                 isShowingModal: false,
                 changedStore: null,
@@ -92,7 +92,7 @@
         handleStoreSelectionChange(newStore) {
             if (newStore === 'Select a store') {
                 this.setState({
-                    store: {id: null, type: '', title: '', variants_map: []},
+                    store: {id: null, type: '', title: ''},
                     isChanged: false,
                     isShowingModal: false,
                     changedStore: null,
@@ -167,7 +167,7 @@
                                     Select a store
                                 </option>
                                 {
-                                    connected_stores?.map(store => (
+                                    connected_stores.map(store => (
                                         <option key={store.id} value={store.id + "_" + store.type}>
                                             {store.title}
                                         </option>
@@ -207,8 +207,7 @@
                                                                 value={store.variants_map[item.title]}
                                                                 onChange={({target: {value}}) => this.handleVariantSelectionChange(item.title, value)}
                                                         >
-                                                            <option key="none" value={null}>None</option>
-                                                            {master_variants?.map(variant => (
+                                                            {master_variants.map(variant => (
                                                                 <option key={variant} value={variant}>{variant}</option>
                                                             ))}
                                                         </select>
@@ -237,4 +236,4 @@
 
     const domContainer = document.querySelector('#variants-mapping-container');
     ReactDOM.render(<VariantsMappingSelector/>, domContainer);
-}(master_variants, connected_stores));
+}());

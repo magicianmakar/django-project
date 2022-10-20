@@ -2307,7 +2307,7 @@ def format_shopify_send_to_store(save_for_later_product):
     }
 
     variants = []
-    for title, info in (save_for_later_product.get('variants_info', {}) or {}).items():
+    for title, info in save_for_later_product['variants_info'].items():
         variant = {
             'price': info['price'],
             'title': title.replace(' / ', ' & '),

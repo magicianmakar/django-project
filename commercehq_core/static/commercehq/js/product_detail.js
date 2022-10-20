@@ -6,15 +6,6 @@
 
 var image_cache = {};
 
-/* jshint ignore:start */
-function uuidv4() {
-    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function (c) {
-            return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
-        }
-    );
-}
-/* jshint ignore:end */
-
 function showProductInfo(rproduct) {
     product = rproduct;
     if (product) {
@@ -42,39 +33,6 @@ function showProductInfo(rproduct) {
 
                 $('#variants .area').append(v);
             });
-        }
-        else if (product.options && product.options.length) {
-            $.each(product.options, function (i, el) {
-                var v = $('#variants .variant-simple').clone();
-                v.removeClass('variant-simple');
-                v.addClass('variant');
-                v.find("a.remove-variant").click(removeVariant);
-                v.show();
-
-                v.find('#product-variant-name').val(el.title).prop('disabled', true);
-                v.find('#product-variant-values').val(el.values.join(',')).prop('disabled', true);
-
-                v.data('changes-look', el.changes_look);
-                v.data('thumbnails', el.thumbnails);
-
-                $("#product-variant-values", v).tagit({
-                    allowSpaces: true,
-                    // readOnly: true,
-                    beforeTagAdded: function (event, ui) {
-                        if (!ui.duringInitialization) {
-                            beforeTagAdded(event, ui);
-                        }
-                    },
-                    afterTagRemoved: function (event, ui) {
-                        if (!ui.duringInitialization) {
-                            afterTagRemoved(event, ui);
-                        }
-                    }
-                });
-
-                $('#variants .area').append(v);
-            });
-            $('#variants .area').next().remove();
         }
 
         if (product.weight) {
@@ -104,362 +62,16 @@ $("a.add-variant").click(function (e) {
     v.removeClass('variant-simple');
     v.show();
     v.find("a.remove-variant").click(removeVariant);
-    v.data('changes-look', false);
-    v.data('thumbnails', []);
 
     $("#product-variant-values", v).tagit({
-        allowSpaces: true,
-        beforeTagAdded: function (event, ui) {
-            beforeTagAdded(event, ui);
-        },
-        afterTagRemoved: function (event, ui) {
-            afterTagRemoved(event, ui);
-        }
+        allowSpaces: true
     });
 
     $('#variants .area').append(v);
 });
 
-function afterTagRemoved(event, ui) {
-    var updatedVariants = [];
-    product.variants.forEach(function (item) {
-        item.variant = item.variant.filter(function (variant) {
-            if (variant !== ui.tagLabel) {
-                return variant;
-            } else {
-                updatedVariants.push(item.id);
-            }
-        });
-    });
-    if (updatedVariants && $(event.target).tagit("assignedTags").length !== 0) {
-        product.variants.forEach(function (item) {
-            if (updatedVariants.includes(item.id)) {
-                item.variant.push($(event.target).tagit("assignedTags")[0]);
-            }
-        });
-        $('#commercehq-variants tr.commercehq-variant').each(function (j, tr) {
-            var id = +$(tr).attr('variant-id');
-            if (isNaN(id)) {
-                id = $(tr).attr('variant-id');
-            }
-            if (updatedVariants.includes(id)) {
-                $('span[data-name="title"]', tr).text($('span[data-name="title"]', tr).text().replace(ui.tagLabel, $(event.target).tagit("assignedTags")[0]).replace(/\s\/\s$/, '').replace(/^\s\/\s/, ''));
-            }
-        });
-    } else if ($(event.target).tagit("assignedTags").length === 0) {
-        $('#commercehq-variants tr.commercehq-variant').each(function (j, tr) {
-            var id = +$(tr).attr('variant-id');
-            if (isNaN(id)) {
-                id = $(tr).attr('variant-id');
-            }
-            if (updatedVariants.includes(id)) {
-                $('span[data-name="title"]', tr).text($('span[data-name="title"]', tr).text().replace(ui.tagLabel, '').replace(/\s\/\s$/, '').replace(/^\s\/\s/, ''));
-            }
-        });
-    }
-}
-
-function beforeTagAdded(event, ui) {
-    if ($(event.target).tagit("assignedTags").length === 0) {
-        product.variants.forEach(function (item) {
-            item.variant.push(ui.tagLabel);
-        });
-        $('#commercehq-variants tr.commercehq-variant').each(function (j, tr) {
-            $('span[data-name="title"]', tr).text($('span[data-name="title"]', tr).text() + ' / ' + ui.tagLabel);
-        });
-    }
-}
-
-$("a.edit-variant-options").click(function (e) {
-    e.preventDefault();
-
-    if (!$('#variants').is(':hidden')) {
-        $(this).text('Edit Variant Options');
-    } else {
-        $(this).text('Hide Variant Options');
-    }
-
-    $('#variants').toggle();
-});
-
-$('#modal-add-variant-options .save-add-options').click(function (e) {
-    var options = $('#modal-add-variant-options #product-variant-options').val();
-    if (options) {
-        product.options = options.split(',').map(function(name) {
-            return {changes_look: name.toLowerCase() === 'color', thumbnails: [], title: name, values: []};
-        });
-        $('#modal-add-variant-options').modal('hide');
-        $("a.add-new-variant").trigger('click');
-    }
-});
-
-$("a.add-new-variant").click(function (e) {
-    e.preventDefault();
-    if (!product.options || !product.options.length) {
-        $('#modal-add-variant-options').modal('show');
-        $('#modal-add-variant-options #product-variant-options').tagit({
-            allowSpaces: true,
-            availableTags: ['Color', 'Size'],
-            placeholderText: 'Enter new options',
-        });
-        return;
-    }
-
-    var uuid = uuidv4();
-    product.variants.push({id: uuid, compare_price: '', price: '', sku: '', variant: [], image: ''});
-
-    var row = $('<tr>');
-    row.addClass('commercehq-variant');
-    row.attr('variant-id', uuid);
-
-    var nameCell = $('<td>');
-    nameCell.css('white-space', 'nowrap');
-    row.append(nameCell);
-
-    var displayElement = $('<div>');
-    displayElement.addClass('variant-name');
-    nameCell.append(displayElement);
-
-    displayElement.append(
-        '<span data-name="title"></span>'
-        // +
-        // '<a href="#" class="itooltip edit-variant-name" title="Edit" style="margin-left: 8px;">' +
-        // '<i class="fa fa-edit" style="font-size: 18px;"></i>' +
-        // '</a>'
-    );
-    displayElement.hide();
-
-    var editElement = $('<div>');
-    editElement.css('display', 'flex');
-    editElement.css('align-items', 'center');
-    editElement.append(
-        '<a href="#" class="itooltip save-variant-name" title="Save" style="margin-right: 8px;">' +
-        '<i class="fa fa-check" style="font-size: 18px;"></i>' +
-        '</a>'
-        // +
-        // '<a href="#" class="itooltip cancel-variant-name" title="Cancel" style="margin-right: 8px;">' +
-        // '<i class="fa fa-times" style="font-size: 18px;"></i>' +
-        // '</a>'
-    );
-    nameCell.append(editElement);
-
-    var options = [];
-    if ($('#variants .variant').length) {
-        $('#variants .variant').each(function (i, el) {
-            options.push({
-                'title': $(el).find('#product-variant-name').val(),
-                'values': $(el).find('#product-variant-values').val().split(','),
-                'changes_look': $(el).data('changes-look'),
-                'thumbnails': $(el).data('thumbnails'),
-            });
-        });
-    }
-
-    var el = $('<div>').addClass('editable-variant-name');
-    el.css('display', 'flex');
-    el.css('align-items', 'center');
-    product.options.forEach(function (option) {
-        var select = $('<input>');
-        select.css('margin-right', '10px').addClass('form-control').prop('name', option.title).attr('placeholder', option.title);
-        // var emptyOption = $('<option>').attr('value', '').text('Select ' + option.title).attr('selected','selected');
-        // select.append(emptyOption);
-        //
-        // option.values.forEach(function (value) {
-        //     select.append($('<option>').attr('value', value).text(value));
-        // });
-        el.append(select);
-    });
-    editElement.prepend(el);
-
-    var inputs =
-        '<td><div class="input-group" style="width:120px">' +
-        '<span class="input-group-addon input-sm">$</span>' +
-        '<input type="number" name="price" value="" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" />' +
-        '</div></td>' +
-        '<td><div class="input-group" style="width:120px">' +
-        '<span class="input-group-addon input-sm">$</span>' +
-        '<input type="number" name="compare_price" value="" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" />' +
-        '</div></td>' +
-        '<td><input class="var-input form-control" type="text" name="sku" value="" style="border-right:1px solid #ddd;width:120px"/></td>';
-    row.append(inputs);
-    row.append(
-        '<td><a href="#" class="itooltip delete-variant" title="Remove" style="margin-right: 8px;">' +
-        '<i class="fa fa-times" style="font-size: 18px;"></i>' +
-        '</a></td>');
-
-    $('#commercehq-variants tbody').append(row);
-});
-
-$('body').on('click', 'tr.commercehq-variant td.add-variant-image', function(e) {
-    e.preventDefault();
-    $('#modal-add-variant-image #images-row').empty();
-    product.images.forEach(function(image) {
-        $('#modal-add-variant-image #images-row').append(
-            '<div class="col-xs-3">' +
-            '<img src="'+ image + '" data-src="'+ image + '" class="unveil add-variant-image-block"/>' +
-            '</div>'
-        );
-    });
-    $('#modal-add-variant-image').attr('variant-id', $(this).closest('tr').attr('variant-id'));
-    $('#modal-add-variant-image').modal('show');
-});
-
-$('#modal-add-variant-image').on('click', '.add-variant-image-block', function(e) {
-    var id = $('#modal-add-variant-image').attr('variant-id');
-    var img = $('#commercehq-variants tr[variant-id="' + id + '"]').find('.add-variant-image img');
-    img.attr('src', $(this).prop('src'));
-    img.data('src', $(this).prop('src'));
-    if (img.next()) {
-        img.next().remove();
-    }
-    var variant = product.variants.find(function (item) {
-        if (item.id === id) {
-            return item;
-        }
-    });
-    variant.image = $(this).prop('src');
-    $('#modal-add-variant-image').modal('hide');
-});
-
-$('body').on('click', 'tr.commercehq-variant .delete-variant', function(e) {
-    e.preventDefault();
-
-    var id = $(this).parent().parent().attr('variant-id');
-    product.variants = product.variants.filter(function(item) {
-        if (item.id !== id) {
-            return item;
-        }
-    });
-    $(this).parent().parent().remove();
-});
-
-$('body').on('click', 'tr.commercehq-variant .edit-variant-name', function(e){
-    e.preventDefault();
-
-    $(this).parent().hide();
-    var row = $(this).parent().parent().parent();
-
-    var editElement = $(this).parent().next();
-    editElement.show();
-    editElement.css('display', 'flex');
-    editElement.css('align-items', 'center');
-
-    var options = [];
-
-    if ($('#variants .variant').length) {
-        $('#variants .variant').each(function (i, el) {
-            options.push({
-                'title': $(el).find('#product-variant-name').val(),
-                'values': $(el).find('#product-variant-values').val().split(','),
-                'changes_look': $(el).data('changes-look'),
-                'thumbnails': $(el).data('thumbnails'),
-            });
-        });
-    }
-
-    var id = +row.attr('variant-id');
-    if (isNaN(id)) {
-        id = row.attr('variant-id');
-    }
-    var variant = product.variants.find(function (item) {
-        if (item.id === id) {
-            return item;
-        }
-    });
-
-    var el = $('<div>');
-    el.css('display', 'flex');
-    el.css('align-items', 'center');
-    options.forEach(function (option) {
-        var select = $('<select>');
-        select.css('margin-right', '10px');
-        select.addClass('form-control');
-        select.prop('name', option.title);
-        var emptyOption = $('<option>').attr('value', '').text('Select ' + option.title).attr('selected', 'selected');
-        select.append(emptyOption);
-
-        var selectedValue = null;
-        option.values.forEach(function (value) {
-            select.append($('<option>').attr('value', value).text(value));
-            if (variant.variant.includes(value)) {
-                selectedValue = value;
-            }
-        });
-        if (selectedValue) {
-            select.val(selectedValue);
-        }
-        el.append(select);
-    });
-
-    editElement.prepend(el);
-});
-
-$('body').on('click', 'tr.commercehq-variant .cancel-variant-name', function(e) {
-    e.preventDefault();
-
-    $(this).parent().prev().show();
-    $(this).prev().prev().remove();
-    $(this).parent().hide();
-});
-
-$('body').on('click', 'tr.commercehq-variant .save-variant-name', function(e) {
-    e.preventDefault();
-
-    var el = $(this).prev();
-    var editElement = $(this).parent();
-    var displayElement = $(this).parent().prev();
-
-    var row = $(this).parent().parent().parent();
-    var variant = {variant: []};
-    var id = +row.attr('variant-id');
-    if (isNaN(id)) {
-        id = row.attr('variant-id');
-    }
-    variant = product.variants.find(function (item) {
-        if (item.id === id) {
-            return item;
-        }
-    });
-
-    var title = '';
-    variant.variant = [];
-    editElement.find('input').each(function() {
-        var value = $(this).val();
-        if (value) {
-            variant.variant.push(value);
-            if (title) {
-                title += ' / ' + value;
-            } else {
-                title = value;
-            }
-        }
-    });
-
-    displayElement.find('span').text(title);
-
-    displayElement.show();
-    el.remove();
-    editElement.hide();
-});
-
 function removeVariant(e) {
     e.preventDefault();
-
-    var removedOptions = $('#product-variant-values', $(e.target).parent()).val().split(',');
-
-    product.variants.forEach(function (item) {
-        item.variant = item.variant.filter(function (variant) {
-            if (!removedOptions.includes(variant)) {
-                return variant;
-            }
-        });
-    });
-
-    removedOptions.forEach(function (option) {
-        $('#commercehq-variants tr.commercehq-variant').each(function (j, tr) {
-            $('span[data-name="title"]', tr).text($('span[data-name="title"]', tr).text().replace(option, '').replace(/\s\/\s$/, '').replace(/^\s\/\s/, ''));
-        });
-    });
 
     $(e.target).parent().remove();
 }
@@ -548,16 +160,14 @@ $('#product-update-btn').click(function (e) {
 
         'variants': [],
         'images': product.images,
-        'options': product.options,
     };
 
+    if (product.is_multi) {
         $('#commercehq-variants tr.commercehq-variant').each(function(j, tr) {
 
-            var variant_data = {};
-            var id = +$(tr).attr('variant-id');
-            if (!isNaN(id)) {
-                variant_data.id = parseInt($(tr).attr('variant-id'));
-            }
+            var variant_data = {
+                id: parseInt($(tr).attr('variant-id'))
+            };
 
             var attrs = [
                 'price', 'compare_price', 'sku'
@@ -576,21 +186,9 @@ $('#product-update-btn').click(function (e) {
                 }
             });
 
-            var title = $('span[data-name="title"]', tr).text();
-            if (title) {
-                variant_data.variant = title.split(' / ');
-            } else {
-                variant_data.variant = [];
-            }
-
-            variant_data.variant.forEach(function(option, index) {
-                if (!api_data.options[index].values.includes(option)) {
-                    api_data.options[index].values.push(option);
-                }
-            });
-
             api_data.variants.push(variant_data);
         });
+    }
 
     $.ajax({
         url: api_url('product-update', 'chq'),

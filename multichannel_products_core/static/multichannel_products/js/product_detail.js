@@ -9,17 +9,6 @@ var image_cache = {};
 var children_count = 0;
 var children_deleted = 0;
 
-var newVariants = [];
-
-/* jshint ignore:start */
-function uuidv4() {
-    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function (c) {
-            return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
-        }
-    );
-}
-/* jshint ignore:end */
-
 function showProductInfo(rproduct) {
     product = rproduct;
     if (product) {
@@ -85,189 +74,6 @@ function removeVariant(e) {
 
     $(e.target).parent().remove();
 }
-
-$('#modal-add-variant-options .save-add-options').click(function (e) {
-    var options = $('#modal-add-variant-options #product-variant-options').val();
-    if (options) {
-        product.variants = options.split(',').map(function(name) {
-            return {title: name, values: []};
-        });
-        $('#modal-add-variant-options').modal('hide');
-        $("a.add-new-variant").trigger('click');
-    }
-});
-
-$("a.add-new-variant").click(function (e) {
-    e.preventDefault();
-    if (!product.variants.length) {
-        $('#modal-add-variant-options').modal('show');
-        $('#modal-add-variant-options #product-variant-options').tagit({
-            allowSpaces: true,
-            availableTags: ['Color', 'Size'],
-            placeholderText: 'Enter new options',
-        });
-        return;
-    }
-
-    var uuid = uuidv4();
-    newVariants.push({
-        title: '',
-        price: '',
-        compare_at: '',
-        compare_at_price: '',
-        id: uuid,
-        variants: [],
-    });
-
-    var row = $('<tr>');
-    row.addClass('parent-variant');
-    row.attr('variant-id', uuid);
-    row.append(
-        '<td class="add-variant-image">' +
-        '<img class="unveil" src="" data-src="" product="' + uuid + '" style="width:64px;cursor:pointer;"/>' +
-        '<a href="#" class="itooltip add-variant-image">+ Add image</a>' +
-        '</td>');
-
-    var nameCell = $('<td>');
-    nameCell.css('white-space', 'nowrap');
-    row.append(nameCell);
-
-    var displayElement = $('<div>');
-    displayElement.addClass('variant-name');
-    nameCell.append(displayElement);
-
-    displayElement.append(
-        '<span data-name="title"></span>'
-    );
-    displayElement.hide();
-
-    var editElement = $('<div>');
-    editElement.css('display', 'flex');
-    editElement.css('align-items', 'center');
-    editElement.append(
-        '<a href="#" class="itooltip save-variant-name" title="Save" style="margin-right: 8px;">' +
-        '<i class="fa fa-check" style="font-size: 18px;"></i>' +
-        '</a>'
-    );
-    nameCell.append(editElement);
-
-    var el = $('<div>').addClass('editable-variant-name');
-    el.css('display', 'flex');
-    el.css('align-items', 'center');
-    product.variants.forEach(function (option) {
-        var select = $('<input>');
-        select.css('margin-right', '10px').addClass('form-control').prop('name', option.title).attr('placeholder', option.title);
-        el.append(select);
-    });
-    editElement.prepend(el);
-
-    var inputs =
-        '<td><div class="input-group" style="width:120px">' +
-        '<span class="input-group-addon input-sm">$</span>' +
-        '<input type="number" name="price" value="" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" />' +
-        '</div></td>' +
-        '<td><div class="input-group" style="width:120px">' +
-        '<span class="input-group-addon input-sm">$</span>' +
-        '<input type="number" name="compare_at" value="" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" />' +
-        '</div></td>';
-    row.append(inputs);
-    row.append(
-        '<td><a href="#" class="itooltip delete-variant" title="Remove" style="margin-right: 8px;">' +
-        '<i class="fa fa-times" style="font-size: 18px;"></i>' +
-        '</a></td>');
-
-    $('#parent-variants tbody').append(row);
-});
-
-$('body').on('click', 'tr.parent-variant td.add-variant-image', function(e) {
-    e.preventDefault();
-    $('#modal-add-variant-image #images-row').empty();
-    product.images.forEach(function(image) {
-        $('#modal-add-variant-image #images-row').append(
-            '<div class="col-xs-3">' +
-            '<img src="'+ image + '" data-src="'+ image + '" class="unveil add-variant-image-block"/>' +
-            '</div>'
-        );
-    });
-    $('#modal-add-variant-image').attr('variant-id', $(this).closest('tr').attr('variant-id'));
-    $('#modal-add-variant-image').modal('show');
-});
-
-$('#modal-add-variant-image').on('click', '.add-variant-image-block', function(e) {
-    var id = $('#modal-add-variant-image').attr('variant-id');
-    var img = $('#parent-variants tr[variant-id="' + id + '"]').find('.add-variant-image img');
-    img.attr('src', $(this).prop('src'));
-    img.data('src', $(this).prop('src'));
-    if (img.next()) {
-        img.next().remove();
-    }
-    var variant = newVariants.find(function (item) {
-        if (item.id === id) {
-            return item;
-        }
-    });
-    variant.image = $(this).prop('src');
-    $('#modal-add-variant-image').modal('hide');
-});
-
-$('body').on('click', 'tr.parent-variant .delete-variant', function(e) {
-    e.preventDefault();
-
-    var id = $(this).parent().parent().attr('variant-id');
-
-    newVariants = newVariants.filter(function (item) {
-        if (item.id !== id) {
-            return item;
-        }
-    });
-
-    $(this).parent().parent().remove();
-});
-
-$('body').on('click', 'tr.parent-variant .save-variant-name', function(e) {
-    e.preventDefault();
-
-    var el = $(this).prev();
-    var editElement = $(this).parent();
-    var displayElement = $(this).parent().prev();
-
-    var row = $(this).parent().parent().parent();
-    var id = row.attr('variant-id');
-    var variant = newVariants.find(function (item) {
-        if (item.id === id) {
-            return item;
-        }
-    });
-
-    var title = '';
-    var variants = {};
-    editElement.find('input').each(function() {
-        var value = $(this).val();
-        var name = $(this).attr('name');
-        if (value) {
-            product.variants = product.variants.map(function (item) {
-                if (item.title === name && !item.values.includes(value)) {
-                    item.values.push(value);
-                }
-                return item;
-            });
-            variants[name] = value;
-            if (title) {
-                title += ' / ' + value;
-            } else {
-                title = value;
-            }
-        }
-    });
-
-    variant.title = title;
-    variant.variants = variants;
-    displayElement.find('span').text(title);
-    displayElement.show();
-    el.remove();
-    editElement.hide();
-    row.prop('variant-title', title);
-});
 
 $('#product-update-btn').click(function (e) {
     e.preventDefault();
@@ -379,7 +185,6 @@ $('#product-save-btn').click(function (e) {
     var btn = $(this);
     productSave(btn, function () {
         toastr.success('Product changes saved!','Product Saved');
-        window.location.reload(true);
     });
 
 });
@@ -524,49 +329,17 @@ function productSave(btn, callback) {
         // 'weight': parseFloat($('#product-weight').val()),
         // 'weight_unit': $('#product-weight-unit').val(),
         'published': product.published,
-        'variants': product.variants,
+        'variants': [],
         'variants_info': product.variants_info,
     };
 
-    if ($('tr.parent-variant[variant-id]').length) {
-        $('tr.parent-variant[variant-id]').each(function (i, el) {
-            var id = $(this).attr('variant-id');
-
-            var variant_data = {};
-
-            var attrs = [
-                'price', 'compare_at'
-            ];
-
-            var tr = $(this);
-            $.each(attrs, function(k, att) {
-                var att_val = $('[name="' + att + '"]', tr).val();
-                if (att_val && att_val.length > 0) {
-                    if (k < 2) {
-                        att_val = parseFloat(att_val);
-                    }
-
-                    variant_data[att] = att_val;
-                } else {
-                    variant_data[att] = '';
-                }
+    if ($('#variants .variant').length) {
+        $('#variants .variant').each(function (i, el) {
+            api_data.variants.push({
+                'title': $(el).find('#product-variant-name').val(),
+                'values': $(el).find('#product-variant-values').val().split(',')
             });
 
-            var variant = newVariants.find(function (item) {
-                if (item.id === id) {
-                    return item;
-                }
-            });
-
-            if (variant && variant.image) {
-                variant_data.image = variant.image;
-            }
-            if (!api_data.variants_info) {
-                api_data.variants_info = {};
-                api_data.variants_info[variant.title] = variant_data;
-            } else {
-                api_data.variants_info[variant.title] = variant_data;
-            }
         });
     }
 
@@ -1560,7 +1333,7 @@ $('.publish-child').click(function (e) {
         var title = $(this).closest('.parent-variant').attr('variant-title');
         if ($(this).prop('name') === 'price') {
             Object.assign(product.variants_info[title], {'price': $(this).prop('value')});
-        } else if ($(this).prop('name') === 'compare_at') {
+        } else if ($(this).prop('name') === 'compare_at_price') {
             Object.assign(product.variants_info[title],
                 {'compare_at': $(this).prop('value'), 'compare_at_price': $(this).prop('value')});
         }

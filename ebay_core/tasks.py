@@ -1,4 +1,3 @@
-import json
 from json import JSONDecodeError
 from math import ceil
 from requests.exceptions import HTTPError
@@ -618,19 +617,16 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         # Fill images into variants
         for variant in product_data.get('variants', []):
             media1 = variant.pop('image')
-            variant['media1'] = (
-                media1 if (not variant.get('guid') or variant['guid'] != variant['sku']) and media1 in media else
-                product_data['media1'])
+            variant['media1'] = (media1 if variant['guid'] != variant['sku'] and media1 in media
+                                 else product_data['media1'])
             for i in range(2, 11):
                 if product_data.get(f'media{i}'):
                     variant[f'media{i}'] = product_data[f'media{i}']
             if product_data['mediax']:
                 variant['mediax'] = product_data['mediax']
 
-        sd_api_response = ebay_utils.update_product_details(
-            product_data, 'ebay', store.store_instance_id, skip_all_channels=skip_publishing,
-            variants_config=json.loads(product.parsed.get('variantsconfig', []))
-        )
+        sd_api_response = ebay_utils.update_product_details(product_data, 'ebay', store.store_instance_id,
+                                                            skip_all_channels=skip_publishing)
 
         parsed_ebay_errors_list = []
 

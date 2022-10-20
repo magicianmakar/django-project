@@ -11,12 +11,7 @@ class BigCommerceApiHelper(ApiHelperBase):
         pass
 
     def after_delete_product_connect(self, product, source_id):
-        options = product.parsed.get('options', [])
-        new_options = [{'values': [item['label'] for item in i['option_values']], 'title': i['display_name']} for i in
-                       options]
-        if new_options:
-            product.update_data({'variants': new_options})
-            product.save()
+        pass
 
     def format_order_key(self, order_key):
         order_key = order_data_cache_key(order_key, prefix='bigcommerce_order')
