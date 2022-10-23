@@ -251,7 +251,7 @@ SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 SESSION_COOKIE_AGE = 172800
 CSRF_COOKIE_SECURE = True
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:8080"] if DEBUG else ['appdeploy.dropified.com']
+CORS_ALLOWED_ORIGINS = ["http://localhost:8080"] if DEBUG else ['https://appdeploy.dropified.com']
 
 # Ignore urllib3 warnings
 warnings.filterwarnings('ignore', module='urllib3', message='Unverified HTTPS request')
