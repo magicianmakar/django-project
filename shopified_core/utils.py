@@ -1024,7 +1024,10 @@ def get_first_valid_option(most_commons, valid_options):
             return option
 
 
-def jwt_encode(payload, key=settings.API_SECRECT_KEY, expire=1):
+def jwt_encode(payload, key=None, expire=1):
+    if not key:
+        key = settings.API_SECRECT_KEY
+
     if expire:
         payload['exp'] = arrow.utcnow().replace(hours=expire).timestamp
 
@@ -1039,7 +1042,10 @@ def jwt_encode(payload, key=settings.API_SECRECT_KEY, expire=1):
     return token
 
 
-def jwt_decode(payload, key=settings.API_SECRECT_KEY):
+def jwt_decode(payload, key=None):
+    if not key:
+        key = settings.API_SECRECT_KEY
+
     return jwt.decode(
         jwt=payload,
         key=key,

@@ -1,7 +1,8 @@
-from django.http import JsonResponse
+from django.conf import settings
 from django.contrib.auth.models import User
-from django.views.generic import View
+from django.http import JsonResponse
 from django.http import QueryDict
+from django.views.generic import View
 
 import simplejson as json
 
@@ -106,6 +107,12 @@ class AuthenticationMixin(RequestDataMixin):
 
             try:
                 info = jwt_decode(token)
+                return User.objects.get(id=info['id'])
+            except:
+                pass
+
+            try:
+                info = jwt_decode(token, key=settings.SSO_SECRET_KEY)
                 return User.objects.get(id=info['id'])
             except:
                 pass

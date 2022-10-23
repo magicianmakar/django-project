@@ -2340,6 +2340,7 @@ class ShopifyWebhook(models.Model):
 class AppPermission(models.Model):
     name = models.CharField(max_length=512, verbose_name="Permission")
     description = models.CharField(max_length=512, blank=True, default='', verbose_name="Permission Description")
+    notes = models.TextField(blank=True, null=True, verbose_name="Notes")
 
     def __str__(self):
         if self.description:

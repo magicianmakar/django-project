@@ -110,7 +110,9 @@ class ShopifiedApi(ApiResponseMixin, View):
             return JsonResponse({
                 'id': user.id,
                 'username': user.username,
-                'email': user.email
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
             })
 
     def get_stores(self, request, user, data):
