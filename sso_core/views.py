@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib import messages
 
+from lib.exceptions import capture_message
 from shopified_core.utils import jwt_decode, jwt_encode
 
 
@@ -20,7 +21,7 @@ SITE_CONFIG = {
         },
         {
             'name': 'Dropified deploy',
-            'redirect_url': 'http://appdeploy.dropified.com/login',
+            'redirect_url': 'https://appdeploy.dropified.com/login',
             'domain': 'appdeploy.dropified.com',
             'validator': lambda user: user.is_staff
         }
@@ -69,12 +70,14 @@ def redirect(request):
         if site['redirect_url'].strip('/') == redirect.strip('/'):
             if site.get('validator'):
                 if not site['validator'](request.user):
+                    capture_message('SSO user not allowed', extra={'user': request.user.id, 'redirect': redirect})
                     messages.error(request, 'You are not allowed to access this site')
                     return HttpResponseRedirect('/')
 
             token = _generate_jwt_token(request.user, domain=site['domain'])
             return HttpResponseRedirect(f'{redirect}?{urlencode({"token": token})}')
 
+    capture_message('SSO Website is not found', extra={'user': request.user.id, 'redirect': redirect})
     messages.error(request, 'Website is not found')
     return HttpResponseRedirect('/')
 
