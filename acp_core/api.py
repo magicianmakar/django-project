@@ -145,7 +145,7 @@ class ACPApi(ApiResponseMixin):
                 'price': plan.get_price(),
                 'active': plan.revision == settings.PLAN_REVISION,
                 'permissions': permissions,
-                'parent_plan': model_to_dict(plan.parent_plan, exclude=['goals']) if plan.parent_plan else None,
+                'parent_plan': model_to_dict(plan.parent_plan, exclude=['goals', 'permissions']) if plan.parent_plan else None,
             })
 
             plans.append(p)
