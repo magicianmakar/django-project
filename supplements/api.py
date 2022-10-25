@@ -72,7 +72,6 @@ class SupplementsApi(ApiResponseMixin, View):
         order = list(orders.values())[0]
         country = order.get('shipping_address').get('country')
         country_code = order.get('shipping_address').get('country_code')
-
         for item in order['items']:
             total_amount += item['quantity'] * item['user_supplement'].pl_supplement.cost_price
 
@@ -525,8 +524,15 @@ class SupplementsApi(ApiResponseMixin, View):
 
         basket_items = user.basket_items.all()
         total_weight = []
+        supplements_cost_groups = {}
         for basket_item in basket_items:
-            total_weight.append(basket_item.user_supplement.pl_supplement.weight * basket_item.quantity)
+            shipstation_account = basket_item.user_supplement.pl_supplement.shipstation_account.name
+            if shipstation_account not in supplements_cost_groups:
+                supplements_cost_groups[shipstation_account] = 0
+            supplements_cost_groups[shipstation_account] += (basket_item.user_supplement.pl_supplement.weight * basket_item.quantity)
+
+        for i in supplements_cost_groups:
+            total_weight.append(supplements_cost_groups[i])
 
         shippings = get_shipping_costs(
             country_code,
