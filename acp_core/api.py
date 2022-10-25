@@ -130,12 +130,14 @@ class ACPApi(ApiResponseMixin):
     def get_plans(self, request, user, data):
         check_user_permission(user)
 
+        include_view = request.GET.get('view') == 'true'
+
         plans = []
         for plan in GroupPlan.objects.all().select_related('stripe_plan').prefetch_related('permissions'):
             p = model_to_dict(plan, exclude=['goals'])
             permissions = []
-            for perm in plan.permissions.all():
-                if perm.name.endswith('.view'):
+            for perm in plan.permissions.all().order_by('-id'):
+                if not include_view and perm.name.endswith('.view'):
                     continue
 
                 permissions.append(model_to_dict(perm))
@@ -159,3 +161,24 @@ class ACPApi(ApiResponseMixin):
             plans = [*active_plan, *non_active_plan]
 
         return self.api_success({'plans': plans})
+
+    def get_permissions(self, request, user, data):
+        check_user_permission(user)
+
+        include_view = request.GET.get('view') == 'true'
+        permissions = []
+        for perm in AppPermission.objects.all().order_by('-id'):
+            if include_view or not perm.name.endswith('.view'):
+                permissions.append(model_to_dict(perm))
+
+        return self.api_success({'permissions': permissions})
+
+    def post_remove_permission_from_plan(self, request, user, data):
+        check_user_permission(user)
+
+        plan = GroupPlan.objects.get(id=data['plan'])
+        perm = AppPermission.objects.get(id=data['permission'])
+
+        plan.permissions.remove(perm)
+
+        return self.api_success()
