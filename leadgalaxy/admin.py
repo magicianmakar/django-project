@@ -12,6 +12,7 @@ from .models import (
     AccessToken,
     AdminEvent,
     AppPermission,
+    AppPermissionTag,
     CaptchaCredit,
     CaptchaCreditPlan,
     ClippingMagic,
@@ -254,6 +255,12 @@ class UserProfileAdmin(admin.ModelAdmin):
 class AppPermissionAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
     search_fields = ('name', 'description')
+
+
+@admin.register(AppPermissionTag)
+class AppPermissionTagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    search_fields = ('name', 'slug', 'description')
 
 
 @admin.register(PlanRegistration)

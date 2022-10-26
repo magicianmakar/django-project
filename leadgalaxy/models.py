@@ -2337,10 +2337,22 @@ class ShopifyWebhook(models.Model):
             return None
 
 
+class AppPermissionTag(models.Model):
+    name = models.CharField(max_length=128)
+    slug = models.CharField(max_length=64, unique=True)
+    description = models.TextField(blank=True, default='')
+
+    def __str__(self):
+        return self.name
+
+
 class AppPermission(models.Model):
     name = models.CharField(max_length=512, verbose_name="Permission")
     description = models.CharField(max_length=512, blank=True, default='', verbose_name="Permission Description")
     notes = models.TextField(blank=True, null=True, verbose_name="Notes")
+    image_url = models.CharField(max_length=512, blank=True, null=True, verbose_name="Image URL")
+
+    tags = models.ManyToManyField(AppPermissionTag, blank=True)
 
     def __str__(self):
         if self.description:
@@ -2352,6 +2364,16 @@ class AppPermission(models.Model):
                 return f'{desc} ({self.name})'
         else:
             return self.name
+
+    def add_tag(self, tag):
+        if isinstance(tag, str):
+            tag, created = AppPermissionTag.objects.get_or_create(name=tag)
+        self.tags.add(tag)
+
+    def remove_tag(self, tag):
+        if isinstance(tag, str):
+            tag = AppPermissionTag.objects.get(name=tag)
+        self.tags.remove(tag)
 
 
 class ClippingMagicPlan(models.Model):

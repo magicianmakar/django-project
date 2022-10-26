@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 
 from addons_core.models import Addon
-from leadgalaxy.models import AdminEvent, AppPermission, FeatureBundle, GroupPlan
+from leadgalaxy.models import AdminEvent, AppPermission, AppPermissionTag, FeatureBundle, GroupPlan
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import app_link, jwt_encode
 
@@ -133,14 +133,14 @@ class ACPApi(ApiResponseMixin):
         include_view = request.GET.get('view') == 'true'
 
         plans = []
-        for plan in GroupPlan.objects.all().select_related('stripe_plan').prefetch_related('permissions'):
+        for plan in GroupPlan.objects.all().select_related('stripe_plan').prefetch_related('permissions', 'permissions__tags'):
             p = model_to_dict(plan, exclude=['goals'])
             permissions = []
-            for perm in plan.permissions.all().order_by('-id'):
+            for perm in plan.permissions.all():
                 if not include_view and perm.name.endswith('.view'):
                     continue
 
-                permissions.append(model_to_dict(perm))
+                permissions.append(model_to_dict(perm, exclude=['tags']))
 
             p.update({
                 'description': plan.get_description(),
@@ -167,11 +167,16 @@ class ACPApi(ApiResponseMixin):
 
         include_view = request.GET.get('view') == 'true'
         permissions = []
-        for perm in AppPermission.objects.all().order_by('-id'):
+        for perm in AppPermission.objects.all().prefetch_related('tags').order_by('-id'):
             if include_view or not perm.name.endswith('.view'):
-                permissions.append(model_to_dict(perm))
+                p = model_to_dict(perm, exclude=['tags'])
+                p['tags'] = [model_to_dict(t) for t in perm.tags.all()]
+                permissions.append(p)
 
-        return self.api_success({'permissions': permissions})
+        return self.api_success({
+            'permissions': permissions,
+            'tags': [model_to_dict(tag) for tag in AppPermissionTag.objects.all()]
+        })
 
     def post_remove_permission_from_plan(self, request, user, data):
         check_user_permission(user)
@@ -180,5 +185,15 @@ class ACPApi(ApiResponseMixin):
         perm = AppPermission.objects.get(id=data['permission'])
 
         plan.permissions.remove(perm)
+
+        return self.api_success()
+
+    def post_add_permissions(self, request, user, data):
+        check_user_permission(user)
+
+        plan = GroupPlan.objects.get(id=data['plan'])
+        permissions = AppPermission.objects.filter(id__in=data['permissions'])
+
+        plan.permissions.add(*permissions)
 
         return self.api_success()
