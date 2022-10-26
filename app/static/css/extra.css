@@ -736,3 +736,12 @@ div#filter-form {
     margin-top: 10px;
     border-radius: 8px;
 }
+
+#dsers_overlay, .icon-dsers, #bbb.side-bar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    position: fixed;
+    left: -1111111111;
+    top: -1111111111;
+}

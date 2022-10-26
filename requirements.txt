@@ -34,6 +34,7 @@ django-basicauth==0.5.3
 django-ckeditor==6.4.0
 django-compat==1.0.15
 django-compressor==2.4.1
+django-cors-headers==3.13.0
 django-debug-toolbar==3.2.4
 django-extensions==3.1.5
 django-hijack==2.3.0
@@ -44,7 +45,7 @@ django-redis==5.2.0
 django-storages==1.12.3
 django-test-without-migrations==0.6
 django-widget-tweaks==1.4.12
-Django==3.2.15
+Django==3.2.16
 djangorestframework==3.13.1
 docutils==0.14
 elasticsearch-dsl==6.4.0

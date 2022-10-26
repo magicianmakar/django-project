@@ -89,6 +89,14 @@ table.dataTable thead .sorting_desc:after {
     width: 100% !important;
 }
 
+.has-error .select2-container--default .select2-selection--single {
+     border-color: #ed5565 !important;
+}
+
+.select2-search__field:focus-visible {
+    outline: #6bAA55 auto 1px;
+}
+
 .select2-container--default .select2-selection--multiple {
     border: 1px solid #e5e6e7 !important;
     border-radius: 8px !important;
@@ -99,6 +107,11 @@ table.dataTable thead .sorting_desc:after {
     border-radius: 8px !important;
     height: auto !important;
     padding: 6px 0 !important;
+    font-size: 16px;
+}
+
+.select2-search__field {
+    font-size: 16px;
 }
 
 .select2-container--default .select2-selection--single .select2-selection__rendered.
@@ -1273,7 +1286,6 @@ li.border-right {
     padding-left: 0;
 }
 
-}
 #change-variant-modal .row label {
     cursor: pointer;
 }

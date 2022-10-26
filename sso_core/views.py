@@ -1,30 +1,85 @@
+from urllib.parse import urlencode
+
+import simplejson as json
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect, JsonResponse
-from shopified_core.utils import get_domain, jwt_decode, jwt_encode
-import simplejson as json
+from django.contrib import messages
+
+from lib.exceptions import capture_message
+from shopified_core.utils import jwt_decode, jwt_encode
 
 
-def _generate_jwt_token(user):
+SITE_CONFIG = {
+    'production': [
+        {
+            'name': 'Dropified Academy',
+            'redirect_url': 'http://academy.dropified.com/sso',
+            'domain': 'academy.dropified.com',
+        },
+        {
+            'name': 'Dropified deploy',
+            'redirect_url': 'https://appdeploy.dropified.com/login',
+            'domain': 'appdeploy.dropified.com',
+            'validator': lambda user: user.is_staff
+        }
+    ],
+    'development': [
+        {
+            'name': 'Dropified Academy',
+            'redirect_url': 'http://challengedev.wpengine.com/sso',
+            'domain': 'challengedev.wpengine.com',
+        },
+        {
+            'name': 'Dropified deploy',
+            'redirect_url': 'http://localhost:8080/login',
+            'domain': 'localhost:8080',
+            'validator': lambda user: user.is_staff
+        }
+    ],
+}
+
+
+def _generate_jwt_token(user, **kwargs):
     """
     Generates a JSON Web Token that stores this user's ID.
     """
 
-    token = jwt_encode({'id': user.id}, key=settings.SSO_SECRET_KEY)
+    payload = {'id': user.id}
+    if kwargs:
+        payload.update(kwargs)
+
+    token = jwt_encode(
+        payload=payload,
+        key=settings.SSO_SECRET_KEY,
+        expire=6
+    )
 
     return token
 
 
 @login_required
 def redirect(request):
-    token = _generate_jwt_token(request.user)
-    redirect = request.GET.get('redirect', 'http://academy.dropified.com/sso')
+    redirect = request.GET.get('redirect')
 
-    if not settings.DEBUG and get_domain(redirect) != 'dropified' and get_domain(redirect, full=True) != 'challengedev.wpengine.com':
-        return JsonResponse({'error': 'Domain is not allowed'}, status=403)
+    config = SITE_CONFIG['development'] if settings.DEBUG else SITE_CONFIG['production']
 
-    return HttpResponseRedirect('{}?token={}'.format(redirect, token))
+    for site in config:
+        if site['redirect_url'].strip('/') == redirect.strip('/'):
+            if site.get('validator'):
+                if not site['validator'](request.user):
+                    capture_message('SSO user not allowed', extra={'user': request.user.id, 'redirect': redirect})
+                    messages.error(request, 'You are not allowed to access this site')
+                    return HttpResponseRedirect('/')
+
+            token = _generate_jwt_token(request.user, domain=site['domain'])
+            return HttpResponseRedirect(f'{redirect}?{urlencode({"token": token})}')
+
+    capture_message('SSO Website is not found', extra={'user': request.user.id, 'redirect': redirect})
+    messages.error(request, 'Website is not found')
+    return HttpResponseRedirect('/')
 
 
 def validate(request):

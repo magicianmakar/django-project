@@ -17,7 +17,7 @@ from product_alerts.utils import get_supplier_variants, variant_index_from_suppl
 from shopified_core import permissions
 from shopified_core.utils import get_domain, http_exception_response, http_excption_status_code, safe_json
 from suredone_core.models import SureDoneAccount
-from suredone_core.utils import SureDonePusher
+from suredone_core.utils import SureDonePusher, GetSureDoneProductByGuidEmpty
 
 from .models import GoogleProduct, GoogleStore
 from .utils import GoogleOrderUpdater, GoogleUtils, smart_board_by_product
@@ -377,6 +377,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
     store = GoogleStore.objects.get(id=store_id)
     product = GoogleProduct.objects.get(guid=parent_guid)
     default_error_message = 'Something went wrong, please try again.'
+    sd_pusher = SureDonePusher(pusher_channel)
     pusher_event = 'google-product-update'
     try:
         permissions.user_can_view(user, store)
@@ -424,7 +425,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         # If the product was not successfully posted
         error_msg = google_utils.format_error_messages('actions', sd_api_response)
         if error_msg:
-            store.pusher_trigger(pusher_event, {
+            sd_pusher.trigger(pusher_event, {
                 'success': False,
                 'error': error_msg,
                 'product': product.guid,
@@ -441,7 +442,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
 
         # If the SureDone returns no data, then the product did not get imported
         if not updated_product or not isinstance(updated_product, GoogleProduct):
-            store.pusher_trigger(pusher_event, {
+            sd_pusher.trigger(pusher_event, {
                 'success': False,
                 'error': default_error_message,
                 'product': product.guid,
@@ -449,7 +450,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
             })
             return
 
-        store.pusher_trigger(pusher_event, {
+        sd_pusher.trigger(pusher_event, {
             'success': True,
             'product': product.guid,
             'product_url': url,
@@ -459,7 +460,7 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
             capture_exception(extra=http_exception_response(e))
 
-        store.pusher_trigger(pusher_event, {
+        sd_pusher.trigger(pusher_event, {
             'success': False,
             'error': http_exception_response(e, json=True).get('message', 'Server Error'),
             'product': product.guid,
@@ -499,7 +500,7 @@ def product_duplicate(user_id, parent_sku, product_data, store_id):
 
 
 @celery_app.task(base=CaptureFailure)
-def product_delete(user_id, parent_guid, store_id):
+def product_delete(user_id, parent_guid, store_id, skip_all_channels=False):
     user = User.objects.get(id=user_id)
     store = GoogleStore.objects.get(id=store_id)
     product = GoogleProduct.objects.get(guid=parent_guid)
@@ -509,7 +510,19 @@ def product_delete(user_id, parent_guid, store_id):
         permissions.user_can_delete(user, product)
         google_utils = GoogleUtils(user)
         is_connected = product.is_connected
-        sd_api_resp = google_utils.delete_product_with_all_variations(parent_guid)
+        redirect_url = f"{reverse('google:products_list')}?store={store.id if is_connected else 'n'}"
+        try:
+            sd_api_resp = google_utils.delete_product_with_all_variations(parent_guid, skip_all_channels=skip_all_channels)
+        except GetSureDoneProductByGuidEmpty:
+            # Exception because the product is missing in SureDone
+            # Delete the product and its variants for the product
+            product.delete()
+            store.pusher_trigger(pusher_event, {
+                'success': True,
+                'product': product.guid,
+                'redirect_url': redirect_url,
+            })
+            return
 
         if not isinstance(sd_api_resp, dict):
             store.pusher_trigger(pusher_event, {
@@ -538,8 +551,6 @@ def product_delete(user_id, parent_guid, store_id):
 
         # Delete the product and its variants for the product
         product.delete()
-
-        redirect_url = f"{reverse('google:products_list')}?store={store.id if is_connected else 'n'}"
 
         store.pusher_trigger(pusher_event, {
             'success': True,
@@ -929,3 +940,114 @@ def delete_all_store_products(user_id, store_id, skip_all_channels=False):
     except Exception as e:
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
             capture_exception(extra=http_exception_response(e))
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def get_import_product_options(self, store_id, user_id, page=1, page_limit=10):
+    user = User.objects.get(id=user_id)
+    store = GoogleStore.objects.get(id=store_id)
+    pusher_event = 'google-import-products-found'
+    cache_key = f'import_products_{user_id}_{store_id}'
+
+    try:
+        permissions.user_can_view(user, store)
+
+        utils = GoogleUtils(user)
+        result = utils.get_import_products(store, user, page=page, limit=page_limit)
+
+        products = result.get('products', [])
+        if products:
+            cache.set(cache_key, products, timeout=3600)
+
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'task': self.request.id,
+            'current': page,
+            'prev': page > 1,
+            'next': result.get('next', False),
+            'products': cache_key
+        })
+
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'task': self.request.id,
+            'error': http_exception_response(e, json=True).get('message', 'Server Error'),
+            'current': page,
+            'prev': page > 1,
+            'next': False
+        })
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def import_product(self, store_id, user_id, product_guid, csv_position, product_variants_count,
+                   supplier_url, vendor_name, vendor_url):
+    user = User.objects.get(id=user_id)
+    store = GoogleStore.objects.get(id=store_id)
+    pusher_event = 'google-product-import-completed'
+
+    try:
+        permissions.user_can_edit(user, store)
+
+        GoogleUtils(user).import_product_from_csv(
+            store=store,
+            product_guid=product_guid,
+            csv_position=csv_position,
+            product_variants_count=product_variants_count,
+            supplier_url=supplier_url,
+            vendor_name=vendor_name,
+            vendor_url=vendor_url)
+
+        store.pusher_trigger(pusher_event, {
+            'success': True,
+            'task': self.request.id,
+            'product_link': reverse('google:product_detail', args=[store.id, product_guid]),
+        })
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+
+        default_error_message = 'Something went wrong. Please try submitting a new import job.'
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'task': self.request.id,
+            'error': http_exception_response(e, json=True).get('message', default_error_message),
+        })
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def sync_product_with_import_file(self, store_id, user_id, product_id, csv_position, product_variants_count):
+    user = User.objects.get(id=user_id)
+    store = GoogleStore.objects.get(id=store_id)
+    product = GoogleProduct.objects.get(id=product_id)
+    pusher_event = 'google-product-sync-completed'
+
+    try:
+        permissions.user_can_view(user, store)
+        permissions.user_can_edit(user, product)
+
+        GoogleUtils(user).update_product_from_import_csv(
+            store=store,
+            product=product,
+            csv_position=csv_position,
+            product_variants_count=product_variants_count)
+
+        store.pusher_trigger(pusher_event, {
+            'success': True,
+            'task': self.request.id,
+            'product': product.guid,
+        })
+    except Exception as e:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            capture_exception(extra=http_exception_response(e))
+
+        default_error_message = 'Something went wrong. Please try submitting a new import job.'
+        store.pusher_trigger(pusher_event, {
+            'success': False,
+            'task': self.request.id,
+            'error': http_exception_response(e, json=True).get('message', default_error_message),
+            'product': product.guid,
+        })

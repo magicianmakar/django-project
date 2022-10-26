@@ -867,9 +867,14 @@ class AliexpressApi(ApiResponseMixin):
 
     def import_shipping_method(self, user, data):
         try:
+            cache_key = f"aliexpress_shipping_method_{data['order']['store']}_{data['order']['order_id']}_{data['order']['order_data']['source_id']}"
+            aliexpress_shipping_result = cache.get(cache_key, {})
+            if aliexpress_shipping_result:
+                return aliexpress_shipping_result
+
             priority_service_list = []  # saves the list of Shipping methods in order of priority from Settings under AliExpress tab
             service = ''
-            config = json.loads(user.profile.config)
+            config = json.loads(user.models_user.profile.config)
             for i in range(1, 5):
                 method_key = f'aliexpress_shipping_method_{i}'
                 shipping_method = config.get(method_key)

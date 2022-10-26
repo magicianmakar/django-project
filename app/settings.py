@@ -63,6 +63,7 @@ INSTALLED_APPS = (
     'adminsortable2',
     'ckeditor',
     'ckeditor_uploader',
+    'corsheaders',
 
     'last_seen',
     'infinite_pagination',
@@ -132,6 +133,7 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'leadgalaxy.middleware.PlanSetupMiddleware',
     'last_seen.middleware.LastSeenMiddleware',
     'leadgalaxy.middleware.UserIpSaverMiddleware',
@@ -248,6 +250,8 @@ SESSION_COOKIE_SAMESITE2 = 'none'
 SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 SESSION_COOKIE_AGE = 172800
 CSRF_COOKIE_SECURE = True
+
+CORS_ALLOWED_ORIGINS = ["http://localhost:8080"] if DEBUG else ['https://appdeploy.dropified.com']
 
 # Ignore urllib3 warnings
 warnings.filterwarnings('ignore', module='urllib3', message='Unverified HTTPS request')
@@ -734,6 +738,12 @@ SUREDONE_CUSTOM_FIELDS_CONFIG = [
         'name': ['dropifiedgoogleproductlink'],
         'type': 'varchar',
         'length': 510,
+    },
+    # eBay Internal Notes
+    {
+        'label': ['eBay Internal Notes'],
+        'name': ['dropifiedinternalnotes'],
+        'type': 'text',
     }
 ]
 SUREDONE_DEFAULT_VARIANTS_FIELDS_CONFIG = [

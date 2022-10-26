@@ -421,7 +421,7 @@ class GoogleStoreApi(ApiBase):
 
         pusher_channel = f'user_{user.id}'
         sd_pusher = SureDonePusher(pusher_channel)
-        default_event = 'fb-product-update'
+        default_event = 'google-product-update'
         update_product_limit_check, product_limit_check, logs_count = GoogleUtils(user).check_product_update_limit(
             sd_pusher, default_event)
         if update_product_limit_check == "Limit Reached":
@@ -1156,3 +1156,156 @@ class GoogleStoreApi(ApiBase):
 
         pusher = {'key': settings.PUSHER_KEY, 'channel': pusher_channel}
         return self.api_success({'pusher': pusher})
+
+    def get_import_product_options(self, request, user, data):
+        # TODO: add filters to imports
+        try:
+            store = GoogleStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except GoogleStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        page_limit = safe_int(data.get('ppp'), 10)
+        if page_limit < 1:
+            page_limit = 10
+
+        page = safe_int(data.get('current_page'), 1)
+        if page < 1:
+            page = 1
+
+        task = tasks.get_import_product_options.apply_async(kwargs={
+            'store_id': store.id,
+            'user_id': user.id,
+            'page_limit': page_limit,
+            'page': page,
+        })
+
+        return self.api_success({'task': task.id})
+
+    def get_import_products_from_cache(self, request, user, data):
+        try:
+            products = cache.get(data.get('cache_key'))
+            if products:
+                return self.api_success({'data': products})
+            else:
+                return self.api_success({'data': []})
+        except:
+            return self.api_error('Something went wrong. Please try again later.')
+
+    def get_import_products_status(self, request, user, data):
+        try:
+            store = GoogleStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+        except GoogleStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        try:
+            result = GoogleUtils(user).get_import_products_status(store=store)
+            return self.api_success({'data': result})
+        except:
+            return self.api_error('Something went wrong. Please try again later.')
+
+    def post_new_products_import_job(self, request, user, data):
+        try:
+            store = GoogleStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except GoogleStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        try:
+            result = GoogleUtils(user).start_new_products_import_job(store=store)
+        except:
+            return self.api_error('Something went wrong. Please try again later.')
+
+        if isinstance(result, dict) and result.get('result') == 'success':
+            return self.api_success({'data': result})
+        else:
+            return self.api_error('Something went wrong. Please try again later.')
+
+    def post_import_product(self, request, user, data):
+        store_id = data.get('store')
+        supplier = data.get('supplier')
+        vendor_name = data.get('vendor_name')
+        vendor_url = data.get('vendor_url', 'http://www.aliexpress.com/')
+        product_guid = data.get('product')
+        product_variants_count = safe_int(data.get('variants_count'), None)
+        csv_position = safe_int(data.get('csv_index_position'), None)
+
+        if any(x is None or x == '' for x in [store_id, supplier, vendor_name, vendor_url, product_guid, csv_position, product_variants_count]):
+            return self.api_error('Missing or invalid required parameters.')
+
+        try:
+            store = GoogleStore.objects.get(id=store_id)
+            permissions.user_can_edit(user, store)
+        except GoogleStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        # Check if a user has reached products limit
+        can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
+
+        if not can_add:
+            return self.api_error("Woohoo! 🎉. You are growing and you've hit your account limit for products. "
+                                  'Upgrade your plan to keep importing new products')
+
+        task = tasks.import_product.apply_async(kwargs={
+            'store_id': store_id,
+            'user_id': user.id,
+            'supplier_url': supplier,
+            'vendor_name': vendor_name,
+            'vendor_url': vendor_url,
+            'product_guid': product_guid,
+            'csv_position': csv_position,
+            'product_variants_count': product_variants_count,
+        })
+
+        return self.api_success({'task': task.id})
+
+    def post_update_product_with_import(self, request, user, data):
+        """
+        Sync an existing product with the imported facebook data
+        """
+        product_guid = data.get('product')
+        product_variants_count = safe_int(data.get('variants_count'), None)
+        csv_position = safe_int(data.get('csv_index_position'), None)
+
+        if any(x is None or x == '' for x in [product_guid, csv_position, product_variants_count]):
+            return self.api_error('Missing or invalid required parameters.')
+
+        try:
+            product = GoogleProduct.objects.get(guid=product_guid)
+            permissions.user_can_edit(user, product)
+        except GoogleStore.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+
+        store_id = data.get('store')
+        if not store_id:
+            store_id = product.store.id
+
+        task = tasks.sync_product_with_import_file.apply_async(kwargs={
+            'store_id': store_id,
+            'user_id': user.id,
+            'product_id': product.id,
+            'csv_position': csv_position,
+            'product_variants_count': product_variants_count,
+        })
+
+        return self.api_success({'task': task.id})
+
+    def delete_disconnect_product(self, request, user, data):
+        store_id = data.get('store')
+        product_guid = data.get('product')
+
+        try:
+            product = GoogleProduct.objects.get(guid=product_guid, user=user.models_user)
+            permissions.user_can_delete(user, product)
+        except GoogleProduct.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+
+        tasks.product_delete.apply_async(kwargs={
+            'user_id': user.id,
+            'parent_guid': product_guid,
+            'store_id': store_id,
+            'skip_all_channels': True,
+        })
+
+        return self.api_success()

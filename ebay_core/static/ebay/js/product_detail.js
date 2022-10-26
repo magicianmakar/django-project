@@ -53,6 +53,7 @@ function prepareApiData(productData, variants) {
         ebay_category_id: productData.ebay_category_id,
         status: productData.status,
         vendor: $('#product-vendor').val(),
+        condition: $('#product-condition').val(),
         published: $('#product-visible').prop('checked'),
         images: productData.images,
         variants: []
@@ -295,7 +296,7 @@ function productExport(btn) {
                     window.location.reload(true);
                 }, 1500);
             } else {
-                if (eventData.parsed_ebay_errors_list.length) {
+                if (eventData.parsed_ebay_errors_list && eventData.parsed_ebay_errors_list.length) {
                     eventData = handleEbayErrorsList(eventData.parsed_ebay_errors_list);
                 }
                 displayAjaxError('eBay Export', eventData, true);

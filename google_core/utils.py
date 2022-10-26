@@ -1,13 +1,16 @@
 import arrow
 import json
 import re
-
+import requests as req
+import csv
+import itertools
 from requests.exceptions import HTTPError
 
 from django.core.cache import caches
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 
 # import urllib.parse
 # from django.conf import settings
@@ -433,8 +436,16 @@ class GoogleUtils(SureDoneUtils):
         # Get product's google ID
         google_product_id = safe_int(sd_product_data.get(f'{google_prefix}productid'), 0)
 
-        # Get google category ID
+        # Get google category ID and name
         google_category_id = safe_int(sd_product_data.get(f'{google_prefix}category'), None)
+        if not google_category_id:
+            google_category_id = safe_int(sd_product_data.get(f'{google_prefix}productcategory'), None)
+        try:
+            get_categories = self.search_categories(google_category_id)
+            google_category_name = get_categories.get('categories')[0].get('name') if get_categories.get(
+                'result') == 'success' else ''
+        except:
+            google_category_name = product_to_update.google_category_name if hasattr(product_to_update, 'google_category_name') else ''
 
         # Get google product status ('active', 'pending' or '')
         product_status = sd_product_data.get(f'{google_prefix}status', '')
@@ -455,6 +466,12 @@ class GoogleUtils(SureDoneUtils):
         # Parse tags
         tags = sd_product_data.get('tags', '').replace('*', ',')
 
+        # Get product type
+        product_type = sd_product_data.get('producttype') if sd_product_data.get('producttype') else google_category_name.split('>')[-1]
+
+        # Get page link
+        page_link = sd_product_data.get('dropifiedgoogleproductlink') if sd_product_data.get('dropifiedgoogleproductlink') else ''
+
         # Get variants config
         variants_config = sd_product_data.get('variantsconfig', '[]')
 
@@ -467,7 +484,7 @@ class GoogleUtils(SureDoneUtils):
             'price': sd_product_data.get('price'),
             'guid': sd_product_data.get('guid'),
             'sku': sd_product_data.get('sku'),
-            'product_type': sd_product_data.get('producttype'),
+            'product_type': product_type,
             'tags': tags,
             'product_description': sd_product_data.get('longdescription'),
             # 'created_at': product_created_at,
@@ -478,11 +495,12 @@ class GoogleUtils(SureDoneUtils):
             'sd_account': self.sd_account,
             'data': json.dumps(sd_product_data),
             'google_category_id': google_category_id,
+            'google_category_name': google_category_name,
             'google_store_index': google_store_index,
             'source_id': google_product_id,
             'variants_config': variants_config,
             'brand': sd_product_data.get('brand', ''),
-            'page_link': sd_product_data.get('dropifiedgoogleproductlink', ''),
+            'page_link': page_link,
             'status': product_status,
             **add_model_fields
         }
@@ -826,6 +844,279 @@ class GoogleUtils(SureDoneUtils):
         except Exception:
             capture_exception()
         return updated_product
+
+    def start_new_products_import_job(self, store: GoogleStore):
+        resp = self.api.post_new_products_import_job(store.instance_prefix)
+        resp_body = resp.json()
+        resp.raise_for_status()
+        if resp_body.get('errors'):
+            import_products_action_error = resp_body.get('errors').get(f'{store.instance_prefix}_import_products_set_action')
+            if 'action may not be modified,' in import_products_action_error:
+                data = import_products_action_error[len('action may not be modified,'):]
+                return {
+                    "result": "success",
+                    "data": data
+                }
+
+        return resp_body
+
+    def get_import_products_status(self, store: GoogleStore):
+        resp = self.api.get_import_options(store_prefix=store.instance_prefix)
+        resp_body = resp.json()
+        resp.raise_for_status()
+
+        store_options = safe_json(resp_body.get(f'plugin_settings_{store.instance_prefix}', '{}'), {})
+        last_imported_file = store_options.get('sets').get('import_products_file').get('value')
+        import_products_set = store_options.get('sets').get('import_products_set').get('value')
+        import_products_file_empty = store_options.get('sets').get('import_products_file_empty', {'value': None}).get('value')
+
+        if import_products_set in ['on', 'running']:
+            status = 'Import in Progress'
+        else:
+            status = 'No past imports found. Start a new import job to import and update products.'
+
+        last_updated = None
+        if last_imported_file:
+            if import_products_set not in ['on', 'running']:
+                status = 'Finished'
+            # Example filename: 20220418-220226-36-google2-match.csv
+            date_parts = last_imported_file.split('-')
+            last_updated = arrow.get(f'{date_parts[0]} {date_parts[1]}', 'YYYYMMDD HHmmss').datetime
+
+        if import_products_file_empty:
+            status = 'There are not products for import in the Google store'
+
+        return {'status': status, 'last_updated': last_updated}
+
+    def get_import_file_url(self, store: GoogleStore):
+        resp = self.api.get_import_options(store_prefix=store.instance_prefix)
+        resp_body = resp.json()
+        resp.raise_for_status()
+
+        store_options = safe_json(resp_body.get(f'plugin_settings_{store.instance_prefix}', '{}'), {})
+        last_imported_file = store_options.get('sets').get('import_products_file').get('value')
+
+        # Get the file link
+        resp = self.api.get_import_file_download_link(filename=last_imported_file)
+        resp_body = resp.json()
+        resp.raise_for_status()
+
+        return resp_body.get('url')
+
+    def get_import_products(self, store: GoogleStore, user, page: int = 1, limit: int = 20):
+        url = self.get_import_file_url(store)
+        next_page = False
+        result = dict()
+
+        if url:
+            resp = req.get(url)
+            lines = resp.text.splitlines()
+            reader = csv.reader(lines)
+
+            header = list(next(reader))
+            sku_field_index = header.index('sku')
+
+            current_index = 0  # Index among products with unique sku values
+
+            start_index = limit * (page - 1)
+            limit_index = start_index + limit
+
+            for i, row in enumerate(reader):
+                row_sku = row[sku_field_index]
+                if row_sku in result:
+                    result[row_sku]['variants_count'] += 1
+                    continue
+
+                # If the current index reached the next page
+                if current_index >= limit_index:
+                    next_page = True
+                    break
+
+                # If the current index reached the current page
+                if current_index >= start_index:
+                    value = {header[index]: value for index, value in enumerate(row)}
+                    try:
+                        product_type = value.get('product_type', '').split(':')[-1]
+                        if not product_type:
+                            # Get google category ID and name
+                            google_category_id = safe_int(value.get(f'{store.instance_prefix}category'), None)
+                            if not google_category_id:
+                                google_category_id = safe_int(value.get(f'{store.instance_prefix}productcategory'), None)
+                            get_categories = self.search_categories(google_category_id)
+                            google_category_name = get_categories.get('categories')[0].get('name') if get_categories.get(
+                                'result') == 'success' else ''
+                            product_type = google_category_name.split('>')[-1]
+                    except:
+                        product_type = ''
+
+                    result[row_sku] = {
+                        'image': value.get('media1', ''),
+                        'title': value.get('title', ''),
+                        'price': f'{value.get("price", "")}',
+                        'google_link': value.get(f'{store.instance_prefix}url', ''),
+                        'csv_index_position': i,
+                        'id': row_sku,
+                        'product_link': None,
+                        'status': 'non-connected',
+                        'variants_count': 1,
+                        'product_type': product_type,
+                    }
+
+                current_index += 1
+
+            products_by_guid = GoogleProduct.objects.filter(guid__in=result.keys(), user=user.models_user)
+
+            for product in products_by_guid:
+                supplier_name = ''
+                original_url = ''
+                if product.have_supplier:
+                    supplier_name = product.default_supplier.supplier_name
+                    original_url = product.default_supplier.product_url
+
+                result[product.guid].update({
+                    'product_link': reverse('google:product_detail', args=[store.id, product.guid]),
+                    'status': 'connected',
+                    'supplier_name': supplier_name,
+                    'original_url': original_url,
+                })
+
+        return {'products': list(result.values()), 'next': next_page}
+
+    def import_product_base(self, store: GoogleStore, action: str, csv_position: int, product_variants_count: int, product_url=None):
+        url = self.get_import_file_url(store)
+        if url:
+            resp = req.get(url)
+            lines = resp.text.splitlines()
+            reader = list(csv.reader(lines))
+
+            # Pad rows in case some trailing empty column values are missing
+            reader = list(zip(*itertools.zip_longest(*reader, fillvalue='')))
+
+            header = list(reader.pop(0))
+            selected_rows = reader[csv_position:csv_position + product_variants_count]
+            selected_rows = [list(row) for row in selected_rows]
+
+            if len(selected_rows) == 0:
+                raise ValueError('No import data was found for this product.', resp)
+
+            # Handle images
+            media_indices = [header.index(f'media{i}') for i in range(1, 11) if f'media{i}' in header]
+            all_images = [selected_rows[0][i] for i in media_indices if selected_rows[0][i]]
+            if 'mediax' in header:
+                all_images.extend(selected_rows[0][header.index('mediax')].split('*'))
+
+            # Construct variantsconfig and varianttitle
+            header.append('varianttitle')
+            variants = {}
+            if len(selected_rows) == 1:
+                title = selected_rows[0][header.index('title')] if header.index('title') else ''
+                selected_rows[0].append(title)
+            else:
+                try:
+                    variations_index = header.index(f'{store.instance_prefix}variations')
+                except:
+                    variations_index = 0
+                for index, row in enumerate(selected_rows):
+                    variations_from_csv = safe_json(row[variations_index], row[variations_index])
+                    if not isinstance(variations_from_csv, dict):
+                        specifics = {}
+                        for specific in ['size', 'color', 'gender', 'pattern', 'material']:
+                            if row[header.index(specific)]:
+                                specifics.update({specific: row[header.index(specific)]})
+                        variations_from_csv = {
+                            'specifics': specifics
+                        }
+
+                    row.append(' / '.join(variations_from_csv.get('specifics', {}).values()))
+                    for key, value in variations_from_csv.get('specifics', {}).items():
+                        if key in variants:
+                            variants[key].append(value)
+                        else:
+                            variants[key] = [value]
+
+            variants_config = [{'title': title, 'values': values} for title, values in variants.items()]
+            common_values_to_add = {
+                'dropifiedconnectedstoretype': 'google',
+                'dropifiedconnectedstoreid': str(store.store_instance_id),
+                'allimages': json.dumps(all_images),
+                'variantsconfig': json.dumps(variants_config),
+            }
+            header.extend(common_values_to_add.keys())
+            try:
+                action_index = header.index('action')
+            except:
+                header[0] = 'action'
+                action_index = 0
+
+            if not header.index('dropifiedgoogleproductlink'):
+                header.append('dropifiedgoogleproductlink')
+
+            for row in selected_rows:
+                row.extend(common_values_to_add.values())
+                # Update the action type in case it was "Add" initially
+                row[action_index] = action
+                # Update the product link
+                if product_url:
+                    row[header.index('dropifiedgoogleproductlink')] = product_url
+
+            selected_rows.insert(0, header)
+            return self.api.post_imported_products(selected_rows)
+        else:
+            raise ValueError('No import data was found.')
+
+    def import_product_from_csv(self, store, product_guid, csv_position, product_variants_count,
+                                supplier_url, vendor_name, vendor_url):
+        resp = self.import_product_base(
+            store=store,
+            action='add',
+            csv_position=csv_position,
+            product_variants_count=product_variants_count,
+            product_url=supplier_url
+        )
+
+        resp_body = resp.json()
+        resp.raise_for_status()
+
+        # Fetch SureDone updates and update the DB
+        updated_product = self.get_google_product_details(product_guid, smart_board_sync=True)
+
+        if not updated_product:
+            raise Exception('Failed to get product details.', updated_product)
+
+        product_supplier = GoogleSupplier.objects.create(
+            store=store,
+            product=updated_product,
+            product_guid=product_guid,
+            product_url=supplier_url,
+            supplier_name=vendor_name,
+            supplier_url=vendor_url,
+            is_default=True
+        )
+        updated_product.set_default_supplier(product_supplier, commit=True)
+        return resp_body
+
+    def update_product_from_import_csv(self, store, product, csv_position, product_variants_count):
+        resp = self.import_product_base(
+            store=store,
+            action='edit',
+            csv_position=csv_position,
+            product_variants_count=product_variants_count,
+        )
+
+        resp_body = resp.json()
+        resp.raise_for_status()
+
+        for i in range(1, resp_body.get('actions') + 1):
+            if resp_body.get(f'{i}', {}).get('result') != 'success':
+                raise Exception('Failed to sync a product. Please try submitting a new import job.')
+
+        # Fetch SureDone updates and update the DB
+        updated_product = self.get_google_product_details(product.guid, smart_board_sync=True)
+
+        if not updated_product:
+            raise Exception('Failed to get product details.', updated_product)
+
+        return resp_body
 
 
 class GoogleOrderUpdater(SureDoneOrderUpdater):

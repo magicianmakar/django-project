@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^product/mapping/supplier/(?P<store>[0-9]+)/(?P<pk>(.*?))', google_views.MappingSupplierView.as_view(), name='mapping_supplier'),
     url(r'^product/mapping/bundle/(?P<pk>[0-9]+)$', google_views.MappingBundleView.as_view(), name='mapping_bundle'),
     url(r'^product/variants/(?P<store_id>[0-9]+)/(?P<pk>(.*?))$', google_views.VariantsEditView.as_view(), name='variants_edit'),
+    url(r'^products/(?P<store>[0-9]+)/import', google_views.ProductsImportView.as_view(), name='products_import'),
     url(r'^orders$', google_views.OrdersList.as_view(), name='orders_list'),
     url(r'^orders/track$', google_views.OrdersTrackList.as_view(), name='orders_track'),
     url(r'^profit-dashboard$', google_views.ProfitDashboardView.as_view(), name='profits'),

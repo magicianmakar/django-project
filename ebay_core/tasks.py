@@ -568,6 +568,8 @@ def product_update(user_id, parent_guid, product_data, store_id, skip_publishing
         ebay_utils = EbayUtils(user)
 
         product_data['dropifiedconnectedstoreid'] = store.store_instance_id
+        product_data['dropifiedinternalnotes'] = product.notes
+        product_data['notes'] = product_data.get('condition')
 
         # Remap category fields to SureDone conventions
         ebay_cat_id = product_data.pop('ebay_category_id', None)

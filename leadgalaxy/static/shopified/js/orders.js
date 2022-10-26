@@ -830,6 +830,11 @@ function pusherSub() {
             return;
         }
 
+        line.find('.open-order').append(
+            '<a href="'+ data.source_url + '" class="itooltip" title="Open Order" target="_blank">' +
+            '<i class="fa fa-external-link m-r-xs" style="font-size: 16px; color: #2c5de5;"></i>' +
+            '</a>');
+
         line.attr('line-track', data.track);
         line.find('.line-order-id').find('a').remove();
         line.find('.line-order-id').append($('<a>', {

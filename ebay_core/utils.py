@@ -615,6 +615,11 @@ class EbayUtils(SureDoneUtils):
         media_links = self.extract_media_from_product(sd_product_data)
         thumbnail_image = media_links[0] if len(media_links) > 0 else None
 
+        if sd_product_data.get('dropifiedinternalnotes'):
+            dropified_internal_notes = sd_product_data.get('dropifiedinternalnotes')
+        else:
+            dropified_internal_notes = product_to_update.notes if hasattr(product_to_update, 'notes') else ''
+
         model_params = {
             'user': self.user.models_user,
             'title': sd_product_data.get('title'),
@@ -622,6 +627,8 @@ class EbayUtils(SureDoneUtils):
             'guid': sd_product_data.get('guid'),
             'sku': sd_product_data.get('sku'),
             'product_type': sd_product_data.get('producttype'),
+            'condition': sd_product_data.get('condition'),
+            'notes': dropified_internal_notes,
             'tags': tags,
             'product_description': sd_product_data.get('longdescription'),
             # 'created_at': product_created_at,

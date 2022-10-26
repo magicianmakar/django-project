@@ -1,23 +1,28 @@
 import json
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils.text import slugify
 
 from addons_core.models import Addon
-from leadgalaxy.models import AdminEvent, AppPermission, FeatureBundle
+from leadgalaxy.models import AdminEvent, AppPermission, AppPermissionTag, FeatureBundle, GroupPlan
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import app_link, jwt_encode
 
 
+def check_user_permission(user):
+    if not user.is_superuser and not user.is_staff:
+        raise PermissionDenied()
+
+
 class ACPApi(ApiResponseMixin):
-    http_method_names = ['post', 'delete']
-    login_non_required = ['add-permission']
+    http_method_names = ['get', 'post', 'delete']
 
     def delete_addon(self, request, user, data):
-        if not user.is_superuser and not user.is_staff:
-            raise PermissionDenied()
+        check_user_permission(user)
 
         target_user = User.objects.get(id=data.get('user'))
         addon = Addon.objects.get(id=data.get('addon'))
@@ -33,8 +38,7 @@ class ACPApi(ApiResponseMixin):
         return self.api_success()
 
     def post_deactivate_account(self, request, user, data):
-        if not user.is_superuser and not user.is_staff:
-            raise PermissionDenied()
+        check_user_permission(user)
 
         target_user = User.objects.get(id=data.get('user'))
 
@@ -50,8 +54,7 @@ class ACPApi(ApiResponseMixin):
         return self.api_success()
 
     def post_activate_account(self, request, user, data):
-        if not user.is_superuser and not user.is_staff:
-            raise PermissionDenied()
+        check_user_permission(user)
 
         target_user = User.objects.get(id=data.get('user'))
 
@@ -67,8 +70,7 @@ class ACPApi(ApiResponseMixin):
         return self.api_success()
 
     def post_toggle_plod(self, request, user, data):
-        if not user.is_superuser and not user.is_staff:
-            raise PermissionDenied()
+        check_user_permission(user)
 
         target_user = User.objects.get(id=data.get('user'))
 
@@ -91,8 +93,7 @@ class ACPApi(ApiResponseMixin):
         return self.api_success()
 
     def post_login_as(self, request, user, data):
-        if not user.is_superuser and not user.is_staff:
-            raise PermissionDenied()
+        check_user_permission(user)
 
         target_user = User.objects.get(id=data.get('user'))
 
@@ -114,6 +115,8 @@ class ACPApi(ApiResponseMixin):
         })
 
     def post_add_permission(self, request, user, data):
+        check_user_permission(user)
+
         perm, created = AppPermission.objects.get_or_create(name=data['name'])
         perm.description = data['desc']
         perm.save()
@@ -123,3 +126,74 @@ class ACPApi(ApiResponseMixin):
             bundle.permissions.add(perm)
 
         return self.api_success({'data': data})
+
+    def get_plans(self, request, user, data):
+        check_user_permission(user)
+
+        include_view = request.GET.get('view') == 'true'
+
+        plans = []
+        for plan in GroupPlan.objects.all().select_related('stripe_plan').prefetch_related('permissions', 'permissions__tags'):
+            p = model_to_dict(plan, exclude=['goals'])
+            permissions = []
+            for perm in plan.permissions.all():
+                if not include_view and perm.name.endswith('.view'):
+                    continue
+
+                permissions.append(model_to_dict(perm, exclude=['tags']))
+
+            p.update({
+                'description': plan.get_description(),
+                'price': plan.get_price(),
+                'active': plan.revision == settings.PLAN_REVISION,
+                'permissions': permissions,
+                'parent_plan': model_to_dict(plan.parent_plan, exclude=['goals', 'permissions']) if plan.parent_plan else None,
+            })
+
+            plans.append(p)
+
+        active_plan = sorted(filter(lambda x: x['active'], plans), key=lambda x: x['id'])
+        non_active_plan = sorted(filter(lambda x: not x['active'], plans), key=lambda x: x['id'])
+
+        if request.GET.get('active') == 'true':
+            plans = active_plan
+        else:
+            plans = [*active_plan, *non_active_plan]
+
+        return self.api_success({'plans': plans})
+
+    def get_permissions(self, request, user, data):
+        check_user_permission(user)
+
+        include_view = request.GET.get('view') == 'true'
+        permissions = []
+        for perm in AppPermission.objects.all().prefetch_related('tags').order_by('-id'):
+            if include_view or not perm.name.endswith('.view'):
+                p = model_to_dict(perm, exclude=['tags'])
+                p['tags'] = [model_to_dict(t) for t in perm.tags.all()]
+                permissions.append(p)
+
+        return self.api_success({
+            'permissions': permissions,
+            'tags': [model_to_dict(tag) for tag in AppPermissionTag.objects.all()]
+        })
+
+    def post_remove_permission_from_plan(self, request, user, data):
+        check_user_permission(user)
+
+        plan = GroupPlan.objects.get(id=data['plan'])
+        perm = AppPermission.objects.get(id=data['permission'])
+
+        plan.permissions.remove(perm)
+
+        return self.api_success()
+
+    def post_add_permissions(self, request, user, data):
+        check_user_permission(user)
+
+        plan = GroupPlan.objects.get(id=data['plan'])
+        permissions = AppPermission.objects.filter(id__in=data['permissions'])
+
+        plan.permissions.add(*permissions)
+
+        return self.api_success()
