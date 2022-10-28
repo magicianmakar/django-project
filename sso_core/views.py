@@ -1,5 +1,3 @@
-from urllib.parse import urlencode
-
 import simplejson as json
 
 from django.conf import settings
@@ -7,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib import messages
+from leadgalaxy.utils import set_url_query
 
 from lib.exceptions import capture_message
 from shopified_core.utils import jwt_decode, jwt_encode
@@ -67,7 +66,7 @@ def redirect(request):
     config = SITE_CONFIG['development'] if settings.DEBUG else SITE_CONFIG['production']
 
     for site in config:
-        if site['redirect_url'].strip('/') == redirect.strip('/'):
+        if site['redirect_url'].strip('/') == redirect.strip('/').split('?')[0]:
             if site.get('validator'):
                 if not site['validator'](request.user):
                     capture_message('SSO user not allowed', extra={'user': request.user.id, 'redirect': redirect})
@@ -75,7 +74,8 @@ def redirect(request):
                     return HttpResponseRedirect('/')
 
             token = _generate_jwt_token(request.user, domain=site['domain'])
-            return HttpResponseRedirect(f'{redirect}?{urlencode({"token": token})}')
+            final_redirect = set_url_query(redirect, 'token', token)
+            return HttpResponseRedirect(final_redirect)
 
     capture_message('SSO Website is not found', extra={'user': request.user.id, 'redirect': redirect})
     messages.error(request, 'Website is not found')
