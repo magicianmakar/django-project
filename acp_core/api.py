@@ -131,16 +131,20 @@ class ACPApi(ApiResponseMixin):
         check_user_permission(user)
 
         include_view = request.GET.get('view') == 'true'
+        top_level = request.GET.get('top') == 'true'
 
         plans = []
         for plan in GroupPlan.objects.all().select_related('stripe_plan').prefetch_related('permissions', 'permissions__tags'):
+            if plan.parent_plan_id and top_level:
+                continue
+
             p = model_to_dict(plan, exclude=['goals'])
             permissions = []
             for perm in plan.permissions.all():
                 if not include_view and perm.name.endswith('.view'):
                     continue
 
-                permissions.append(model_to_dict(perm, exclude=['tags']))
+                permissions.append(perm.to_json())
 
             p.update({
                 'description': plan.get_description(),
