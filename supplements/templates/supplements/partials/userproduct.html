@@ -39,7 +39,7 @@
           <div class="col-md-4">
             <a href="{{ item.get_url }}" class="btn btn-xs btn-outline btn-primary"> Edit <i class="fa fa-long-arrow-right"></i> </a>
           </div>
-          {% if request.user|can:'supplements_basket.use' and item.current_label.status == "approved" and item.pl_supplement.is_active %}
+          {% if request.user|can:'supplements_basket.use' and item.current_label.status == "approved" and item.pl_supplement.is_active and item.pl_supplement.inventory > 0 %}
            <div class="col-md-8 text-right">
             <a href="#" class="btn-info btn-xs btn-outline btn-primary pls-add-basket" data-product-id="{{item.id}}"> Add to Basket <i class="fa fa-shopping-basket"></i> </a>
           </div>
