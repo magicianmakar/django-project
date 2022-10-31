@@ -9,10 +9,7 @@ import simplejson as json
 from supplements.lib.authorizenet import (
     charge_customer_profile,
     get_customer_payment_profile,
-    refund_customer_profile,
     charge_customer_for_items,
-    void_unsettled_transaction,
-    retrieve_transaction_status,
 )
 
 
@@ -578,27 +575,6 @@ class AuthorizeNetCustomerMixin:
             self.customer_id,
             self.payment_id,
             line,
-        )
-
-    def refund(self, amount, transaction_id):
-        return refund_customer_profile(
-            amount,
-            self.customer_id,
-            self.payment_id,
-            transaction_id,
-        )
-
-    def void(self, transaction_id):
-        return void_unsettled_transaction(
-            self.customer_id,
-            self.payment_id,
-            transaction_id,
-        )
-
-    def status(self, transaction_id):
-        return retrieve_transaction_status(
-            self.customer_id,
-            transaction_id,
         )
 
     def retrieve(self):

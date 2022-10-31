@@ -283,7 +283,7 @@ def refund_customer_profile(amount, customer_id, payment_id, trans_id):
     return get_authnet_response(response)
 
 
-def void_unsettled_transaction(customer_id, payment_id, trans_id):
+def void_unsettled_transaction(trans_id):
     transaction_request = apicontractsv1.transactionRequestType()
     transaction_request.transactionType = "voidTransaction"
     transaction_request.refTransId = trans_id
@@ -302,7 +302,7 @@ def void_unsettled_transaction(customer_id, payment_id, trans_id):
     return get_authnet_response(response)
 
 
-def retrieve_transaction_status(customer_id, trans_id):
+def retrieve_transaction_status(trans_id):
     transaction_status = None
 
     transactionDetailsRequest = apicontractsv1.getTransactionDetailsRequest()

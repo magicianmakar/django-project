@@ -65,7 +65,11 @@
         "TWILIO_TOKEN": {"required": true},
 
         "YOUTUBE_CLIENT_ID": {"required": true},
-        "YOUTUBE_CLIENT_SECRET": {"required": true}
+        "YOUTUBE_CLIENT_SECRET": {"required": true},
+
+        "AUTHORIZENET_LOGIN_ID": "7Fy7JfA2kU",
+        "AUTHORIZENET_TRANSACTION_KEY": "5yY27E4q99x82TDL",
+        "AUTHORIZENET_KEY": "Simon"
     },
     "formation": {
         "web": {

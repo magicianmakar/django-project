@@ -319,6 +319,8 @@ class Util:
             order.status = order.PAID
             order.payment_date = timezone.now()
             order.stripe_transaction_id = transaction_id
+            order.authorize_net_customer_id = user.authorize_net_customer.customer_id
+            order.authorize_net_payment_id = user.authorize_net_customer.payment_id
             order.save()
 
         return orders
