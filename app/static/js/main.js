@@ -26,7 +26,7 @@ function isExtensionReady() {
 }
 
 function renderSupplierInfo(product_url, parent) {
-    if ((/aliexpress.com/i).test(product_url)) {
+    if ((/aliexpress.(com|us)/i).test(product_url)) {
         var product_id = product_url.match(/[\/_]([0-9]+)\.html/);
         if(!product_id || product_id.length != 2) {
             return;
