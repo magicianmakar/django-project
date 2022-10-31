@@ -477,6 +477,7 @@ class SupplementsApi(ApiResponseMixin, View):
         else:
             if not user_supplement.pl_supplement.approved_label_url:
                 return self.api_error('No Sample label for this product', status=500)
+
         try:
             basket_item = user.basket_items.get(user_supplement=user_supplement)
             basket_item.quantity += 1

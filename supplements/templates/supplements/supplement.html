@@ -76,6 +76,7 @@
                        >
                 {% if approved_label_url %}
                 <input type="hidden" id="add_to_basket" name="add_to_basket" value="0" />
+                {% if supplement.inventory > 0 %}
                 <input type="submit"
                        value="Add Sample to Basket"
                        data-action="preapproved"
@@ -88,6 +89,8 @@
                        data-redirect-url="{% url 'pls:my_supplements' %}"
                        >
                 {% endif %}
+                {% endif %}
+
 
                 <input type="reset" value="Reset" class="btn btn-default">
               </div>
