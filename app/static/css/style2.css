@@ -3170,3 +3170,10 @@ textarea.note {
     -webkit-background-clip: text;
     color: transparent;
 }
+
+.select-country:invalid{
+height: 45px !important;
+opacity: 0 !important;
+position: absolute !important;
+display: flex !important;
+}

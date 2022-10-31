@@ -101,12 +101,20 @@ $("#shipping_address").click(function () {
         $("input[name=shipping_address_line1]").attr("required", true);
         $("input[name=shipping_state]").attr("required", true);
         $("input[name=shipping_zip_code]").attr("required", true);
+        $("#shipping_country").prop("required", true);
+        $("#billing_country").prop("required", false);
     } else {
         $('.shipping-form').hide();
         $("input[name=shipping_address_line1]").attr("required", false);
         $("input[name=shipping_state]").attr("required", false);
         $("input[name=shipping_zip_code]").attr("required", false);
+        $("#shipping_country").prop("required", false);
+        $("#billing_country").prop("required", true);
     }
+});
+
+$('.select-country').on('change', function(e) {
+    $('.select-country').trigger("chosen:updated");
 });
 
 $(document).ready(function () {
@@ -121,8 +129,15 @@ $(document).ready(function () {
     $('#shipping_address').prop('checked', true);
 
     $(".basket-checkout").click(function () {
-        var country_code = $('#shipping_country').val();
-        var province = $('#shipping_state').val();
+        var country_code = '';
+        var province = '';
+        if ($('#shipping_address').prop('checked') == false ){
+            country_code = $('#shipping_country').val();
+            province = $('#shipping_state').val();
+        } else {
+            country_code = $('#billing_country').val();
+            province = $('#billing_state').val();
+        }
 
         if ( $('#checkout-form')[0].checkValidity() ) {
             basketCalculateShipping(country_code,province);
