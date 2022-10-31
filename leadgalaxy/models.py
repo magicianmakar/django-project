@@ -2383,6 +2383,14 @@ class AppPermission(models.Model):
             tag = AppPermissionTag.objects.get(name=tag)
         self.tags.remove(tag)
 
+    def get_images(self):
+        return self.image_url.split(',') if self.image_url else []
+
+    def add_image(self, url):
+        images = self.get_images()
+        images.append(url)
+        self.image_url = ','.join(images)
+
     def to_json(self):
         return {
             'id': self.id,
