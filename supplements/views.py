@@ -111,7 +111,10 @@ class Index(common_views.IndexView):
         if form.is_valid():
             title = form.cleaned_data['title']
             if title:
-                queryset = queryset.filter(title__icontains=title)
+                q = Q()
+                for term in title.split():
+                    q &= Q(title__icontains=term)
+                queryset = PLSupplement.objects.filter(q)
 
             tags = form.cleaned_data['tags']
             if tags:
