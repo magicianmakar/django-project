@@ -24,7 +24,7 @@
 
                             <div class="form-group"><label class="col-sm-2 control-label">Country</label>
                                 <div class="col-sm-8">
-                                    <select id="billing_country" name="billing_country" class="select-country" current="{{user.profile.timezone}}" style="width:350px;">
+                                    <select id="billing_country" name="billing_country" class="select-country" current="{{user.profile.timezone}}" style="width:350px;" required>
                                         <option value=""></option>
                                         {% for item in countries %}
                                         <option value="{{item.0}}"
@@ -45,7 +45,7 @@
                             </div>
                             <div class="form-group"><label class="col-sm-2 control-label">Address</label>
                                 <div class="col-sm-4">
-                                    <input type="text" name="billing_address_line1" value="{{ user.profile.company.address_line1 }}" class="form-control" placeholder="Address line 1">
+                                    <input type="text" name="billing_address_line1" value="{{ user.profile.company.address_line1 }}" class="form-control" placeholder="Address line 1" required>
                                 </div>
                                 <div class="col-sm-4">
                                     <input type="text" name="billing_address_line2" value="{{ user.profile.company.address_line2 }}" class="form-control" placeholder="Address line 2">
@@ -56,12 +56,12 @@
                                     <input type="text" name="billing_city" value="{{ user.profile.company.city }}" class="form-control" placeholder="City">
                                 </div>
                                 <div class="col-sm-4">
-                                    <input type="text" name="billing_state" value="{{ user.profile.company.state }}" class="form-control" placeholder="State or Province">
+                                    <input id="billing_state" type="text" name="billing_state" value="{{ user.profile.company.state }}" class="form-control" placeholder="State or Province" required>
                                 </div>
                             </div>
                             <div class="form-group"><label class="col-sm-2 control-label"></label>
                                 <div class="col-sm-4">
-                                    <input type="text" name="billing_zip_code" value="{{ user.profile.company.zip_code }}" class="form-control" placeholder="Zip or Postal">
+                                    <input type="text" name="billing_zip_code" value="{{ user.profile.company.zip_code }}" class="form-control" placeholder="Zip or Postal" required>
                                 </div>
 
                             </div>
