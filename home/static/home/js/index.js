@@ -2547,7 +2547,6 @@
         if(element.prop('checked')) {
             swal({
                     title: 'Are you sure you want to switch to our old layout?',
-                    text: 'Version 22.10.31.1 is an old version of Dropified and will no longer be getting enhanced.',
                     type: 'warning',
                     html: true,
                     animation: false,
@@ -2561,7 +2560,7 @@
                 },
                 function (isConfirmed) {
                     if (!isConfirmed) {
-                        $('#revert_to_v2210311 + .switchery').click();
+                        $('#revert_to_v2210311 + .switchery').trigger('click');
                     }
                     swal.close();
                 });
