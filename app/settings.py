@@ -770,3 +770,8 @@ LIFETIME3PAY_PRODUCTS = [
 ]
 
 SUREDONE_CHANNELS = os.environ.get('SUREDONE_CHANNELS', 'google,facebook,ebay').split(',')
+
+# Heartbeat API
+HEARTBEAT_API_KEY = os.environ.get('HEARTBEAT_API_KEY')
+HEARTBEAT_ROLE_ID = os.environ.get('HEARTBEAT_ROLE_ID')
+HEARTBEAT_GROUP_ID = os.environ.get('HEARTBEAT_GROUP_ID')

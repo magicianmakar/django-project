@@ -41,6 +41,7 @@ from analytic_events.models import SuccessfulPaymentEvent
 from tapfiliate.tasks import commission_from_stripe, successful_payment
 from leadgalaxy import signals
 from shopified_core.utils import safe_int, safe_float
+import requests
 
 
 class SubscriptionException(Exception):
@@ -1134,6 +1135,35 @@ def process_webhook_event(request, event_id):
                 user.profile.bundles.add(bundle)
             except:
                 capture_message("Error adding bundle")
+
+        if 'RLS' in description:
+            try:
+                # process heartbeat
+                url = "https://api.heartbeat.chat/v0/invitations"
+                payload = {
+                    "groupIDs": [settings.HEARTBEAT_GROUP_ID],
+                    "roleID": settings.HEARTBEAT_ROLE_ID
+                }
+                headers = {
+                    "accept": "application/json",
+                    "content-type": "application/json",
+                    "authorization": f'Bearer {settings.HEARTBEAT_API_KEY}'
+                }
+
+                response = requests.put(url, json=payload, headers=headers)
+                invitation_id = json.loads(response.text)['id']
+
+                # adding email
+                url = f'https://api.heartbeat.chat/v0/invitations/{invitation_id}'
+                payload = {"emails": [stripe_customer.email], "shouldSendEmail": True}
+                headers = {
+                    "content-type": "application/json",
+                    "authorization": f'Bearer {settings.HEARTBEAT_API_KEY}'
+                }
+
+                requests.post(url, json=payload, headers=headers)
+            except:
+                capture_message("Error adding Heartbeat")
 
         # process 3-pay charges
         for product_to_process in settings.LIFETIME3PAY_PRODUCTS:
