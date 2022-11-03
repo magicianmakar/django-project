@@ -287,9 +287,11 @@
             success: function (data) {
                 if (data.status == 'ok') {
                     toastr.success('Saved.','User Config');
-
-                    syncConfig();
-
+                    if ($('#layout-settings').hasClass('active')) {
+                        window.location.reload();
+                    } else {
+                        syncConfig();
+                    }
                 } else {
                     displayAjaxError('User Config', data);
                 }
@@ -2538,6 +2540,32 @@
                 }
             });
         });
+    });
+
+    $('#revert_to_v2210311').on('change', function(e) {
+        var element = $(this);
+        if(element.prop('checked')) {
+            swal({
+                    title: 'Are you sure you want to switch to our old layout?',
+                    text: 'Version 22.10.31.1 is an old version of Dropified and will no longer be getting enhanced.',
+                    type: 'warning',
+                    html: true,
+                    animation: false,
+                    showCancelButton: true,
+                    confirmButtonColor: '#DD6B55',
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    closeOnCancel: false,
+                    closeOnConfirm: true,
+                    showLoaderOnConfirm: false,
+                },
+                function (isConfirmed) {
+                    if (!isConfirmed) {
+                        $('#revert_to_v2210311 + .switchery').click();
+                    }
+                    swal.close();
+                });
+        }
     });
 
 })(sub_conf, user_statistics);

@@ -1,0 +1,147 @@
+{% load url_tools %}
+{% load static %}
+{% load perms_helper %}
+
+<div class="row border-bottom page-search-nav new">
+            <nav class="navbar navbar-static-top white-bg lifetime-ui" role="navigation" style="margin-bottom: 0;">
+                <div class="navbar-head">
+                    <div style="display: flex; align-items: center;">
+                        <div class="logo" style="position: fixed;">
+                            <a href="{% if request.user|can:'dashboard.view' %}{% url 'dashboard' %}{% else %}{% url 'index' %}{% endif %}">
+                                <img src="{% static 'dropified-logo-2.svg' %}"/>
+                            </a>
+                        </div>
+                        <div class="logo-mini" style="position: fixed;">
+                            <a href="{% if request.user|can:'dashboard.view' %}{% url 'dashboard' %}{% else %}{% url 'index' %}{% endif %}">
+                                <img src="{% static 'Logo.svg' %}"/>
+                            </a>
+                        </div>
+                        <div class="plan-badge-wrapper">
+                    {% if request.user.is_authenticated %}
+                        {% if request.user.profile.plan.description %}
+                            <a href="/user/profile#plan" class="plan-badge">
+                                <img src="{% static 'img/star-plan.svg' %}">
+                                <span class="plan-badge-name">{{request.user.profile.plan.description}}</span>
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                    <a href="#" class="btn icon-button-light" style="margin-left: 40px; display: none;">
+                        <img src="{% static 'img/group.svg' %}">
+                        Refer a friend
+                    </a>
+                    </div>
+                    </div>
+
+                    <ul class="nav navbar-top-links navbar-right">
+                    {% if lifetime_menus %}
+                        <li class="p-r-m border-right">
+                            <a href="#" id="open-applications-menu" class="neutral-color applications-nav {% if open_application_menu and lifetime_menus %}active{% endif %}">
+                                <span class="applications-nav-name">Applications</span>
+                                <img src="{% static 'img/applications.svg' %}">
+                            </a>
+                        </li>
+                    {% endif %}
+                        <li>
+                            <a href="{% url 'settings' %}">
+                                <img src="{% static 'img/gear-2.svg' %}">
+                            </a>
+                        </li>
+                        <li style="display: none;">
+                            <a href="#">
+                                <img src="{% static 'img/notification.svg' %}">
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="{% static 'img/userpic.svg' %}" width="25px">
+                            </a>
+                            <ul id="accounts-menu" class="dropdown-menu pull-right">
+                                <li>Account</li>
+                                <li>
+                                    <a href="{% url 'user_profile' %}#profile" data-href="#tab-1">
+                                        <img src="{% static 'img/applications_menu/profile-settings.svg' %}">
+                                        Profile Settings
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'user_profile' %}#email" data-href="#tab-2">
+                                        <img src="{% static 'img/applications_menu/email-and-password.svg' %}">
+                                        E-mail & Password
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'user_profile' %}#plan" data-href="#tab-3">
+                                        <img src="{% static 'img/applications_menu/plan-and-subscription.svg' %}">
+                                        Plan & Subscription
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'user_profile' %}#billing" data-href="#tab-4">
+                                        <img src="{% static 'img/applications_menu/billing.svg' %}">
+                                        Billing
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'user_profile' %}#invoices" data-href="#tab-5">
+                                        <img src="{% static 'img/applications_menu/invoices.svg' %}">
+                                        Invoices
+                                    </a>
+                                </li>
+                                {% if request.user|can:"sales_fee.use" %}
+                                <li>
+                                    <a href="{% url 'user_profile' %}#salesfees" data-href="#tab-salesfees">
+                                        <img src="{% static 'img/applications_menu/fulfillment-fees.svg' %}">
+                                        Fulfillment Fees
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li>
+                                    <a href="{% url 'subusers' %}">
+                                        <img src="{% static 'img/applications_menu/sub-users.svg' %}">
+                                        Sub Users
+                                    </a>
+                                </li>
+                                {% if user.models_user.profile.plan.support_addons %}
+                                <li>
+                                    <a href="{% url 'addons.list_view' %}">
+                                        <img src="{% static 'img/applications_menu/addons.svg' %}">
+                                        Addon Store
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
+                                <li>
+                                    <a href="https://plod.dropified.com/">
+                                        <i class="fa fa-question-circle" style="color:#6BAA55;margin:0 10px 0 2px;"></i>
+                                        Private Label Help
+                                    </a>
+                                </li>
+                                {% if user.is_staff %}
+                                <li>
+                                    <a href="https://learn.dropified.com/">
+                                        <i class="fa fa-question-circle" style="color:#6BAA55;margin:0 10px 0 2px;"></i>
+                                        Learning Center
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% else %}
+                                <li>
+                                    <a href="https://learn.dropified.com/">
+                                        <i class="fa fa-question-circle" style="color:#6BAA55;margin:0 10px 0 2px;"></i>
+                                        Learning Center
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li class="divider" style="margin:16px 0;"></li>
+                                <li>
+                                    <a href="{% url 'leadgalaxy.views.logout' %}">
+                                        <img src="{% static 'img/applications_menu/logout.svg' %}">
+                                        Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>

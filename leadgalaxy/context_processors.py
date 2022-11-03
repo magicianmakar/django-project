@@ -211,18 +211,10 @@ def add_lifetime_menu(request):
     if not request.user.is_authenticated:
         return {}
 
-    if request.user.is_staff:
-        lifetime_menus = ApplicationMenu.objects.prefetch_related(
-            Prefetch('items', ApplicationMenuItem.objects.all(), to_attr='plan_items'),
-        ).distinct()
-    else:
-        lifetime_menus = ApplicationMenu.objects.prefetch_related(
-            Prefetch('items', ApplicationMenuItem.objects.filter(
-                plans=request.user.profile.plan
-            ), to_attr='plan_items'),
-        ).filter(
-            items__plans=request.user.profile.plan
-        ).distinct()
+    lifetime_menus = ApplicationMenu.objects.prefetch_related(
+        Prefetch('items', ApplicationMenuItem.objects.all(), to_attr='plan_items'),
+    ).distinct()
+
     return {
         'lifetime_menus': lifetime_menus,
         'lifetime_menu_slugs': lifetime_menus.values_list('slug', flat=True),

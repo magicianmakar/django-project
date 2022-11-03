@@ -5,6 +5,38 @@
 var taskIntervals = {};
 var taskCallsCount = {};
 
+$(function () {
+    var ui_update_popup = localStorage.getItem('ui_update_popup');
+    if (!ui_update_popup) {
+        if (window.is_old_layout) {
+            $('#modal-ui-update').modal('show');
+        }
+        localStorage.setItem('ui_update_popup', true);
+    }
+});
+
+$('body').on('click', '#update-ui-btn', function (){
+    $.ajax({
+        type: 'POST',
+        url: '/api/user-show-new-layout',
+        success: function (data) {
+            window.location.reload();
+        },
+        error: function (data) {
+            displayAjaxError('Update to New Flow', data);
+        }
+    });
+});
+
+$('body').on('click', '#open-support-chat', function (){
+    $('.intercom-launcher').click();
+});
+
+$('body').on('click', '.menu-not-available', function (e){
+    e.preventDefault();
+    $('#upsell-modal').modal('show');
+});
+
 function isExtensionReady() {
     var $deferred = $.Deferred();
 
@@ -1036,23 +1068,29 @@ $(function() {
     });
 
     $(".side-menu-dropdown").each(function() {
-        var collapsed = localStorage.getItem($(this.children[0].children[1].children[0]).text());
+        var collapsedIndex = 0;
+        var caretIndex = 1;
+        if ($('.sidebar').hasClass('new')) {
+            collapsedIndex = 1;
+            caretIndex = 2;
+        }
+        var collapsed = localStorage.getItem($(this.children[0].children[1].children[collapsedIndex]).text());
         if (collapsed === "collapsed") {
             $(this).toggleClass("collapsed");
             this.nextElementSibling.style.display = "none";
-            $(this.children[0].children[1].children[1]).css({"transform": "rotate(180deg)"});
+            $(this.children[0].children[1].children[caretIndex]).css({"transform": "rotate(180deg)"});
         }
         $(this).on("click", function() {
             $(this).toggleClass("collapsed");
             var dropdownContent = this.nextElementSibling;
             if (!$(this).hasClass("collapsed")) {
                 dropdownContent.style.display = "block";
-                $(this.children[0].children[1].children[1]).css({"transform": "none"});
-                localStorage.removeItem($(this.children[0].children[1].children[0]).text());
+                $(this.children[0].children[1].children[caretIndex]).css({"transform": "none"});
+                localStorage.removeItem($(this.children[0].children[1].children[collapsedIndex]).text());
             } else {
                 dropdownContent.style.display = "none";
-                $(this.children[0].children[1].children[1]).css({"transform": "rotate(180deg)"});
-                localStorage.setItem($(this.children[0].children[1].children[0]).text(), 'collapsed');
+                $(this.children[0].children[1].children[caretIndex]).css({"transform": "rotate(180deg)"});
+                localStorage.setItem($(this.children[0].children[1].children[collapsedIndex]).text(), 'collapsed');
             }
         });
     });
