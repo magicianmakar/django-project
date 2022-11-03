@@ -315,6 +315,22 @@ class ACPUserInfoView(BaseTemplateView):
 
         user_ips = UserIpRecord.objects.filter(user=target_user).order_by('-last_seen_at')[:10]
 
+        # Search First Promoter for this customer
+        r = requests.get(
+            'https://firstpromoter.com/api/v1/promoters/show',
+            params={
+                'promoter_email': target_user.email,
+            }, headers={
+                'x-api-key': settings.FIRST_PROMOTER_API_KEY,
+            }
+        )
+
+        if r.ok:
+            fp_affilaite = r.json()
+        else:
+            print(r.text)
+            fp_affilaite = None
+
         ctx.update({
             'target_user': target_user,
             'addon_logs': addon_logs,
@@ -334,6 +350,7 @@ class ACPUserInfoView(BaseTemplateView):
             'show_products': self.request.GET.get('products'),
             'user_plans': user_plans,
             'user_ips': user_ips,
+            'fp_affilaite': fp_affilaite,
         })
 
         return ctx
