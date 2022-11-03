@@ -775,3 +775,4 @@ SUREDONE_CHANNELS = os.environ.get('SUREDONE_CHANNELS', 'google,facebook,ebay').
 HEARTBEAT_API_KEY = os.environ.get('HEARTBEAT_API_KEY')
 HEARTBEAT_ROLE_ID = os.environ.get('HEARTBEAT_ROLE_ID')
 HEARTBEAT_GROUP_ID = os.environ.get('HEARTBEAT_GROUP_ID')
+HEARTBEAT_INVITE_ID = os.environ.get('HEARTBEAT_INVITE_ID', False)

@@ -1139,19 +1139,22 @@ def process_webhook_event(request, event_id):
         if 'RLS' in description:
             try:
                 # process heartbeat
-                url = "https://api.heartbeat.chat/v0/invitations"
-                payload = {
-                    "groupIDs": [settings.HEARTBEAT_GROUP_ID],
-                    "roleID": settings.HEARTBEAT_ROLE_ID
-                }
-                headers = {
-                    "accept": "application/json",
-                    "content-type": "application/json",
-                    "authorization": f'Bearer {settings.HEARTBEAT_API_KEY}'
-                }
+                if settings.HEARTBEAT_INVITE_ID:
+                    invitation_id = settings.HEARTBEAT_INVITE_ID
+                else:
+                    url = "https://api.heartbeat.chat/v0/invitations"
+                    payload = {
+                        "groupIDs": [settings.HEARTBEAT_GROUP_ID],
+                        "roleID": settings.HEARTBEAT_ROLE_ID
+                    }
+                    headers = {
+                        "accept": "application/json",
+                        "content-type": "application/json",
+                        "authorization": f'Bearer {settings.HEARTBEAT_API_KEY}'
+                    }
 
-                response = requests.put(url, json=payload, headers=headers)
-                invitation_id = json.loads(response.text)['id']
+                    response = requests.put(url, json=payload, headers=headers)
+                    invitation_id = json.loads(response.text)['id']
 
                 # adding email
                 url = f'https://api.heartbeat.chat/v0/invitations/{invitation_id}'
@@ -1163,7 +1166,7 @@ def process_webhook_event(request, event_id):
 
                 requests.post(url, json=payload, headers=headers)
             except:
-                capture_message("Error adding Heartbeat")
+                capture_exception()
 
         # process 3-pay charges
         for product_to_process in settings.LIFETIME3PAY_PRODUCTS:
