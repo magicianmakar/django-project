@@ -11,9 +11,8 @@ from . import settings as app_settings
 def create_fp_user(user):
     # Add user to First Promoter
     compain_conf = {}
-    if user.can(app_settings.FIRST_PROMOTER_PRO_PERMISSION_NAME):
+    if not user.profile.plan.is_free:
         compain_conf['campaign_id'] = app_settings.FIRST_PROMOTER_PRO_CAMPAIGN_ID
-        print('User is pro', compain_conf)
 
     rep = requests.post(
         'https://firstpromoter.com/api/v1/promoters/create',
