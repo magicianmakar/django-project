@@ -46,3 +46,14 @@ def upgrade_fp_user(user, promoter_id):
     )
 
     return rep.ok
+
+
+def find_fp_user(user):
+    r = requests.get(
+        url='https://firstpromoter.com/api/v1/promoters/show',
+        params={'promoter_email': user.email},
+        headers={'x-api-key': app_settings.FIRST_PROMOTER_API_KEY}
+    )
+
+    if r.ok:
+        return r.json()
