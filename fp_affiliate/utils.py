@@ -2,6 +2,9 @@ import requests
 
 from django.conf import settings
 
+from lib.exceptions import capture_exception
+from shopified_core.utils import http_response_extra
+
 from . import settings as app_settings
 
 
@@ -29,6 +32,11 @@ def create_fp_user(user):
         }
     )
 
+    try:
+        rep.raise_for_status()
+    except:
+        capture_exception(extra=http_response_extra(rep))
+
     return rep.ok
 
 
@@ -45,15 +53,25 @@ def upgrade_fp_user(user, promoter_id):
         }
     )
 
+    try:
+        rep.raise_for_status()
+    except:
+        capture_exception(extra=http_response_extra(rep))
+
     return rep.ok
 
 
 def find_fp_user(user):
-    r = requests.get(
+    rep = requests.get(
         url='https://firstpromoter.com/api/v1/promoters/show',
         params={'promoter_email': user.email},
         headers={'x-api-key': app_settings.FIRST_PROMOTER_API_KEY}
     )
 
-    if r.ok:
-        return r.json()
+    try:
+        rep.raise_for_status()
+    except:
+        capture_exception(extra=http_response_extra(rep))
+
+    if rep.ok:
+        return rep.json()
