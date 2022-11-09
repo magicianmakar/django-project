@@ -2,7 +2,6 @@ import requests
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -28,9 +27,6 @@ class IndexView(TemplateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_superuser and not request.user.is_staff:
-            raise PermissionDenied()
-
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs: dict) -> dict:
