@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load cache %}
+{% load template_helper %}
+{% load url_tools %}
+
+{% block main-container %}
+
+{% if affiliate %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <div class="row">
+                    <div class="col-md-offset-1 col-md-2 boxed">
+                        <h5 class="box-label">Clicks</h5>
+                        <h1 class="box-value">{{ promotion.visitors_count }}</h1>
+                    </div>
+                    <div class="col-md-2 boxed">
+                        <h5 class="box-label">Signups</h5>
+                        <h1 class="box-value">{{ promotion.leads_count }}</h1>
+                    </div>
+
+                    <div class="col-md-2 boxed">
+                        <h5 class="box-label">Sales</h5>
+                        <h1 class="box-value">{{ promotion.customers_count }}</h1>
+                    </div>
+                    <div class="col-md-2 boxed">
+                        <h5 class="box-label">Commisions</h5>
+                        <h1 class="box-value">{{ promotion.sales_total }}</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5 class="fl">{{ promotion.campaign_name }}</h5> <h5 class="fr">{{ promotion.current_referral_reward.name }}</h5>
+            </div>
+            <div class="ibox-content">
+                <div class="row">
+                    <div class="col-md-2 text-right">
+                        <h2 class="titled">Affiliate</h5>
+                    </div>
+                    <div class="col-md-8 ">
+                        <h2 class="titled">
+                            <a href="{{ promotion.referral_link }}" target="_blank">
+                                {{ promotion.referral_link }}
+                            </a>
+                        </h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+
+<div class="ibox float-e-margins">
+    <div class="ibox-content" style="background:#90c67d">
+        <div class="row">
+            <div class="containerInner ui-sortable">
+                <div class="row bgCover noBorder borderSolid border3px cornersAll radius0 shadow0 P0-top P0-bottom P0H noTopMargin" id="row--51798" data-trigger="none" data-animate="fade" data-delay="500" data-title="2 column row" style="padding-top: 0px; padding-bottom: 20px; margin: 0px auto; outline: none; width: 95%; max-width: 100%;">
+                    <div id="col-left-106" class="innerContent col_left ui-resizable col-md-6" data-col="left" data-trigger="none" data-animate="fade" data-delay="500" data-title="1st column" style="outline: none;">
+                        <div class="col-inner bgCover  noBorder borderSolid border3px cornersAll radius0 shadow0 P0-top P0-bottom P0H noTopMargin" style="padding: 0 10px">
+                            <div class="de elHeadlineWrapper ui-droppable de-editable" id="tmp_headline1-55120" data-de-type="headline" data-de-editing="false" data-title="headline" data-ce="true" data-trigger="none" data-animate="fade" data-delay="500" style="margin-top: 0px; outline: none; font-family: Poppins, Helvetica, sans-serif !important;" data-google-font="Poppins" aria-disabled="false" data-htype="content">
+                                <h1 class="ne elHeadline hsSize3 lh4 elMargin0 elBGStyle0 hsTextShadow0 borderSolid border0px" style="text-align: left; font-size: 48px; color: rgb(255, 255, 255);" data-bold="inherit" data-gramm="false" contenteditable="false">
+                                    <b>Get Paid <br>Every Month with our Dropified Partner Program</b>
+                                </h1>
+                            </div>
+                            <div class="de elHeadlineWrapper ui-droppable de-editable" id="headline-21062" data-de-type="headline" data-de-editing="false" data-title="sub-headline" data-ce="true" data-trigger="none" data-animate="fade" data-delay="500" data-gramm="false" style="margin-top: 15px; outline: none;" aria-disabled="false">
+                                <h2 class="ne elHeadline hsSize2 elMargin0 elBGStyle0 hsTextShadow0 lh2" style="text-align: left; font-size: 18px; color: rgb(255, 255, 255);" data-bold="inherit" data-gramm="false" contenteditable="false">
+                                    Top Quality Affiliate Program. Join today to see all of our offers inside a powerful management area.</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="col-right-123" class="innerContent col_right ui-resizable col-md-6" data-col="right" data-trigger="none" data-animate="fade" data-delay="500" data-title="2nd column" style="outline: none;">
+                        <div class="col-inner bgCover  noBorder borderSolid border3px cornersAll radius0 shadow0 P0-top P0-bottom P0H noTopMargin" style="padding: 0 10px">
+                            <div class="de elImageWrapper de-image-block elAlign_center elMargin0 ui-droppable de-editable" id="tmp_image-88706" data-de-type="img" data-de-editing="false" data-title="image" data-ce="false" data-trigger="none" data-animate="fade" data-delay="500" style="margin-top: 0px; outline: none;" aria-disabled="false">
+                                <img src="//go.dropified.com/hosted/images/56/223644433346f9a9429a835d1d3688/dropified-affiliate_v3.png" class="elIMG ximg" alt="" width="450" height="" tabindex="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row text-center">
+            <a href= "{% url 'fp_affiliate_index' %}?join=1" class="btn btn-lg btn-success">
+                Join Affiliate
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+        .boxed {
+            border: 1px solid #e7eaec;
+            padding: 10px;
+            margin-right: 5px;
+            border-radius: 10px;
+        }
+        .boxed .box-value {
+            font-size: 30px;
+            font-weight: bold;
+        }
+        .titled {
+            font-weight: normal;
+            font-size: 1.4em;
+        }
+        .ibox-title h5.fl {
+            float: left;
+            display: inline-block;
+        }
+        .ibox-title h5.fr {
+            float: right;
+            display: inline-block;
+        }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+    </script>
+{% endblock %}

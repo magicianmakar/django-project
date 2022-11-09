@@ -136,24 +136,24 @@
                                             {% endif %}
 
                                             <li class="divider"></li>
-                                            <li><a href="#" class="sub-affiliate btn-success btn-outline" user-id="{{target_user.id}}" username="{{target_user.username}}">Create Affilaite</a></li>
+                                            <li><a href="#" class="sub-affiliate btn-success btn-outline" user-id="{{target_user.id}}" username="{{target_user.username}}">Create Affiliate</a></li>
                                         </ul>
                                     </div>
                                 </td>
                             </tr>
-                            {% if fp_affilaite %}
+                            {% if fp_affiliate %}
                             <tr>
-                                <th>Affilaite</th>
+                                <th>Affiliate</th>
                                 <td style="display:flex;justify-content:space-between;align-items:center">
-                                    {% for promotion in fp_affilaite.promotions %}
+                                    {% for promotion in fp_affiliate.promotions %}
                                         {% if not promotion.hidden %}
                                             <div>
                                                 <span class="label label-primary">{{promotion.campaign_name}}</span>
                                                 <span class="label label-info">{{promotion.current_referral_reward.name}}</span>
                                             </div>
                                             {% if promotion.current_referral_reward.per_of_sale == 20 %}
-                                                <button class="affilaite-upgrade btn btn-xs btn-success btn-outline"
-                                                    user-id="{{target_user.id}}" promoter-id="{{fp_affilaite.id}}">
+                                                <button class="affiliate-upgrade btn btn-xs btn-success btn-outline"
+                                                    user-id="{{target_user.id}}" promoter-id="{{fp_affiliate.id}}">
                                                     <i class="fa fa-rocket"></i>
                                                     Upgrade
                                                 </button>

@@ -326,10 +326,10 @@ class ACPUserInfoView(BaseTemplateView):
         )
 
         if r.ok:
-            fp_affilaite = r.json()
+            fp_affiliate = r.json()
         else:
             print(r.text)
-            fp_affilaite = None
+            fp_affiliate = None
 
         ctx.update({
             'target_user': target_user,
@@ -350,7 +350,7 @@ class ACPUserInfoView(BaseTemplateView):
             'show_products': self.request.GET.get('products'),
             'user_plans': user_plans,
             'user_ips': user_ips,
-            'fp_affilaite': fp_affilaite,
+            'fp_affiliate': fp_affiliate,
         })
 
         return ctx

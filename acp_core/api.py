@@ -1,7 +1,5 @@
 import json
 
-import requests
-
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
@@ -15,6 +13,7 @@ from leadgalaxy.models import AdminEvent, AppPermission, AppPermissionTag, Featu
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import app_link, jwt_encode
+from fp_affiliate.utils import create_fp_user, upgrade_fp_user
 
 
 def check_user_permission(user):
@@ -274,49 +273,21 @@ class ACPApi(ApiResponseMixin):
     def post_sub_affiliate(self, request, user, data):
         check_user_permission(user)
 
-        user: User = User.objects.get(id=data['user'])
+        user = User.objects.get(id=data['user'])
 
         # Add user to First Promoter
-        rep = requests.post(
-            'https://firstpromoter.com/api/v1/promoters/create',
-            json={
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'website': settings.APP_URL,
-                'custom_field': {
-                    'user_id': user.id,
-                }
-            },
-            headers={
-                'x-api-key': settings.FIRST_PROMOTER_API_KEY,
-            }
-        )
-
-        if rep.ok:
+        if create_fp_user(user):
             return self.api_success()
         else:
             return self.api_error('Could not add user to First Promoter')
 
-    def post_affilaite_upgrade(self, request, user, data):
+    def post_affiliate_upgrade(self, request, user, data):
         check_user_permission(user)
 
-        user: User = User.objects.get(id=data['user'])
+        user = User.objects.get(id=data['user'])
         promoter_id = data['promoter']
 
-        # Add user to First Promoter
-        rep = requests.post(
-            'https://firstpromoter.com/api/v1/promoters/move_to_campaign',
-            json={
-                'id': promoter_id,
-                'destination_campaign_id': '6239',
-            },
-            headers={
-                'x-api-key': settings.FIRST_PROMOTER_API_KEY,
-            }
-        )
-
-        if rep.ok:
+        if upgrade_fp_user(user, promoter_id):
             return self.api_success()
         else:
             return self.api_error('Could not add user to First Promoter')

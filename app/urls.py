@@ -31,6 +31,7 @@ urlpatterns = [
     url(r'^callflex/', include('phone_automation.urls')),
     url(r'^aliextractor/', include('aliextractor.urls')),
     url(r'^sso/', include('sso_core.urls')),
+    url(r'^referral-dashboard/', include('fp_affiliate.urls')),
     url(r'^profits/', include(('profits.urls', 'profits'), 'profits')),
     url(r'^print-on-demand/', include(('prints.urls', 'prints'), 'prints')),
     url(r'^supplements/', include(('supplements.urls', 'supplements'), 'pls')),

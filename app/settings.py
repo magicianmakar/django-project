@@ -107,6 +107,7 @@ INSTALLED_APPS = (
     'phone_automation',
     'aliextractor',
     'prints',
+    'fp_affiliate',
     'supplements',
     'product_common',
     'dropified_product',
@@ -640,8 +641,6 @@ TRELLO_TOKEN = os.environ.get('TRELLO_TOKEN')
 
 # Walmart
 WALMART_AFFILIATE_LINK = 'https://goto.walmart.com/c/1325250/565706/9383?subId1=userID&veh=aff&sourceid=imp_000011112222333344&u='
-
-FIRST_PROMOTER_API_KEY = os.environ.get('FIRST_PROMOTER_API_KEY')
 
 # ActiveCampaign
 ACTIVECAMPAIGN_URL = os.environ.get('ACTIVECAMPAIGN_URL')

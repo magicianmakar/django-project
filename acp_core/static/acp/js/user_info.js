@@ -94,12 +94,12 @@ $(document).ready(function () {
         });
     });
 
-    $('.affilaite-upgrade').on('click', function (e) {
+    $('.affiliate-upgrade').on('click', function (e) {
         e.preventDefault();
 
         $.ajax({
             type: 'POST',
-            url: api_url('affilaite-upgrade', 'acp'),
+            url: api_url('affiliate-upgrade', 'acp'),
             data: {
                 'user': $(this).attr('user-id'),
                 'promoter': $(this).attr('promoter-id'),
