@@ -310,6 +310,35 @@ class SupplementsApi(ApiResponseMixin, View):
         else:
             raise permissions.PermissionDenied()
 
+    def post_product_shipping_refund(self, request, user, data):
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            all_total_weight = Decimal('0.0')
+            exc_total_weight = Decimal('0.0')
+            for order_line in data['all_products']:
+                pk = safe_int(order_line['id'])
+                weight = Decimal(PLSOrderLine.objects.get(id=pk).label.user_supplement.pl_supplement.weight) * safe_int(order_line['qty'])
+                all_total_weight += weight
+            for order_line in data['products_exc_refunded']:
+                pk = safe_int(order_line['id'])
+                weight = Decimal(PLSOrderLine.objects.get(id=pk).label.user_supplement.pl_supplement.weight) * safe_int(order_line['qty'])
+                exc_total_weight += weight
+            shipping_address = json.loads(PLSOrderLine.objects.get(id=pk).pls_order.shipping_address)
+            res = {}
+            res['all_shipping_service'] = get_shipping_costs(
+                shipping_address['country_code'],
+                shipping_address['province_code'],
+                [all_total_weight],
+                None,
+            )
+            if (exc_total_weight != Decimal('0.0')):
+                res['exc_shipping_service'] = get_shipping_costs(
+                    shipping_address['country_code'],
+                    shipping_address['province_code'],
+                    [exc_total_weight],
+                    None,
+                )
+            return self.api_success(res)
+
     def post_mark_usersupplement_unread(self, request, user, data):
         if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
             pk = safe_int(data['item_id'])

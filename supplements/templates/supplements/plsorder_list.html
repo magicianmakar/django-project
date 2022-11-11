@@ -1,39 +1,6 @@
 {% extends "supplements/tab_view_admin.html" %}
 {% load static compress %}
 
-{% block extrajs-before %}
-<script>
-      function calculate_total_refund() {
-        var amount = 0;
-        $(".refund-amount").each(function (i, item) {
-            if ($(item).val()) {
-                amount += parseFloat($(item).val());
-            }
-        });
-        var id_fee = $('#id_fee').val();
-        // convert from any "falsey" value to 0
-        // https://stackoverflow.com/questions/7540397/convert-nan-to-0-in-javascript
-        id_fee = id_fee || 0
-        var id_shippling = $('#id_shipping').val()
-        id_shippling = id_shippling || 0
-        amount -= parseFloat(id_fee);
-        amount += parseFloat(id_shippling);
-        amount = amount.toFixed(2)
-        $('#total_refund').val(amount)
-    }
-
-    $('#id_fee').keyup(function() {
-        console.log("id_fee")
-        calculate_total_refund()
-    });
-
-    $('#id_shipping').keyup(function() {
-      console.log("id_shipping")
-        calculate_total_refund()
-    });
-</script>
-{% endblock %}
-
 {% block extra_pls_css %}
 <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
 {% endblock %}
@@ -137,5 +104,72 @@
 <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
 <script type='application/javascript'>
   setupDateRangePicker('#date', 'input[name="date"]');
+
+  function calculate_total_refund() {
+      var amount = 0;
+      $(".refund-amount").each(function (i, item) {
+          if ($(item).val()) {
+              amount += parseFloat($(item).val());
+          }
+      });
+      var id_fee = $('#id_fee').val();
+      // convert from any "falsey" value to 0
+      // https://stackoverflow.com/questions/7540397/convert-nan-to-0-in-javascript
+      id_fee = id_fee || 0;
+      var id_shippling = $('#id_shipping').val();
+      id_shippling = id_shippling || 0;
+      amount -= parseFloat(id_fee);
+      amount += parseFloat(id_shippling);
+      amount = amount.toFixed(2);
+      $('#total_refund').val(amount);
+  }
+
+  function calculate_shipping() {
+      var products = {"all_products":[], "products_exc_refunded":[]};
+      $(".refund-qty").each(function (i, item) {
+          id = $(item).data("line-id");
+          rtn_qty = $(item).val();
+          all_qty = $(item).data("line-qty");
+          exc_qty = all_qty - rtn_qty;
+          products['all_products'].push({"id":id, "qty":all_qty});
+          products['products_exc_refunded'].push({"id":id, "qty":exc_qty});
+      });
+      $.ajax({
+          url: api_url('product-shipping-refund', 'supplements'),
+          type: "POST",
+          data: JSON.stringify(products),
+          dataType: 'json',
+          contentType: 'application/json',
+          success: function (response) {
+              var shipping_service_used;
+              var all_shipping_cost = 0.0;
+              var exc_shipping_cost = 0.0;
+              for (var i = 0, iLength = response['all_shipping_service'].length; i < iLength ; i++){
+                  all_shipping_cost = response['all_shipping_service'][i]['shipping_cost'];
+                  if (all_shipping_cost == parseFloat($("#shipping_price").attr("data-shipping-price"))) {
+                      shipping_service_used = response['all_shipping_service'][i]['service_id'];
+                      break;
+                  }
+              }
+              if(response.hasOwnProperty('exc_shipping_service')){
+                  for (var o = 0, oLength = response['exc_shipping_service'].length; o < oLength ; o++){
+                      if (shipping_service_used == response['exc_shipping_service'][o]['service_id']){
+                          exc_shipping_cost = response['exc_shipping_service'][o]['shipping_cost'];
+                      }
+                  }
+              }
+              $('#id_shipping').val((all_shipping_cost - exc_shipping_cost).toFixed(2)).change();
+          }
+      });
+  }
+
+  function calculate_refund_amount(element) {
+      rtn_qty = $(element).val();
+      unit_price = $(element).data("line-unit-price");
+      idx = $(element).data("line-idx");
+      $(".refund-amount").eq(idx).val((unit_price * rtn_qty).toFixed(2));
+      calculate_shipping();
+    }
+
 </script>
 {% endblock %}

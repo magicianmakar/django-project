@@ -1,7 +1,7 @@
 {% load widget_tweaks %}
 
 <div id="modal-orders-refund" class="modal" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog" style="width: 700px;">
     <div class="modal-content">
         <form class="form-horizontal" id="refund_form" role="form" action="" method="POST">
         <div class="modal-header">
@@ -36,6 +36,7 @@
                     <th>Unit Price</th>
                     <th>Quantity</th>
                     <th>Total Amount</th>
+                    <th>Refund Quantity</th>
                     <th>Refund Amount</th>
                   </thead>
                   <tbody>
@@ -77,7 +78,7 @@
                     <div class="col-sm-4 col-xs-12">
                       <div class='input-group'>
                         <span class="input-group-addon">$</span>
-                        <input id="total_refund" type="number" step="0.01" class="form-control" readonly />
+                        <input id="total_refund" type="number" class="form-control" readonly />
                       </div>
                     </div>
                 </div>
@@ -103,23 +104,32 @@
     <td>${{ this.supplement.cost_price }}</td>
     <td>{{ this.quantity }}</td>
     <td>{{ this.line_total_string }}</td>
-    {{#ifeq ../transaction_status "capturedPendingSettlement"}}
-      <td>
-        <div class='input-group'>
-          <span class="input-group-addon">$</span>
-          <input type="number" step="0.01" class="refund-amount form-control" data-line-id="{{ this.id }}"
-            readonly value="{{this.line_total}}" onkeyup="calculate_total_refund()"/>
-        </div>
-      </td>
-    {{else}}
-      <td>
-        <div class='input-group'>
-          <span class="input-group-addon">$</span>
-          <input type="number" step="0.01" class="refund-amount form-control" data-line-id="{{ this.id }}"
-          onkeyup="calculate_total_refund()"/>
-        </div>
-      </td>
-    {{/ifeq}}
+    <td>
+      <div class='input-group'>
+        <span class="input-group-addon"></span>
+        {{#ifeq ../transaction_status "capturedPendingSettlement"}}
+        <input type="number" step="1" class="refund-qty form-control" data-line-id="{{ this.id }}"
+          data-line-qty="{{ this.quantity }}" data-line-unit-price="{{ this.supplement.cost_price }}"
+          readonly value="{{this.quantity}}" />
+        {{else}}
+        <input type="number" step="1" class="refund-qty form-control" data-line-id="{{ this.id }}"
+          data-line-qty="{{ this.quantity }}" data-line-unit-price="{{ this.supplement.cost_price }}"
+          data-line-idx="{{ @index }}"onchange="calculate_refund_amount(this)"/>
+        {{/ifeq}}
+      </div>
+    </td>
+    <td>
+      <div class='input-group'>
+        <span class="input-group-addon">$</span>
+        {{#ifeq ../transaction_status "capturedPendingSettlement"}}
+        <input type="number" step="0.01" class="refund-amount form-control" data-line-id="{{ this.id }}"
+          data-line-qty="{{ this.quantity }}" readonly value="{{this.line_total}}" />
+        {{else}}
+        <input type="number" step="0.01" class="refund-amount form-control" data-line-id="{{ this.id }}"
+          data-line-qty="{{ this.quantity }}" readonly />
+        {{/ifeq}}
+      </div>
+    </td>
   </tr>
   {{/each}}
 </script>
