@@ -2476,8 +2476,8 @@ class GroupPlan(models.Model):
     extra_subuser_cost = models.DecimalField(decimal_places=2, max_digits=9, null=True, default=0.00,
                                              verbose_name='Extra sub user cost per user(in USD)')
     auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
-    product_create_limit = models.IntegerField(default=10000, verbose_name="Products Create Limit")
-    product_update_limit = models.IntegerField(default=10000, verbose_name="Product Update Limit")
+    product_create_limit = models.IntegerField(default=10000, verbose_name="Suredone Products Create Limit")
+    product_update_limit = models.IntegerField(default=10000, verbose_name="Suredone Product Update Limit")
     suredone_orders_limit = models.IntegerField(default=-1, verbose_name="Suredone Orders Limit")
 
     support_addons = models.BooleanField(default=False)

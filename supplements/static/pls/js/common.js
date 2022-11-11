@@ -236,6 +236,7 @@ $(document).ready(function(){
                 $('#modal-orders-refund tbody').empty().append(html);
                 $('#modal-orders-refund').modal('show');
                 $('#shipping_price').empty().text(data.shipping_price_string);
+                $('#shipping_price').attr("data-shipping-price", data.shipping_price);
                 $('#id_shipping').val("");
                 $('#id_fee').val("");
                 $('#total_refund').val("");
@@ -272,6 +273,14 @@ $(document).ready(function(){
         form.shipping.value = shipping ? shipping : 0;
         form.amount.value = amount;
         form.line_items_data.value = JSON.stringify(data);
+    });
+
+    $('#id_fee').change(function() {
+        calculate_total_refund();
+    });
+
+    $('#id_shipping').change(function() {
+        calculate_total_refund();
     });
 
     $('.mark-supplement').click(function (e) {
