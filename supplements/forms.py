@@ -88,6 +88,7 @@ class PLSupplementForm(forms.ModelForm):
                   'inventory',
                   'supplier',
                   'shipstation_account',
+                  'barcode_label',
                   ]
 
         widgets = {

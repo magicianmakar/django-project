@@ -901,7 +901,8 @@ class AdminLabelHistory(LabelHistory):
                 # If a label does not have SKU, needs to be generated for barcode
                 if label.sku == '':
                     label.generate_sku()
-                self.add_barcode_to_label(label)
+                if label.user_supplement.pl_supplement.barcode_label:
+                    self.add_barcode_to_label(label)
                 label_class = 'label-primary'
                 if action == label.QA_PASSED:
                     label_class = 'label-warning'
