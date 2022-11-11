@@ -39,6 +39,7 @@ from .utils import (
     find_or_create_category,
     get_product_data,
     get_deleted_product_images,
+    smart_board_by_product,
 )
 
 from product_alerts.utils import (
@@ -155,6 +156,8 @@ def product_save(req_data, user_id):
             return {
                 'error': "Add Product: {}".format(str(e))
             }
+
+    smart_board_by_product(user.models_user, product)
 
     return {
         'product': {

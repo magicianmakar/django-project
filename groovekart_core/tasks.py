@@ -30,7 +30,8 @@ from .utils import (
     format_gkart_errors,
     get_variant_value,
     update_product_images,
-    get_or_create_category_by_title
+    get_or_create_category_by_title,
+    smart_board_by_product
 )
 
 from product_alerts.utils import (
@@ -133,6 +134,8 @@ def product_save(req_data, user_id):
             return {
                 'error': "Add Product: {}".format(str(e))
             }
+
+    smart_board_by_product(user, product)
 
     return {
         'product': {

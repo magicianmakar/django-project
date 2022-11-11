@@ -30,7 +30,12 @@ from shopified_core.utils import (
     safe_str
 )
 
-from .utils import format_chq_errors, CHQOrderUpdater, get_chq_product
+from .utils import (
+    CHQOrderUpdater,
+    format_chq_errors,
+    get_chq_product,
+    smart_board_by_product,
+)
 from .models import (
     CommerceHQStore,
     CommerceHQProduct,
@@ -151,6 +156,8 @@ def product_save(req_data, user_id):
             return {
                 'error': "Add Product: {}".format(str(e))
             }
+
+    smart_board_by_product(user.models_user, product)
 
     return {
         'product': {

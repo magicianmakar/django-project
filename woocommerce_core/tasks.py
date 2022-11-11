@@ -47,6 +47,7 @@ from .utils import (
     find_missing_orders,
     update_woo_store_order,
     get_woo_order,
+    smart_board_by_product,
 )
 
 from product_alerts.utils import (
@@ -168,6 +169,8 @@ def product_save(req_data, user_id):
             return {
                 'error': "Add Product: {}".format(str(e))
             }
+
+    smart_board_by_product(user, product)
 
     return {
         'product': {

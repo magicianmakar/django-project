@@ -1426,7 +1426,7 @@ class BoardsList(ListView):
             board.connected = board.connected_count(request=self.request)
         context['boards'] = current_page
         context['breadcrumbs'] = ['Boards']
-
+        context['store_type'] = 'bigcommerce'
         return context
 
 
