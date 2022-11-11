@@ -197,6 +197,7 @@ class UserSupplement(UserSupplementMixin, models.Model):
                                          on_delete=models.SET_NULL,
                                          related_name='current_label_of',
                                          null=True)
+    sample_product = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     seen_users = models.TextField(default='', blank=True, null=True)

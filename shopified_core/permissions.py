@@ -487,6 +487,7 @@ def can_upload_label(user):
 
     if label_count is None:
         label_count = UserSupplementLabel.objects.filter(user_supplement__user=user,
+                                                         user_supplement__sample_product=False,
                                                          created_at__month=today.month,
                                                          created_at__year=today.year).exclude(status=UserSupplementLabel.DRAFT).count()
         cache.set(labels_count_keys, label_count, timeout=6)
