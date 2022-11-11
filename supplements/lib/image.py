@@ -325,7 +325,10 @@ def get_order_number_label(item, use_latest=False, label_id=None):
     else:
         label_url = item.label.url
 
-    order_number = item.pls_order.shipstation_order_number
+    if item.label.user_supplement.pl_supplement.order_number_on_label:
+        order_number = item.pls_order.shipstation_order_number
+    else:
+        order_number = ''
 
     pdf_page = make_pdf_of(order_number)
 
