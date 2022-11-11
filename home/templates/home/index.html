@@ -33,7 +33,14 @@
 {% endblock %}
 
 {% block extracss %}
-
+    <style type="text/css">
+        .table > tbody > tr:last-child > td {
+            border-bottom: none;
+        }
+        table.table.store-tables {
+            margin-bottom: 0 !important;
+        }
+    </style>
     <link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 
 {% compress css %}

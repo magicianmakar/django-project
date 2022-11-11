@@ -82,17 +82,21 @@ $(document).ready(function () {
         $("body").toggleClass("mini-navbar");
         SmoothlyMenu();
         if (!$('body').hasClass('mini-navbar') || $('body').hasClass('body-small')) {
-          $(this).css({
-            'transform': 'none',
-            'left': '200px',
-          });
-          localStorage.removeItem('navbar');
+            if (!$('.sidebar').hasClass('new')) {
+                $(this).css({
+                    'transform': 'none',
+                    'left': '200px',
+                });
+            }
+            localStorage.removeItem('navbar');
         } else {
-          $(this).css({
-            'transform': 'rotate(180deg)',
-            'left': '40px',
-          });
-          localStorage.setItem('navbar', 'mini-navbar')
+            if (!$('.sidebar').hasClass('new')) {
+                $(this).css({
+                    'transform': 'rotate(180deg)',
+                    'left': '40px',
+                });
+            }
+            localStorage.setItem('navbar', 'mini-navbar')
         }
     });
 
@@ -102,10 +106,12 @@ $(document).ready(function () {
         $("body").toggleClass("mini-navbar");
         $('#side-menu').hide();
         $('#mini-side-menu').show();
-        $('.navbar-minimalize').css({
-          'transform': 'rotate(180deg)',
-          'left': '40px',
-        });
+        if (!$('.sidebar').hasClass('new')) {
+            $('.navbar-minimalize').css({
+                'transform': 'rotate(180deg)',
+                'left': '40px',
+            });
+        }
     }
 
     // Move modal to body
@@ -138,12 +144,19 @@ $(document).ready(function () {
     // Fixed Sidebar
     $(window).bind("load", function () {
         if ($("body").hasClass('fixed-sidebar')) {
-            $('.sidebar-collapse').slimScroll({
-                height: '100%',
-                railOpacity: 0.9
-            });
+            if ($('.sidebar').hasClass('new')) {
+                $('.sidebar-collapse').slimScroll({
+                    height: 'calc(100vh - 64px)',
+                    railOpacity: 0.9
+                });
+            } else {
+                $('.sidebar-collapse').slimScroll({
+                    height: '100%',
+                    railOpacity: 0.9
+                });
+            }
         }
-    })
+    });
 
     // Move right sidebar top after scroll
     $(window).scroll(function(){

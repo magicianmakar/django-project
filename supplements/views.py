@@ -50,7 +50,13 @@ from shopified_core.utils import (
 )
 from shopified_core.models_utils import get_store_model
 from analytic_events.models import SupplementLabelForApprovalEvent
-from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
+from supplements.lib.authorizenet import (
+    create_customer_profile,
+    create_payment_profile,
+    refund_customer_profile,
+    retrieve_transaction_status,
+    void_unsettled_transaction
+)
 from supplements.lib.image import get_order_number_label, get_payment_pdf
 from supplements.lib.shipstation import send_shipstation_orders
 from supplements.models import (
@@ -1237,7 +1243,7 @@ class Order(common_views.OrderView):
         return context
 
     def void_transaction(self, request, refund, transaction_id):
-        transaction_id, errors = request.user.authorize_net_customer.void(transaction_id)
+        transaction_id, errors = void_unsettled_transaction(transaction_id)
         if transaction_id:
             refund.transaction_id = transaction_id
             refund.status = 'voided'
@@ -1245,10 +1251,6 @@ class Order(common_views.OrderView):
             messages.success(request, f"The transaction with the id {transaction_id} is voided.")
         elif errors:
             messages.error(request, f"{errors[0]}.")
-
-    def retrieve_transaction_status(self, request, transaction_id):
-        transaction_status = request.user.authorize_net_customer.status(transaction_id)
-        return transaction_status
 
     def post(self, request):
         refund_form = self.refund_form = self.refund_form(request.POST)
@@ -1271,8 +1273,10 @@ class Order(common_views.OrderView):
 
                     transaction_id = None
                     if order.stripe_transaction_id:
-                        transaction_id, errors = order.user.authorize_net_customer.refund(
+                        transaction_id, errors = refund_customer_profile(
                             refund.amount - refund.fee + refund.shipping,
+                            order.authorize_net_customer_id,
+                            order.authorize_net_payment_id,
                             order.stripe_transaction_id,
                         )
 
@@ -1287,7 +1291,7 @@ class Order(common_views.OrderView):
                             error_code = reg[0]
                         # Void a transaction if error code is 54 which means transaction cannot be refunded
                         if error_code == '54:':
-                            transaction_status = self.retrieve_transaction_status(request, order.stripe_transaction_id)
+                            transaction_status = retrieve_transaction_status(order.stripe_transaction_id)
                             # Ensure to void only Unsettled transaction
                             if transaction_status == 'capturedPendingSettlement':
                                 self.void_transaction(request, refund, order.stripe_transaction_id)

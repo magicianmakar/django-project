@@ -6,11 +6,14 @@ from django.core.exceptions import PermissionDenied
 from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils.text import slugify
+from django.utils.crypto import get_random_string
 
 from addons_core.models import Addon
 from leadgalaxy.models import AdminEvent, AppPermission, AppPermissionTag, FeatureBundle, GroupPlan
+from leadgalaxy.utils import aws_s3_upload
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import app_link, jwt_encode
+from fp_affiliate.utils import create_fp_user, upgrade_fp_user
 
 
 def check_user_permission(user):
@@ -131,16 +134,20 @@ class ACPApi(ApiResponseMixin):
         check_user_permission(user)
 
         include_view = request.GET.get('view') == 'true'
+        top_level = request.GET.get('top') == 'true'
 
         plans = []
         for plan in GroupPlan.objects.all().select_related('stripe_plan').prefetch_related('permissions', 'permissions__tags'):
+            if plan.parent_plan_id and top_level:
+                continue
+
             p = model_to_dict(plan, exclude=['goals'])
             permissions = []
             for perm in plan.permissions.all():
                 if not include_view and perm.name.endswith('.view'):
                     continue
 
-                permissions.append(model_to_dict(perm, exclude=['tags']))
+                permissions.append(perm.to_json())
 
             p.update({
                 'description': plan.get_description(),
@@ -160,22 +167,23 @@ class ACPApi(ApiResponseMixin):
         else:
             plans = [*active_plan, *non_active_plan]
 
-        return self.api_success({'plans': plans})
+        return self.api_success({
+            'plans': plans,
+            'tags': [tag.to_json() for tag in AppPermissionTag.objects.all()]
+        })
 
     def get_permissions(self, request, user, data):
         check_user_permission(user)
 
         include_view = request.GET.get('view') == 'true'
         permissions = []
-        for perm in AppPermission.objects.all().prefetch_related('tags').order_by('-id'):
+        for perm in AppPermission.objects.all().prefetch_related('tags').order_by('id'):
             if include_view or not perm.name.endswith('.view'):
-                p = model_to_dict(perm, exclude=['tags'])
-                p['tags'] = [model_to_dict(t) for t in perm.tags.all()]
-                permissions.append(p)
+                permissions.append(perm.to_json())
 
         return self.api_success({
             'permissions': permissions,
-            'tags': [model_to_dict(tag) for tag in AppPermissionTag.objects.all()]
+            'tags': [tag.to_json() for tag in AppPermissionTag.objects.all()]
         })
 
     def post_remove_permission_from_plan(self, request, user, data):
@@ -197,3 +205,89 @@ class ACPApi(ApiResponseMixin):
         plan.permissions.add(*permissions)
 
         return self.api_success()
+
+    def post_remove_permissions(self, request, user, data):
+        check_user_permission(user)
+
+        permission = AppPermission.objects.filter(id=data['permission'])
+        permission.delete()
+
+        return self.api_success()
+
+    def post_permission_image_upload(self, request, user, data):
+        check_user_permission(user)
+
+        permission = AppPermission.objects.get(id=data['permission'])
+        upload_file = request.FILES['file']
+        s3_key = f'permission_images/{get_random_string(length=10)}/{upload_file.name}'
+
+        url = aws_s3_upload(s3_key, fp=upload_file)
+
+        permission.add_image(url)
+        permission.save()
+
+        return self.api_success({
+            'url': url
+        })
+
+    def get_permission_tags(self, request, user, data):
+        check_user_permission(user)
+
+        return self.api_success({
+            'tags': [tag.to_json() for tag in AppPermissionTag.objects.all()]
+        })
+
+    def post_permission_tag(self, request, user, data):
+        check_user_permission(user)
+
+        tag = AppPermissionTag.objects.create(
+            name=data['name'],
+            description=data['description'],
+            slug=slugify(data['name']),
+        )
+
+        return self.api_success({
+            'tag': tag.to_json()
+        })
+
+    def post_permission_edit(self, request, user, data):
+        check_user_permission(user)
+
+        permission = AppPermission.objects.get(id=data['id'])
+        permission.name = data['name']
+        permission.description = data['description']
+        permission.notes = data['notes']
+        permission.image_url = ','.join(data['images']) if data.get('images') else ''
+
+        permission.tags.clear()
+        if data.get('tags'):
+            for tag in AppPermissionTag.objects.filter(id__in=[t['id'] for t in data['tags']]):
+                permission.tags.add(tag)
+
+        permission.save()
+
+        return self.api_success({
+            'permission': permission.to_json()
+        })
+
+    def post_sub_affiliate(self, request, user, data):
+        check_user_permission(user)
+
+        user = User.objects.get(id=data['user'])
+
+        # Add user to First Promoter
+        if create_fp_user(user):
+            return self.api_success()
+        else:
+            return self.api_error('Could not add user to First Promoter')
+
+    def post_affiliate_upgrade(self, request, user, data):
+        check_user_permission(user)
+
+        user = User.objects.get(id=data['user'])
+        promoter_id = data['promoter']
+
+        if upgrade_fp_user(user, promoter_id):
+            return self.api_success()
+        else:
+            return self.api_error('Could not add user to First Promoter')

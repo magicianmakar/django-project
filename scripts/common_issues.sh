@@ -148,7 +148,7 @@ if [ -n "$CIRCLE_BRANCH" ]; then
 fi
 
 cat << EOF | md5sum -c > /dev/null
-    c45b871428f0493eccf280e6b11a907a  .env
+    8b42ca25bf9c65f1993828c3d68a7049  .env
     b2e3982ec145d493da9d013ec91f2978  env.yaml
 EOF
 

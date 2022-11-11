@@ -75,6 +75,45 @@ $(document).ready(function () {
         });
     });
 
+    $('.sub-affiliate').on('click', function (e) {
+        e.preventDefault();
+
+        $.ajax({
+            type: 'POST',
+            url: api_url('sub-affiliate', 'acp'),
+            data: {
+                'user': $(this).attr('user-id')
+            },
+            success: function (data) {
+                swal('Affiliate Upgrade', 'Created', 'success');
+                window.location.reload();
+            },
+            error: function (data) {
+                displayAjaxError('Affiliate Upgrade', data);
+            },
+        });
+    });
+
+    $('.affiliate-upgrade').on('click', function (e) {
+        e.preventDefault();
+
+        $.ajax({
+            type: 'POST',
+            url: api_url('affiliate-upgrade', 'acp'),
+            data: {
+                'user': $(this).attr('user-id'),
+                'promoter': $(this).attr('promoter-id'),
+            },
+            success: function (data) {
+                swal('Affiliate Account', 'Created', 'success');
+                window.location.reload();
+            },
+            error: function (data) {
+                displayAjaxError('Affiliate Account', data);
+            },
+        });
+    });
+
     $('.toggle-plod').click(function (e) {
         e.preventDefault();
 

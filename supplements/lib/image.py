@@ -14,6 +14,7 @@ from reportlab.platypus import Image as report_img
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table
 
 from stripe_subscription.invoices.pdf import STYLES, styleN, draw_footer
+from supplements.lib.authorizenet import get_customer_payment_profile
 
 
 def get_elements(type):
@@ -351,13 +352,21 @@ def get_payment_pdf(order):
     date = timezone.now().strftime('%b %d, %Y')
     br = '<br />'
 
-    order.user.authorize_net_customer.retrieve()
-    profile = order.user.authorize_net_customer.payment_profile
-
-    billing_address = (f'{profile["bill_to"].firstName} {profile["bill_to"].lastName} {br}'
-                       f'{profile["bill_to"].address} {br}'
-                       f'{profile["bill_to"].city}, {profile["bill_to"].state}, {profile["bill_to"].zip} {br}'
-                       f'{profile["bill_to"].country}')
+    profile = get_customer_payment_profile(
+        order.authorize_net_customer_id,
+        order.authorize_net_payment_id
+    )
+    firstName = profile["billTo"].firstName if getattr(profile["billTo"], 'firstName', None) else ""
+    lastName = profile["billTo"].lastName if getattr(profile["billTo"], 'lastName', None) else ""
+    address = profile["billTo"].address if getattr(profile["billTo"], 'address', None) else ""
+    city = profile["billTo"].city if getattr(profile["billTo"], 'city', None) else ""
+    state = profile["billTo"].state if getattr(profile["billTo"], 'state', None) else ""
+    zip = profile["billTo"].zip if getattr(profile["billTo"], 'zip', None) else ""
+    country = profile["billTo"].country if getattr(profile["billTo"], 'country', None) else ""
+    billing_address = (f'{firstName} {lastName} {br}'
+                       f'{address} {br}'
+                       f'{city}, {state}, {zip} {br}'
+                       f'{country}')
 
     pdf = SimpleDocTemplate(data, pagesize=A4)
     parts = []

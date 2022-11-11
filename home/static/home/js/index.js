@@ -287,9 +287,11 @@
             success: function (data) {
                 if (data.status == 'ok') {
                     toastr.success('Saved.','User Config');
-
-                    syncConfig();
-
+                    if ($('#layout-settings').hasClass('active')) {
+                        window.location.reload();
+                    } else {
+                        syncConfig();
+                    }
                 } else {
                     displayAjaxError('User Config', data);
                 }

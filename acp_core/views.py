@@ -19,6 +19,7 @@ from django.views.generic import TemplateView
 
 from acp_core.utils import AcpUtils
 from addons_core.models import AddonUsage
+from fp_affiliate.utils import find_fp_user
 from last_seen.models import LastSeen, UserIpRecord
 from leadgalaxy.models import AccountRegistration, AdminEvent, FeatureBundle, GroupPlan, PlanRegistration
 from leadgalaxy.shopify import ShopifyAPI
@@ -315,6 +316,9 @@ class ACPUserInfoView(BaseTemplateView):
 
         user_ips = UserIpRecord.objects.filter(user=target_user).order_by('-last_seen_at')[:10]
 
+        # Search First Promoter for this customer
+        fp_affiliate = find_fp_user(target_user)
+
         ctx.update({
             'target_user': target_user,
             'addon_logs': addon_logs,
@@ -334,6 +338,7 @@ class ACPUserInfoView(BaseTemplateView):
             'show_products': self.request.GET.get('products'),
             'user_plans': user_plans,
             'user_ips': user_ips,
+            'fp_affiliate': fp_affiliate,
         })
 
         return ctx

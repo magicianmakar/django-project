@@ -176,10 +176,10 @@
                                     </thead>
                                     <tbody>
                                         {% for item in groovekart_product.variants %}
-                                        <tr class="groovekart-variant" variant-id="{{item.id}}" variant-image="{{item.image.src}}">
+                                        <tr class="groovekart-variant" variant-id="{{item.id}}" variant-image="{{item.image.url}}">
                                             <td>
-                                                {% if item.image.src %}
-                                                <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb item.image.src %}"
+                                                {% if item.image.url %}
+                                                <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb item.image.url %}"
                                                      store="{{product.store.id}}" product="{{item.product_id}}"
                                                      variant="{{item.id}}" style="width:64px" />
                                                 {% else %}

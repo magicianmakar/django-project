@@ -7,64 +7,87 @@ from article.utils import get_article_link
 
 
 def get_menu_structure(namespace, request):
-    body = [
-        ('products', [
-            'find-products',
-            'all-products',
-            'prints',
-            'boards',
-            'alerts',
-            'us-product-database',
-            'import-products',
-            'alibaba-products',
-            'insiders-report-article',
-        ]),
-        ('orders', [
-            'place-orders',
-            'tracking',
-        ]),
-        ('logistics', [
-            'logistics-products',
-            'logistics-warehouses',
-            'logistics-carriers',
-            'logistics-orders',
-        ]),
-        ('business', [
-            'profit-dashboard',
-            'marketing-feeds',
-            'subusers',
-            'callflex',
-            'tubehunt',
-            'tools',
-            'insider-reports',
-        ]),
-    ]
+    if request.user.is_authenticated and not request.user.profile.get_config().get('revert_to_v2210311'):
+        body = [
+            ('products', [
+                'all-products',
+                'find-products',
+                'boards',
+                'pods',
+            ]),
+            ('orders', [
+                'place-orders',
+                'tracking',
+            ]),
+        ]
 
-    header = [
-        ('dashboard', ['dashboard']),
-        ('get-started', ['get-started']),
-        ('settings', ['settings']),
-    ]
+        header = [
+            ('pods-admin', ['pods-admin']),
+            ('launchpad', ['launchpad']),
+            ('dashboard', ['dashboard']),
+            ('get-started', ['get-started']),
+        ]
 
-    is_black = False
-    is_plod = False
-
-    try:
-        if request.user.is_authenticated:
-            is_black = request.user.profile.plan.is_black
-            is_plod = request.user.profile.plan.is_plod
-    except:
-        pass
-
-    if request.session.get('old_layout'):
-        if is_black:
-            footer = [('help', ['help']), ('plod_help', ['plod_help'])]
-        elif is_plod:
-            footer = [('plod_help', ['plod_help'])]
-        else:
-            footer = [('help', ['help'])]
+        footer = []
     else:
-        footer = [('help', ['swipebox-headline-generator'])]
+        body = [
+            ('products', [
+                'all-products',
+                'find-products',
+                'prints',
+                'boards',
+                'alerts',
+                'us-product-database',
+                'import-products',
+                'alibaba-products',
+                'insiders-report-article',
+            ]),
+            ('orders', [
+                'place-orders',
+                'tracking',
+            ]),
+            ('logistics', [
+                'logistics-products',
+                'logistics-warehouses',
+                'logistics-carriers',
+                'logistics-orders',
+            ]),
+            ('business', [
+                'profit-dashboard',
+                'marketing-feeds',
+                'subusers',
+                'callflex',
+                'tubehunt',
+                'tools',
+                'insider-reports',
+            ]),
+        ]
+
+        header = [
+            ('dashboard', ['dashboard']),
+            ('get-started', ['get-started']),
+            ('settings', ['settings']),
+        ]
+
+        is_black = False
+        is_plod = False
+
+        try:
+            if request.user.is_authenticated:
+                is_black = request.user.profile.plan.is_black
+                is_plod = request.user.profile.plan.is_plod
+        except:
+            pass
+
+        if request.session.get('old_layout'):
+            if is_black:
+                footer = [('help', ['help']), ('plod_help', ['plod_help'])]
+            elif is_plod:
+                footer = [('plod_help', ['plod_help'])]
+            else:
+                footer = [('help', ['help'])]
+        else:
+            footer = [('help', ['swipebox-headline-generator'])]
 
     named = [
         ('account', ['account']),
@@ -120,6 +143,7 @@ def get_menu_item_data(request):
         'orders': {
             'title': 'Orders',
             'icon': 'vector-orders.svg',
+            'new_icon': 'img/box.svg',
             'permissions': ['orders.view'],
         },
         'place-orders': {
@@ -128,6 +152,7 @@ def get_menu_item_data(request):
             'permissions': ['orders.view'],
             'match': fr'{store_type_prefixes}/orders$',
             'icon': 'img/place-order.svg',
+            'new_icon': 'img/box.svg',
         },
         'tracking': {
             'title': 'Tracking',
@@ -135,16 +160,19 @@ def get_menu_item_data(request):
             'permissions': ['orders.view'],
             'match': fr'{store_type_prefixes}/orders/track',
             'icon': 'img/tracking.svg',
+            'new_icon': 'img/tracking-order.svg',
         },
         'products': {
             'title': 'Products',
             'icon': 'vector-products.svg',
+            'new_icon': 'img/notification-status.svg',
         },
         'all-products': {
-            'title': 'Saved Products',
+            'title': 'My Products',
             'url_name': 'products_list',
             'match': fr'{store_type_prefixes}/products?($|\?\w+)',
             'icon': 'img/saved-product.svg',
+            'new_icon': 'img/bookmark.svg',
         },
         'import-products': {
             'title': 'Import Products',
@@ -169,13 +197,15 @@ def get_menu_item_data(request):
             'match': r'(/\w+)?(/aliexpress|/alibaba)/products',
             'is_ns_aware': False,
             'icon': 'img/find-products.svg',
+            'new_icon': 'img/notification-status.svg',
         },
         'boards': {
-            'title': 'Boards',
+            'title': 'Product Boards',
             'url_name': 'boards_list',
             'permissions': ['view_product_boards.use', 'view_product_boards.sub'],
             'match': fr'{store_type_prefixes}/boards/list',
             'icon': 'img/board.svg',
+            'new_icon': 'img/task-square.svg',
         },
         'alerts': {
             'title': 'Alerts',
@@ -272,21 +302,33 @@ def get_menu_item_data(request):
             'match': r'(/\w+)?/settings',
             'is_ns_aware': False,
             'icon': 'img/setting.svg',
+            'new_icon': 'img/setting-2.svg',
         },
         'get-started': {
-            'title': 'Manage Stores',
+            'title': 'Stores',
             'url_name': 'manage_stores' if is_research else 'index',
             'match': r'(/chq|/gear|/gkart|/woo|/bigcommerce|/ebay|/fb|/google)?/$',
             'is_ns_aware': not is_research,
             'icon': 'img/manage-store.svg',
+            'new_icon': 'img/shop-add.svg',
         },
         'dashboard': {
-            'title': 'Dashboard',
+            'title': 'Analytics',
             'url_name': 'dashboard',
             'match': r'(/\w+)?/dashboard',
             'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq', 'ebay', 'fb', 'google'],
             'icon': 'img/profit-dashboard.svg',
+            'new_icon': 'img/presention-chart.svg',
             'hidden': hide_dashboard,
+            'is_ns_aware': False,
+        },
+        'launchpad': {
+            'title': 'Launchpad',
+            'url_name': 'dashboard',
+            'match': r'(/\w+)?/dashboard',
+            'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq', 'ebay', 'fb', 'google'],
+            'new_icon': 'img/graph.svg',
+            'hidden': True,
             'is_ns_aware': False,
         },
         'prints': {
@@ -310,6 +352,7 @@ def get_menu_item_data(request):
             'is_ns_aware': False,
             'permissions': ['insider_reports.use'],
             'icon': 'img/insider-report.svg',
+            'new_icon': 'img/clipboard-text.svg',
         },
         'insiders-report-article': get_article_link(
             'insiders-report',
@@ -359,6 +402,29 @@ def get_menu_item_data(request):
             'match': r'^/headline-generator',
             'is_ns_aware': False,
             'hidden': not user or not user.profile.bundles.filter(slug='retro-elite-lifetime').exists(),
+        },
+        'pods': {
+            'title': 'POD Supplements',
+            'url_name': 'pls:index',
+            'permissions': ['pls.use'],
+            'is_ns_aware': False,
+            'icon': 'img/private-label.svg',
+            'new_icon': 'img/bookmark-2.svg',
+        },
+        'pods-update': {
+            'title': 'Print On Demand Updates',
+            'url': 'https://www.dropified.com/dropified-black-catalog/',
+            'permissions': ['pls.use'],
+            'icon': 'img/private-label.svg',
+            'new_icon': 'img/bookmark-2.svg',
+        },
+        'pods-admin': {
+            'title': 'Print On Demand Admin',
+            'url_name': 'pls:all_user_supplements',
+            'permissions': ['pls_admin.use', 'pls_staff.use', 'pls_supplier.use'],
+            'is_ns_aware': False,
+            'icon': 'img/private-label.svg',
+            'new_icon': 'img/bookmark-2.svg',
         },
     }
 

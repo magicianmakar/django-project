@@ -134,10 +134,38 @@
                                             {% else %}
                                             <li><a href="#" class="activate-account btn-success btn-outline text-danger" user-id="{{target_user.id}}" username="{{target_user.username}}">Activate Account</a></li>
                                             {% endif %}
+
+                                            <li class="divider"></li>
+                                            <li><a href="#" class="sub-affiliate btn-success btn-outline" user-id="{{target_user.id}}" username="{{target_user.username}}">Create Affiliate</a></li>
                                         </ul>
                                     </div>
                                 </td>
                             </tr>
+                            {% if fp_affiliate %}
+                            <tr>
+                                <th>Affiliate</th>
+                                <td style="display:flex;justify-content:space-between;align-items:center">
+                                    {% for promotion in fp_affiliate.promotions %}
+                                        {% if not promotion.hidden %}
+                                            <div>
+                                                <span class="label label-primary">{{promotion.campaign_name}}</span>
+                                                <span class="label label-info">{{promotion.current_referral_reward.name}}</span>
+                                            </div>
+                                            {% if promotion.current_referral_reward.per_of_sale == 20 %}
+                                                <button class="affiliate-upgrade btn btn-xs btn-success btn-outline"
+                                                    user-id="{{target_user.id}}" promoter-id="{{fp_affiliate.id}}">
+                                                    <i class="fa fa-rocket"></i>
+                                                    Upgrade
+                                                </button>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% empty %}
+                                        <strong class="text-warning">No promotions</strong>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            {% endif %}
+
                         </table>
                     </div>
 

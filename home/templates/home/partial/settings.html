@@ -1149,3 +1149,35 @@
     </div>
 </div>
 {% endif %}
+
+<div id="layout-settings" class="tab-pane">
+    <div class="panel-body">
+        <form class="config-form" action="" method="post" style="display: flex;flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <input type="checkbox" class="js-switch" id="revert_to_v2210311"
+                               name="revert_to_v2210311"
+                               {% if config.revert_to_v2210311 %}checked="checked"{% endif %}>
+                        <label for="revert_to_v2210311" class="control-label">
+                            Revert to previous version, November 2, 2022 (22.10.31.1)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12"><hr /></div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <button class="btn btn-primary btn-lg">
+                            Save <i class="fa fa-save"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

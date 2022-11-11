@@ -730,7 +730,7 @@ class OrderListTestCase(PLSBaseTestCase):
         )
 
         self.assertEqual(self.pls_order.refund, None)
-        with patch('supplements.mixin.AuthorizeNetCustomerMixin.refund',
+        with patch('supplements.views.refund_customer_profile',
                    return_value=(self.transaction_id, [])):
             response = self.client.post(self.get_url(), data=data)
             self.assertEqual(response.status_code, 200)
@@ -751,7 +751,7 @@ class OrderListTestCase(PLSBaseTestCase):
 
         self.assertEqual(self.pls_order.refund, None)
         error = ['Transaction must be setteled']
-        with patch('supplements.mixin.AuthorizeNetCustomerMixin.refund',
+        with patch('supplements.views.refund_customer_profile',
                    return_value=(None, error)):
             response = self.client.post(self.get_url(), data=data)
             self.assertEqual(response.status_code, 200)
@@ -1127,7 +1127,7 @@ class GeneratePaymentPDFTestCase(PLSBaseTestCase):
         mock_profile = MagicMock()
         mock_profile.payment.creditCard = '1' * 16
 
-        with patch('supplements.mixin.get_customer_payment_profile',
+        with patch('supplements.lib.image.get_customer_payment_profile',
                    return_value=mock_profile):
             response = self.client.get(self.get_url())
 

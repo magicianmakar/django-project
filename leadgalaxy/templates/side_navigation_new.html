@@ -1,0 +1,171 @@
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load cache %}
+
+<nav id="side-menu" class="navbar-default sidebar navbar-static-side new" role="navigation">
+    <div class="sidebar-collapse">
+        <div class="menu">
+            <span>Menu</span>
+            <a class="navbar-minimalize btn btn-primary leftnavbar old-layout-hidden m-none" href="#">
+                <i class="fa fa-caret-left"></i>
+            </a>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: space-between; height: calc(100vh - 135px);">
+            <ul>
+                {# header #}
+                {% if request.user.is_superuser or request.user.is_staff %}
+                    {% if request.session.old_layout %}
+                        <li style="display:flex;margin-left:10px;">
+                            {% else %}
+                        <li style="display:flex;margin-left:0;">
+                    {% endif %}
+                    <a href="{% url 'acp_index_view' %}" style="flex-grow:2">
+                        <span class="item-title">Admin</span>
+                    </a>
+                    <a href="#" style="flex-grow:1;text-align:center" class="find-user-cp"
+                       data-url="{% url 'acp_search_view' %}?"
+                       data-title="Users Search"
+                       data-desc="Email, username or store domain">
+                        <i class="fa fa-search"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for section in sidemenu.header %}
+                    {% for item in section.items %}
+                        <li class="section-no-icon {{ item.classes }}">
+                            <a href="{{ item.url }}">
+                                {% if item.new_icon %}
+                                    {% if 'https://' in item.new_icon %}
+                                        <img src="{{ item.new_icon }}" class="item-icon"/>
+                                    {% else %}
+                                        <img src="{% static item.new_icon %}" class="item-icon"/>
+                                    {% endif %}
+                                {% endif %}
+                                {{ item.title | safe }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                {% endfor %}
+
+                {# body #}
+                {% for section in sidemenu.body %}
+                    <li class="section side-menu-dropdown">
+                        <span class="section-header">
+                            <div class="new-layout-hidden">
+                                <img src="{% static section.new_icon %}"/>
+                            </div>
+                            <div class="section-header-content">
+                                {% if section.new_icon %}
+                                    {% if 'https://' in section.new_icon %}
+                                        <img src="{{ section.new_icon }}" class="item-icon"/>
+                                    {% else %}
+                                        <img src="{% static section.new_icon %}" class="item-icon"/>
+                                    {% endif %}
+                                {% endif %}
+                                <span class="item-title">
+                                      {{ section.title }}
+                                </span>
+                                <i class="fa fa-caret-up nav-menu-caret"></i>
+                            </div>
+                        </span>
+                    </li>
+                    <div>
+                        {% for item in section.items %}
+                            <li class="item {{ item.classes }}">
+                                <a {% if item.new_tab %}target="_blank"{% endif %} href="{{ item.url }}">
+                                    {{ item.title }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </ul>
+            {# footer #}
+            <div class="navfooter">
+                <div class="">
+                    <a href="/terms-of-service/" target="_blank">
+                        Terms Of Service
+                    </a>
+                </div>
+                <div class="">
+                    <a href="https://www.dropified.com/privacy-policy/" target="_blank">
+                        Privacy Policy
+                    </a>
+                </div>
+                <div class="">
+                    <a href="https://www.dropified.com/shipping-refund-policy/" target="_blank">
+                        Shipping & Refund Policy
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+<nav id="mini-side-menu" class="navbar-default sidebar navbar-static-side icon-navbar new" role="navigation" style="display: none">
+    <div class="sidebar-collapse">
+        <div class="menu">
+            <a class="navbar-minimalize btn btn-primary leftnavbar old-layout-hidden m-none" href="#">
+                <i class="fa fa-caret-right"></i>
+            </a>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: space-between; height: calc(100vh - 135px);">
+            <ul>
+                {# header #}
+                {% if request.user.is_superuser or request.user.is_staff %}
+                    {% if request.session.old_layout %}
+                        <li style="display:flex;margin-left:10px;">
+                            {% else %}
+                        <li class="section-no-icon">
+                    {% endif %}
+                <a href="{% url 'acp_index_view' %}" title="Admin">
+                    <i class="fa fa-search item-icon"></i>
+                </a>
+                </li>
+                {% endif %}
+                {% for section in sidemenu.header %}
+                    {% for item in section.items %}
+
+                        <li class="section-no-icon {{ item.classes }}">
+                            <a href="{{ item.url }}" title="{{ item.title | safe }}">
+                                {% if item.new_icon %}
+                                    <img src="{% static item.new_icon %}" class="item-icon"/>
+                                {% endif %}
+                            </a>
+                        </li>
+
+                    {% endfor %}
+                {% endfor %}
+
+                {# body #}
+                {% for section in sidemenu.body %}
+                    <li class="section">
+                        <span class="section-header">
+                          <div class="new-layout-hidden">
+                            <img src="{% static section.new_icon %}"/>
+                          </div>
+                        </span>
+                    </li>
+
+                    <div>
+                        {% for item in section.items %}
+                            <li class="item {{ item.classes }}">
+                                <a {% if item.new_tab %}target="_blank"{% endif %} href="{{ item.url }}"
+                                   title="{{ item.title | safe }}">
+                                    {% if item.new_icon %}
+                                        <img src="{% static item.new_icon %}" class="item-icon"/>
+                                    {% else %}
+                                        <i class="fa fa-ban item-icon" aria-hidden="true"></i>
+                                    {% endif %}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</nav>

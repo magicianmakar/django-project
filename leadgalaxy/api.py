@@ -1270,6 +1270,8 @@ class ShopifyStoreApi(ApiBase):
         # Flag for whether the user can use multichannel products
         config['multichannel_enabled'] = user.can('multichannel.use')
 
+        config['revert_to_v2210311'] = config.get('revert_to_v2210311', False)
+
         return JsonResponse(config)
 
     def post_user_config(self, request, user, data):
@@ -1316,6 +1318,7 @@ class ShopifyStoreApi(ApiBase):
             'price_update_for_increase',
             'compare_at_enabled',
             'pl_pay_taxes',
+            'revert_to_v2210311',
         ]
 
         for key in data:
@@ -2312,23 +2315,15 @@ class ShopifyStoreApi(ApiBase):
                     profile.address.save()
 
             if user.can('pls_supplier.use'):
-                supplier_logo = request.FILES.get('supplier_logo', None)
                 supplier = user.profile.supplier
-                if supplier_logo:
-                    supplier_logo_url = upload_image_to_aws(supplier_logo, 'supplier_logo', user.id)
-                    supplier.logo_url = supplier_logo_url
-                supplier.title = form.cleaned_data['supplier_name']
-                supplier.description = form.cleaned_data['supplier_description']
-                supplier.save()
-
-            if user.can('pls_supplier.use'):
-                supplier_logo = request.FILES.get('supplier_logo', None)
-                supplier_logo_url = upload_image_to_aws(supplier_logo, 'supplier_logo', user.id)
-                supplier = user.profile.supplier
-                supplier.title = form.cleaned_data['supplier_name']
-                supplier.description = form.cleaned_data['supplier_description']
-                supplier.logo_url = supplier_logo_url
-                supplier.save()
+                if supplier:
+                    supplier_logo = request.FILES.get('supplier_logo', None)
+                    if supplier_logo:
+                        supplier_logo_url = upload_image_to_aws(supplier_logo, 'supplier_logo', user.id)
+                        supplier.logo_url = supplier_logo_url
+                    supplier.title = form.cleaned_data['supplier_name']
+                    supplier.description = form.cleaned_data['supplier_description']
+                    supplier.save()
 
             profile.save()
 
@@ -2951,3 +2946,8 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success({
             'log': log.get_logs()
         })
+
+    def post_user_show_new_layout(self, request, user, data):
+        user.profile.set_config_value('revert_to_v2210311', False)
+
+        return self.api_success()

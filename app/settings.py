@@ -107,6 +107,7 @@ INSTALLED_APPS = (
     'phone_automation',
     'aliextractor',
     'prints',
+    'fp_affiliate',
     'supplements',
     'product_common',
     'dropified_product',
@@ -765,6 +766,14 @@ LOOPEDIN_WORKSPACE_ID = os.environ.get("LOOPEDIN_WORKSPACE_ID")
 LIFETIME3PAY_PRODUCTS = [
     {"title": "retro elite lifetime 3-pay", "charges": 3, "config_prefix": "3pay-elite"},
     {"title": "retro unlimited pass 3-pay", "charges": 3, "config_prefix": "3pay-unlimited"},
+    {"title": "done for you store 3-pay", "charges": 3, "config_prefix": "3pay-elite"},
+    {"title": "rapid launch system bundle 3-pay", "charges": 3, "config_prefix": "3pay-unlimited"},
 ]
 
 SUREDONE_CHANNELS = os.environ.get('SUREDONE_CHANNELS', 'google,facebook,ebay').split(',')
+
+# Heartbeat API
+HEARTBEAT_API_KEY = os.environ.get('HEARTBEAT_API_KEY')
+HEARTBEAT_ROLE_ID = os.environ.get('HEARTBEAT_ROLE_ID')
+HEARTBEAT_GROUP_ID = os.environ.get('HEARTBEAT_GROUP_ID')
+HEARTBEAT_INVITE_ID = os.environ.get('HEARTBEAT_INVITE_ID', False)

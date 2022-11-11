@@ -318,6 +318,14 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
                                   on_delete=models.SET_NULL,
                                   null=True,
                                   blank=True)
+    authorize_net_customer_id = models.CharField(
+        max_length=255,
+        null=True,
+    )
+    authorize_net_payment_id = models.CharField(
+        max_length=255,
+        null=True,
+    )
 
     @property
     def payment_details(self):

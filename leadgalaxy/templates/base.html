@@ -58,7 +58,7 @@
         }
     </style>
 
-    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700,700i|Roboto+Slab:400,700|Inter:100,200,300,400,500,600,700,800,900" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700,700i|Roboto+Slab:400,700|Inter:100,200,300,400,500,600,700,800,900|Archivo:100,200,300,400,500,600,700,800,900" rel="stylesheet">
     <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
     <link href="//fast.appcues.com/widget.css" rel="stylesheet">
 
@@ -112,156 +112,29 @@
         </div>
     {% endif %}
 
+    {% if not request.user.profile.get_config.revert_to_v2210311 %}
+        {% block new-nav %}
+            {% include 'top_navigation_new.html' %}
+        {% endblock new-nav %}
+    {% endif %}
+
     {% block main-nav %}
-      {% include 'side_navigation.html' %}
+        {% if not request.user.profile.get_config.revert_to_v2210311 %}
+            {% include 'side_navigation_new.html' %}
+        {% else %}
+            {% include 'side_navigation.html' %}
+        {% endif %}
     {% endblock %}
 
    <div {% block page-wrapper-div %}id="page-wrapper" class="gray-bg"{% endblock %}>
-        {% block nav %}
-        <div class="row border-bottom page-search-nav">
-            <nav class="navbar navbar-static-top white-bg lifetime-ui" role="navigation" style="margin-bottom: 0;">
-                <div class="navbar-header">
-                    {% if request.user.is_authenticated %}
-                        {% if request.user.profile.plan.description %}
-                            <a class="pull-left btn btn-default btn-outline btn-plan old-layout-hidden" href="/user/profile#plan">
-                                {% if request.user.profile.plan.badge_image %}
-                                    <img style="height: 35px; margin-right: 10px;" src="{{ request.user.profile.plan.badge_image }}" alt=""
-                                        {% if 'tooltip' in request.user.profile.plan.badge_image %}
-                                        qtip-tooltip="<img style='width: 100%' src='{{ request.user.profile.plan.large_badge_image }}'>"
+       {% if request.user.profile.get_config.revert_to_v2210311 %}
+            {% block nav %}
+                {% include 'top_navigation.html' %}
+            {% endblock nav %}
+       {% endif %}
 
-                                        qtip-my="top right"
-                                        qtip-at="bottom left"
-                                        {% endif %}
-                                    />
-                                {% endif %}
-                                {{request.user.profile.plan.description}}
-                            </a>
-                        {% endif %}
-                    {% endif %}
-
-                    {% block search-form %}
-                        {% include 'partial/search_form.html' %}
-                    {% endblock search-form %}
-
-                    <ul class="nav navbar-top-links navbar-right" style="padding: 15px 0;">
-                        {% if lifetime_menus %}
-                        <li class="p-r-m border-right">
-                            <a href="#" id="open-applications-menu" class="neutral-color {% if open_application_menu and lifetime_menus %}active{% endif %}">
-                                Applications <img src="{% static 'img/applications.svg' %}" style="margin-left:8px; margin-top: -3px;">
-                            </a>
-                        </li>
-                        {% endif %}
-
-                        {% if request.user|can:"switch_theme.use" and page_name == 'orders' %}
-                            {% if not store_type or store_type == 'shopify' or store_type == 'woo' %}
-                            <li class="m-l" style="border-color: #dbdbdb;">
-                                <a href="{% url_replace 'theme' 'old' %}" style="btn btn-block btn-sm">Switch to old view</a>
-                            </li>
-                            {% endif %}
-                        {% endif %}
-
-                        <li class="m-l" style="border-color: #dbdbdb;">
-                            <a href="{% url 'settings' %}">
-                                <img src="{% static 'img/gear.svg' %}">
-                            </a>
-                        </li>
-                        <li class="pull-right">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="line-height:18px;margin-top:2px;">
-                                <i class="fa fa-user neutral-color" style="font-size:20px;margin-left:6px;"></i>
-                                <span class="dropified-icons di-arrow-down" style="color: #62809D;"></span>
-                            </a>
-                            <ul id="accounts-menu" class="dropdown-menu pull-right">
-                                <li>Account</li>
-                                <li>
-                                    <a href="{% url 'user_profile' %}#profile" data-href="#tab-1">
-                                        <img src="{% static 'img/applications_menu/profile-settings.svg' %}">
-                                        Profile Settings
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{% url 'user_profile' %}#email" data-href="#tab-2">
-                                        <img src="{% static 'img/applications_menu/email-and-password.svg' %}">
-                                        E-mail & Password
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{% url 'user_profile' %}#plan" data-href="#tab-3">
-                                        <img src="{% static 'img/applications_menu/plan-and-subscription.svg' %}">
-                                        Plan & Subscription
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{% url 'user_profile' %}#billing" data-href="#tab-4">
-                                        <img src="{% static 'img/applications_menu/billing.svg' %}">
-                                        Billing
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{% url 'user_profile' %}#invoices" data-href="#tab-5">
-                                        <img src="{% static 'img/applications_menu/invoices.svg' %}">
-                                        Invoices
-                                    </a>
-                                </li>
-                                {% if request.user|can:"sales_fee.use" %}
-                                <li>
-                                    <a href="{% url 'user_profile' %}#salesfees" data-href="#tab-salesfees">
-                                        <img src="{% static 'img/applications_menu/fulfillment-fees.svg' %}">
-                                        Fulfillment Fees
-                                    </a>
-                                </li>
-                                {% endif %}
-                                <li>
-                                    <a href="{% url 'subusers' %}">
-                                        <img src="{% static 'img/applications_menu/sub-users.svg' %}">
-                                        Sub Users
-                                    </a>
-                                </li>
-                                {% if user.models_user.profile.plan.support_addons %}
-                                <li>
-                                    <a href="{% url 'addons.list_view' %}">
-                                        <img src="{% static 'img/applications_menu/addons.svg' %}">
-                                        Addon Store
-                                    </a>
-                                </li>
-                                {% endif %}
-                                {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
-                                <li>
-                                    <a href="https://plod.dropified.com/">
-                                        <i class="fa fa-question-circle" style="color:#6BAA55;margin:0 10px 0 2px;"></i>
-                                        Private Label Help
-                                    </a>
-                                </li>
-                                {% if user.is_staff %}
-                                <li>
-                                    <a href="https://learn.dropified.com/">
-                                        <i class="fa fa-question-circle" style="color:#6BAA55;margin:0 10px 0 2px;"></i>
-                                        Learning Center
-                                    </a>
-                                </li>
-                                {% endif %}
-                                {% else %}
-                                <li>
-                                    <a href="https://learn.dropified.com/">
-                                        <i class="fa fa-question-circle" style="color:#6BAA55;margin:0 10px 0 2px;"></i>
-                                        Learning Center
-                                    </a>
-                                </li>
-                                {% endif %}
-                                <li class="divider" style="margin:16px 0;"></li>
-                                <li>
-                                    <a href="{% url 'leadgalaxy.views.logout' %}">
-                                        <img src="{% static 'img/applications_menu/logout.svg' %}">
-                                        Logout
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-        </div>
-
-        <div class="row {% if open_application_menu and lifetime_menus %}active{% endif %}" id="applications-menu">
+        {% if not request.user.profile.get_config.revert_to_v2210311 %}
+            <div class="row {% if open_application_menu and lifetime_menus %}active{% endif %}" id="applications-menu">
             <h3>Applications</h3>
             <div class="tabs-container">
                 <ul class="nav nav-pills">
@@ -291,14 +164,25 @@
                         ">
                             <div class="row">
                                 {% for item in menu.plan_items %}
-                                <a class="col-md-4" href="{{ item.link }}" {% if item.new_tab %}target="_blank"{% endif %}>
-                                        <img src="{{ item.icon }}">
-                                    <div>
-                                        <label>{{ item.title }}</label>
-                                        <span>{{ item.description }}</span>
+                                    <div class="col-md-4" style="position: relative;">
+                                        <a class="col-xs-12{% if not request.user.is_staff and not request.user.profile.plan in item.plans.all %} menu-not-available{% endif %}"
+                                           href="{% if request.user.is_staff or request.user.profile.plan in item.plans.all %}{{ item.link }}{% else %}#{% endif %}"
+                                           {% if item.new_tab %}target="_blank"{% endif %}
+                                           style="padding: 0;"
+                                        >
+                                            <img src="{{ item.icon }}">
+                                            <div>
+                                                <label>{{ item.title }}</label>
+                                                <span>{{ item.description }}</span>
+                                            </div>
+                                        </a>
+                                        <a href="{{ item.about_link }}" target="_blank"
+                                           style="height: fit-content;position: absolute;top: 5px;right: 8px;font-size: 20px;">
+                                            <i class="fa fa-question-circle-o"></i>
+                                        </a>
                                     </div>
-                                </a>
-                                {% if forloop.counter|divisibleby:"3" %}</div><div class="row">{% endif %}
+                                    {% if forloop.counter|divisibleby:"3" %}</div>
+                                        <div class="row">{% endif %}
                                 {% endfor %}
                             </div>
                     </div>
@@ -306,12 +190,12 @@
 
 
                     <div style="width: 100%;text-align: right;display: inline-block;">
-                        <a style="font-size: 16px;padding: 5px 20px 20px;display: inline-block;" href="https://www.dropified.com/dropified-apps/"  target="_blank">View All Applications</a>
+                        <a style="font-size: 16px;padding: 5px 20px 20px;display: inline-block;" href="https://www.dropified.com/dropified-apps/"  target="_blank">Discover All Applications</a>
                     </div>
                 </div>
             </div>
         </div>
-        {% endblock nav %}
+        {% endif %}
 
         {% block breadcrumb-area %}
         <div class="row breadcrumbs-container wrapper border-bottom white-bg">
@@ -361,30 +245,36 @@
       </div>
         {% block submain-container %}{% endblock %}
 
-        <div class="footer">
-            <div class="pull-right" style="margin-right:30px">
-                <span class="extension-version" data-version="{{extension_release}}" data-extension-version="{{extension_release}}" style="color:#008c06" {% if extension_required %}data-required="true"{% endif %}>
+       {% if request.user.profile.get_config.revert_to_v2210311 %}
+           <div class="footer">
+               <div class="pull-right" style="margin-right:30px">
+                <span class="extension-version" data-version="{{ extension_release }}"
+                      data-extension-version="{{ extension_release }}" style="color:#008c06"
+                      {% if extension_required %}data-required="true"{% endif %}>
                    New Extension Version Available!
-                   <a class="btn btn-outline btn-xs btn-success" href="/pages/view/how-to-update-the-extension-to-the-latest-version">Update</a>
+                   <a class="btn btn-outline btn-xs btn-success"
+                      href="/pages/view/how-to-update-the-extension-to-the-latest-version">Update</a>
                 </span>
-            </div>
+               </div>
 
-            <div>
-                Dropified &copy; {% now "Y" %} -
-                <a href="{% app_link 'pages/terms-of-service' %}" target="_blank">
-                    Terms Of Service
-                </a>
-                -
-                <a href="https://www.dropified.com/privacy-policy/" target="_blank">
-                    Privacy Policy
-                </a>
-                -
-                <a href="https://www.dropified.com/shipping-refund-policy/" target="_blank">
-                    Shipping &amp; Refund Policy
-                </a>
-                <img src="//cdn.dropified.com/static/visa-mastercard-logo.png" alt="VISA & MasterCard" style="margin-left:10px;height:20px;">
-            </div>
-        </div>
+               <div>
+                   Dropified &copy; {% now "Y" %} -
+                   <a href="{% app_link 'pages/terms-of-service' %}" target="_blank">
+                       Terms Of Service
+                   </a>
+                   -
+                   <a href="https://www.dropified.com/privacy-policy/" target="_blank">
+                       Privacy Policy
+                   </a>
+                   -
+                   <a href="https://www.dropified.com/shipping-refund-policy/" target="_blank">
+                       Shipping &amp; Refund Policy
+                   </a>
+                   <img src="//cdn.dropified.com/static/visa-mastercard-logo.png" alt="VISA & MasterCard"
+                        style="margin-left:10px;height:20px;">
+               </div>
+           </div>
+       {% endif %}
     </div>
 
   </div>
@@ -472,6 +362,7 @@
     <script type="text/javascript">
         window.app_base_link = '{% app_link %}';
         window.app_base_api = '{% app_link "api" %}';
+        window.is_old_layout = {% json_dumps request.user.profile.get_config.revert_to_v2210311 %};
     </script>
 
 
@@ -519,6 +410,14 @@
 
     {% if subusers_limit_reached %}
         {% include 'partial/subusers_limit_reached.html' %}
+    {% endif %}
+
+    {% if request.user.profile.get_config.revert_to_v2210311 %}
+        {% include 'partial/ui_update_modal.html' %}
+    {% endif %}
+
+    {% if not request.user.profile.get_config.revert_to_v2210311 %}
+        {% include 'partial/upsell_modal.html' %}
     {% endif %}
 
   </body>

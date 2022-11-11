@@ -835,6 +835,15 @@ def last_executed(unique_ids, timeout, save=True):
     return seen
 
 
+def http_response_extra(rep):
+    return {
+        'status': rep.status_code,
+        'text': rep.text,
+        'url': rep.url,
+        'reason': rep.reason,
+    }
+
+
 def http_exception_response(e, json=False, extra=True):
     try:
         if json:

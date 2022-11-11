@@ -9,6 +9,7 @@ from django.views.generic import TemplateView, View
 
 from alibaba_core.utils import get_access_token_url as get_alibaba_access_token_url
 from ebay_core.utils import EbayUtils, get_ebay_currencies_list
+from fp_affiliate.settings import FIRST_PROMOTER_DASHBOARD_URL
 from goals.utils import get_dashboard_user_goals
 from leadgalaxy.models import DashboardVideo, DescriptionTemplate, GroupPlan, PriceMarkupRule
 from lib.exceptions import capture_message
@@ -77,6 +78,12 @@ class HomePageMixing(TemplateView):
         if not user.can('price_changes.use'):
             upsell_alerts = True
             config.update(get_mocked_config_alerts())
+
+        if FIRST_PROMOTER_DASHBOARD_URL and not user.is_subuser:
+            if user.profile.plan.is_free:
+                if not user.get_config('__fp_partners_redirect'):
+                    user.set_config('__fp_partners_redirect', True)
+                    return redirect(FIRST_PROMOTER_DASHBOARD_URL)
 
         ctx.update({
             'config': config,

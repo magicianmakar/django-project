@@ -41,6 +41,7 @@ from analytic_events.models import SuccessfulPaymentEvent
 from tapfiliate.tasks import commission_from_stripe, successful_payment
 from leadgalaxy import signals
 from shopified_core.utils import safe_int, safe_float
+import requests
 
 
 class SubscriptionException(Exception):
@@ -1035,6 +1036,144 @@ def process_webhook_event(request, event_id):
         successful_payment.apply_async(
             args=[charge.id],
             countdown=600)  # Give time for the user to register/login to Dropified before handling this event (wait for conversion)
+
+        return HttpResponse(response_message)
+
+    elif event.type == 'checkout.session.completed':
+        # Process stripe payment link checkout (one-time product)
+        charge = event.data.object
+
+        if not charge.customer:
+            return HttpResponse('Customer Is Not Set')
+
+        if charge.status != 'complete' or charge.payment_status != 'paid':
+            return HttpResponse('Payment not complete')
+
+        stripe_customer = stripe.Customer.retrieve(charge.customer)
+        is_lifetime = False
+        description = ""
+
+        # getting products from session.
+        line_items = stripe.checkout.Session.list_line_items(
+            charge.id, limit=15)
+        for line_item in line_items:
+            stripe_product = stripe.Product.retrieve(line_item.price.product)
+            if 'Retro Pro Lifetime' in stripe_product.description \
+                    or line_item.metadata.get('products') == 'Lifetime Plan - (one-time fee)':
+                is_lifetime = True
+                description = description + stripe_product.description
+
+        try:
+            user = User.objects.get(stripe_customer__customer_id=charge.customer)
+            response_message = "User Found"
+        except User.MultipleObjectsReturned:
+            response_message = "Multiple users with same email"
+        except User.DoesNotExist:
+            if is_lifetime:
+                if stripe_customer.sources and stripe_customer.sources.data:
+                    fullname = stripe_customer.sources.data[0].name
+                else:
+                    fullname = ''
+
+                user, created = register_new_user(email=stripe_customer.email, fullname=fullname, without_signals=True)
+                if not created:
+                    response_message = 'Existing Registration Found'
+                    StripeCustomer.objects.filter(user=user).delete()
+                else:
+                    response_message = 'New User Registration'
+
+        response_message = "OK"
+
+        if is_lifetime:
+            customer = update_customer(user, stripe_customer)[0]
+
+            base_lifetime_plan = GroupPlan.objects.get(slug='retro-pro-lifetime')
+            plan_id = base_lifetime_plan.id
+
+            if plan_id:
+                plan = GroupPlan.objects.get(id=plan_id)
+                response_message = f'{response_message},  Change plan to {plan.slug}'
+
+                try:
+                    profile = user.profile
+                except UserProfile.DoesNotExist:
+                    profile = UserProfile.objects.create(user=user, plan=plan)
+
+                if profile.subuser_parent:
+                    response_message = f'{response_message},  Convert sub user'
+                    profile.subuser_parent = None
+                    profile.subuser_stores.clear()
+                    profile.subuser_chq_stores.clear()
+                    profile.save()
+
+                profile.change_plan(plan)
+
+                if plan.is_stripe():
+                    profile.apply_subscription(plan)
+
+                user.set_config('_stripe_lifetime', plan.id)
+
+                SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
+                    'charge': charge.to_dict(),
+                    'count': 1
+                }))
+            else:
+                response_message = f'{response_message},  No Plan ID found'
+
+        # process bundles (Stripe)
+        if 'Retro Elite Lifetime' in description:
+            try:
+                bundle = FeatureBundle.objects.get(slug='retro-elite-lifetime')
+                user.profile.bundles.add(bundle)
+            except:
+                capture_message("Error adding bundle")
+
+        if 'Retro Unlimited Pass' in description:
+            # upsell
+            try:
+                bundle = FeatureBundle.objects.get(slug='retro-unlimited-pass')
+                user.profile.bundles.add(bundle)
+            except:
+                capture_message("Error adding bundle")
+
+        if 'RLS' in description:
+            try:
+                # process heartbeat
+                if settings.HEARTBEAT_INVITE_ID:
+                    invitation_id = settings.HEARTBEAT_INVITE_ID
+                else:
+                    url = "https://api.heartbeat.chat/v0/invitations"
+                    payload = {
+                        "groupIDs": [settings.HEARTBEAT_GROUP_ID],
+                        "roleID": settings.HEARTBEAT_ROLE_ID
+                    }
+                    headers = {
+                        "accept": "application/json",
+                        "content-type": "application/json",
+                        "authorization": f'Bearer {settings.HEARTBEAT_API_KEY}'
+                    }
+
+                    response = requests.put(url, json=payload, headers=headers)
+                    invitation_id = json.loads(response.text)['id']
+
+                # adding email
+                url = f'https://api.heartbeat.chat/v0/invitations/{invitation_id}'
+                payload = {"emails": [stripe_customer.email], "shouldSendEmail": True}
+                headers = {
+                    "content-type": "application/json",
+                    "authorization": f'Bearer {settings.HEARTBEAT_API_KEY}'
+                }
+
+                requests.post(url, json=payload, headers=headers)
+            except:
+                capture_exception()
+
+        # process 3-pay charges
+        for product_to_process in settings.LIFETIME3PAY_PRODUCTS:
+            if product_to_process['title'] in description.lower():
+                user.profile.set_config_value(f'{product_to_process["config_prefix"]}-lastcharge-timestamp', charge.created)
+                user.profile.set_config_value(f'{product_to_process["config_prefix"]}-amount', charge.amount)
+                user.profile.set_config_value(f'{product_to_process["config_prefix"]}-charges', 1)
 
         return HttpResponse(response_message)
 

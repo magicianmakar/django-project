@@ -26,6 +26,8 @@ def complete_payment(transaction_id, pls_order_id):
     pls_order.status = pls_order.PAID
     pls_order.payment_date = timezone.now()
     pls_order.stripe_transaction_id = transaction_id
+    pls_order.authorize_net_customer_id = pls_order.user.authorize_net_customer.customer_id
+    pls_order.authorize_net_payment_id = pls_order.user.authorize_net_customer.payment_id
     pls_order.save()
     return pls_order
 
@@ -319,6 +321,8 @@ class Util:
             order.status = order.PAID
             order.payment_date = timezone.now()
             order.stripe_transaction_id = transaction_id
+            order.authorize_net_customer_id = user.authorize_net_customer.customer_id
+            order.authorize_net_payment_id = user.authorize_net_customer.payment_id
             order.save()
 
         return orders

@@ -35,6 +35,7 @@ class ApplicationMenuItem(models.Model):
     new_tab = models.BooleanField(default=True)
     plans = models.ManyToManyField(GroupPlan, blank=True, related_name='applications')
     menu_title = None
+    about_link = models.URLField(default='https://www.dropified.com/dropified-apps/')
 
     class Meta:
         ordering = ('sort_order',)

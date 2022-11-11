@@ -1,0 +1,7 @@
+
+import os
+from django.conf import settings
+
+FIRST_PROMOTER_PRO_CAMPAIGN_ID = getattr(settings, 'FIRST_PROMOTER_PRO_CAMPAIGN_ID', 16206)
+FIRST_PROMOTER_API_KEY = getattr(settings, 'FIRST_PROMOTER_API_KEY', os.environ.get('FIRST_PROMOTER_API_KEY'))
+FIRST_PROMOTER_DASHBOARD_URL = getattr(settings, 'FIRST_PROMOTER_DASHBOARD_URL', os.environ.get('FIRST_PROMOTER_DASHBOARD_URL'))

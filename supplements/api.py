@@ -22,7 +22,7 @@ from shopified_core.mixins import ApiResponseMixin
 
 from .lib.image import get_order_number_label
 from .lib.shipstation import create_shipstation_order, send_shipstation_orders
-from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel, BasketItem, PLSupplement, AuthorizeNetCustomer
+from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel, BasketItem, PLSupplement
 from .utils import user_can_download_label
 from .utils.payment import Util, get_shipping, get_shipping_costs
 from .utils.basket import BasketStore
@@ -37,7 +37,7 @@ from my_basket.models import BasketOrderTrack
 from fulfilment_fee.utils import process_sale_transaction_fee
 from basicauth.decorators import basic_auth_required
 from django.utils.decorators import method_decorator
-from supplements.lib.authorizenet import create_customer_profile
+from supplements.lib.authorizenet import retrieve_transaction_status
 
 
 class SupplementsApi(ApiResponseMixin, View):
@@ -310,6 +310,35 @@ class SupplementsApi(ApiResponseMixin, View):
         else:
             raise permissions.PermissionDenied()
 
+    def post_product_shipping_refund(self, request, user, data):
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            all_total_weight = Decimal('0.0')
+            exc_total_weight = Decimal('0.0')
+            for order_line in data['all_products']:
+                pk = safe_int(order_line['id'])
+                weight = Decimal(PLSOrderLine.objects.get(id=pk).label.user_supplement.pl_supplement.weight) * safe_int(order_line['qty'])
+                all_total_weight += weight
+            for order_line in data['products_exc_refunded']:
+                pk = safe_int(order_line['id'])
+                weight = Decimal(PLSOrderLine.objects.get(id=pk).label.user_supplement.pl_supplement.weight) * safe_int(order_line['qty'])
+                exc_total_weight += weight
+            shipping_address = json.loads(PLSOrderLine.objects.get(id=pk).pls_order.shipping_address)
+            res = {}
+            res['all_shipping_service'] = get_shipping_costs(
+                shipping_address['country_code'],
+                shipping_address['province_code'],
+                [all_total_weight],
+                None,
+            )
+            if (exc_total_weight != Decimal('0.0')):
+                res['exc_shipping_service'] = get_shipping_costs(
+                    shipping_address['country_code'],
+                    shipping_address['province_code'],
+                    [exc_total_weight],
+                    None,
+                )
+            return self.api_success(res)
+
     def post_mark_usersupplement_unread(self, request, user, data):
         if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
             pk = safe_int(data['item_id'])
@@ -387,17 +416,7 @@ class SupplementsApi(ApiResponseMixin, View):
             line_total_string="${:.2f}".format((i.amount * i.quantity) / 100.)
         ) for i in order.order_items.all()]
 
-        try:
-            customer_id = request.user.authorize_net_customer.customer_id
-        except AuthorizeNetCustomer.DoesNotExist:
-            customer_id = create_customer_profile(request.user)
-            auth_net_user = AuthorizeNetCustomer(
-                user=request.user,
-            )
-            auth_net_user.customer_id = customer_id
-            auth_net_user.save()
-
-        transaction_status = request.user.authorize_net_customer.status(order.stripe_transaction_id)
+        transaction_status = retrieve_transaction_status(order.stripe_transaction_id)
 
         return self.api_success({
             'items': line_items,
