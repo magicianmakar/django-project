@@ -217,6 +217,7 @@ class Product(models.Model):
     image_urls = models.TextField(blank=True, default='')
     hs_tariff = models.CharField(max_length=32, blank=True, default='')
     variants_map = models.TextField(default='[]')
+    default_variant = models.BooleanField(default=False, blank=True)
 
     @cached_property
     def image(self):

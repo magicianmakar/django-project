@@ -25,7 +25,18 @@
                                 </div>
                             </div>
 
-                            <h3>
+                            <input type="checkbox" id="no-variant" name="no-variant" value="{{ product.default_variant|default:'' }}">
+                            <label for="no-variant"> This product has no variant</label><br>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group m-t default-variant-sku">
+                                        <label>Default Variant SKU</label>
+                                        <input id="default-sku" type="text" name="default_sku" placeholder="SKU" class="form-control" value="{{ default_sku|default:'' }}" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h3 id="add-variant-group">
                                 Variants
                                 <a href="#" id="add-variant" class="btn btn-primary btn-small">Add</a>
                                 <input type="hidden" name="variants_map" value="{{ product.variants_map|default:'[]' }}">
