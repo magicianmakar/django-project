@@ -10,8 +10,8 @@ def get_menu_structure(namespace, request):
     if request.user.is_authenticated and not request.user.profile.get_config().get('revert_to_v2210311'):
         body = [
             ('products', [
-                'find-products',
                 'all-products',
+                'find-products',
                 'boards',
                 'pods',
             ]),
@@ -32,8 +32,8 @@ def get_menu_structure(namespace, request):
     else:
         body = [
             ('products', [
-                'find-products',
                 'all-products',
+                'find-products',
                 'prints',
                 'boards',
                 'alerts',
