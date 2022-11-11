@@ -108,27 +108,58 @@ class ProductView(LoginRequiredMixin, View):
             product = Product(user=models_user)
         product.title = request.POST.get('title')
         product.hs_tariff = request.POST.get('hs_tariff')
-        product.variants_map = request.POST['variants_map'] or '[]'
-        product.save()
-
+        default_variant = request.POST.get('no-variant')
         deleted_variants = []
-        variant_ids = request.POST.getlist('variant_ids')
-        for variant_id in variant_ids:
-            variant_id = int(variant_id)
-            title = request.POST.get(f'variant_title_{variant_id}')
-            sku = request.POST.get(f'variant_sku_{variant_id}')
-            if not title and not sku:
-                if variant_id > 0:
-                    Variant.objects.filter(id=variant_id, product=product).delete()
-                    deleted_variants.append(variant_id)
-                continue
+        if default_variant:
+            default_sku = request.POST.get('default_sku')
+            product.default_variant = True
+            product.variants_map = [{'values': {'title': product.title, 'default_sku': default_sku}}]
+            product.save()
+            if pk or supplier_id:
+                variant_ids = request.POST.getlist('variant_ids')
+                variant_id = variant_ids.pop()
+                if variant_id == '':
+                    Variant.objects.create(product=product)
+                else:
+                    Variant.objects.filter(product=product).delete()
+                    Variant.objects.create(product=product, id=variant_id, title=product.title, sku=default_sku,
+                                           weight=request.POST.get(f'variant_weight_{variant_id}') or 0,
+                                           length=request.POST.get(f'variant_length_{variant_id}') or 0,
+                                           width=request.POST.get(f'variant_width_{variant_id}') or 0,
+                                           height=request.POST.get(f'variant_height_{variant_id}') or 0)
+                    if supplier_id:
+                        deleted_variants = [eval(i) for i in variant_ids]
+                        Listing.objects.create(supplier=Supplier.objects.get(id=supplier_id),
+                                               variant_id=int(variant_id))
 
-            Variant(product=product, title=title, sku=sku,
-                    id=variant_id if variant_id > 0 else None,
-                    weight=request.POST.get(f'variant_weight_{variant_id}') or 0,
-                    length=request.POST.get(f'variant_length_{variant_id}') or 0,
-                    width=request.POST.get(f'variant_width_{variant_id}') or 0,
-                    height=request.POST.get(f'variant_height_{variant_id}') or 0).save()
+            else:
+                Variant(product=product, title=product.title, sku=default_sku,
+                        weight=request.POST.get('variant_weight_') or 0,
+                        length=request.POST.get('variant_length_') or 0,
+                        width=request.POST.get('variant_width_') or 0,
+                        height=request.POST.get('variant_height_') or 0).save()
+
+        else:
+            product.default_variant = False
+            product.variants_map = request.POST['variants_map'] or '[]'
+            product.save()
+            variant_ids = request.POST.getlist('variant_ids')
+            for variant_id in variant_ids:
+                variant_id = int(variant_id)
+                title = request.POST.get(f'variant_title_{variant_id}')
+                sku = request.POST.get(f'variant_sku_{variant_id}')
+                if not title and not sku:
+                    if variant_id > 0:
+                        Variant.objects.filter(id=variant_id, product=product).delete()
+                        deleted_variants.append(variant_id)
+                    continue
+
+                Variant(product=product, title=title, sku=sku,
+                        id=variant_id if variant_id > 0 else None,
+                        weight=request.POST.get(f'variant_weight_{variant_id}') or 0,
+                        length=request.POST.get(f'variant_length_{variant_id}') or 0,
+                        width=request.POST.get(f'variant_width_{variant_id}') or 0,
+                        height=request.POST.get(f'variant_height_{variant_id}') or 0).save()
 
         listings = request.POST.getlist('listings')
         for listing in listings:

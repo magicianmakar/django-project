@@ -3,6 +3,19 @@ var lastVariantID = $('.variant').length;
 var groupTpl = Handlebars.compile($("#variant-group").html());
 
 $(document).on('ready', function() {
+
+    if ($('#no-variant').val() == 'True' ){
+        $('#no-variant').attr('checked', true);
+        $('.default-variant-sku').show();
+        $('#add-variant-group').hide();
+        $('#variants').append(variantTemplate({'variant': variants[0], 'config': userConfig}));
+        $('.default-variant-sku').show();
+        $('#default-sku').val(variants[0].sku);
+
+    } else {
+        $('.default-variant-sku').hide();
+    }
+
     JSON.parse($('[name="variants_map"]').val()).forEach(function(variantType) {
         variantType.sku = '';
         variantType.values = variantType.values.map(function(v) {
@@ -37,6 +50,42 @@ $('#variants').on('keyup', '[name^="variant_title_"]', function() {
     var variantId = $(this).parents('.variant').find('[name="variant_ids"]').val();
     var text = $(this).val();
     $('[data-variant-id="' + variantId + '"] ').text(text).attr('title', text);
+});
+
+$('#no-variant').on('change', function(e) {
+    if ($(this).is(":checked")){
+        $('#variant-groups').hide();
+        $(this).val('True');
+        $('.default-variant-sku').show();
+        $('#add-variant-group').hide();
+        $('.variant-group-add-values').hide();
+        $('.variant').hide();
+        $('#variants').append(variantTemplate({'variant': variants[0], 'config': userConfig}));
+    } else {
+        $(this).val('False');
+        $('#variant-groups').show();
+        $('.default-variant-sku').hide();
+        $('#add-variant-group').show();
+        $('.variant-group-add-values').show();
+        $('#variants').empty();
+        for (var i = 0, iLength = variants.length; i < iLength; i++) {
+            if (!isNaN(variants[i].length)) {
+                variants[i].length = parseFloat(variants[i].length);
+            }
+            if (!isNaN(variants[i].width)) {
+                variants[i].width = parseFloat(variants[i].width);
+            }
+            if (!isNaN(variants[i].height)) {
+                variants[i].height = parseFloat(variants[i].height);
+            }
+
+            $('#variants').append(variantTemplate({'variant': variants[i], 'config': userConfig}));
+        }
+
+    joinVariants(formatVariants());
+
+    }
+
 });
 
 $('#add-variant').on('click', function(e) {
