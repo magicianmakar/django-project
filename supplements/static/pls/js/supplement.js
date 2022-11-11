@@ -3,6 +3,7 @@ var mockupData = {};
 $(document).ready(function(){
     var form = document.getElementById('user_supplement_form');
     $('#sample_label').on('click', function(e) {
+        $(id_price).val($(id_cost_price).val()); //      sample uses cost price as sale price
         if (form.checkValidity()) {
             e.preventDefault();
             $(this).val('Processing...');

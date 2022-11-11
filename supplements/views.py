@@ -331,7 +331,6 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
 
 class LabelMixin:
     def save_label(self, user, url, user_supplement, action=''):
-
         can_add_label, total_allowed_label, label_limit_left = self.check_user_can_upload_label(user)
         if not can_add_label and action != 'preapproved' and total_allowed_label != 0:
             messages.error(self.request, "You have exhausted your monthly label upload limit.")
@@ -564,7 +563,6 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
                 self.save_label(user, upload_url, new_user_supplement, form.cleaned_data['action'])
             elif upload_url:
                 self.save_label(user, upload_url, new_user_supplement, form.cleaned_data['action'])
-
             mockup_urls = request.POST.getlist('mockup_urls')
             if len(mockup_urls) or upload_url:
                 new_user_supplement.images.all().delete()
@@ -579,6 +577,8 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
             if form.cleaned_data['action'] == 'preapproved':
                 new_user_supplement.current_label.status = UserSupplementLabel.APPROVED
+                new_user_supplement.sample_product = True
+                new_user_supplement.save()
                 self.add_barcode_to_label(new_user_supplement.current_label)
                 new_user_supplement.current_label.save()
 
@@ -951,6 +951,7 @@ class MySupplements(LoginRequiredMixin, View):
         if form.is_valid():
             queryset = self.add_filters(queryset, form)
 
+        queryset = queryset.filter(sample_product=False)
         temp_queryset = queryset
         queryset = queryset.exclude(is_deleted=True)
         len_supplement = len(queryset)
@@ -1115,6 +1116,8 @@ class AllUserSupplements(MyLabels, ListView):
                 queryset = queryset.filter(pl_supplement__supplier_id=supplier)
             elif user.can('pls_supplier.use') and user.profile.supplier is not None:
                 queryset = queryset.filter(pl_supplement__supplier_id=user.profile.supplier)
+
+            queryset = queryset.filter(sample_product=False)
 
         return queryset
 
