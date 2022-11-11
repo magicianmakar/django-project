@@ -239,6 +239,13 @@
       </div>
     </div>
 
+    <div class="form-group">
+      <label class="col-sm-2 control-label">Barcode Label:</label>
+      <div class="col-sm-5" style="padding-top: 7px;">
+        {{ form.barcode_label }}
+      </div>
+    </div>
+
     <div class="form-group {{ form.approvedlabel.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Pre-Approved Label:</label>
       <div class='col-sm-7'>

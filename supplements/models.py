@@ -62,6 +62,7 @@ class PLSupplement(PLSupplementMixin, model_base.Product):
     is_discontinued = models.BooleanField(default=False)
     is_new = models.BooleanField(default=False)
     on_sale = models.BooleanField(default=False)
+    barcode_label = models.BooleanField(default=True)
     inventory = models.PositiveIntegerField(default=9999)
     hs_code = models.CharField(max_length=255,
                                null=True,
