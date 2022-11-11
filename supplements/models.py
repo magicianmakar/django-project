@@ -58,6 +58,7 @@ class PLSupplement(PLSupplementMixin, model_base.Product):
     authenticity_certificate_url = models.URLField()
     weight = models.DecimalField(max_digits=10, decimal_places=4, default=0)
     msrp = models.CharField(max_length=100, null=True, blank=True, verbose_name='MSRP')
+    order_number_on_label = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
     is_discontinued = models.BooleanField(default=False)
     is_new = models.BooleanField(default=False)
