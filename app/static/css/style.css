@@ -386,6 +386,7 @@ body.canvas-menu .navbar-static-side {
 body.fixed-sidebar:has(.new.sidebar) .navbar-static-side,
 body.canvas-menu:has(.new.sidebar) .navbar-static-side {
   width: 216px;
+  top: 64px;
 }
 
 body.fixed-sidebar.mini-navbar .navbar-static-side {
@@ -474,7 +475,9 @@ body.canvas-menu.mini-navbar nav.navbar-static-side {
 .white-bg .navbar-fixed-top,
 .white-bg .navbar-static-top {
   background: #fff;
+  margin-left: 15px;
 }
+
 .top-navigation .navbar {
   margin-bottom: 0;
 }
