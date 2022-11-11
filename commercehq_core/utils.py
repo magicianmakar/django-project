@@ -282,6 +282,43 @@ def commercehq_products(request, post_per_page=25, sort=None, board=None, store=
     return res
 
 
+def smart_board_by_product(user, product):
+    product_info = {
+        'title': product.title,
+        'tags': product.tags,
+        'type': product.product_type,
+    }
+    for k, v in list(product_info.items()):
+        if v:
+            product_info[k] = [i.lower().strip() for i in v.split(',')]
+        else:
+            product_info[k] = []
+
+    for i in user.commercehqboard_set.all():
+        try:
+            config = json.loads(i.config)
+        except:
+            continue
+
+        product_added = False
+        for j in ['title', 'tags', 'type']:
+            if product_added:
+                break
+
+            if not len(config.get(j, '')) or not product_info[j]:
+                continue
+
+            for f in config.get(j, '').split(','):
+                if f.lower() and f.lower().strip() in product_info[j]:
+                    i.products.add(product)
+                    product_added = True
+
+                    break
+
+        if product_added:
+            i.save()
+
+
 def chq_customer_address(order, aliexpress_fix=False, german_umlauts=False,
                          aliexpress_fix_city=False, return_corrections=False,
                          shipstation_fix=False):
