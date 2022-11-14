@@ -1059,7 +1059,7 @@ def process_webhook_event(request, event_id):
         for line_item in line_items:
             stripe_product = stripe.Product.retrieve(line_item.price.product)
             if 'Retro Pro Lifetime' in stripe_product.description \
-                    or line_item.metadata.get('products') == 'Lifetime Plan - (one-time fee)':
+                    or stripe_product.metadata.get('products') == 'Lifetime Plan - (one-time fee)':
                 is_lifetime = True
                 description = description + stripe_product.description
 
