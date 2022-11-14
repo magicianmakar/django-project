@@ -596,6 +596,8 @@
                                                     </span>
                                                 {% elif item.fulfillment_status == 'fulfilled' %}
                                                     <span class="ordered-status">Fulfilled in Shopify</span>
+                                                {% elif item.fulfillment_status == 'partial' %}
+                                                    <span class="ordered-status">Partially Fulfilled in Shopify</span>
                                                 {% elif excluded_product %}
                                                     <span class="ordered-status">Excluded Product</span>
                                                 {% elif item.is_pls and item.is_paid %}

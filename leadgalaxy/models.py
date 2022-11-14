@@ -24,7 +24,7 @@ from shopified_core.models import BoardBase, OrderTrackBase, ProductBase, StoreB
 from shopified_core.utils import get_domain, safe_int, url_join, using_store_db
 from stripe_subscription.stripe_api import stripe
 
-SHOPIFY_API_VERSION = "2021-07"
+SHOPIFY_API_VERSION = "2022-07"
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -1243,7 +1243,7 @@ class ShopifyStore(StoreBase):
         Return a Shopify API link with basic auth and the resources path
         Example usage:
             store.api('orders') => '/admin/api/{SHOPIFY_API_VERSION}/orders.json'
-            store.api('orders', 1234567, 'fulfillments') => '/admin/api/{SHOPIFY_API_VERSION}/orders/1234567/fulfillments.json'
+            store.api('orders', 1234567) => '/admin/api/{SHOPIFY_API_VERSION}/orders/1234567.json'
 
         Note that this examples return the same result:
             store.api('orders')

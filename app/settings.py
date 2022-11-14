@@ -363,6 +363,9 @@ SHOPIFY_API_SCOPE_BASE = [
     'write_orders',
     'write_fulfillments',
     'write_inventory',
+    'write_assigned_fulfillment_orders',
+    'write_merchant_managed_fulfillment_orders',
+    'write_third_party_fulfillment_orders',
     'read_locations',
 ]
 
