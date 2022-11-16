@@ -16,8 +16,24 @@ from lib.exceptions import capture_message, capture_exception
 class ShopifyWebhookVerifyMixing:
     http_method_names = ['get', 'post']
 
-    def verify_shopify_webhook_signature(store, request, throw_excption=True):
-        api_data = request.body
+    def encoded_params_for_signature(self, params):
+        """
+        Sort and combine query parameters into a single string,
+        excluding those that should be removed and joining with '&'
+        """
+        def encoded_pairs(params):
+            for k, v in params.items():
+                if k not in ['signature', 'hmac']:
+                    # escape delimiters to avoid tampering
+                    k = str(k).replace("%", "%25").replace("=", "%3D")
+                    v = str(v).replace("%", "%25")
+                    yield '{0}={1}'.format(k, v).replace("&", "%26")
+
+        return "&".join(sorted(encoded_pairs(params)))
+
+    def verify_shopify_webhook_signature(self, request, throw_excption=True):
+        api_data = request.body or self.encoded_params_for_signature(request.GET).encode()
+
         request_hash = request.META.get('HTTP_X_SHOPIFY_HMAC_SHA256')
         shop = request.META.get('HTTP_X_SHOPIFY_SHOP_DOMAIN')
 
