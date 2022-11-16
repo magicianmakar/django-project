@@ -1655,6 +1655,13 @@ def order_track_fulfillment(**kwargs):
 
     user_config = kwargs['user_config']
 
+    fulfillment_order = None
+    fulfillment_item = None
+
+    if kwargs.get('fulfillment'):
+        fulfillment_order = kwargs['fulfillment']['order']
+        fulfillment_item = kwargs['fulfillment']['item']
+
     is_usps = False
     line = None
     tracking_numbers = None
@@ -1679,25 +1686,27 @@ def order_track_fulfillment(**kwargs):
     except:
         capture_exception()
 
-    store = ShopifyStore.objects.get(id=store_id)
-    fulfillemenet_order, fulfillemenet_item = order_fulfillement(store, order_id, line_id)
+    if not fulfillment_order or not fulfillment_item:
+        store = ShopifyStore.objects.get(id=store_id)
+        fulfillment_order, fulfillment_item = order_fulfillement(store, order_id, line_id)
 
     data = {
         "fulfillment": {
-            "location_id": fulfillemenet_order['assigned_location_id'],
+            "location_id": fulfillment_order['assigned_location_id'],
             "line_items_by_fulfillment_order": [
                 {
-                    "fulfillment_order_id": fulfillemenet_order['id'],
+                    "fulfillment_order_id": fulfillment_order['id'],
                     "fulfillment_order_line_items": [
                         {
-                            "id": fulfillemenet_item['id'],
-                            "quantity": fulfillemenet_item['fulfillable_quantity']
+                            "id": fulfillment_item['id'],
+                            "quantity": fulfillment_item['fulfillable_quantity']
                         }
                     ]
                 }
             ],
             "tracking_info": {
                 "number": source_tracking,
+                "company": 'Other'
             },
         }
     }
