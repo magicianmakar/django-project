@@ -126,7 +126,7 @@ rjsmin==1.1.0
 rsa==4.8
 s3transfer==0.5.2
 service-identity==21.1.0
-ShopifyAPI==11.0.0
+ShopifyAPI==12.0.1
 simplejson==3.17.6
 six==1.16.0
 slimit==0.8.1

@@ -1,4 +1,5 @@
 import arrow
+import requests
 import simplejson as json
 
 from django.db import models
@@ -322,3 +323,45 @@ class ShopifyOrderRevenue(models.Model):
     total_price_usd = models.FloatField()
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class ShopifyFulfillementRequest(models.Model):
+    class Meta:
+        unique_together = ('store', 'fulfillment_order_id')
+
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
+    fulfillment_order_id = models.BigIntegerField()
+
+    request_status = models.CharField(max_length=256, blank=True, null=True)
+    status = models.CharField(max_length=256, blank=True, null=True)
+    order_id = models.BigIntegerField()
+    assigned_location_id = models.BigIntegerField()
+
+    data = models.TextField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.store.shop} #{self.fulfillment_order_id}'
+
+    def get_data(self):
+        try:
+            return json.loads(self.data)
+        except:
+            return {}
+
+    def set_data(self, data):
+        if data:
+            self.status = data['status']
+            self.request_status = data['request_status']
+            self.data = json.dumps(data)
+
+            self.save()
+
+    def sync(self):
+        rep = requests.get(self.store.api('assigned_fulfillment_orders'))
+        if rep.ok:
+            for fulfillment in rep.json()['fulfillment_orders']:
+                if fulfillment['id'] == self.fulfillment_order_id:
+                    self.set_data(fulfillment)

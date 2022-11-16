@@ -1,5 +1,8 @@
 import json
 
+import arrow
+import requests
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
@@ -13,6 +16,7 @@ from leadgalaxy.models import AdminEvent, AppPermission, AppPermissionTag, Featu
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import app_link, jwt_encode
+from shopify_orders.models import ShopifyFulfillementRequest
 from fp_affiliate.utils import create_fp_user, upgrade_fp_user
 
 
@@ -291,3 +295,92 @@ class ACPApi(ApiResponseMixin):
             return self.api_success()
         else:
             return self.api_error('Could not add user to First Promoter')
+
+    def get_fulfillments_request(self, request, user, data):
+        check_user_permission(user)
+
+        fulfillements = ShopifyFulfillementRequest.objects.all().order_by('-id')
+
+        fulfillements_list = []
+        for fulfillement in fulfillements:
+            f = model_to_dict(fulfillement, exclude=['data'])
+            f['created_at'] = arrow.get(fulfillement.created_at).humanize()
+            f['updated_at'] = arrow.get(fulfillement.updated_at).humanize()
+            f['store'] = model_to_dict(fulfillement.store, fields=['id', 'title', 'shop'])
+            f['user'] = model_to_dict(fulfillement.store.user, fields=['id', 'email', 'first_name', 'last_name'])
+            f['plan'] = model_to_dict(fulfillement.store.user.profile.plan, fields=['title', 'slug', 'free_plan'])
+
+            fulfillements_list.append(f)
+
+        return self.api_success({
+            'fulfillments': fulfillements_list
+        })
+
+    def post_fulfillment_request(self, request, user, data):
+        check_user_permission(user)
+
+        fulfillment = ShopifyFulfillementRequest.objects.get(id=data['id'])
+
+        action = data['action']
+        if action == 'accept':
+            extra = {'message': 'Fulfillment request accepted'}
+        elif action == 'reject':
+            extra = {
+                'message': 'Fulfillment request rejected, please connect your AliExpress account to your store first',
+                'reason': 'other'
+            }
+        else:
+            return self.api_error(f'Invalid action: {action}')
+
+        rep = requests.post(
+            url=fulfillment.store.api('fulfillment_orders', fulfillment.fulfillment_order_id, 'fulfillment_request', action),
+            json={
+                'fulfillment_request': {
+                    'id': fulfillment.fulfillment_order_id,
+                    **extra
+                }
+            }
+        )
+
+        if rep.ok:
+            fulfillment_order = rep.json().get('fulfillment_order')
+            fulfillment.set_data(fulfillment_order)
+
+            return self.api_success()
+        else:
+            fulfillment.sync()
+            errors = rep.json().get('errors', ['Unknown API errors'])
+            return self.api_error(f'Could not fulfill {action} fulfillment request:<br>{"<br>".join(errors)}')
+
+    def post_cancellation_request(self, request, user, data):
+        check_user_permission(user)
+
+        fulfillment = ShopifyFulfillementRequest.objects.get(id=data['id'])
+
+        action = data['action']
+        if action == 'accept':
+            description = 'Cancellation request accepted'
+        elif action == 'reject':
+            description = 'Cancellation request rejected'
+        else:
+            return self.api_error(f'Invalid action: {action}')
+
+        rep = requests.post(
+            url=fulfillment.store.api('fulfillment_orders', fulfillment.fulfillment_order_id, 'cancellation_request', action),
+            json={
+                'fulfillment_request': {
+                    'id': fulfillment.fulfillment_order_id,
+                    'message': description
+                }
+            }
+        )
+
+        if rep.ok:
+            fulfillment_order = rep.json().get('fulfillment_order')
+            fulfillment.set_data(fulfillment_order)
+
+            return self.api_success()
+        else:
+            fulfillment.sync()
+            errors = rep.json().get('errors', ['Unknown API errors'])
+            return self.api_error(f'Could not fulfill {action} fulfillment request:<br>{"<br>".join(errors)}')

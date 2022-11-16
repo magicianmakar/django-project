@@ -1,5 +1,9 @@
+import base64
+import hmac
 import json
+from hashlib import sha256
 
+from django.conf import settings
 from django.http import HttpResponse
 from django.views import View
 
@@ -9,9 +13,27 @@ from leadgalaxy.utils import webhook_token
 from lib.exceptions import capture_message, capture_exception
 
 
-class ShopifyWebhookMixing(View):
+class ShopifyWebhookVerifyMixing:
     http_method_names = ['get', 'post']
 
+    def verify_shopify_webhook_signature(store, request, throw_excption=True):
+        api_data = request.body
+        request_hash = request.META.get('HTTP_X_SHOPIFY_HMAC_SHA256')
+        shop = request.META.get('HTTP_X_SHOPIFY_SHOP_DOMAIN')
+
+        webhook_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), api_data, sha256).digest()
+        webhook_hash = base64.b64encode(webhook_hash).decode()
+
+        if webhook_hash == request_hash:
+            if shop:
+                return shop
+            else:
+                raise Exception('Shop domain not found in header')
+        else:
+            raise Exception('Invalid signature')
+
+
+class ShopifyWebhookMixing(View):
     def verify_shopify_webhook(self, request):
         token = request.GET['t']
 

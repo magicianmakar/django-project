@@ -9,8 +9,9 @@ from unidecode import unidecode
 import simplejson as json
 
 from elasticsearch import Elasticsearch
+from aliexpress_core.models import AliexpressAccount
 
-from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
+from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyFulfillementRequest
 from shopified_core.utils import OrderErrors, delete_model_from_db, safe_int, ensure_title
 from shopified_core.shipping_helper import country_from_code
 
@@ -607,3 +608,77 @@ class OrderErrorsCheck:
     def write(self, *args):
         if self.stdout:
             self.stdout.write(' | '.join([str(i) for i in args]))
+
+
+def fulfillment_accept_request(store):
+    rep = requests.get(
+        url=store.api('assigned_fulfillment_orders'),
+        params={
+            'assignment_status': 'fulfillment_requested',
+        }
+    )
+
+    if rep.ok:
+        for fulfillment in rep.json()['fulfillment_orders']:
+            fulfillment_request, _ = ShopifyFulfillementRequest.objects.update_or_create(
+                store=store,
+                fulfillment_order_id=fulfillment['id'],
+                defaults={
+                    'data': json.dumps(fulfillment),
+                    'status': fulfillment['status'],
+                    'request_status': fulfillment['request_status'],
+                    'order_id': fulfillment['order_id'],
+                    'assigned_location_id': fulfillment['assigned_location_id'],
+                }
+            )
+
+            aliexpress_account = AliexpressAccount.objects.filter(user=store.user).first()
+            if not aliexpress_account:
+                line_items = []
+                # for item in fulfillment['line_items']:
+                #     line_items.append({
+                #         'fulfillment_order_line_item_id': item['id'],
+                #         'message': 'Please connect your AliExpress account to your store first'
+                #     })
+
+                api_data = {
+                    'id': fulfillment_request.fulfillment_order_id,
+                    'message': 'Please connect your AliExpress account to your store first',
+                    'reason': 'other',
+                }
+
+                if line_items:
+                    api_data['line_items'] = line_items
+
+                rep = requests.post(
+                    url=store.api('fulfillment_orders', fulfillment_request.fulfillment_order_id, 'fulfillment_request', 'reject'),
+                    json={
+                        'fulfillment_request': api_data
+                    }
+                )
+
+                if rep.ok:
+                    fulfillment_request.set_data(rep.json().get('fulfillment_order'))
+
+
+def fulfillment_cancel_request(store):
+    rep = requests.get(
+        url=store.api('assigned_fulfillment_orders'),
+        params={
+            'assignment_status': 'cancellation_requested',
+        }
+    )
+
+    if rep.ok:
+        for fulfillment in rep.json()['fulfillment_orders']:
+            ShopifyFulfillementRequest.objects.update_or_create(
+                store=store,
+                fulfillment_order_id=fulfillment['id'],
+                defaults={
+                    'data': json.dumps(fulfillment),
+                    'status': fulfillment['status'],
+                    'request_status': fulfillment['request_status'],
+                    'order_id': fulfillment['order_id'],
+                    'assigned_location_id': fulfillment['assigned_location_id'],
+                }
+            )

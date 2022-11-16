@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from shopify_orders.models import (
+    ShopifyFulfillementRequest,
     ShopifyOrder,
     ShopifyOrderLine,
     ShopifyOrderLog,
@@ -8,7 +9,7 @@ from shopify_orders.models import (
     ShopifyOrderRisk,
     ShopifyOrderShippingLine,
     ShopifyOrderVariant,
-    ShopifySyncStatus
+    ShopifySyncStatus,
 )
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
@@ -80,4 +81,21 @@ class ShopifyOrderRevenueAdmin(admin.ModelAdmin):
     )
     list_filter = ('created_at',)
     raw_id_fields = ('user', 'store')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(ShopifyFulfillementRequest)
+class ShopifyFulfillementRequestAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'store',
+        'fulfillment_order_id',
+        'status',
+        'order_id',
+        'assigned_location_id',
+        'created_at',
+        'updated_at',
+    )
+    list_filter = ('created_at', 'updated_at')
+    raw_id_fields = ('store',)
     date_hierarchy = 'created_at'
