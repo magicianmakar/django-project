@@ -900,10 +900,9 @@ def get_shopify_products(store, page_url=None, limit=50, all_products=False,
 
 def get_shopify_inventories(store, inventory_item_ids, sleep=None):
     if len(inventory_item_ids) <= 50:
-        primary_location = store.get_primary_location()
         params = {
             'inventory_item_ids': ','.join(str(x) for x in inventory_item_ids),
-            'location_ids': primary_location,
+            'location_ids': store.get_dropified_location(),
         }
 
         rep = requests.get(
