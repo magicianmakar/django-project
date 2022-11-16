@@ -11,10 +11,8 @@ from leadgalaxy.tests.factories import (
 )
 from product_alerts.utils import get_supplier_variants
 
-from leadgalaxy.tasks import (
-    link_variants_to_new_images,
-    sync_shopify_product_quantities
-)
+from leadgalaxy.utils import link_variants_to_new_images
+from leadgalaxy.tasks import sync_shopify_product_quantities
 
 
 class TasksTestCase(BaseTestCase):
