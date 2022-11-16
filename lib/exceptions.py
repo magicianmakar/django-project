@@ -9,12 +9,15 @@ from raven.contrib.django.raven_compat.models import client
 def capture_exception(*args, **options):
     e_type, e, _ = sys.exc_info()
     if hasattr(e, 'response') and hasattr(e.response, 'text'):
-        extra = options.get('extra', {})
-        extra['response_text'] = e.response.text
-        extra['response_status'] = e.response.status_code
-        extra['response_reason'] = e.response.reason
+        try:
+            extra = options.get('extra', {})
+            extra['response_text'] = e.response.text
+            extra['response_status'] = e.response.status_code
+            extra['response_reason'] = e.response.reason
 
-        options['extra'] = extra
+            options['extra'] = extra
+        except Exception:
+            pass
 
     if settings.DEBUG or 'test' in sys.argv:
         print()
@@ -36,7 +39,7 @@ def capture_exception(*args, **options):
             if hasattr(e, 'message'):
                 print('------> Exception message:', e.message)
 
-            if hasattr(e, 'response'):
+            if hasattr(e, 'response') and hasattr(e.response, 'text'):
                 print('------> Exception response:', e.response.text)
 
         print('------>')
