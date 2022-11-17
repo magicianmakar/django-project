@@ -5,6 +5,15 @@
 {% load widget_tweaks %}
 {% load template_helper %}
 
+{% block breadcrumb-right %}
+    {% if user|can:'sub_users.use' %}
+    <button class="btn btn-primary invite-subuser"
+            data-extra={{ extra_subusers|lower }} data-cost="{{ extra_user_cost }}">
+        Add User <i class="fa fa-user-plus"></i>
+    </button>
+    {% endif %}
+{% endblock %}
+
 {% block main-container %}
 
 <div class="panel panel-default">
@@ -79,10 +88,6 @@
                       {% endfor %}
                   </tbody>
               </table>
-
-              <button class="btn btn-primary invite-subuser" data-extra={{ extra_subusers|lower }} data-cost="{{ extra_user_cost }}">
-                 Add User <i class="fa fa-user-plus"></i>
-              </button>
               {% else %}
               {% include "subusers/subusers_upsell.html" %}
               {% include "common/partial/upsell.html" with message="Add Sub Users to your Plan" only %}
@@ -266,6 +271,8 @@
                 showLoaderOnConfirm: true,
                 confirmButtonText: "Invite User",
                 confirmButtonColor: "#6BAA55",
+                imageUrl: '//cdn.dropified.com/static/img/person-add.svg',
+                imageSize: '120x120',
             }, function(inputValue) {
                 if (inputValue === false) {
                     return;
