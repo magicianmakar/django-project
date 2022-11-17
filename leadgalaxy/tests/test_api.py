@@ -379,6 +379,7 @@ class ProductsApiTestCase(BaseTestCase):
 
     @patch('leadgalaxy.models.ShopifyStore.get_link', Mock(return_value=''))
     @patch('leadgalaxy.models.ShopifyStore.get_primary_location', Mock(return_value=1))
+    @patch('leadgalaxy.utils.order_fulfillement', Mock(return_value=({'id': 123456789, 'assigned_location_id': 1, }, {'id': 987654321, 'fulfillable_quantity': 1}))) # noqa
     @patch('leadgalaxy.api.requests')
     def test_post_fulfill_order(self, requests_mock):
         requests_mock.post = Mock(return_value=Mock(raise_for_status=Mock(return_value=None)))
