@@ -1,5 +1,5 @@
 #!/bin/bash
 
 if [ ! -d "venv" ]; then
-    virtualenv venv
+    virtualenv --python python3.8 venv
 fi
