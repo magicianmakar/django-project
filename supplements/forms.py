@@ -378,3 +378,15 @@ class ShippingCostsWidget(forms.Textarea):
 
 class ShippingGroupAdminForm(forms.ModelForm):
     data = forms.CharField(widget=ShippingCostsWidget)
+
+
+class WarehouseInventoryFilterForm(forms.Form):
+    INVENTORY_STATUSES = [
+        ('', 'All Items'),
+        ('out_of_stock', 'Out Of stock'),
+        ('low_in_stock', 'Low in stock (< 50)'),
+    ]
+
+    stock = forms.ChoiceField(required=False, choices=INVENTORY_STATUSES)
+    item_sku = forms.CharField(required=False)
+    title = forms.CharField(required=False)

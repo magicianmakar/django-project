@@ -1,0 +1,112 @@
+{% extends "supplements/tab_view_admin.html" %}
+
+{% block tab_content %}
+{% load static %}
+{% load widget_tweaks %}
+
+    <form role="form" autocomplete="off">
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group {% if form.stock.errors %}has-error{% endif %}">
+                    <label class="control-label">Inventory Status:</label>
+                    {{ form.stock|add_class:"form-control" }}
+                    {% for error in form.stock.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="col-sm-4">
+                <div class="form-group {% if form.item_sku.errors %}has-error{% endif %}">
+                    <label class="control-label">Product SKU:</label>
+                    {{ form.item_sku|add_class:"form-control" }}
+                    {% for error in form.item_sku.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group {% if form.title.errors %}has-error{% endif %}">
+                    <label class="control-label">Product Title:</label>
+                    {{ form.title|add_class:"form-control" }}
+                    {% for error in form.title.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3">
+                <div class="form-group">
+                    <input type="submit" class="btn btn-primary form-control" value="Filter" />
+                </div>
+            </div>
+        </div>
+    </form>
+<table class="table table-striped m-t">
+    <thead>
+        <th>Title</th>
+      <th>Item SKU</th>
+      <th>ShipStation Account</th>
+      <th>Quantity</th>
+      <th></th>
+    </thead>
+    <tbody>
+    {% for item in object_list %}
+    <tr>
+      <td>
+        {{ item.title }}
+        </td>
+        <td>
+            {{ item.shipstation_sku }}
+        </td>
+        <td>{{ shipstation_account }}</td>
+        <td class="inv-td">
+            {% if item.inventory == 0 %}
+                <span class="inv-label text-danger">Out of Stock</span>
+            {% endif %}
+            {% if item.inventory > 0 and item.inventory <= 50 %}
+            <span class="inv-label text-warning">Low Stock</span>
+            {% endif %}
+            <input type="number" value="{{item.inventory }}" min="0" id="item-{{item.shipstation_sku}}" class="form-control input-inv"/>
+        </td>
+        <td class="warehouse_inventory">
+            <input type="submit" value="Update" data-sku="{{ item.shipstation_sku }}" class="btn btn-primary update-inventory-ware"/>
+        </td>
+        {% empty %}
+      <td colspan="8">No Product found.</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+    <div class="text-center">
+        <div class="btn-group">
+            {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">previous</a>
+        {% endif %}
+
+        {% for page in page_range %}
+        <a
+        {% if page == page_obj.number %}
+            class="btn btn-white active"
+        {% else %}
+            class="btn btn-white"
+        {% endif %}
+        href="?page={{ page_obj.previous_page_number }}">
+        {{ page }}
+        </a>
+        {% endfor %}
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"> 
+            <i class="fa fa-chevron-right"></i>
+        </a>
+        {% endif %}
+        </div>
+{% endblock %}
+{% block extrajs %}
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
+{% endblock %}

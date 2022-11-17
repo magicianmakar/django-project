@@ -354,6 +354,29 @@ $(document).ready(function(){
         });
     });
 
+    $(".update-inventory-ware").on("click", function() {
+        var sku = $(this).attr("data-sku");
+        var id = "#item-" + sku;
+        var inv = $(id).val();
+        var url = api_url('update_warehouse_inventory', 'supplements');
+        data = {'shipstation_sku': sku, inventory: inv};
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: JSON.stringify(data),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (response) {
+                toastr.success("Successfully updated inventory.");
+
+            },
+            error: function(xhr, status, error) {
+                var err = JSON.parse(xhr.responseText);
+                toastr.error(err.error);
+            }
+        });
+    });
+
     $("#id_shipping_countries").chosen();
     $("#id_label_size_filter").chosen();
     $("#id_product_sku_filter").chosen();

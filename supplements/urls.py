@@ -21,6 +21,10 @@ urlpatterns = [
         supplements.views.UserSupplementView.as_view(),
         name='user_supplement'),
 
+    url(r'^warehouse/inventory$',
+        supplements.views.WarehouseInventory.as_view(),
+        name='warehouse_inventory'),
+
     url(r'^my/supplement/list$',
         supplements.views.MySupplements.as_view(),
         name='my_supplements'),

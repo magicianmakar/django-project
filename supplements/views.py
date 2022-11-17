@@ -86,7 +86,8 @@ from .forms import (
     ReportsQueryForm,
     UploadJSONForm,
     UserSupplementFilterForm,
-    UserSupplementForm
+    UserSupplementForm,
+    WarehouseInventoryFilterForm
 )
 from .utils import aws_s3_context, create_rows, report, send_email_against_comment
 from .utils.basket import BasketStoreObj
@@ -2921,3 +2922,58 @@ class ProductAnnouncements(LoginRequiredMixin, TemplateView):
         context = {'breadcrumbs': breadcrumbs}
 
         return render(request, "supplements/plod_product_announcements.html", context)
+
+
+class WarehouseInventory(LoginRequiredMixin, PagingMixin, ListView):
+    template_name = 'supplements/warehouse_inventory.html'
+    model = PLSupplement
+    ordering = 'inventory'
+    paginate_by = 20
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls.use') and request.user.profile.warehouse_account:
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def get_breadcrumbs(self):
+        return [
+            'Warehouse Inventory',
+            {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'Warehouse Inventory', 'url': reverse('pls:warehouse_inventory')},
+        ]
+
+    def get_queryset(self):
+        form = WarehouseInventoryFilterForm(self.request.GET)
+        warehouse_account = self.request.user.profile.warehouse_account.id
+        queryset = super().get_queryset()
+        queryset = queryset.filter(shipstation_account=warehouse_account, is_active=True, is_discontinued=False)
+
+        if form.is_valid():
+            stock_query = form.cleaned_data['stock']
+            if stock_query == 'out_of_stock':
+                queryset = queryset.filter(inventory=0)
+            if stock_query == 'low_in_stock':
+                queryset = queryset.filter(inventory__gte=1, inventory__lte=50)
+
+            product_sku = form.cleaned_data['item_sku']
+            if product_sku:
+                queryset = queryset.filter(shipstation_sku__icontains=self.request.GET.get("item_sku"))
+
+            title = form.cleaned_data['title']
+            if title:
+                q = Q()
+                for term in title.split():
+                    q &= Q(title__icontains=term)
+                queryset = queryset.filter(q)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = WarehouseInventoryFilterForm(self.request.GET)
+        context['breadcrumbs'] = self.get_breadcrumbs()
+        context['queryset'] = self.get_queryset()
+        context['shipstation_account'] = self.request.user.profile.warehouse_account
+        context['warehouse_account_id'] = self.request.user.profile.warehouse_account.id
+        return context

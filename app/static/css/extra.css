@@ -745,3 +745,18 @@ div#filter-form {
     left: -1111111111;
     top: -1111111111;
 }
+.warehouse_inventory {
+    width: 30%;
+}
+span.inv-label {
+    background: transparent;
+    padding-right: 5px;
+}
+td.inv-td {
+    display: flex;
+    align-items: center;
+    flex-direction: column-reverse;
+}
+td.inv-td > input.input-inv {
+    width: 110px;
+}

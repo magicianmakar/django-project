@@ -13,6 +13,7 @@
 {% url 'pls:orderitem_list' as pls_orderitems %}
 {% url 'pls:upload_json' as pls_upload_json %}
 {% url 'pls:reports' as pls_reports %}
+{% url 'pls:warehouse_inventory' as pls_warehouse_inventory %}
 
 
 {% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' pls_supplier=request.user|can:'pls_supplier.use' %}
@@ -69,6 +70,14 @@
       <li class="active"><a data-toggle="tab" href="#tab-1">Reports</a></li>
       {% else %}
       <li><a href="{% url 'pls:reports' %}">Reports</a></li>
+      {% endif %}
+    {% endif %}
+
+    {% if request.user.profile.warehouse_account %}
+      {% if request.path == pls_warehouse_inventory %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Warehouse Inventory</a></li>
+      {% else %}
+      <li><a href="{% url 'pls:warehouse_inventory' %}">Warehouse Inventory</a></li>
       {% endif %}
     {% endif %}
   {% endif %}

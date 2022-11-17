@@ -735,6 +735,24 @@ class SupplementsApi(ApiResponseMixin, View):
         }
         return self.api_success(success_data)
 
+    def post_update_warehouse_inventory(self, request, user, data):
+        sku = data.get('shipstation_sku')
+        inventory = data.get('inventory')
+        try:
+            pl_supplement = PLSupplement.objects.get(shipstation_sku=sku)
+            print(pl_supplement.shipstation_account)
+            if user.profile.warehouse_account != pl_supplement.shipstation_account:
+                return self.api_error("Cannot update product, warehouse account does not match", status=500)
+            pl_supplement.inventory = inventory
+            pl_supplement.save()
+        except PLSupplement.DoesNotExist:
+            capture_exception()
+            return self.api_error('SKU Not Found', status=404)
+        except:
+            capture_exception()
+            return self.api_error('Unable to update inventory', status=500)
+        return self.api_success()
+
 
 # this class can be moved to utils/pasket.py or separate file
 class BasketApi(ApiResponseMixin, View):
