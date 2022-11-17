@@ -59,12 +59,35 @@
                                 <div class="row">
                                     <div class="col-xs-12 col-sm-4">
                                         <div class="ibox">
-                                            <label for="shopify-store" style="width: 100%;">
+                                            <label for="gk-store" style="width: 100%;">
                                                 <div class="ibox-content store-box active" style="cursor: pointer;">
                                                     <div class="product-imitation"
                                                          style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
                                                         <label class="control-label">
-                                                            <input name="amt" value="#shopify-section" checked=""
+                                                            <input name="amt" checked
+                                                                   value="{% if request.user|can:'allow_groovekart.use' %}#gk-section{% else %}#upgrade-section{% endif %}"
+                                                                   type="radio"
+                                                                   id="gk-store"/>
+                                                        </label>
+                                                        <label for="gk-store" style="margin-top: 10px;">
+                                                            <img height="25px"
+                                                                 src="{% static 'logo/gkart-logo.svg' %}"
+                                                                 alt="GrooveKart"
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-4">
+                                        <div class="ibox">
+                                            <label for="shopify-store" style="width: 100%;">
+                                                <div class="ibox-content store-box" style="cursor: pointer;">
+                                                    <div class="product-imitation"
+                                                         style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
+                                                        <label class="control-label">
+                                                            <input name="amt" value="#shopify-section"
                                                                    type="radio"
                                                                    id="shopify-store"/>
                                                         </label>
@@ -115,29 +138,6 @@
                                                             <img height="25px"
                                                                  src="{% static 'logo/woocommerce-logo.svg' %}"
                                                                  alt="Woocommerce"
-                                                            />
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-xs-12 col-sm-4">
-                                        <div class="ibox">
-                                            <label for="gk-store" style="width: 100%;">
-                                                <div class="ibox-content store-box" style="cursor: pointer;">
-                                                    <div class="product-imitation"
-                                                         style="padding: 1.5rem 0; display: flex; flex-direction: column; align-items: center;">
-                                                        <label class="control-label">
-                                                            <input name="amt"
-                                                                   value="{% if request.user|can:'allow_groovekart.use' %}#gk-section{% else %}#upgrade-section{% endif %}"
-                                                                   type="radio"
-                                                                   id="gk-store"/>
-                                                        </label>
-                                                        <label for="gk-store" style="margin-top: 10px;">
-                                                            <img height="25px"
-                                                                 src="{% static 'logo/gkart-logo.svg' %}"
-                                                                 alt="GrooveKart"
                                                             />
                                                         </label>
                                                     </div>
@@ -424,6 +424,9 @@
                                         <hr>
 
                                         <div>
+                                            <a href="https://groovepages.groovesell.com/a/lao4pAEQelST">
+                                                Sign up to GrooveKart FREE Here
+                                            </a>
                                             <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs"
                                                     type="button">
                                                 Add store
