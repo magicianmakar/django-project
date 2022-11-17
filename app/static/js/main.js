@@ -1027,6 +1027,8 @@ $(function() {
         $('.itooltip').bootstrapTooltip(tooltipOptions);
     }
 
+    $('#mini-side-menu [data-toggle="bootstrap-tooltip"]').bootstrapTooltip(tooltipOptions);
+
     $('[qtip-tooltip]').each(function() {
         $(this).qtip({
             content: {

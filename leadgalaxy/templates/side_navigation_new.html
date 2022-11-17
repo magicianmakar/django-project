@@ -121,7 +121,7 @@
                             {% else %}
                         <li class="section-no-icon">
                     {% endif %}
-                <a href="{% url 'acp_index_view' %}" title="Admin">
+                <a href="{% url 'acp_index_view' %}" title="Admin" data-toggle="bootstrap-tooltip" data-placement="right">
                     <i class="fa fa-search item-icon"></i>
                 </a>
                 </li>
@@ -130,7 +130,7 @@
                     {% for item in section.items %}
 
                         <li class="section-no-icon {{ item.classes }}">
-                            <a href="{{ item.url }}" title="{{ item.title | safe }}">
+                            <a href="{{ item.url }}" title="{{ item.title | safe }}" data-toggle="bootstrap-tooltip" data-placement="right">
                                 {% if item.new_icon %}
                                     <img src="{% static item.new_icon %}" class="item-icon"/>
                                 {% endif %}
@@ -154,7 +154,7 @@
                         {% for item in section.items %}
                             <li class="item {{ item.classes }}">
                                 <a {% if item.new_tab %}target="_blank"{% endif %} href="{{ item.url }}"
-                                   title="{{ item.title | safe }}">
+                                   title="{{ item.title | safe }}" data-toggle="bootstrap-tooltip" data-placement="right">
                                     {% if item.new_icon %}
                                         <img src="{% static item.new_icon %}" class="item-icon"/>
                                     {% else %}
