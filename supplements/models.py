@@ -556,6 +556,14 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
         title = self.title or self.label.user_supplement.title
         if '**low stock**' in title.lower():
             title = re.sub(r'(\*\*.*?\*\*) ?', '', title)
+        if self.label.user_supplement.pl_supplement.shipstation_account.labels_only:
+            return [{'name': title,
+                     'quantity': self.quantity,
+                     'sku': self.label.sku,
+                     'unitPrice': float(self.label.user_supplement.cost_price),
+                     'imageUrl': self.label.image,
+                     'lineItemKey': self.shipstation_key,
+                     }]
 
         return [{
             'name': title,
@@ -783,6 +791,7 @@ class ShipStationAccount(models.Model):
     max_retries = models.IntegerField(default=5)
     send_timeout = models.IntegerField(default=60)
     store_id = models.CharField(max_length=100, null=True, blank=True)
+    labels_only = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
