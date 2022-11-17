@@ -182,7 +182,7 @@ workflows:
       - statics:
           requires:
             - build
-      - deploy
+      - deploy:
           requires:
             - test
             - statics
