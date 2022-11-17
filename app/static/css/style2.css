@@ -1355,8 +1355,7 @@ li.border-right {
 .breadcrumbs-container {
     background-color: transparent;
     border-bottom: 0 none !important;
-    padding: 12px 26px;
-    padding: 12px 10px 12px 26px;
+    padding: 30px 6px 12px 26px;
     display: flex;
     align-items: center;
 }
