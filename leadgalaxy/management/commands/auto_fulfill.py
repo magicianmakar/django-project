@@ -146,7 +146,7 @@ class Command(DropifiedBaseCommand):
 
             try:
                 rep = requests.post(
-                    url=store.api('orders', order.order_id, 'fulfillments'),
+                    url=store.api('fulfillments'),
                     json=api_data
                 )
 
@@ -156,10 +156,11 @@ class Command(DropifiedBaseCommand):
                 if fulfilled:
                     fulfillment = rep.json()['fulfillment']
                     if fulfillment['status'] == 'pending':
-                        r = requests.post(
-                            url=store.api('orders', order.order_id, 'fulfillments', fulfillment['id'], 'complete'),
-                            json=api_data
-                        )
+                        capture_message('Fulfillment Complete', level='info', extra={
+                            'order': order.order_id,
+                            'fulfillments': fulfillment['id'],
+                            'api_data': api_data
+                        })
 
                 break
 
@@ -207,31 +208,6 @@ class Command(DropifiedBaseCommand):
                         self.log_fulfill_error(order, 'Order is already fulfilled')
 
                         return False
-
-                    elif 'Invalid fulfillment order line item quantity requested' in rep.text:
-                        # This could mean it was fulfilled
-                        r = requests.get(url=store.api(f'orders/{order.order_id}/fulfillments'))
-                        if r.ok:
-
-                            for fulfillment in r.json()['fulfillments']:
-                                for line in fulfillment['line_items']:
-                                    if line['id'] == order.line_id:
-                                        if line['fulfillment_status'] == 'fulfilled':
-                                            # Mark as fulfilled but not auto-fulfilled
-                                            self.write(f'Already have fulfillment #{order.order_id} in {order.store.shop}')
-                                            order.shopify_status = 'fulfilled'
-                                            order.save()
-
-                                            self.log_fulfill_error(order, 'Order is already fulfilled')
-
-                                            return False
-
-                        capture_message('Invalid fulfillment order line', extra={
-                            'shop': order.store.shop,
-                            'order_track': order.id,
-                            'r': r.text,
-                            'rep': rep.text
-                        })
 
                     elif 'This order has been canceled' in rep.text:
                         self.write('Order has been canceled #{} in [{}]'.format(order.order_id, order.store.title))

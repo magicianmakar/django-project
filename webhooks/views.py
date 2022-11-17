@@ -35,6 +35,7 @@ from leadgalaxy.models import (
     UserProfile,
     AppPermission
 )
+from shopify_orders.tasks import fulfillment_accept_request_task, fulfillment_cancel_request_task
 from woocommerce_core.models import WooStore
 
 from woocommerce_core.tasks import update_woo_order
@@ -52,7 +53,7 @@ from shopify_orders.models import ShopifyOrder
 from stripe_subscription.utils import process_webhook_event
 from supplements.models import PLSOrder, ShipStationAccount
 from webhooks.tasks import setup_free_account
-from webhooks.utils import ShopifyWebhookMixing, WooWebhookProcessing
+from webhooks.utils import ShopifyWebhookMixing, ShopifyWebhookVerifyMixing, WooWebhookProcessing
 
 
 def jvzoo_webhook(request, option):
@@ -530,6 +531,42 @@ class ShopifyOrderDeleteWebhook(ShopifyWebhookMixing):
         cache.set(f'saved_orders_clear_{store.id}', True, timeout=300)
 
         ShopifyOrder.objects.filter(store=store, order_id=shopify_data['id']).delete()
+
+
+class ShopifyFulfillmentOrderWebhook(View, ShopifyWebhookVerifyMixing):
+    def get(self, request, *args, **kwargs):
+        try:
+            self.verify_shopify_webhook_signature(request)
+        except:
+            capture_exception()
+            return HttpResponse('Signature Error', status=403)
+
+        return JsonResponse({})
+
+    def post(self, request, name):
+        try:
+            try:
+                shop = self.verify_shopify_webhook_signature(request)
+            except:
+                capture_exception()
+                return HttpResponse('Signature Error', status=403)
+
+            try:
+                shopify_data = json.loads(request.body)
+            except:
+                shopify_data = None
+
+            if name == 'fulfillment_order_notification':
+                if shopify_data['kind'] == "FULFILLMENT_REQUEST":
+                    fulfillment_accept_request_task.delay(shop)
+                elif shopify_data['kind'] == "CANCELLATION_REQUEST":
+                    fulfillment_cancel_request_task.delay(shop)
+
+            return HttpResponse('ok')
+
+        except:
+            capture_exception()
+            return HttpResponse('Error', status=500)
 
 
 class ShopifyShopUpdateWebhook(ShopifyWebhookMixing):

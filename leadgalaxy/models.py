@@ -21,10 +21,10 @@ from leadgalaxy.graphql import ShopifyGraphQL
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class
 from shopified_core.models import BoardBase, OrderTrackBase, ProductBase, StoreBase, SupplierBase, UserUploadBase
-from shopified_core.utils import get_domain, safe_int, url_join, using_store_db
+from shopified_core.utils import app_link, get_domain, safe_int, url_join, using_store_db
 from stripe_subscription.stripe_api import stripe
 
-SHOPIFY_API_VERSION = "2021-07"
+SHOPIFY_API_VERSION = "2022-07"
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -1184,6 +1184,8 @@ class ShopifyStore(StoreBase):
     access_token = models.CharField(max_length=512, blank=True, null=True)
     scope = models.CharField(max_length=512, blank=True, null=True)
     primary_location = models.BigIntegerField(blank=True, null=True)
+    dropified_location = models.BigIntegerField(blank=True, null=True)
+    dropified_fulfillment_service = models.BigIntegerField(blank=True, null=True)
 
     is_active = models.BooleanField(default=True, db_index=True)
     store_hash = models.CharField(unique=True, default='', max_length=50, editable=False)
@@ -1243,7 +1245,7 @@ class ShopifyStore(StoreBase):
         Return a Shopify API link with basic auth and the resources path
         Example usage:
             store.api('orders') => '/admin/api/{SHOPIFY_API_VERSION}/orders.json'
-            store.api('orders', 1234567, 'fulfillments') => '/admin/api/{SHOPIFY_API_VERSION}/orders/1234567/fulfillments.json'
+            store.api('orders', 1234567) => '/admin/api/{SHOPIFY_API_VERSION}/orders/1234567.json'
 
         Note that this examples return the same result:
             store.api('orders')
@@ -1494,6 +1496,56 @@ class ShopifyStore(StoreBase):
         primary_location = locations[0].get('id')
 
         return primary_location
+
+    def get_dropified_location(self):
+        if self.dropified_location:
+            return self.dropified_location
+
+        api_data = {
+            "fulfillment_service": {
+                "name": "Dropified",
+                "callback_url": app_link("/webhooks/shopify/fulfillment"),
+                "inventory_management": True,
+                "permits_sku_sharing": True,
+                "fulfillment_orders_opt_in": True,
+                "tracking_support": True,
+                "requires_shipping_method": True,
+                "format": "json"
+            }
+        }
+
+        rep = requests.post(
+            url=self.api('fulfillment_services'),
+            json=api_data
+        )
+
+        if rep.ok:
+            self.dropified_fulfillment_service = rep.json()['fulfillment_service']['id']
+            self.dropified_location = rep.json()['fulfillment_service']['location_id']
+            self.save()
+
+            return self.dropified_location
+        else:
+            if "You already have a location with this name" in rep.text:
+                rep = requests.get(url=self.api('fulfillment_services'))
+                rep.raise_for_status()
+
+                for service in rep.json()['fulfillment_services']:
+                    if service['name'] == 'Dropified':
+                        rep = requests.put(
+                            url=self.api('fulfillment_services', service['id']),
+                            json=api_data
+                        )
+
+                        rep.raise_for_status()
+
+                        self.dropified_fulfillment_service = service['id']
+                        self.dropified_location = service['location_id']
+                        self.save()
+
+                        return self.dropified_location
+            else:
+                rep.raise_for_status()
 
     def get_locations(self, fulfillments_only=False, active_only=True):
         try:
@@ -2096,7 +2148,7 @@ class ShopifyProduct(ProductBase):
         return requests.post(
             url=self.store.api('inventory_levels/set'),
             json={
-                'location_id': self.store.get_primary_location(),
+                'location_id': self.store.get_dropified_location(),
                 'inventory_item_id': inventory_item_id,
                 'available': quantity,
             }
@@ -2109,12 +2161,11 @@ class ShopifyProduct(ProductBase):
 
             inventory_item_id = self.get_inventory_item_by_variant(variant_id, variant=variant, ensure_tracking=False)
 
-        primary_location = self.store.get_primary_location()
         response = requests.get(
             url=self.store.api('inventory_levels'),
             params={
                 'inventory_item_ids': inventory_item_id,
-                'location_ids': primary_location
+                'location_ids': self.store.get_dropified_location()
             }
         )
 

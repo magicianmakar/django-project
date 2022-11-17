@@ -1901,7 +1901,7 @@ var PusherSubscription = {
 
                             $('<div>', {
                                 'class': 'col-xs-3 add-var-image-block',
-                                'html': '<img src="/static/img/blank.gif" data-src="' + image.image_src[0] + '" class="add-var-image unveil" />'
+                                'html': '<img src="//cdn.dropified.com/static/img/blank.gif" data-src="' + image.image_src[0] + '" class="add-var-image unveil" />'
                             }).appendTo($('#images', par));
                         });
 

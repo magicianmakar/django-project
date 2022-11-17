@@ -12,7 +12,7 @@ from aliexpress_core.settings import API_KEY, API_SECRET, API_KEY_ADMITAD, API_S
 from aliexpress_core.utils import MaillingAddress, PlaceOrder, OrderInfo, PlaceOrderRequest, ProductBaseItem
 from leadgalaxy.models import ShopifyStore, ShopifyProduct, ShopifyOrderTrack
 from leadgalaxy.utils import get_admitad_credentials
-from shopify_orders.utils import OrderErrorsCheck, update_elasticsearch_shopify_order
+from shopify_orders.utils import OrderErrorsCheck, fulfillment_accept_request, fulfillment_cancel_request, update_elasticsearch_shopify_order
 from shopify_orders.models import ShopifyOrder
 from groovekart_core.models import GrooveKartStore
 from woocommerce_core.models import WooStore
@@ -326,3 +326,15 @@ def get_order_info_via_api(self, order, source_id, store_id, store_type=None, us
             'error_code': e.errorcode,
             'sub_code': e.subcode,
         }
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def fulfillment_accept_request_task(self, shop):
+    for store in ShopifyStore.objects.filter(shop=shop, is_active=True):
+        fulfillment_accept_request(store)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def fulfillment_cancel_request_task(self, shop):
+    for store in ShopifyStore.objects.filter(shop=shop, is_active=True):
+        fulfillment_cancel_request(store)

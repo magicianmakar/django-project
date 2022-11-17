@@ -6,7 +6,6 @@ import time
 import requests
 
 from shopified_core.exceptions import ApiProcessException
-from leadgalaxy.utils import order_track_fulfillment
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -214,28 +213,4 @@ class ShopifyOrderImport():
         return orders
 
     def send_tracking_number(self, items):
-        tracking = {}
-        success = True
-        for item in items:
-            key = '{}-{}'.format(item['order_id'], item['tracking_number'])
-            if key in tracking:
-                tracking[key]['fulfillment']['line_items'].append({'id': item['line_item_id']})
-            else:
-                data = order_track_fulfillment(
-                    order_id=item['order_id'],
-                    line_id=item['line_item_id'],
-                    source_tracking=item['tracking_number'],
-                    user_config=self.store.user.get_config(),
-                    location_id=self.store.get_primary_location()
-                )
-
-                tracking[key] = data
-
-        for key, data in tracking.items():
-            order_id = key.split('-')[0]
-            url = '/admin/orders/{}/fulfillments.json'.format(order_id)
-            response = self._post_response_from_url(url, data)
-            if not response.ok:
-                success = False
-
-        return success
+        raise NotImplementedError

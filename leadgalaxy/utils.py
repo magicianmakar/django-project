@@ -900,10 +900,9 @@ def get_shopify_products(store, page_url=None, limit=50, all_products=False,
 
 def get_shopify_inventories(store, inventory_item_ids, sleep=None):
     if len(inventory_item_ids) <= 50:
-        primary_location = store.get_primary_location()
         params = {
             'inventory_item_ids': ','.join(str(x) for x in inventory_item_ids),
-            'location_ids': primary_location,
+            'location_ids': store.get_dropified_location(),
         }
 
         rep = requests.get(
@@ -1611,6 +1610,20 @@ def is_shipping_carrier(tracking_number, carrier, any_match=False):
     return False
 
 
+def order_fulfillement(store, order_id, line_id):
+    rep = requests.get(store.api('orders', order_id, 'fulfillment_orders'))
+    if rep.ok:
+        for order in rep.json()['fulfillment_orders']:
+            if order['status'] == 'closed':
+                continue
+
+            for item in order['line_items']:
+                if item['line_item_id'] == int(line_id):
+                    return order, item
+
+    return None, None
+
+
 def order_track_fulfillment(**kwargs):
     ''' Get Tracking Carrier and Url for Shopify Order Fulfillment
         order_id:        Shopify Order ID
@@ -1641,6 +1654,13 @@ def order_track_fulfillment(**kwargs):
 
     user_config = kwargs['user_config']
 
+    fulfillment_order = None
+    fulfillment_item = None
+
+    if kwargs.get('fulfillment'):
+        fulfillment_order = kwargs['fulfillment']['order']
+        fulfillment_item = kwargs['fulfillment']['item']
+
     is_usps = False
     line = None
     tracking_numbers = None
@@ -1665,22 +1685,36 @@ def order_track_fulfillment(**kwargs):
     except:
         capture_exception()
 
+    if not fulfillment_order or not fulfillment_item:
+        store = ShopifyStore.objects.get(id=store_id)
+        fulfillment_order, fulfillment_item = order_fulfillement(store, order_id, line_id)
+
     data = {
         "fulfillment": {
-            "location_id": location_id,
-            "tracking_number": source_tracking,
-            "line_items": [{
-                "id": line_id,
-            }]
+            "location_id": fulfillment_order['assigned_location_id'],
+            "line_items_by_fulfillment_order": [
+                {
+                    "fulfillment_order_id": fulfillment_order['id'],
+                    "fulfillment_order_line_items": [
+                        {
+                            "id": fulfillment_item['id'],
+                            "quantity": fulfillment_item['fulfillable_quantity']
+                        }
+                    ]
+                }
+            ],
+            "tracking_info": {
+                "number": source_tracking,
+                "company": 'Other'
+            },
         }
     }
 
     if source_tracking:
         if tracking_numbers:
-            data['fulfillment']['tracking_numbers'] = tracking_numbers
-            del data['fulfillment']['tracking_number']
+            data['fulfillment']['tracking_info']['number'] = tracking_numbers
         else:
-            data['fulfillment']['tracking_number'] = source_tracking
+            data['fulfillment']['tracking_info']['number'] = source_tracking
 
         user_aftership_domain = user_config.get('aftership_domain')
         have_custom_domain = store_id and user_aftership_domain \
@@ -1693,18 +1727,18 @@ def order_track_fulfillment(**kwargs):
             alibaba_tracking_urls = get_alibaba_tracking_links(kwargs.get('order_track').source_id.split(','))
 
         if alibaba_tracking_urls:
-            data['fulfillment']['tracking_company'] = "Other"
+            data['fulfillment']['tracking_info']['company'] = "Other"
             if tracking_numbers:
-                data['fulfillment']['tracking_urls'] = [t[1] for t in alibaba_tracking_urls]
+                data['fulfillment']['tracking_info']['url'] = [t[1] for t in alibaba_tracking_urls]
             else:
-                data['fulfillment']['tracking_url'] = alibaba_tracking_urls
+                data['fulfillment']['tracking_info']['url'] = alibaba_tracking_urls
 
         elif (kwargs.get('use_usps') is None and is_usps and not have_custom_domain) or kwargs.get('use_usps'):
-            data['fulfillment']['tracking_company'] = user_config.get('_default_shipping_carrier', 'USPS')
+            data['fulfillment']['tracking_info']['company'] = user_config.get('_default_shipping_carrier', 'USPS')
         elif (kwargs.get('use_usps') is None and not have_custom_domain) and is_shipping_carrier(source_tracking, 'FedEx', any_match=True):
-            data['fulfillment']['tracking_company'] = "FedEx"
+            data['fulfillment']['tracking_info']['company'] = "FedEx"
         elif (not kwargs.get('use_usps') and not have_custom_domain) and is_shipping_carrier(source_tracking, 'UPS', any_match=True):
-            data['fulfillment']['tracking_company'] = "UPS"
+            data['fulfillment']['tracking_info']['company'] = "UPS"
         else:
             aftership_domain = 'https://track.aftership.com/{{tracking_number}}'
 
@@ -1717,11 +1751,11 @@ def order_track_fulfillment(**kwargs):
 
             aftership_domain = add_http_schema(aftership_domain)
 
-            data['fulfillment']['tracking_company'] = "Other"
+            data['fulfillment']['company'] = "Other"
             if tracking_numbers:
-                data['fulfillment']['tracking_urls'] = [aftership_domain.replace('{{tracking_number}}', i) for i in tracking_numbers]
+                data['fulfillment']['tracking_info']['url'] = [aftership_domain.replace('{{tracking_number}}', i) for i in tracking_numbers]
             else:
-                data['fulfillment']['tracking_url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
+                data['fulfillment']['tracking_info']['url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
 
     if user_config.get('validate_tracking_number', False) \
             and not is_valide_tracking_number(source_tracking) \
@@ -2532,6 +2566,34 @@ def activate_suredone_account(sd_account):
                 'message': message,
             }
         )
+
+
+def link_variants_to_new_images(product, new_data, req_data):
+    old_to_new_image_url = json.loads(req_data.get('old_to_new_url', '{}'))
+
+    new_images = new_data['product']['images']
+
+    # Retrieve the current data from Shopify.
+    shopify_product = get_shopify_product(product.store, product.shopify_id)
+    shopify_images = shopify_product['images']
+
+    for shopify_image in shopify_images:
+        old_image_src = shopify_image['src']
+        if old_image_src not in old_to_new_image_url:
+            continue
+
+        # Get the variants that were linked to the previous image.
+        variant_ids = shopify_image.get('variant_ids', [])
+        if not variant_ids:
+            continue
+
+        new_image_src = old_to_new_image_url[old_image_src]
+        for new_image in new_images:
+            if new_image_src == new_image.get('src'):
+                # Link the variants to the updated image.
+                new_image['variant_ids'] = variant_ids
+
+    return new_data
 
 
 class ShopifyOrderUpdater:

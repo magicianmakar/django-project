@@ -12,6 +12,7 @@ from ebay_core.utils import EbayUtils, get_ebay_currencies_list
 from fp_affiliate.settings import FIRST_PROMOTER_DASHBOARD_URL
 from goals.utils import get_dashboard_user_goals
 from leadgalaxy.models import DashboardVideo, DescriptionTemplate, GroupPlan, PriceMarkupRule
+from leadgalaxy.tasks import fulfullment_service_check
 from lib.exceptions import capture_message
 from shopified_core import permissions
 from shopified_core.mocks import get_mocked_config_alerts
@@ -84,6 +85,8 @@ class HomePageMixing(TemplateView):
                 if not user.get_config('__fp_partners_redirect'):
                     user.set_config('__fp_partners_redirect', True)
                     return redirect(FIRST_PROMOTER_DASHBOARD_URL)
+
+        fulfullment_service_check.apply_async(args=[user.id], queue='priority_high', expires=200)
 
         ctx.update({
             'config': config,

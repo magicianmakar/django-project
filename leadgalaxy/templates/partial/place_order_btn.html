@@ -84,8 +84,10 @@
             <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Mark as Ordered</a></li>
             {% endif %}
 
-            {% if not item.fulfillment_status and not order.pending_payment %}
-            <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.order_track.source_tracking}}">Mark as Fulfilled</a></li>
+            {% if not item.fulfillment_status or item.fulfillment_status == 'partial' %}
+                {% if not order.pending_payment %}
+                <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.order_track.source_tracking}}">Mark as Fulfilled</a></li>
+                {% endif %}
             {% endif %}
 
             {% if user_admitad_credentials %}

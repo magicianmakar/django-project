@@ -76,15 +76,7 @@ class ShopifyOrderExport():
         return data
 
     def _post_fulfillment(self, data, order_id, fulfillment_id):
-        if fulfillment_id:
-            url = '/admin/orders/{}/fulfillments/{}.json'.format(order_id, fulfillment_id)
-            data['fulfillment']['id'] = fulfillment_id
-            response = self._put_response_from_url(url=url, data=data)
-        else:
-            url = '/admin/orders/{}/fulfillments.json'.format(order_id)
-            response = self._post_response_from_url(url=url, data=data)
-
-        return response.ok
+        raise NotImplementedError
 
     def _create_url_params(self):
         params = {}
@@ -255,57 +247,7 @@ class ShopifyOrderExport():
         }
 
     def get_data(self, page=1, limit=GENERATED_PAGE_LIMIT):
-        if not self.query.found_order_ids:
-            return []
-
-        orders = self._get_orders(params={'ids': self.query.found_order_ids}, page=page, limit=limit)
-
-        vendor = self.order_export.filters.vendor.lower()
-        vendor_no_spaces = re.sub(r'\s+', '.*?', vendor)
-        vendor_compiled = re.compile(vendor_no_spaces, re.I)
-
-        fields = self.order_export.fields_choices
-        line_fields = self.order_export.line_fields_choices
-        shipping_address = self.order_export.shipping_address_choices
-
-        lines = []
-        for order in orders:
-            line = {'fields': {}, 'shipping_address': {}, 'line_items': []}
-            line['fields']['id'] = str(order['id'])
-
-            if len(fields):
-                for field in fields:
-                    line['fields'][field[0]] = str(order[field[0]])
-
-            if len(shipping_address) and 'shipping_address' in order:
-                for field in shipping_address:
-                    line['shipping_address'][field[0]] = str(order['shipping_address'][field[0]])
-
-            if len(line_fields) and 'line_items' in order:
-                for line_item in order['line_items']:
-                    if vendor.strip() != '' and vendor_compiled.search(line_item['vendor']) is None:
-                        continue
-
-                    items = {}
-                    for line_field in line_fields:
-                        items[line_field[0]] = str(line_item[line_field[0]])
-
-                    items['id'] = line_item['id']
-                    for fulfillment in order['fulfillments']:
-                        for line_item in fulfillment['line_items']:
-                            if items['id'] == line_item['id']:
-                                items['tracking_number'] = fulfillment.get('tracking_number') or ''
-                                items['fulfillment_id'] = fulfillment['id']
-                                break
-
-                        if items.get('tracking_number'):
-                            break
-
-                    line['line_items'].append(items)
-
-            lines.append(line)
-
-        return lines
+        raise NotImplementedError
 
     def create_csv(self, orders=None):
         if orders is None:

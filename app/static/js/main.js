@@ -1331,7 +1331,9 @@ $('.find-user-cp').click(function(e) {
         closeOnConfirm: false,
         animation: "slide-from-top",
         inputPlaceholder: $(e.currentTarget).data('desc'),
-        showLoaderOnConfirm: true
+        showLoaderOnConfirm: true,
+        imageUrl: '//cdn.dropified.com/static/img/person-add.svg',
+        imageSize: '120x120',
     }, function(inputValue) {
         if (inputValue === false) return false;
         inputValue = inputValue.trim();

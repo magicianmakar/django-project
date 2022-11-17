@@ -218,7 +218,7 @@
                         item.tradeDesc = '0 order';
                     }
 
-                    item.lowImageUrl = '/static/img/blank.gif';
+                    item.lowImageUrl = '//cdn.dropified.com/static/img/blank.gif';
                     item.imageUrl = item.imageUrl.replace(/_[0-9]+x[0-9]+[a-z]*\.([a-z]+)/, '_640x640.$1');
 
                     var productEl = $(produtcTpl({

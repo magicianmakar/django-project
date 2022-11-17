@@ -14,6 +14,7 @@ urlpatterns = [
     path('shopify/orders-create', webhooks.views.ShopifyOrderCreateWebhook.as_view()),
     path('shopify/orders-updated', webhooks.views.ShopifyOrderUpdateWebhook.as_view()),
     path('shopify/orders-delete', webhooks.views.ShopifyOrderDeleteWebhook.as_view()),
+    path('shopify/fulfillment/<str:name>', webhooks.views.ShopifyFulfillmentOrderWebhook.as_view()),
 
     # Shopify Other Webhooks
     path('shopify/shop-update', webhooks.views.ShopifyShopUpdateWebhook.as_view()),

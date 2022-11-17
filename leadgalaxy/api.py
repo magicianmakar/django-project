@@ -1548,7 +1548,7 @@ class ShopifyStoreApi(ApiBase):
         api_data = utils.order_track_fulfillment(**fulfillment_data)
 
         rep = requests.post(
-            url=store.api('orders', data.get('fulfill-order-id'), 'fulfillments'),
+            url=store.api('fulfillments'),
             json=api_data
         )
 
