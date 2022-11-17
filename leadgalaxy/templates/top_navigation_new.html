@@ -6,6 +6,11 @@
             <nav class="navbar  white-bg lifetime-ui" role="navigation" style="margin-bottom: 0;">
                 <div class="navbar-head navbar-static-top affix">
                     <div style="display: flex; align-items: center;">
+                        <div id="hamburger" class="menu">
+                            <a class="navbar-minimalize leftnavbar hamburger old-layout-hidden m-none" href="#">
+                                <i class="fa fa-bars fa-2x"></i>
+                            </a>
+                        </div>
                         <div class="logo" style="position: fixed;">
                             <a href="{% if request.user|can:'dashboard.view' %}{% url 'dashboard' %}{% else %}{% url 'index' %}{% endif %}">
                                 <img src="{% static 'dropified-logo-2.svg' %}"/>

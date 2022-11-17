@@ -1673,6 +1673,12 @@ li.border-right {
     margin: 6px 0px 0 -2px;
 }
 
+#hamburger.menu,
+#hamburger.menu > .navbar-minimalize.hamburger {
+    border: 0;
+    margin-top: -4px;
+}
+
 .new .navbar-minimalize.leftnavbar:after {
     content: none;
 }
@@ -3348,8 +3354,8 @@ textarea.note {
 }
 
 .menu {
-    padding: 20px 0;
-    margin: 0 16px;
+    padding: 0 10px;
+    margin: -4px 16px 0 16px;
     border-bottom: 1px solid #E8E8E8;
     display: flex;
     align-items: center;
