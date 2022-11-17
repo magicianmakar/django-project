@@ -2,7 +2,7 @@ version: 2
 defaults: &defaults
   working_directory: ~/ShopifiedApp/webapp
   docker:
-    - image: circleci/python:3.8.10-node
+    - image: circleci/python:3.8.15-node
       environment:
         SECRET_KEY: dBEn2nkwPvlKuEwrQtBwMLlOOTm3TObmllyOb0j6ZepIqztLQh28oItsJQCbVsF1
 
@@ -120,6 +120,7 @@ jobs:
 
       - run:
           name: Django Tests
+          no_output_timeout: 30m
           command: |
             source venv/bin/activate
             coverage run ./manage.py test --noinput -v2 --exclude-tag excessive
@@ -155,6 +156,7 @@ jobs:
 
       - run:
           name: Django Compressor
+          no_output_timeout: 30m
           command: |
             source venv/bin/activate
             DEBUG_APP="FALSE" python manage.py compress
@@ -162,10 +164,10 @@ jobs:
   deploy:
     working_directory: ~/ShopifiedApp/webapp
     docker:
-      - image: circleci/python:3.6.10
+      - image: circleci/python:3.8.15
     steps:
       - run:
-          name: Deploy Master to Heroku
+          name: Deploy to Heroku
           command: |
             echo "Manual Deploy Only"
 
@@ -180,3 +182,7 @@ workflows:
       - statics:
           requires:
             - build
+      - deploy
+          requires:
+            - test
+            - statics
