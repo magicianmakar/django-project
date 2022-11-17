@@ -569,7 +569,7 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
             'name': title,
             'quantity': self.quantity,
             'sku': self.label.user_supplement.shipstation_sku,
-            'unitPrice': float(self.label.user_supplement.cost_price),
+            'unitPrice': float(self.label.user_supplement.price),
             'imageUrl': self.label.image,
         }, {
             'name': f'Label for {title}',
