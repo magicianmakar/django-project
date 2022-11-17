@@ -2,8 +2,10 @@
 import json
 import phonenumbers
 import requests
+import re
 from collections import defaultdict
 
+from pyquery import PyQuery
 from django.core.cache import cache
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import reverse
@@ -639,7 +641,7 @@ class AliexpressProduct():
             aliexpress_product_obj.target_currency = 'USD'
             response = aliexpress_product_obj.getResponse(authrize=self.aliexpress_account.access_token)
             response = response['aliexpress_ds_product_get_response']
-            cache.set(cache_key, response.get('result'), timeout=600)
+            cache.set(cache_key, response.get('result'), timeout=43200)
             aliexpress_product_result = response.get('result')
         return aliexpress_product_result
 
@@ -717,12 +719,14 @@ class AliexpressProduct():
 
 
 class ShippingMethods():
-    def __init__(self, line_item, shipping_address, aliexpress_account):
+    def __init__(self, line_item, shipping_address, aliexpress_account, sku, price):
         self.product_id = line_item['source_id']
         self.quantity = line_item['quantity']
         self.aliexpress_account = aliexpress_account
         self.shipping_address = shipping_address
         self.variant = line_item.get('variant', {})
+        self.sku = sku
+        self.price = price
 
     def get_shipping_data(self):
         aliexpress_obj = ShippingInfo()
@@ -761,7 +765,9 @@ class ShippingMethods():
             "send_goods_country_code": send_goods_country_code
         }
         aliexpress_obj.set_info(json.dumps(data, indent=0))
-        shipping_data = aliexpress_shipping_info(data['product_id'], data['country_code'], data['send_goods_country_code'])
+        obj = AliexpressApi()
+        shipping_data = obj.aliexpress_shipping_info(data['product_id'], data['country_code'],
+                                                     data['send_goods_country_code'], 0, self.sku, self.price)
 
         if len(shipping_data['freight']) > 0:
             shipping_services = [{
@@ -846,11 +852,11 @@ class AliexpressApi(ApiResponseMixin):
         return self.api_success()
 
     def post_import_aliexpress_data(self, request, user, data):
-        shipping_data = self.import_shipping_method(user, data)
         product_data = self.import_ali_product_data(user, data)
+        shipping_data = self.import_shipping_method(user, data, product_data.get('sku'), product_data.get('price'))
         return self.api_success({**shipping_data, **product_data})
 
-    def post_import_aliexpress_data_bundle(self, request, user, data):
+    def post_import_aliexpress_data_bundle(self, request, user, data, sku=None):
         temp_data = data
         for count, i in enumerate(data['order']['order_data']['products']):
             temp_data['order']['order_data']['source_id'] = i.get('source_id')
@@ -865,7 +871,7 @@ class AliexpressApi(ApiResponseMixin):
             data['order']['order_data']['products'][count]['stock'] = product_data.get('stock')
         return self.api_success({'data': data})
 
-    def import_shipping_method(self, user, data):
+    def import_shipping_method(self, user, data, sku, price):
         try:
             cache_key = f"aliexpress_shipping_method_{data['order']['store']}_{data['order']['order_id']}_{data['order']['order_data']['source_id']}"
             aliexpress_shipping_result = cache.get(cache_key, {})
@@ -894,7 +900,7 @@ class AliexpressApi(ApiResponseMixin):
                 'quantity': data['order']['order_data']['quantity'],
                 'variant': variant_title
             }
-            shipping_obj = ShippingMethods(line_item, data['order']['order_data']['shipping_address'], aliexpress_account)
+            shipping_obj = ShippingMethods(line_item, data['order']['order_data']['shipping_address'], aliexpress_account, sku, price)
             shipping_data = shipping_obj.get_shipping_data()
             if shipping_data is None:
                 return {'data': {}}
@@ -930,3 +936,153 @@ class AliexpressApi(ApiResponseMixin):
             return p_data[variant]
         except:
             return {'sku': '', 'price': '', 'stock': '', 'variant': False}
+
+    def number_from_str(p, n_type=float):
+        return n_type(re.sub(r'[^0-9\.]', '', p)) if p else None
+
+    def safeGet(self, data, *keys, default=None):
+        for key in keys:
+            try:
+                data = data[key]
+            except KeyError:
+                return default
+        return data
+
+    def parse_product_new(self, content):
+        try:
+            pq = PyQuery(content)
+            params = None
+            for js in pq('script'):
+                if not js.text or 'window.runParams' not in js.text:
+                    continue
+
+                for line in js.text.split("\n"):
+                    if 'skuModule' in line:
+                        line = line.replace('data: ', '')
+                        if line.endswith(','):
+                            line = line.rstrip(',')
+                        params = json.loads(line)
+                        break
+            variants = self.safeGet(params, 'skuModule', 'skuPriceList', default=[])
+            return variants
+        except Exception:
+            return ''
+
+    def aliexpress_shipping_info(self, aliexpress_id, country_code, sendGoodsCountry='CN', iteration=0, sku='', price=''):
+        shipment_key = f'ali_shipping_info__{aliexpress_id}_{country_code}_{sendGoodsCountry}_{sku}'
+        html_key = f'aliexpress_html_data_{aliexpress_id}'
+        freight_data = cache.get(shipment_key)
+        html_data = cache.get(html_key)
+        product_url = f"https://www.aliexpress.us/item/{aliexpress_id}.html??gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US"
+
+        headers = {
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'accept-encoding': 'gzip, deflate, br',
+            'accept-language': 'en-US,en;q=0.8,fr;q=0.6',
+            'cache-control': 'ax-age=0',
+            'origin': 'https://www.aliexpress.us',
+            'referer': product_url,
+            'user-agent': "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+            "Chromium/81.0.4044.138 Chrome/81.0.4044.138 Safari/537.36",
+        }
+
+        try:
+            if html_data is None:
+                r = requests.get(product_url, headers=headers, verify=False, timeout=15)
+                html_data = r.text
+                cache.set(html_key, html_data, timeout=43200)
+
+            skuIdStr = ''
+            variant_data = self.parse_product_new(html_data)
+            for x in variant_data:
+                if x.get('skuAttr') == sku:
+                    skuIdStr = x.get("skuIdStr")
+        except Exception:
+            capture_exception()
+
+        if freight_data is not None and freight_data:
+            return {
+                **freight_data,
+                'cached': True
+            }
+
+        provinceCode = ''
+        cityCode = ''
+
+        if iteration > 0:
+            if country_code == 'US':
+                provinceCode = '922865760000000000'
+                cityCode = '922865766013000000'
+
+        params = {
+            "productId": aliexpress_id,
+            "count": 1,
+            "country": country_code,
+            "provinceCode": provinceCode,
+            "cityCode": cityCode,
+            "tradeCurrency": 'USD',
+            "minPrice": str(price),
+            "maxPrice": str(price),
+            "displayMultipleFreight": False,
+            "userScene": 'PC_DETAIL_SHIPPING_PANEL',
+            "sendGoodsCountry": "201336100",
+        }
+
+        ext = {
+            "p0": skuIdStr,
+            "p1": str(price),
+            "p3": "USD",
+            "p6": "null"
+        }
+        ext = json.dumps(ext)
+
+        if ext:
+            params["ext"] = ext
+
+        if iteration > 1:
+            del params['minPrice']
+            del params['maxPrice']
+
+        headers = {
+            'referer': f'https://www.aliexpress.com/item/{aliexpress_id}.html'
+        }
+
+        freight_data = []
+
+        try:
+            r = requests.get(
+                url="https://www.aliexpress.com/aeglodetailweb/api/logistics/freight",
+                headers=headers,
+                params=params,
+                timeout=10)
+
+            freight_data = r.json()['body']['freightResult']
+        except KeyError:
+            pass
+        except:
+            capture_exception()
+
+        shippement_data = {
+            'freight': []
+        }
+
+        for i in freight_data:
+            shippement_data['freight'].append({
+                'price': i['freightAmount']['value'],
+                'companyDisplayName': i['company'],
+                'company': i['serviceName'],
+                'time': i['time'],
+                'isTracked': i['tracking'],
+            })
+
+        if len(shippement_data['freight']):
+            cache.set(shipment_key, shippement_data, timeout=43200)
+        else:
+            if iteration < 2:
+                return aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry, iteration + 1)
+
+        return {
+            **shippement_data,
+            'iterations': iteration,
+            'cached': False
+        }
