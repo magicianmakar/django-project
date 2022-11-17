@@ -2,7 +2,7 @@ version: 2
 defaults: &defaults
   working_directory: ~/ShopifiedApp/webapp
   docker:
-    - image: circleci/python:3.8.15-node
+    - image: cimg/python:3.8.15-node
       environment:
         SECRET_KEY: dBEn2nkwPvlKuEwrQtBwMLlOOTm3TObmllyOb0j6ZepIqztLQh28oItsJQCbVsF1
 
@@ -39,7 +39,7 @@ defaults: &defaults
         STRIPE_PUBLIC_KEY: ""
         STRIPE_SECRET_KEY: ""
 
-    - image: circleci/postgres:12.7
+    - image: cimg/postgres:12.7
       environment:
         POSTGRES_USER: ubuntu
         POSTGRES_DB: circle_test
@@ -164,7 +164,7 @@ jobs:
   deploy:
     working_directory: ~/ShopifiedApp/webapp
     docker:
-      - image: circleci/python:3.8.15
+      - image: cimg/python:3.8.15
     steps:
       - run:
           name: Deploy to Heroku
