@@ -3385,8 +3385,12 @@ textarea.note {
 }
 
 .select-country:invalid{
-height: 45px !important;
-opacity: 0 !important;
-position: absolute !important;
-display: flex !important;
+    height: 45px !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    display: flex !important;
+}
+
+.rating-star {
+    cursor: pointer;
 }
