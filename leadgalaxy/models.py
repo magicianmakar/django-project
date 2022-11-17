@@ -1519,13 +1519,33 @@ class ShopifyStore(StoreBase):
             json=api_data
         )
 
-        rep.raise_for_status()
+        if rep.ok:
+            self.dropified_fulfillment_service = rep.json()['fulfillment_service']['id']
+            self.dropified_location = rep.json()['fulfillment_service']['location_id']
+            self.save()
 
-        self.dropified_fulfillment_service = rep.json()['fulfillment_service']['id']
-        self.dropified_location = rep.json()['fulfillment_service']['location_id']
-        self.save()
+            return self.dropified_location
+        else:
+            if "You already have a location with this name" in rep.text:
+                rep = requests.get(url=self.api('fulfillment_services'))
+                rep.raise_for_status()
 
-        return self.dropified_location
+                for service in rep.json()['fulfillment_services']:
+                    if service['name'] == 'Dropified':
+                        rep = requests.put(
+                            url=self.api('fulfillment_services', service['id']),
+                            json=api_data
+                        )
+
+                        rep.raise_for_status()
+
+                        self.dropified_fulfillment_service = service['id']
+                        self.dropified_location = service['location_id']
+                        self.save()
+
+                        return self.dropified_location
+            else:
+                rep.raise_for_status()
 
     def get_locations(self, fulfillments_only=False, active_only=True):
         try:
