@@ -107,7 +107,6 @@ PyJWT==2.1.0
 PyNaCl==1.4.0
 pyOpenSSL==22.0.0
 pyparsing==2.4.7
-pyquery==1.4.3
 PySocks==1.7.0
 python-barcode==0.10.0
 python-dateutil==2.8.2
