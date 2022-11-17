@@ -7,13 +7,9 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 
+from shopified_core.exceptions import RedirectException
 from . import settings as app_settings
 from .utils import create_fp_user
-
-
-class RedirectException(Exception):
-    def __init__(self, url):
-        self.url = url
 
 
 class IndexView(TemplateView):

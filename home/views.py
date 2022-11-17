@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import TemplateView, View
+from django.http import HttpResponseRedirect
 
 from alibaba_core.utils import get_access_token_url as get_alibaba_access_token_url
 from ebay_core.utils import EbayUtils, get_ebay_currencies_list
@@ -18,6 +19,7 @@ from shopified_core import permissions
 from shopified_core.mocks import get_mocked_config_alerts
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import jwt_encode
+from shopified_core.exceptions import RedirectException
 from aliexpress_core.models import AliexpressAccount
 from profit_dashboard.views import index
 from profits.utils import get_store_from_request
@@ -34,10 +36,13 @@ class HomePageMixing(TemplateView):
     @method_decorator(login_required)
     @method_decorator(xframe_options_exempt)
     def dispatch(self, request, *args, **kwargs):
-        if request.path == '/' and request.user.profile.plan.is_research:
-            return redirect('dashboard')
-        else:
-            return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            return super().get(request, *args, **kwargs)
+        except RedirectException as e:
+            return HttpResponseRedirect(e.url)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -80,11 +85,11 @@ class HomePageMixing(TemplateView):
             upsell_alerts = True
             config.update(get_mocked_config_alerts())
 
-        if FIRST_PROMOTER_DASHBOARD_URL and not user.is_subuser:
+        if FIRST_PROMOTER_DASHBOARD_URL and not user.is_subuser and not self.request.session.get('is_hijacked_user'):
             if user.profile.plan.is_free:
                 if not user.get_config('__fp_partners_redirect'):
                     user.set_config('__fp_partners_redirect', True)
-                    return redirect(FIRST_PROMOTER_DASHBOARD_URL)
+                    raise HttpResponseRedirect(url=FIRST_PROMOTER_DASHBOARD_URL)
 
         fulfullment_service_check.apply_async(args=[user.id], queue='priority_high', expires=200)
 
