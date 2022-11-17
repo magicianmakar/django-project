@@ -1611,8 +1611,10 @@ def is_shipping_carrier(tracking_number, carrier, any_match=False):
 
 
 def order_fulfillement(store, order_id, line_id):
-    rep = requests.get(store.api('orders', order_id, 'fulfillment_orders'))
-    if rep.ok:
+    try:
+        rep = requests.get(store.api('orders', order_id, 'fulfillment_orders'))
+        rep.raise_for_status()
+
         for order in rep.json()['fulfillment_orders']:
             if order['status'] == 'closed':
                 continue
@@ -1620,6 +1622,8 @@ def order_fulfillement(store, order_id, line_id):
             for item in order['line_items']:
                 if item['line_item_id'] == int(line_id):
                     return order, item
+    except:
+        capture_exception()
 
     return None, None
 
