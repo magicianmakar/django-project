@@ -90,21 +90,21 @@
                         <a class="store-link" href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
                     <td class="no-wrap text-right">
-                        {% if item.version == 1 %}
-                        <a href="{% url 'product' %}?store={{ item.id }}" class="label label-danger re-install-store"
+                        {% if item.need_reauthorization %}
+                        <a href="{% url 'product' %}?store={{ item.id }}" class="btn btn-xs btn-danger m-r-sm re-install-store"
                             store-id="{{item.id}}" store-shop="{{item.get_shop}}">
                             Upgrade required
-                            {% include 'partial/help_tooltip.html' with help="You've installed Dropified on this store as a Private App, please click here to re-install using Shopify's recommended method. You won't lose any data." qtipstyle="color:#FFF" %}
+                            {% include 'partial/help_tooltip.html' with help="Please click here to re-install Dropified on your Shopify store." qtipstyle="color:#FFF" %}
                         </a>
                         {% endif %}
 
-                        <a href="{% url 'product' %}?store={{ item.id }}" class="label">Products</a>
+                        <a href="{% url 'product' %}?store={{ item.id }}" class="btn btn-xs">Products</a>
                     </td>
                     <td>
-                        <a href="{% url 'orders' %}?store={{ item.id }}" class="label">Orders</a>
+                        <a href="{% url 'orders' %}?store={{ item.id }}" class="btn btn-xs">Orders</a>
                     </td>
                     <td>
-                        <a href="{% url 'orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                        <a href="{% url 'orders_track' %}?store={{ item.id }}" class="btn btn-xs">Tracking</a>
                     </td>
 
                     {% if not user.is_subuser %}
@@ -181,13 +181,13 @@
                         <a class="store-link" href="{% url 'chq:products_list' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
                     <td class="no-wrap text-right">
-                        <a href="{% url 'chq:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                        <a href="{% url 'chq:products_list' %}?store={{ item.id }}" class="btn btn-xs">Products</a>
                     </td>
                     <td>
-                        <a href="{% url 'chq:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                        <a href="{% url 'chq:orders_list' %}?store={{ item.id }}" class="btn btn-xs">Orders</a>
                     </td>
                     <td>
-                        <a href="{% url 'chq:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                        <a href="{% url 'chq:orders_track' %}?store={{ item.id }}" class="btn btn-xs">Tracking</a>
                     </td>
                     {% if not user.is_subuser %}
                     <td style="white-space:nowrap" class="hidden-sm hidden-xs">
@@ -259,13 +259,13 @@
                         <a class="store-link" href="{% url 'woo:products_list' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
                     <td class="no-wrap text-right">
-                        <a href="{% url 'woo:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                        <a href="{% url 'woo:products_list' %}?store={{ item.id }}" class="btn btn-xs">Products</a>
                     </td>
                     <td>
-                        <a href="{% url 'woo:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                        <a href="{% url 'woo:orders_list' %}?store={{ item.id }}" class="btn btn-xs">Orders</a>
                     </td>
                     <td>
-                        <a href="{% url 'woo:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                        <a href="{% url 'woo:orders_track' %}?store={{ item.id }}" class="btn btn-xs">Tracking</a>
                     </td>
                     {% if not user.is_subuser %}
                     <td style="white-space:nowrap" class="hidden-sm hidden-xs">
@@ -338,13 +338,13 @@
                             <a class="store-link" href="{% url 'ebay:products_list' %}?store={{item.id}}">{{item.title}}</a>
                         </td>
                         <td class="no-wrap text-right">
-                            <a href="{% url 'ebay:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                            <a href="{% url 'ebay:products_list' %}?store={{ item.id }}" class="btn btn-xs">Products</a>
                         </td>
                         <td>
-                            <a href="{% url 'ebay:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                            <a href="{% url 'ebay:orders_list' %}?store={{ item.id }}" class="btn btn-xs">Orders</a>
                         </td>
                         <td>
-                            <a href="{% url 'ebay:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                            <a href="{% url 'ebay:orders_track' %}?store={{ item.id }}" class="btn btn-xs">Tracking</a>
                         </td>
                     {% else %}
                         <td class="drag-show">
@@ -477,13 +477,13 @@
                         {% endif %}
                     {% else %}
                         <td class="no-wrap text-right">
-                            <a href="{% url 'fb:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                            <a href="{% url 'fb:products_list' %}?store={{ item.id }}" class="btn btn-xs">Products</a>
                         </td>
                         <td>
-                            <a href="{% url 'fb:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                            <a href="{% url 'fb:orders_list' %}?store={{ item.id }}" class="btn btn-xs">Orders</a>
                         </td>
                         <td>
-                            <a href="{% url 'fb:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                            <a href="{% url 'fb:orders_track' %}?store={{ item.id }}" class="btn btn-xs">Tracking</a>
                         </td>
 
                         {% if not user.is_subuser %}
@@ -619,13 +619,13 @@
                         {% endif %}
                     {% else %}
                         <td class="no-wrap text-right">
-                            <a href="{% url 'google:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                            <a href="{% url 'google:products_list' %}?store={{ item.id }}" class="btn btn-xs">Products</a>
                         </td>
                         <td>
-                            <a href="{% url 'google:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                            <a href="{% url 'google:orders_list' %}?store={{ item.id }}" class="btn btn-xs">Orders</a>
                         </td>
                         <td>
-                            <a href="{% url 'google:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                            <a href="{% url 'google:orders_track' %}?store={{ item.id }}" class="btn btn-xs">Tracking</a>
                         </td>
 
                         {% if not user.is_subuser %}
@@ -690,13 +690,13 @@
                         <a class="store-link" href="{% url 'gear:products_list' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
                     <td class="no-wrap text-right">
-                        <a href="{% url 'gear:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                        <a href="{% url 'gear:products_list' %}?store={{ item.id }}" class="btn btn-xs">Products</a>
                     </td>
                     <td>
-                        <a href="{% url 'gear:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                        <a href="{% url 'gear:orders_list' %}?store={{ item.id }}" class="btn btn-xs">Orders</a>
                     </td>
                     <td>
-                        <a href="{% url 'gear:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                        <a href="{% url 'gear:orders_track' %}?store={{ item.id }}" class="btn btn-xs">Tracking</a>
                     </td>
                     {% if not user.is_subuser %}
                     <td style="white-space:nowrap" class="hidden-sm hidden-xs">
@@ -761,13 +761,13 @@
                         <a class="store-link" href="{% url 'gkart:products_list' %}?store={{ item.id }}">{{item.title}}</a>
                     </td>
                     <td class="no-wrap text-right">
-                        <a href="{% url 'gkart:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                        <a href="{% url 'gkart:products_list' %}?store={{ item.id }}" class="btn btn-xs">Products</a>
                     </td>
                     <td>
-                        <a href="{% url 'gkart:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                        <a href="{% url 'gkart:orders_list' %}?store={{ item.id }}" class="btn btn-xs">Orders</a>
                     </td>
                     <td>
-                        <a href="{% url 'gkart:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                        <a href="{% url 'gkart:orders_track' %}?store={{ item.id }}" class="btn btn-xs">Tracking</a>
                     </td>
 
                     {% if not user.is_subuser %}
@@ -840,13 +840,13 @@
                         <a class="store-link" href="{% url 'bigcommerce:products_list' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
                     <td class="no-wrap text-right">
-                        <a href="{% url 'bigcommerce:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                        <a href="{% url 'bigcommerce:products_list' %}?store={{ item.id }}" class="btn btn-xs">Products</a>
                     </td>
                     <td>
-                        <a href="{% url 'bigcommerce:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                        <a href="{% url 'bigcommerce:orders_list' %}?store={{ item.id }}" class="btn btn-xs">Orders</a>
                     </td>
                     <td>
-                        <a href="{% url 'bigcommerce:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                        <a href="{% url 'bigcommerce:orders_track' %}?store={{ item.id }}" class="btn btn-xs">Tracking</a>
                     </td>
 
                     {% if not user.is_subuser %}
@@ -902,13 +902,13 @@
                         <a class="store-link" href="{% url 'fb_marketplace:products_list' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
                     <td class="no-wrap text-right">
-                        <a href="{% url 'fb_marketplace:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                        <a href="{% url 'fb_marketplace:products_list' %}?store={{ item.id }}" class="btn btn-xs">Products</a>
                     </td>
                     <td>
-                        <a href="#" class="label">Orders</a>
+                        <a href="#" class="btn btn-xs">Orders</a>
                     </td>
                     <td>
-                        <a href="#" class="label">Tracking</a>
+                        <a href="#" class="btn btn-xs">Tracking</a>
                     </td>
 
                     {% if not user.is_subuser %}

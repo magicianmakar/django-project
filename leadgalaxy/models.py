@@ -1226,6 +1226,9 @@ class ShopifyStore(StoreBase):
     def __str__(self):
         return self.title
 
+    def need_reauthorization(self):
+        return self.version == 1 or sorted(self.scope.split(',')) != sorted(settings.SHOPIFY_API_SCOPE)
+
     def get_link(self, page=None, api=False, version=SHOPIFY_API_VERSION):
         if api:
             raise NotImplementedError("Use ShoifyStore.api to get API links")
