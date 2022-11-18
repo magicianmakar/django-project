@@ -1545,7 +1545,10 @@ class ShopifyStoreApi(ApiBase):
             }
         }
 
-        api_data = utils.order_track_fulfillment(**fulfillment_data)
+        if store.need_reauthorization():
+            api_data = utils.order_track_fulfillment_deprecate(**fulfillment_data)
+        else:
+            api_data = utils.order_track_fulfillment(**fulfillment_data)
 
         rep = requests.post(
             url=store.api('fulfillments'),

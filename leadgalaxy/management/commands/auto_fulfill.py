@@ -127,11 +127,17 @@ class Command(DropifiedBaseCommand):
 
         # self.raven_context_from_store(raven_client, store, tags={'order': order.order_id, 'track': order.id})
 
-        api_data, line = utils.order_track_fulfillment(
+        fulfill_kwargs = dict(
             order_track=order,
             user_config=user.get_config(),
             return_line=True,
-            location_id=self.store_locations.get(order.store.id))
+            location_id=self.store_locations.get(order.store.id)
+        )
+
+        if store.need_reauthorization():
+            api_data, line = utils.order_track_fulfillment_deprecate(**fulfill_kwargs)
+        else:
+            api_data, line = utils.order_track_fulfillment(**fulfill_kwargs)
 
         locations = []
         trying_locations = False
