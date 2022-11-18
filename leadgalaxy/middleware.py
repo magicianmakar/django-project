@@ -10,7 +10,7 @@ from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
 
-from shopified_core.utils import app_link, save_user_ip, encode_params
+from shopified_core.utils import app_link, last_executed, save_user_ip, encode_params
 from lib.exceptions import capture_exception
 
 Cookie.Morsel._reserved['samesite'] = 'SameSite'
@@ -178,6 +178,7 @@ class ShopifyScopeCheckMiddleware(object):
                 store = request.user.profile.get_shopify_stores().first()
                 if store.need_reauthorization():
                     shop_name = store.shop.split('.')[0]
-                    return HttpResponseRedirect(app_link('/shopify/install', shop_name, reinstall=store.id, scope=1))
+                    if not last_executed(f'need_reauthorization_{shop_name}', 600):
+                        return HttpResponseRedirect(app_link('/shopify/install', shop_name, reinstall=store.id, scope=1))
 
         return self.get_response(request)
