@@ -171,16 +171,13 @@ class ShopifyScopeCheckMiddleware(object):
     def __call__(self, request):
         if request.user.is_authenticated \
                 and request.method == 'GET' \
-                and not request.path.startswith('/webhook/') \
-                and not request.path.startswith('/shopify/') \
-                and not request.path.startswith('/api/') \
-                and not request.path.startswith('/admin/') \
+                and request.path == '/' \
                 and not request.session.get('is_hijacked_user') \
                 and not request.user.is_subuser:
             if request.user.profile.get_shopify_stores().count() == 1:
                 store = request.user.profile.get_shopify_stores().first()
                 if store.need_reauthorization():
                     shop_name = store.shop.split('.')[0]
-                    return HttpResponseRedirect(app_link('/shopify/install', shop_name, reinstall=store.id))
+                    return HttpResponseRedirect(app_link('/shopify/install', shop_name, reinstall=store.id, scope=1))
 
         return self.get_response(request)
