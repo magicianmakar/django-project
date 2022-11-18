@@ -127,11 +127,12 @@ class Command(DropifiedBaseCommand):
 
         # self.raven_context_from_store(raven_client, store, tags={'order': order.order_id, 'track': order.id})
 
-        api_data, line = utils.order_track_fulfillment(
+        fulfill_kwargs = dict(
             order_track=order,
             user_config=user.get_config(),
             return_line=True,
-            location_id=self.store_locations.get(order.store.id))
+            location_id=self.store_locations.get(order.store.id)
+        )
 
         locations = []
         trying_locations = False
@@ -145,10 +146,7 @@ class Command(DropifiedBaseCommand):
                 break
 
             try:
-                rep = requests.post(
-                    url=store.api('fulfillments'),
-                    json=api_data
-                )
+                api_data, line, rep = utils.do_order_fulfillment(store, fulfill_kwargs)
 
                 rep.raise_for_status()
 
