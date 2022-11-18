@@ -611,24 +611,30 @@ def sync_shopify_product_quantities(self, product_id):
                 }]
         else:
             variant_quantities = get_supplier_variants(product.default_supplier.supplier_type(), product.default_supplier.get_source_id())
-        if product_data and variant_quantities:
-            for variant in variant_quantities:
-                sku = variant.get('sku')
-                if not sku:
-                    if len(product_data['variants']) == 1 and len(variant_quantities) == 1:
-                        idx = 0
-                    else:
-                        continue
-                else:
-                    idx = variant_index_from_supplier_sku(product, sku, product_data['variants'])
-                    if idx is None:
+
+        if product_data:
+            if variant_quantities:
+                for variant in variant_quantities:
+                    sku = variant.get('sku')
+                    if not sku:
                         if len(product_data['variants']) == 1 and len(variant_quantities) == 1:
                             idx = 0
                         else:
                             continue
+                    else:
+                        idx = variant_index_from_supplier_sku(product, sku, product_data['variants'])
+                        if idx is None:
+                            if len(product_data['variants']) == 1 and len(variant_quantities) == 1:
+                                idx = 0
+                            else:
+                                continue
 
-                product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
-                time.sleep(0.5)
+                    product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
+                    time.sleep(0.5)
+            elif product.default_supplier.supplier_type() == 'aliexpress':
+                for variant in product_data['variants']:
+                    product.set_variant_quantity(quantity=100, variant=variant)
+                    time.sleep(0.5)
 
         cache.delete('product_inventory_sync_shopify_{}_{}'.format(product.id, product.default_supplier.id))
 
