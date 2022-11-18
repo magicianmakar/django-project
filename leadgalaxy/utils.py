@@ -1870,34 +1870,22 @@ def order_track_fulfillment_deprecate(**kwargs):
     except:
         capture_exception()
 
-    store = ShopifyStore.objects.get(id=store_id)
-    fulfillemenet_order, fulfillemenet_item = order_fulfillement(store, order_id, line_id)
-
     data = {
         "fulfillment": {
-            "location_id": fulfillemenet_order['assigned_location_id'],
-            "line_items_by_fulfillment_order": [
-                {
-                    "fulfillment_order_id": fulfillemenet_order['id'],
-                    "fulfillment_order_line_items": [
-                        {
-                            "id": fulfillemenet_item['id'],
-                            "quantity": fulfillemenet_item['fulfillable_quantity']
-                        }
-                    ]
-                }
-            ],
-            "tracking_info": {
-                "number": source_tracking,
-            },
+            "location_id": location_id,
+            "tracking_number": source_tracking,
+            "line_items": [{
+                "id": line_id,
+            }]
         }
     }
 
     if source_tracking:
         if tracking_numbers:
-            data['fulfillment']['tracking_info']['number'] = tracking_numbers
+            data['fulfillment']['tracking_numbers'] = tracking_numbers
+            del data['fulfillment']['tracking_number']
         else:
-            data['fulfillment']['tracking_info']['number'] = source_tracking
+            data['fulfillment']['tracking_number'] = source_tracking
 
         user_aftership_domain = user_config.get('aftership_domain')
         have_custom_domain = store_id and user_aftership_domain \
@@ -1910,18 +1898,18 @@ def order_track_fulfillment_deprecate(**kwargs):
             alibaba_tracking_urls = get_alibaba_tracking_links(kwargs.get('order_track').source_id.split(','))
 
         if alibaba_tracking_urls:
-            data['fulfillment']['tracking_info']['company'] = "Other"
+            data['fulfillment']['tracking_company'] = "Other"
             if tracking_numbers:
-                data['fulfillment']['tracking_info']['url'] = [t[1] for t in alibaba_tracking_urls]
+                data['fulfillment']['tracking_urls'] = [t[1] for t in alibaba_tracking_urls]
             else:
-                data['fulfillment']['tracking_info']['url'] = alibaba_tracking_urls
+                data['fulfillment']['tracking_url'] = alibaba_tracking_urls
 
         elif (kwargs.get('use_usps') is None and is_usps and not have_custom_domain) or kwargs.get('use_usps'):
-            data['fulfillment']['tracking_info']['company'] = user_config.get('_default_shipping_carrier', 'USPS')
+            data['fulfillment']['tracking_company'] = user_config.get('_default_shipping_carrier', 'USPS')
         elif (kwargs.get('use_usps') is None and not have_custom_domain) and is_shipping_carrier(source_tracking, 'FedEx', any_match=True):
-            data['fulfillment']['tracking_info']['company'] = "FedEx"
+            data['fulfillment']['tracking_company'] = "FedEx"
         elif (not kwargs.get('use_usps') and not have_custom_domain) and is_shipping_carrier(source_tracking, 'UPS', any_match=True):
-            data['fulfillment']['tracking_info']['company'] = "UPS"
+            data['fulfillment']['tracking_company'] = "UPS"
         else:
             aftership_domain = 'https://track.aftership.com/{{tracking_number}}'
 
@@ -1934,11 +1922,11 @@ def order_track_fulfillment_deprecate(**kwargs):
 
             aftership_domain = add_http_schema(aftership_domain)
 
-            data['fulfillment']['company'] = "Other"
+            data['fulfillment']['tracking_company'] = "Other"
             if tracking_numbers:
-                data['fulfillment']['tracking_info']['url'] = [aftership_domain.replace('{{tracking_number}}', i) for i in tracking_numbers]
+                data['fulfillment']['tracking_urls'] = [aftership_domain.replace('{{tracking_number}}', i) for i in tracking_numbers]
             else:
-                data['fulfillment']['tracking_info']['url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
+                data['fulfillment']['tracking_url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
 
     if user_config.get('validate_tracking_number', False) \
             and not is_valide_tracking_number(source_tracking) \
