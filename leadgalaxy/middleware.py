@@ -171,7 +171,8 @@ class ShopifyScopeCheckMiddleware(object):
     def __call__(self, request):
         if request.user.is_authenticated \
                 and request.method == 'GET' \
-                and not request.path.startswith('/shopify/install/') \
+                and not request.path.startswith('/webhook/') \
+                and not request.path.startswith('/shopify/') \
                 and not request.path.startswith('/api/') \
                 and not request.path.startswith('/admin/') \
                 and not request.session.get('is_hijacked_user') \
