@@ -134,7 +134,7 @@
       <li class="section side-menu-dropdown">
         <span class="section-header">
           <div class="new-layout-hidden">
-            <img src="{% static section.icon %}"/>
+            {% if section.icon %}<img src="{% static section.icon %}" />{% endif %}
           </div>
           <div class="section-header-content">
             <span class="item-title">{{ section.title }}</span>
@@ -299,7 +299,7 @@
       <li class="section">
         <span class="section-header">
           <div class="new-layout-hidden">
-            <img src="{% static section.icon %}"/>
+            {% if section.icon %}<img src="{% static section.icon %}" />{% endif %}
           </div>
         </span>
       </li>
