@@ -10,7 +10,7 @@ from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
 
-from shopified_core.utils import save_user_ip, encode_params
+from shopified_core.utils import app_link, save_user_ip, encode_params
 from lib.exceptions import capture_exception
 
 Cookie.Morsel._reserved['samesite'] = 'SameSite'
@@ -159,5 +159,27 @@ class PlanSetupMiddleware(object):
     def __call__(self, request):
         if request.user.is_authenticated:
             request.user.profile.ensure_has_plan()
+
+        return self.get_response(request)
+
+
+class ShopifyScopeCheckMiddleware(object):
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated \
+                and request.method == 'GET' \
+                and not request.path.startswith('/shopify/install/') \
+                and not request.path.startswith('/api/') \
+                and not request.path.startswith('/admin/') \
+                and not request.session.get('is_hijacked_user') \
+                and not request.user.is_subuser:
+            if request.user.profile.get_shopify_stores().count() == 1:
+                store = request.user.profile.get_shopify_stores().first()
+                if store.need_reauthorization():
+                    shop_name = store.shop.split('.')[0]
+                    return HttpResponseRedirect(app_link('/shopify/install', shop_name, reinstall=store.id))
 
         return self.get_response(request)
