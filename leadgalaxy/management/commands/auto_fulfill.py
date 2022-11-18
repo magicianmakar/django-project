@@ -86,7 +86,7 @@ class Command(DropifiedBaseCommand):
             try:
                 counter['need_fulfill'] += 1
 
-                if last_executed(f'order-auto-fulfill2-{order.id}', 21600):
+                if last_executed(f'order-auto-fulfill3-{order.id}', 21600):
                     if not last_executed(f'order-auto-fulfill-sync-{order.id}', 21600):
                         utils.get_tracking_orders(order.store, [order])
 
