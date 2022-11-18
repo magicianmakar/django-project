@@ -1796,7 +1796,7 @@ def do_order_fulfillment(store, fulfillment_data):
         order_id = fulfillment_data['order_id']
 
     if store.need_reauthorization():
-        url = store.api('orders', order_id, 'fulfillments')
+        url = store.api('orders', order_id, 'fulfillments', version='2022-04')
         api_data = order_track_fulfillment_deprecate(**fulfillment_data)
     else:
         url = store.api('fulfillments')
