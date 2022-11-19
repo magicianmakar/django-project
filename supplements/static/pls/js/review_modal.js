@@ -50,7 +50,7 @@
         for (var index = 0; index < reviews.length; index++) {
             var element = reviews[index];
             $('#comment-template #first_name').text(element['user__first_name']);
-            $('#comment-template #last_name').text(element['user__last_name']);
+            $('#comment-template #last_name').text(element['user__last_name'][0]);
             $('#comment-template #comment').text(element['comment']);
             var stars =  $('#comment-template .product-rating-star-user');
             var avg_rating = parseFloat(
