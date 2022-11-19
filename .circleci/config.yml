@@ -123,7 +123,7 @@ jobs:
           no_output_timeout: 30m
           command: |
             source venv/bin/activate
-            coverage run ./manage.py test --noinput -v2 --exclude-tag excessive --parallel 4
+            coverage run ./manage.py test --noinput -v2 --exclude-tag excessive
 
       - run:
           name: Coverage Report
