@@ -1009,8 +1009,13 @@ class UserProfile(models.Model):
 
     @property
     def use_new_navigation(self):
-        use_old_nav = self.set_config_value('revert_to_v2210311', True)
-        return not use_old_nav and not self.plan.is_plod and not self.is_black
+        return not any([
+            self.get_config_value('revert_to_v2210311', True),
+            self.plan.is_plod,
+            self.is_black,
+            self.dropified_private_label,
+            self.private_label
+        ])
 
 
 class AddressBase(models.Model):
