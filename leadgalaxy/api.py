@@ -1270,7 +1270,7 @@ class ShopifyStoreApi(ApiBase):
         # Flag for whether the user can use multichannel products
         config['multichannel_enabled'] = user.can('multichannel.use')
 
-        config['revert_to_v2210311'] = config.get('revert_to_v2210311', False)
+        config['revert_to_v2210311'] = config.get('revert_to_v2210311', True)
 
         return JsonResponse(config)
 

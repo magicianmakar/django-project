@@ -1007,6 +1007,11 @@ class UserProfile(models.Model):
     def phone(self):
         return self.get_config_value('__phone', False)
 
+    @property
+    def use_new_navigation(self):
+        use_old_nav = self.set_config_value('revert_to_v2210311', True)
+        return not use_old_nav and not self.plan.is_plod and not self.is_black
+
 
 class AddressBase(models.Model):
     class Meta:

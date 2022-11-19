@@ -112,14 +112,14 @@
         </div>
     {% endif %}
 
-    {% if not request.user.profile.get_config.revert_to_v2210311 %}
+    {% if request.user.profile.use_new_navigation %}
         {% block new-nav %}
             {% include 'top_navigation_new.html' %}
         {% endblock new-nav %}
     {% endif %}
 
     {% block main-nav %}
-        {% if not request.user.profile.get_config.revert_to_v2210311 %}
+        {% if request.user.profile.use_new_navigation %}
             {% include 'side_navigation_new.html' %}
         {% else %}
             {% include 'side_navigation.html' %}
@@ -127,13 +127,13 @@
     {% endblock %}
 
    <div {% block page-wrapper-div %}id="page-wrapper" class="gray-bg"{% endblock %}>
-       {% if request.user.profile.get_config.revert_to_v2210311 %}
+       {% if not request.user.profile.use_new_navigation %}
             {% block nav %}
                 {% include 'top_navigation.html' %}
             {% endblock nav %}
        {% endif %}
 
-        {% if not request.user.profile.get_config.revert_to_v2210311 %}
+        {% if request.user.profile.use_new_navigation %}
             <div class="row {% if open_application_menu and lifetime_menus %}active{% endif %}" id="applications-menu">
             <h3>Applications</h3>
             <div class="tabs-container">
@@ -244,7 +244,7 @@
       </div>
         {% block submain-container %}{% endblock %}
 
-       {% if request.user.profile.get_config.revert_to_v2210311 %}
+       {% if not request.user.profile.use_new_navigation %}
            <div class="footer">
                <div class="pull-right" style="margin-right:30px">
                 <span class="extension-version" data-version="{{ extension_release }}"
@@ -361,7 +361,7 @@
     <script type="text/javascript">
         window.app_base_link = '{% app_link %}';
         window.app_base_api = '{% app_link "api" %}';
-        window.is_old_layout = {% json_dumps request.user.profile.get_config.revert_to_v2210311 %};
+        window.is_old_layout = {% if request.user.profile.use_new_navigation %}false{% else %}true{% endif %};
     </script>
 
 
@@ -411,11 +411,9 @@
         {% include 'partial/subusers_limit_reached.html' %}
     {% endif %}
 
-    {% if request.user.profile.get_config.revert_to_v2210311 %}
+    {% if not request.user.profile.use_new_navigation %}
         {% include 'partial/ui_update_modal.html' %}
-    {% endif %}
-
-    {% if not request.user.profile.get_config.revert_to_v2210311 %}
+    {% else %}
         {% include 'partial/upsell_modal.html' %}
     {% endif %}
 
