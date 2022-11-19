@@ -396,7 +396,7 @@
                 addOrderToQueue(order_data);
             }
             else {
-                toastr.error('Quick Order Error (Product variants can\'t be auto-detected. Please use regular oreding method.' ) ;
+                toastr.error('Quick Order Error (Product variants can\'t be auto-detected. Please use regular ordering method.' ) ;
             }
 
         });
