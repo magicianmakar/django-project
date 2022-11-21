@@ -46,7 +46,7 @@ urlpatterns = [
     url(r'^alibaba/', include('alibaba_core.urls', 'alibaba')),
     url(r'^aliexpress/', include('aliexpress_core.urls', 'aliexpress')),
     url(r'^logistics/', include('logistics.urls', 'logistics')),
-    url(r'^webhook/', include('webhooks.urls')),
+    url(r'^webhooks?/', include('webhooks.urls')),
     url(r'^products/', include('product_core.urls')),
     url(r'^insider-reports/', include('insider_reports.urls')),
     url(r'^loopedin/', include(('loopedin_core.urls', 'loopedin'), 'loopedin')),
