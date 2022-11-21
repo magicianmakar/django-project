@@ -89,7 +89,7 @@ class HomePageMixing(TemplateView):
             if user.profile.plan.is_free:
                 if not user.get_config('__fp_partners_redirect'):
                     user.set_config('__fp_partners_redirect', True)
-                    raise HttpResponseRedirect(url=FIRST_PROMOTER_DASHBOARD_URL)
+                    raise RedirectException(url=FIRST_PROMOTER_DASHBOARD_URL)
 
         fulfullment_service_check.apply_async(args=[user.id], queue='priority_high', expires=200)
 
