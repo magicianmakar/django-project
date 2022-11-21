@@ -8,7 +8,7 @@ $(document).ready(function() {
     $('.alibaba-import-by-url').on('click', function(e) {
         var inputData = $('#alibaba_product_url').val();
         if (!inputData) {
-            toastr.info("Please add an Alibaba product URL or ID.");
+            toastr.error("Please add an Alibaba product URL or ID.");
             return;
         }
         $('#modal-alibaba-import-by-url').modal('hide');
@@ -36,7 +36,7 @@ $(document).ready(function() {
             }
         });
         if (data['store_ids'].length == 0) {
-            toastr.info("Please select at least one store to add products.");
+            toastr.error("Please select at least one store to add products.");
             btn.button('reset');
             return;
         }

@@ -314,7 +314,7 @@ $(document).ready(function () {
     $('#select-bundle-remove').on('click', function (e) {
 
         if (!$('#bundle-remove-select option').length) {
-            toastr.info('No Bundle to Delete');
+            toastr.error('No Bundle to Delete');
             $('#modal-bundle-delete').modal('hide');
             return;
         }
