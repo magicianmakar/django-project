@@ -520,8 +520,8 @@ def order_track_fulfillment(order_track, user_config=None):
     data = {
         'tracking_number': tracking_number,
         'order_address_id': shipping_address_id,
-        'shipping_provider': provider_id,
-        'shipping_method': provider_name,
+        'shipping_provider': provider_id or "",
+        'shipping_method': provider_name or "",
         'items': [
             {
                 'order_product_id': order_track.line_id,
