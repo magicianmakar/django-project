@@ -1,4 +1,4 @@
-/* global $, toastr, swal, displayAjaxError, cleanUrlPatch */
+/* global $, toastr, swal, displayAjaxError, cleanUrlPatch, copyToClipboardPermissionWrapper */
 
 (function(user_filter, sub_conf) {
 'use strict';
@@ -816,6 +816,12 @@ function pusherSub() {
     });
     */
 }
+
+$('.copy-to-clipboard').click(function (e) {
+    e.preventDefault();
+    var text = String($(this).data('copy-value')).trim().replace(/\s\s+/g, ' ');
+    copyToClipboardPermissionWrapper(text);
+});
 
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {

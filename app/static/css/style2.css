@@ -1144,7 +1144,7 @@ li.border-right {
     color: #3b4d5e;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-box-orient: vertical;\left: ;
+    -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
 }
 .product-box .product-imitation.pls + .product-desc .product-name {
@@ -3121,6 +3121,10 @@ textarea.note {
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
+}
+
+.copy-cursor {
+    cursor: url(../img/copy.svg) 16 16, copy;
 }
 
 .plan-badge, .applications-nav {

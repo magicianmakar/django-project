@@ -185,25 +185,16 @@
                                     <div>
                                         <p class="no-text-overflow">
                                             {% if order.shipping_address.country %}
-                                            <img class="itooltip m-r-xs shipping-country-code" shipping-country-code="{{order.shipping_address.country_code|lower}}"
-                                                 style="width: 28px; margin-bottom: 4px;" title="{{order.shipping_address.country}}" src="//cdn.dropified.com/static/flags/{{order.shipping_address.country_code|lower}}.svg">
+                                            <img class="itooltip m-r-xs shipping-country-code copy-to-clipboard copy-cursor" shipping-country-code="{{order.shipping_address.country_code|lower}}"
+                                                 style="width: 28px; margin-bottom: 4px;" title="{{order.shipping_address.country}}" src="//cdn.dropified.com/static/flags/{{order.shipping_address.country_code|lower}}.svg"
+                                                 data-copy-value="{{ order.shipping_address.country }}"
+                                            >
 
-                                            <span style="text-decoration: underline;" class="itooltip" data-html="true"
-                                                  title="
-                                                    {{order.shipping_address.first_name|default:''}} {{order.shipping_address.last_name|default:''}}<br>
-                                                    {{order.shipping_address.address1}}<br>
-                                                    {% if order.shipping_address.address2 %}
-                                                    {{order.shipping_address.address2}}<br>
-                                                    {% endif %}
-                                                    {{order.shipping_address.city}},
-                                                    {% if order.shipping_address.province %}
-                                                    {{order.shipping_address.province}},
-                                                    {% endif %}
-                                                    {{order.shipping_address.zip}}<br>
-                                                    {% if order.shipping_address.phone %}
-                                                    {{order.shipping_address.phone|default:''}}<br>
-                                                    {% endif %}
-                                                    {{order.shipping_address.country}}">
+                                            <span style="text-decoration: underline;" class="itooltip copy-to-clipboard copy-cursor " data-html="true"
+                                                  title="Name"
+                                                  data-copy-value="
+                                                    {{ order.shipping_address.first_name|default:'' }} {{ order.shipping_address.last_name|default:'' }}"
+                                            >
                                                 {{order.shipping_address.first_name|default:''}} {{order.shipping_address.last_name|default:''}}
                                             </span>
                                             {% endif %}
@@ -233,23 +224,59 @@
                                         <p></p>
                                     </label>
 
+                                    {% with os=order.shipping_address %}
+                                        <div class="pull-right p-t-xs m-l-xs">
+                                            <img class="itooltip copy-to-clipboard"
+                                                 title="Copy Address to Clipboard"
+                                                 src="{% static 'img/copy.svg' %}"
+                                                 style="cursor: pointer; height: 22px;"
+                                                 data-copy-value="
+                                                    {{ os.address1 }},
+                                                    {% if os.address2 %}{{ os.address2 }}, {% endif %}
+                                                    {{ os.city }},
+                                                    {% if os.province %}{{ os.province|default:'N/A' }}, {% endif %}
+                                                    {% if os.zip %}{{ os.zip }}, {% endif %}
+                                                    {{ os.country }},
+                                                    {% if os.phone %} {{ os.phone|default:'' }}{% endif %}"
+                                            >
+                                        </div>
+                                    {% endwith %}
+
                                     <div>
-                                        <p class="no-text-overflow">
+                                        <p class="no-text-overflow copy-to-clipboard copy-cursor itooltip"
+                                           title="Address"
+                                           data-copy-value="
+                                                {{order.shipping_address.address1}}
+                                                {% if order.shipping_address.address2 %}
+                                                - {{order.shipping_address.address2}}
+                                                {% endif %}"
+                                        >
                                             {{order.shipping_address.address1}}
                                             {% if order.shipping_address.address2 %}
                                             - {{order.shipping_address.address2}}
                                             {% endif %}
                                         </p>
                                         <p class="no-text-overflow">
-                                            {{order.shipping_address.city}}
+                                            <span class="copy-to-clipboard copy-cursor itooltip"
+                                                  title="City"
+                                                  data-copy-value="{{order.shipping_address.city}}"
+                                            >{{order.shipping_address.city}}</span>
                                             {% if order.shipping_address.province %}
-                                            - {{order.shipping_address.province}}
+                                                - <span class="copy-to-clipboard copy-cursor itooltip"
+                                                        title="State"
+                                                        data-copy-value="{{ order.shipping_address.province }}">{{ order.shipping_address.province }}</span>
                                             {% endif %}
                                         </p>
                                         <p class="no-text-overflow">
-                                            {{order.shipping_address.zip}}
+                                            {% if order.shipping_address.zip %}
+                                                <span class="copy-to-clipboard copy-cursor itooltip"
+                                                      title="Postcode"
+                                                      data-copy-value="{{ order.shipping_address.zip }}">{{ order.shipping_address.zip }}</span>
+                                            {% endif %}
                                             {% if order.shipping_address.phone %}
-                                            / {{order.shipping_address.phone|default:''}}
+                                                / <span class="copy-to-clipboard copy-cursor itooltip"
+                                                        title="Phone"
+                                                        data-copy-value="{{ order.shipping_address.phone }}">{{ order.shipping_address.phone }}</span>
                                             {% endif %}
                                         </p>
                                     </div>

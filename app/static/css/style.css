@@ -3963,6 +3963,9 @@ a.close-canvas-menu:hover {
 .p-xl {
   padding: 40px;
 }
+.p-t-xs {
+  padding-top: 5px;
+}
 .m-xxs {
   margin: 2px 4px;
 }
