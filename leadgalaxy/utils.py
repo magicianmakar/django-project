@@ -403,8 +403,12 @@ def verify_shopify_webhook(store, request, throw_excption=True):
     return webhook_hash == request_hash
 
 
-def aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry='CN', iteration=0):
+def aliexpress_shipping_info(aliexpress_id, country_code, skuId, item_price, sendGoodsCountry='CN', iteration=0):
     shippement_key = f'ali_shipping_info__{aliexpress_id}_{country_code}_{sendGoodsCountry}'
+
+    if skuId:
+        shippement_key = f'ali_shipping_info__{aliexpress_id}_{country_code}_{sendGoodsCountry}_{skuId}'
+
     freight_data = cache.get(shippement_key)
 
     if freight_data is not None and freight_data:
@@ -416,10 +420,12 @@ def aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry='CN',
     provinceCode = ''
     cityCode = ''
 
-    if iteration > 0:
-        if country_code == 'US':
-            provinceCode = '922865760000000000'
-            cityCode = '922865766013000000'
+    if country_code == 'US':
+        provinceCode = '922865760000000000'
+        cityCode = '922865766013000000'
+
+    if sendGoodsCountry == 'US':
+        sendGoodsCountry = '201336106'
 
     params = {
         "productId": aliexpress_id,
@@ -435,9 +441,19 @@ def aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry='CN',
         "sendGoodsCountry": sendGoodsCountry,
     }
 
-    if iteration > 1 or country_code == 'US':
+    if iteration > 1:
         del params['minPrice']
         del params['maxPrice']
+
+    if skuId:
+        ext = {
+            "p0": str(skuId),
+            "p1": str(item_price),
+            "p3": "USD",
+            "p6": "null"
+        }
+        ext = json.dumps(ext)
+        params["ext"] = ext
 
     headers = {
         'referer': f'https://www.aliexpress.com/item/{aliexpress_id}.html'
@@ -475,7 +491,7 @@ def aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry='CN',
         cache.set(shippement_key, shippement_data, timeout=43200)
     else:
         if iteration < 2:
-            return aliexpress_shipping_info(aliexpress_id, country_code, sendGoodsCountry, iteration + 1)
+            return aliexpress_shipping_info(aliexpress_id, country_code, skuId, item_price, sendGoodsCountry, iteration + 1)
 
     return {
         **shippement_data,

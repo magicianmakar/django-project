@@ -765,9 +765,9 @@ class ShippingMethods():
             "send_goods_country_code": send_goods_country_code
         }
         aliexpress_obj.set_info(json.dumps(data, indent=0))
-        obj = AliexpressApi()
-        shipping_data = obj.aliexpress_shipping_info(data['product_id'], data['country_code'],
-                                                     data['send_goods_country_code'], 0, self.sku, self.price)
+        skuId = ''
+        item_variant_price = ''
+        shipping_data = aliexpress_shipping_info(data['product_id'], data['country_code'], skuId, item_variant_price, data['send_goods_country_code'])
 
         if len(shipping_data['freight']) > 0:
             shipping_services = [{

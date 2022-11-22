@@ -787,7 +787,7 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(ensure_title('vari\xe9t\xe9'), 'Vari\xe9t\xe9')
 
     def test_aliexpress_shipping_method(self):
-        data = aliexpress_shipping_info(4000869234210, "US")
+        data = aliexpress_shipping_info(4000869234210, "US", "12234455", "12.33")
         self.assertTrue(data)
         self.assertIn('freight', data)
         self.assertGreaterEqual(len(data['freight']), 2)

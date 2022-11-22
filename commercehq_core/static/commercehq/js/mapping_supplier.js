@@ -1,3 +1,5 @@
+/*jshint esversion: 8 */
+
 (function(product_id, product_suppliers, suppliers_mapping, shipping_mapping, variants_mapping) {
     'use strict';
 
@@ -382,12 +384,84 @@
         }
     }
 
-    function loadShippingMethods(e) {
+    function getVariantData(aliexpress_url, source_id) {
+        return new Promise(function(resolve, reject) {
+            var data = JSON.parse(sessionStorage.getItem(source_id));
+            if (data) {
+                resolve(data);
+            }
+            window.extensionSendMessage({
+                subject: 'getVariantsCombinations',
+                from: 'website',
+                url: aliexpress_url
+            }, function(item) {
+                if (typeof item === 'object' && item.length) {
+                    sessionStorage.setItem(source_id, JSON.stringify(item));
+                    resolve(item);
+                }
+                reject([]);
+            });
+        });
+    }
+
+    async function loadShippingMethods(e) {
         var select = $(e.target);
 
         var shippingSelect = select.parents('.shipping-rule').find('.shipping-method');
         shippingSelect.empty();
         shippingSelect.trigger("chosen:updated");
+
+        var skuIdStr = '';
+        var item_variant_price = '';
+        var freight_ext_obj = '';
+        var supplier_id = parseInt($('#modal-shipping-methods').prop('supplier'));
+        var store_variant_id = $("#modal-shipping-methods").prop('variant');
+        var variant_obj = variants_mapping[supplier_id][store_variant_id];
+        var supplier_url = product_suppliers[supplier_id].url;
+        var source_id = product_suppliers[supplier_id].source_id;
+        var sendGoodsCountry = 'CN';
+
+        if ((/aliexpress.(com|us)/i).test(supplier_url)) {
+            var current_variant_arr = [];
+            for (var j in variant_obj) {
+                current_variant_arr.push(variant_obj[j].title.trim());
+            }
+            var current_variant_title = current_variant_arr.join(" / ");
+            if (current_variant_title.toLowerCase().trim().indexOf('united states') !== -1) {
+                sendGoodsCountry = "US";
+            }
+            supplier_url = supplier_url.replace('com', 'us');
+            var item = await getVariantData(supplier_url, source_id);
+            for (var x in item) {
+                if (item[x].skuAttr === "") {
+                    skuIdStr = item[x].skuIdStr;
+                    freight_ext_obj = JSON.parse(item[x].freightExt);
+                    item_variant_price = freight_ext_obj.p1;
+                    break;
+                }
+                var variants = item[x].skuAttr.split(';');
+                var variants_normalized = [];
+                for (var i in variants) {
+                    var variant = variants[i];
+                    var variant_title=variant.split("#");
+                    if (variant_title[0]=='200007763:201336100') {
+                        variant_title[1]='China';
+                    }
+                    if (variant_title[0]=='200007763:201336106') {
+                        variant_title[1]='United States';
+                    }
+
+                    var variant_title_normalized=variant_title[1].trim();
+                    variants_normalized.push(variant_title_normalized);
+                    var variants_normalized_str = variants_normalized.join(' / ');
+                    if (variants_normalized_str.toLowerCase().trim() == current_variant_title.toLowerCase().trim()) {
+                        skuIdStr = item[x].skuIdStr;
+                        freight_ext_obj = JSON.parse(item[x].freightExt);
+                        item_variant_price = freight_ext_obj.p1;
+                    }
+                }
+            }
+        }
 
         $.ajax({
             url: '/shipping/info',
@@ -396,6 +470,9 @@
                 'product': product_id,
                 'supplier': select.parents('#modal-shipping-methods').prop('supplier'),
                 'country': select.val(),
+                'skuIdStr': skuIdStr,
+                'item_variant_price': item_variant_price,
+                'sendGoodsCountry': sendGoodsCountry,
                 'for': 'order',
                 'type': 'json',
                 'chq': 1

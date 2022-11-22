@@ -1057,7 +1057,12 @@ def get_shipping_info(request):
         elif supplier_type == 'alibaba':
             shippement_data = alibaba_utils.alibaba_shipping_info(request.user.models_user.alibaba.first(), item_id, country_code)
         else:
-            shippement_data = utils.aliexpress_shipping_info(item_id, country_code)
+            skuId = request.GET.get('skuIdStr')
+            item_price = request.GET.get('item_variant_price')
+            sendGoodsCountry = 'CN'
+            if request.GET.get('sendGoodsCountry'):
+                sendGoodsCountry = request.GET.get('sendGoodsCountry')
+            shippement_data = utils.aliexpress_shipping_info(item_id, country_code, skuId, item_price, sendGoodsCountry)
 
     except requests.Timeout:
         capture_exception()
