@@ -42,8 +42,28 @@ from .utils import is_bot_useragent, update_feed_social_access_at
 
 @login_required
 def product_feeds(request, *args, **kwargs):
+    shopify = request.user.profile.get_shopify_stores()
+    chq = request.user.profile.get_chq_stores()
+    woo = request.user.profile.get_woo_stores()
+    bigcommerce = request.user.profile.get_bigcommerce_stores()
+    gear = request.user.profile.get_gear_stores()
+    gkart = request.user.profile.get_gkart_stores()
     if not kwargs.get('store_type'):
-        return shopify_product_feeds(request)
+        if shopify:
+            return shopify_product_feeds(request)
+        elif chq:
+            kwargs = {'store_type': 'chq'}
+        elif woo:
+            kwargs = {'store_type': 'woo'}
+        elif bigcommerce:
+            kwargs = {'store_type': 'bigcommerce'}
+        elif gear:
+            kwargs = {'store_type': 'gear'}
+        elif gkart:
+            kwargs = {'store_type': 'gkart'}
+        else:
+            return shopify_product_feeds(request)
+
     if kwargs.get('store_type') == 'chq':
         return chq_product_feeds(request)
     if kwargs.get('store_type') == 'woo':
