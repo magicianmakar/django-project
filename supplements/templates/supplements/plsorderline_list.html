@@ -180,9 +180,11 @@
         <td>{{ line_item.label.user_supplement.pl_supplement.shipstation_account }}</td>
       {% endif %}
       <td>
+        {% if line_item.label.user_supplement.id %}
         <a href="{% url 'pls:admin_label_history' line_item.label.user_supplement.id %}"
             title="View History">
           {{ line_item.label.sku }}</a>
+        {% endif %}
       </td>
       <td>{{ line_item.tracking_number }}</td>
       <td>{{ line_item.label.user_supplement.pl_supplement.label_size }}</td>

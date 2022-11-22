@@ -474,6 +474,7 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
                                         decimal_places=2,
                                         blank=True,
                                         null=True)
+    cancelled_in_shipstation = models.BooleanField(default=False)
 
     @property
     def store_api(self):

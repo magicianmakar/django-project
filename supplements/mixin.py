@@ -386,7 +386,9 @@ class PLSOrderLineMixin:
             label = f"<span class='badge badge-{color}'>{value}</span>"
             return format_html(label)
 
-        if self.pls_order.is_fulfilled:
+        if self.cancelled_in_shipstation:
+            return get_string("warning", "Cancelled")
+        elif self.tracking_number:
             return get_string("primary", "Fulfilled")
         elif self.pls_order.status == self.pls_order.SHIPPING_ERROR:
             return get_string("danger", "Error")

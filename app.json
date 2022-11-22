@@ -42,10 +42,6 @@
         "BIGCOMMERCE_CLIENT_ID": "4knwnz7vmlddsjmtn6ae7xknpqvnm66",
         "BIGCOMMERCE_CLIENT_SECRET": "abc69e93dd1303289100372282694a60cebe6b397d90307beca12133d48e9c20",
 
-        "AUTHORIZENET_LOGIN_ID": "7Fy7JfA2kU",
-        "AUTHORIZENET_TRANSACTION_KEY": "5yY27E4q99x82TDL",
-        "AUTHORIZENET_KEY": "Simon",
-
         "SENTRY_DSN": "https://d61f65e226c846be9c4febc6118c04c9:32fd946f6fcf48d6b13798177206dcef@o33519.ingest.sentry.io/5977833",
 
         "BAREMETRICS_ACCESS_TOKEN": {"required": true},
