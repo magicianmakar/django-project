@@ -995,7 +995,26 @@ def process_webhook_event(request, event_id):
                 profile.change_plan(plan)
 
                 if plan.is_stripe():
-                    profile.apply_subscription(plan)
+                    # if user already has subscription, update it
+                    if user.stripesubscription_set.exists():
+                        try:
+                            subscription = user.stripesubscription_set.latest('created_at')
+                            sub = subscription.refresh()
+
+                            main_plan_item = get_main_subscription_item(sub)
+                            if main_plan_item['plan']['interval'] == plan.stripe_plan.interval:
+                                stripe.SubscriptionItem.modify(
+                                    main_plan_item['id'],
+                                    plan=plan.stripe_plan.stripe_id
+                                )
+                            else:
+                                print("Interval mismatch, skipping")
+                                capture_message("Interval mismatch, skipping")
+                        except:
+                            capture_exception()
+                    else:
+                        # if not, create new one
+                        profile.apply_subscription(plan)
 
                 user.set_config('_stripe_lifetime', plan.id)
 
