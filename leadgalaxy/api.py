@@ -93,6 +93,8 @@ class ShopifyStoreApi(ApiBase):
 
         store.is_active = False
         store.uninstalled_at = timezone.now()
+        store.dropified_fulfillment_service = 0
+        store.dropified_location = 0
         store.save()
 
         if store.version == 2:

@@ -585,7 +585,11 @@ class ShopifyShopUpdateWebhook(ShopifyWebhookMixing):
 class ShopifyAppUninstallWebhook(ShopifyWebhookMixing):
     def process_webhook(self, store, shopify_data):
         store.is_active = False
+
         store.uninstalled_at = timezone.now()
+        store.dropified_fulfillment_service = 0
+        store.dropified_location = 0
+
         store.save()
 
         utils.detach_webhooks(store, delete_too=True)
