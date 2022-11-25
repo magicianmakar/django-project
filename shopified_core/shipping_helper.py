@@ -101,6 +101,7 @@ def normalize_country_code(country):
         'br': ['brazil'],
         'kr': ['korea', 'south korea'],
         'sa': ['saudi arabia'],
+        'jp': ['japan'],
     }
 
     for code, names in countries_map.items():
@@ -273,9 +274,8 @@ def fix_br_address(customer_address):
     return customer_address
 
 
-def fuzzy_find_in_list(options, value, default=None):
+def fuzzy_find_in_list(options, value, default=None, score_match=False):
     global fazzy_list_map
-
     if options and value:
         direct_match = find_in_list(options, value)
         if direct_match:
@@ -290,7 +290,8 @@ def fuzzy_find_in_list(options, value, default=None):
         res = f.get(value)
         if res and len(res):
             score, match = res[0]
-            if score > 0.8:
+            score_match = 0.8 if not score_match else score_match
+            if score > score_match:
                 return match
 
     return default
@@ -309,7 +310,7 @@ def find_in_list(items, value, default=None):
     return default
 
 
-def valide_aliexpress_province(country, province, city, auto_correct=False):
+def valide_aliexpress_province(country, province, city, auto_correct=False, score_match=False):
     country = country.strip() if country else ''
     province = province.strip() if province else ''
     city = city.strip() if city else ''
@@ -323,10 +324,11 @@ def valide_aliexpress_province(country, province, city, auto_correct=False):
 
     if country_code:
         aliexpress_countries = load_aliexpress_countries()
-
         province_list = find_in_list(aliexpress_countries, country_code)
+
         if province_list:
-            province_match = fuzzy_find_in_list(list(province_list.keys()), province, default=province) if auto_correct else province
+            province_match = fuzzy_find_in_list(list(province_list.keys()), province, default=province,
+                                                score_match=score_match) if auto_correct else province
 
             if province_match and province_list and province_match != province:
                 if auto_correct:
@@ -341,7 +343,6 @@ def valide_aliexpress_province(country, province, city, auto_correct=False):
 
             if auto_correct:
                 city_match = fuzzy_find_in_list(city_list, city, default=None)
-
                 if not city_match:
                     city_name = CityName(city)
                     if city_name.starts_with_the:
@@ -442,7 +443,6 @@ def province_from_code(country_code, province_code):
                 provinces_code[country_code] = json.loads(f.read())
 
     province = provinces_code.get(country_code, {}).get(province_code)
-
     return province if province else province_code
 
 

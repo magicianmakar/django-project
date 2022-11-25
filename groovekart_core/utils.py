@@ -290,13 +290,22 @@ def gkart_customer_address(order, aliexpress_fix=False, shipstation_fix=False):
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
 
+    if customer_address['country_code'] == 'JP':
+        if customer_address.get('zip'):
+            customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
+
     correction = {}
     if aliexpress_fix:
+        score_match = False
+        if customer_address['country_code'] == 'JP':
+            score_match = 0.3
+
         valide, correction = valide_aliexpress_province(
             customer_address['country'],
             customer_address['province'],
             customer_address['city'],
-            auto_correct=True)
+            auto_correct=True,
+            score_match=score_match)
 
         if not valide:
             if support_other_in_province(customer_address['country']):
