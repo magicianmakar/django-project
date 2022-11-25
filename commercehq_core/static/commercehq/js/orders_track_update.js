@@ -367,15 +367,22 @@
                     'order': order,
                 }
                 }).then(function(data) {
-                    orders.success += 1;
-                    if (order.source_status == data.orderStatus &&
-                        order.source_tracking == data.tracking_number &&
-                        $('#update-unfulfilled-only').is(':checked') &&
-                        !order.bundle) {
-                        // Order info hasn't changed
-                        addOrderUpdateItem(order, data);
+                    if (data.hasOwnProperty('has_tracking_data')) {
+                        if (!data.success) {
+                            orders.error += 1;
+                            addOrderUpdateItem(order, {'error': data.msg});
+                        }
                     } else {
-                        return updateOrderStatus(order, data);
+                        orders.success += 1;
+                        if (order.source_status == data.orderStatus &&
+                            order.source_tracking == data.tracking_number &&
+                            $('#update-unfulfilled-only').is(':checked') &&
+                            !order.bundle) {
+                            // Order info hasn't changed
+                            addOrderUpdateItem(order, data);
+                        } else {
+                            return updateOrderStatus(order, data);
+                        }
                     }
                 }).fail(function(data) {
                     // Couldn't get Supplier order info

@@ -202,7 +202,7 @@ class ShopifyStoreApi(ApiBase):
 
         if result.get('error_code'):
             if result.get('sub_code') == 'isv.target-not-found':
-                return self.api_error('Orders Sync: Not Authorized to view order.', status=500)
+                return JsonResponse({'has_tracking_data': False, 'msg': 'Orders Sync: Not Authorized to view order.'}, status=200, safe=True)
 
         return JsonResponse(result, status=200, safe=True)
 
