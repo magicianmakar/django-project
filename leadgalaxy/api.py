@@ -93,6 +93,8 @@ class ShopifyStoreApi(ApiBase):
 
         store.is_active = False
         store.uninstalled_at = timezone.now()
+        store.dropified_fulfillment_service = 0
+        store.dropified_location = 0
         store.save()
 
         if store.version == 2:
@@ -200,7 +202,7 @@ class ShopifyStoreApi(ApiBase):
 
         if result.get('error_code'):
             if result.get('sub_code') == 'isv.target-not-found':
-                return self.api_error('Orders Sync: Not Authorized to view order.', status=500)
+                return JsonResponse({'has_tracking_data': False, 'msg': 'Orders Sync: Not Authorized to view order.'}, status=200, safe=True)
 
         return JsonResponse(result, status=200, safe=True)
 
@@ -1270,7 +1272,7 @@ class ShopifyStoreApi(ApiBase):
         # Flag for whether the user can use multichannel products
         config['multichannel_enabled'] = user.can('multichannel.use')
 
-        config['revert_to_v2210311'] = config.get('revert_to_v2210311', False)
+        config['revert_to_v2210311'] = config.get('revert_to_v2210311', True)
 
         return JsonResponse(config)
 
@@ -1545,12 +1547,7 @@ class ShopifyStoreApi(ApiBase):
             }
         }
 
-        api_data = utils.order_track_fulfillment(**fulfillment_data)
-
-        rep = requests.post(
-            url=store.api('fulfillments'),
-            json=api_data
-        )
+        api_data, rep = utils.do_order_fulfillment(store, fulfillment_data)
 
         try:
             rep.raise_for_status()

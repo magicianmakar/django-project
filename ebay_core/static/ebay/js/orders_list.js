@@ -1,4 +1,4 @@
-/* global $, toastr, swal, displayAjaxError, cleanUrlPatch, ga, api_url, Cookies, Pusher, sub_conf, moment */
+/* global $, toastr, swal, displayAjaxError, cleanUrlPatch, ga, api_url, Cookies, Pusher, sub_conf, moment, copyToClipboardPermissionWrapper */
 (function(sub_conf) {
 'use strict';
 
@@ -864,6 +864,12 @@ function pusherSub() {
     });
     */
 }
+
+$('.copy-to-clipboard').click(function (e) {
+    e.preventDefault();
+    var text = String($(this).data('copy-value')).trim().replace(/\s\s+/g, ' ');
+    copyToClipboardPermissionWrapper(text);
+});
 
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {

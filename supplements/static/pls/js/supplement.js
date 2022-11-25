@@ -47,7 +47,7 @@ $(document).ready(function(){
                 }
             } else {
                 if (fileUrl !== "" && $('[name="mockup_urls"]').length === 0) {
-                    toastr.info("Please select at least 1 or more mockup images to send to store.");
+                    toastr.error("Please select at least 1 or more mockup images to send to store.");
                 } else {
                     form.submit();
                 }

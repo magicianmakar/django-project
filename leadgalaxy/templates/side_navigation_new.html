@@ -48,7 +48,7 @@
                     <li class="section side-menu-dropdown">
                         <span class="section-header">
                             <div class="new-layout-hidden">
-                                <img src="{% static section.new_icon %}"/>
+                                {% if section.new_icon %}<img src="{% static section.new_icon %}" />{% endif %}
                             </div>
                             <div class="section-header-content">
                                 {% if section.new_icon %}
@@ -110,7 +110,7 @@
                             {% else %}
                         <li class="section-no-icon">
                     {% endif %}
-                <a href="{% url 'acp_index_view' %}" title="Admin" data-toggle="bootstrap-tooltip" data-placement="right">
+                <a href="{% url 'acp_index_view' %}" title="Admin">
                     <i class="fa fa-search item-icon"></i>
                 </a>
                 </li>
@@ -119,7 +119,7 @@
                     {% for item in section.items %}
 
                         <li class="section-no-icon {{ item.classes }}">
-                            <a href="{{ item.url }}" title="{{ item.title | safe }}" data-toggle="bootstrap-tooltip" data-placement="right">
+                            <a href="{{ item.url }}" title="{{ item.title | safe }}">
                                 {% if item.new_icon %}
                                     <img src="{% static item.new_icon %}" class="item-icon"/>
                                 {% endif %}
@@ -134,7 +134,7 @@
                     <li class="section">
                         <span class="section-header">
                           <div class="new-layout-hidden">
-                            <img src="{% static section.new_icon %}"/>
+                            {% if section.new_icon %}<img src="{% static section.new_icon %}" />{% endif %}
                           </div>
                         </span>
                     </li>
@@ -143,7 +143,7 @@
                         {% for item in section.items %}
                             <li class="item {{ item.classes }}">
                                 <a {% if item.new_tab %}target="_blank"{% endif %} href="{{ item.url }}"
-                                   title="{{ item.title | safe }}" data-toggle="bootstrap-tooltip" data-placement="right">
+                                   title="{{ item.title | safe }}">
                                     {% if item.new_icon %}
                                         <img src="{% static item.new_icon %}" class="item-icon"/>
                                     {% else %}

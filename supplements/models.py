@@ -356,7 +356,8 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
 
     @cached_property
     def tracking_numbers_str(self):
-        return ', '.join(self.order_items.exclude(tracking_number='').values_list('tracking_number', flat=True))
+        return ', '.join(self.order_items.exclude(tracking_number='').values_list('tracking_number', flat=True
+                                                                                  ).distinct())
 
     @cached_property
     def shipping_service_id(self):
@@ -474,6 +475,7 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
                                         decimal_places=2,
                                         blank=True,
                                         null=True)
+    cancelled_in_shipstation = models.BooleanField(default=False)
 
     @property
     def store_api(self):

@@ -157,31 +157,19 @@
                                     <div>
                                         <p class="no-text-overflow">
                                             {% if order.customer_address.country %}
-                                            <img class="itooltip m-r-xs shipping-country-code" shipping-country-code="{{order.customer_address.country_code|lower}}"
-                                                 style="width: 28px; margin-bottom: 4px;" title="{{order.customer_address.country}}" src="//cdn.dropified.com/static/flags/{{order.customer_address.country_code|lower}}.svg">
+                                            <img class="itooltip m-r-xs shipping-country-code copy-to-clipboard copy-cursor" shipping-country-code="{{order.customer_address.country_code|lower}}"
+                                                 style="width: 28px; margin-bottom: 4px;" title="{{order.customer_address.country}}" src="//cdn.dropified.com/static/flags/{{order.customer_address.country_code|lower}}.svg"
+                                                 data-copy-value="{{ order.customer_address.country }}"
+                                            >
 
-                                            <span style="text-decoration: underline;" class="itooltip" data-html="true"
-                                                  title="
-                                                    {{order.customer_address.first_name|default:''}} {{order.customer_address.last_name|default:''}}
+                                            <span style="text-decoration: underline;" class="itooltip copy-to-clipboard copy-cursor" data-html="true"
+                                                  title="Name"
+                                                  data-copy-value="
+                                                    {{ order.customer_address.first_name|default:'' }} {{ order.customer_address.last_name|default:'' }}
                                                     {% if order.customer_address.company %}
-                                                    - {{order.customer_address.company}}
-                                                    {% endif %}
-                                                    <br>
-                                                    {{order.customer_address.address1}}<br>
-                                                    {% if order.customer_address.address2 %}
-                                                    {{order.customer_address.address2}}<br>
-                                                    {% endif %}
-                                                    {{order.customer_address.city}},
-                                                    {% if order.customer_address.province_code %}
-                                                    {{order.customer_address.province_code}},
-                                                    {% endif %}
-                                                    {{order.customer_address.zip}}
-                                                    {% if order.customer_address.phone %}
-                                                    <br> {{order.customer_address.phone}}
-                                                    {% elif order.address.phone %}
-                                                    <br> {{order.address.phone}}
-                                                    {% endif %}
-                                                    <br>{{order.customer_address.country}}">
+                                                    - {{ order.customer_address.company }}
+                                                    {% endif %}"
+                                            >
                                                 {{order.customer_address.first_name|default:''}} {{order.customer_address.last_name|default:''}}
                                                 {% if order.customer_address.company %}
                                                 - {{order.customer_address.company}}
@@ -209,25 +197,66 @@
                                         <p></p>
                                     </label>
 
+                                    {% with os=order.customer_address %}
+                                        <div class="pull-right p-t-xs m-l-xs">
+                                            <img class="itooltip copy-to-clipboard"
+                                                 title="Copy Address to Clipboard"
+                                                 src="{% static 'img/copy.svg' %}"
+                                                 style="cursor: pointer; height: 22px;"
+                                                 data-copy-value="
+                                                        {{ os.address1 }},
+                                                        {% if os.address2 %}{{ os.address2 }}, {% endif %}
+                                                        {{ os.city }},
+                                                        {% if os.province_code %}{{ os.province_code }}, {% endif %}
+                                                        {% if os.zip %}{{ os.zip }}, {% endif %}
+                                                        {{ os.country }},
+                                                        {% if os.phone %}
+                                                            {{ os.phone }}
+                                                        {% elif order.address.phone %}
+                                                            {{ order.address.phone }}
+                                                        {% endif %}"
+                                            >
+                                        </div>
+                                    {% endwith %}
+
                                     <div>
-                                        <p class="no-text-overflow">
+                                        <p class="no-text-overflow copy-to-clipboard copy-cursor itooltip"
+                                           title="Address"
+                                           data-copy-value="
+                                                {{order.customer_address.address1}}
+                                                {% if order.customer_address.address2 %}
+                                                - {{order.customer_address.address2}}
+                                                {% endif %}"
+                                        >
                                             {{order.customer_address.address1}}
                                             {% if order.customer_address.address2 %}
                                             - {{order.customer_address.address2}}
                                             {% endif %}
                                         </p>
                                         <p class="no-text-overflow">
-                                            {{order.customer_address.city}}
+                                            <span class="copy-to-clipboard copy-cursor itooltip"
+                                                  title="City"
+                                                  data-copy-value="{{ order.customer_address.city }}">{{ order.customer_address.city }}</span>
                                             {% if order.customer_address.province_code %}
-                                            - {{order.customer_address.province_code}}
+                                                - <span class="copy-to-clipboard copy-cursor itooltip"
+                                                        title="State"
+                                                        data-copy-value="{{ order.customer_address.province_code }}">{{ order.customer_address.province_code }}</span>
                                             {% endif %}
                                         </p>
                                         <p class="no-text-overflow">
-                                            {{order.customer_address.zip}}
+                                            {% if order.shipping_address.zip %}
+                                                <span class="copy-to-clipboard copy-cursor itooltip"
+                                                      title="Postcode"
+                                                      data-copy-value="{{ order.customer_address.zip }}">{{ order.customer_address.zip }}</span>
+                                            {% endif %}
                                             {% if order.customer_address.phone %}
-                                            / {{order.customer_address.phone}}
+                                                / <span class="copy-to-clipboard copy-cursor itooltip"
+                                                        title="Phone"
+                                                        data-copy-value="{{ order.customer_address.phone }}">{{ order.customer_address.phone }}</span>
                                             {% elif order.address.phone %}
-                                            / {{order.address.phone}}
+                                                / <span class="copy-to-clipboard copy-cursor itooltip"
+                                                        title="Phone"
+                                                        data-copy-value="{{ order.address.phone }}">{{ order.address.phone }}</span>
                                             {% endif %}
                                         </p>
                                     </div>

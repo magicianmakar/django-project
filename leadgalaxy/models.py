@@ -1007,6 +1007,16 @@ class UserProfile(models.Model):
     def phone(self):
         return self.get_config_value('__phone', False)
 
+    @property
+    def use_new_navigation(self):
+        return not any([
+            self.get_config_value('revert_to_v2210311', True),
+            self.plan.is_plod,
+            self.is_black,
+            self.dropified_private_label,
+            self.private_label
+        ])
+
 
 class AddressBase(models.Model):
     class Meta:
@@ -1225,6 +1235,9 @@ class ShopifyStore(StoreBase):
 
     def __str__(self):
         return self.title
+
+    def need_reauthorization(self):
+        return self.version == 1 or sorted(self.scope.split(',')) != sorted(settings.SHOPIFY_API_SCOPE)
 
     def get_link(self, page=None, api=False, version=SHOPIFY_API_VERSION):
         if api:

@@ -1027,8 +1027,6 @@ $(function() {
         $('.itooltip').bootstrapTooltip(tooltipOptions);
     }
 
-    $('#mini-side-menu [data-toggle="bootstrap-tooltip"]').bootstrapTooltip(tooltipOptions);
-
     $('[qtip-tooltip]').each(function() {
         $(this).qtip({
             content: {
@@ -1839,4 +1837,41 @@ if (typeof currentUser !== 'undefined') {
     var raven = Raven.config('//9449f975eb984492bc9205e5acd0f36a@sentry.io/73544', ravenOptions);
     raven.install();
     raven.setUserContext(currentUser);
+}
+
+function unsecuredCopyToClipboard(text) {
+    var $txt = $('<textarea />');
+    $txt.val(text).css({ width: "1px", height: "1px" }).appendTo('body');
+    $txt.select();
+    try {
+        document.execCommand('copy');
+        toastr.success('Copying to clipboard was successful!', 'Copy to Clipboard');
+    } catch(err) {
+        toastr.error('Could not copy text.', 'Copy to Clipboard');
+    }
+    $txt.remove();
+}
+
+function copyToClipboard(text) {
+    if (window.isSecureContext && navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function () {
+            toastr.success('Copying to clipboard was successful!', 'Copy to Clipboard');
+        }, function (err) {
+            toastr.error('Could not copy text.', 'Copy to Clipboard');
+        });
+    } else {
+        unsecuredCopyToClipboard(text);
+    }
+}
+
+function copyToClipboardPermissionWrapper(text) {
+    if (window.isSecureContext && navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({name: "clipboard-write"}).then(function(result) {
+            if (result.state === "granted" || result.state === "prompt") {
+                copyToClipboard(text);
+            }
+        });
+    } else {
+        unsecuredCopyToClipboard(text);
+    }
 }

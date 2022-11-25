@@ -453,6 +453,8 @@ def callback(request):
         if store:
             store.is_active = True
             store.uninstalled_at = None
+            store.dropified_fulfillment_service = 0
+            store.dropified_location = 0
         else:
             store = ShopifyStore(user=user, shop=shop)
 

@@ -92,7 +92,7 @@ $(document).ready(function(){
             }
         });
         if (data['item-ids'].length === 0) {
-            toastr.info("Please select line items to print labels against.");
+            toastr.error("Please select line items to print labels against.");
             return;
         }
 
@@ -121,7 +121,7 @@ $(document).ready(function(){
             }
         });
         if (data['item-ids'].length === 0) {
-            toastr.info("Please select line items to mark labels against.");
+            toastr.error("Please select line items to mark labels against.");
             return;
         }
 
@@ -148,7 +148,7 @@ $(document).ready(function(){
             }
         });
         if (data['item-ids'].length === 0) {
-            toastr.info("Please select line items to unmark labels against.");
+            toastr.error("Please select line items to unmark labels against.");
             return;
         }
 
@@ -327,12 +327,12 @@ $(document).ready(function(){
             }
         });
         if (Object.keys(data).length == 0) {
-            toastr.info("Please select at least one supplier to add payouts.");
+            toastr.error("Please select at least one supplier to add payouts.");
             return;
         }
         for (var id in data) {
             if (!data[id].ref_num) {
-                toastr.info('Please make sure to enter reference number for each selected supplier.');
+                toastr.error('Please make sure to enter reference number for each selected supplier.');
                 return;
             }
         }

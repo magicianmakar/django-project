@@ -277,7 +277,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         r = self.client.post('/api/order-fulfill', data)
         self.assertEqual(r.status_code, 403)
 
-    @patch('leadgalaxy.views.utils.order_track_fulfillment', Mock(return_value=None))
+    @patch('leadgalaxy.utils.do_order_fulfillment', Mock(return_value=({}, Mock(raise_for_status=Mock(return_value=None)))))  # noqa
     @patch('leadgalaxy.models.ShopifyStore.get_link', Mock(return_value=None))
     @patch('leadgalaxy.models.ShopifyStore.get_primary_location', Mock(return_value=None))
     @patch('leadgalaxy.utils.ShopifyOrderUpdater.delay_save', Mock(return_value=None))

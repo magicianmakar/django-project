@@ -140,6 +140,7 @@ MIDDLEWARE = (
     'leadgalaxy.middleware.UserIpSaverMiddleware',
     'leadgalaxy.middleware.TimezoneMiddleware',
     'leadgalaxy.middleware.UserEmailEncodeMiddleware',
+    'leadgalaxy.middleware.ShopifyScopeCheckMiddleware',
 )
 
 ROOT_URLCONF = 'app.urls'

@@ -1237,6 +1237,10 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False,
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
 
+    if customer_address['country_code'] == 'JP':
+        if customer_address.get('zip'):
+            customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
+
     customer_address['name'] = ensure_title(customer_address['name'])
 
     if customer_address['company']:
@@ -1244,11 +1248,16 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False,
 
     correction = {}
     if aliexpress_fix:
+        score_match = False
+        if customer_address['country_code'] == 'JP':
+            score_match = 0.3
+
         valide, correction = valide_aliexpress_province(
             customer_address['country'],
             customer_address['province'],
             customer_address['city'],
-            auto_correct=True)
+            auto_correct=True,
+            score_match=score_match)
 
         if not valide:
             if support_other_in_province(customer_address['country']):
@@ -1627,8 +1636,10 @@ def is_shipping_carrier(tracking_number, carrier, any_match=False):
 
 
 def order_fulfillement(store, order_id, line_id):
-    rep = requests.get(store.api('orders', order_id, 'fulfillment_orders'))
-    if rep.ok:
+    try:
+        rep = requests.get(store.api('orders', order_id, 'fulfillment_orders'))
+        rep.raise_for_status()
+
         for order in rep.json()['fulfillment_orders']:
             if order['status'] == 'closed':
                 continue
@@ -1636,6 +1647,8 @@ def order_fulfillement(store, order_id, line_id):
             for item in order['line_items']:
                 if item['line_item_id'] == int(line_id):
                     return order, item
+    except:
+        capture_exception()
 
     return None, None
 
@@ -1772,6 +1785,173 @@ def order_track_fulfillment(**kwargs):
                 data['fulfillment']['tracking_info']['url'] = [aftership_domain.replace('{{tracking_number}}', i) for i in tracking_numbers]
             else:
                 data['fulfillment']['tracking_info']['url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
+
+    if user_config.get('validate_tracking_number', False) \
+            and not is_valide_tracking_number(source_tracking) \
+            and not is_usps:
+        notify_customer = 'no'
+    else:
+        notify_customer = user_config.get('send_shipping_confirmation', 'default')
+
+    if notify_customer == 'default':
+        if line:
+            if line.order.items_count <= 1:
+                data['fulfillment']['notify_customer'] = True
+            else:
+                fulfilled = line.order.shopifyorderline_set.filter(fulfillment_status='fulfilled').exclude(id=line.id).count()
+                data['fulfillment']['notify_customer'] = (line.order.items_count <= fulfilled + 1)
+
+                line.fulfillment_status = 'fulfilled'
+                line.save()
+        else:
+            data['fulfillment']['notify_customer'] = True
+    else:
+        data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
+
+    if kwargs.get('return_line'):
+        return data, line
+    else:
+        return data
+
+
+def do_order_fulfillment(store, fulfillment_data):
+    if fulfillment_data.get('order_track'):
+        order_id = fulfillment_data.get('order_track').order_id
+    else:
+        order_id = fulfillment_data['order_id']
+
+    if store.need_reauthorization():
+        url = store.api('orders', order_id, 'fulfillments', version='2022-04')
+        api_data = order_track_fulfillment_deprecate(**fulfillment_data)
+    else:
+        url = store.api('fulfillments')
+        api_data = order_track_fulfillment(**fulfillment_data)
+
+    line = None
+
+    if fulfillment_data.get('return_line'):
+        line = api_data[1]
+        api_data = api_data[0]
+
+    rep = requests.post(url=url, json=api_data)
+
+    if fulfillment_data.get('return_line'):
+        return (api_data, line, rep)
+    else:
+        return (api_data, rep)
+
+
+def order_track_fulfillment_deprecate(**kwargs):
+    ''' Get Tracking Carrier and Url for Shopify Order Fulfillment
+        order_id:        Shopify Order ID
+        line_id:         Shopify Order Line
+        source_tracking: Order Tracking Number
+        order_track:     ShopifyOrderTrack to get above args. from (optional)
+        user_config:     UserProfile config dict
+    '''
+
+    if kwargs.get('order_track'):
+        order_id = kwargs.get('order_track').order_id
+        line_id = kwargs.get('order_track').line_id
+        location_id = kwargs.get('location_id')
+        source_tracking = kwargs.get('order_track').source_tracking
+        store_id = kwargs.get('order_track').store_id
+
+        if not location_id:
+            location_id = kwargs.get('order_track').store.get_primary_location()
+    else:
+        order_id = kwargs['order_id']
+        line_id = kwargs['line_id']
+        location_id = kwargs['location_id']
+        source_tracking = kwargs['source_tracking']
+        store_id = safe_int(kwargs.get('store_id'))
+
+        if not len(source_tracking):
+            source_tracking = None
+
+    user_config = kwargs['user_config']
+
+    is_usps = False
+    line = None
+    tracking_numbers = None
+
+    if source_tracking and ',' in source_tracking.strip(','):
+        tracking_numbers = source_tracking.split(',')
+        source_tracking = tracking_numbers[0]
+
+    try:
+        if kwargs.get('use_usps') is None:  # Find line when shipping method is not selected
+            line = ShopifyOrderLine.objects.select_related('order').get(
+                line_id=line_id,
+                order__store_id=store_id,
+                order__order_id=order_id)
+
+            is_usps = (is_chinese_carrier(source_tracking) or shipping_carrier(source_tracking) == 'USPS') \
+                and line.order.country_code == 'US' \
+                and not is_shipping_carrier(source_tracking, 'FedEx', any_match=True)
+
+    except ShopifyOrderLine.DoesNotExist:
+        pass
+    except:
+        capture_exception()
+
+    data = {
+        "fulfillment": {
+            "location_id": location_id,
+            "tracking_number": source_tracking,
+            "line_items": [{
+                "id": line_id,
+            }]
+        }
+    }
+
+    if source_tracking:
+        if tracking_numbers:
+            data['fulfillment']['tracking_numbers'] = tracking_numbers
+            del data['fulfillment']['tracking_number']
+        else:
+            data['fulfillment']['tracking_number'] = source_tracking
+
+        user_aftership_domain = user_config.get('aftership_domain')
+        have_custom_domain = store_id and user_aftership_domain \
+            and type(user_aftership_domain) is dict \
+            and user_aftership_domain.get(str(store_id))
+
+        alibaba_tracking_urls = None
+        if kwargs.get('order_track') and kwargs.get('order_track').source_type == 'alibaba':
+            from alibaba_core.utils import get_tracking_links as get_alibaba_tracking_links
+            alibaba_tracking_urls = get_alibaba_tracking_links(kwargs.get('order_track').source_id.split(','))
+
+        if alibaba_tracking_urls:
+            data['fulfillment']['tracking_company'] = "Other"
+            if tracking_numbers:
+                data['fulfillment']['tracking_urls'] = [t[1] for t in alibaba_tracking_urls]
+            else:
+                data['fulfillment']['tracking_url'] = alibaba_tracking_urls
+
+        elif (kwargs.get('use_usps') is None and is_usps and not have_custom_domain) or kwargs.get('use_usps'):
+            data['fulfillment']['tracking_company'] = user_config.get('_default_shipping_carrier', 'USPS')
+        elif (kwargs.get('use_usps') is None and not have_custom_domain) and is_shipping_carrier(source_tracking, 'FedEx', any_match=True):
+            data['fulfillment']['tracking_company'] = "FedEx"
+        elif (not kwargs.get('use_usps') and not have_custom_domain) and is_shipping_carrier(source_tracking, 'UPS', any_match=True):
+            data['fulfillment']['tracking_company'] = "UPS"
+        else:
+            aftership_domain = 'https://track.aftership.com/{{tracking_number}}'
+
+            if have_custom_domain:
+                aftership_domain = user_aftership_domain.get(str(store_id), aftership_domain)
+                if '{{tracking_number}}' not in aftership_domain:
+                    aftership_domain = "https://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
+                elif not aftership_domain.startswith('http'):
+                    aftership_domain = 'https://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
+
+            aftership_domain = add_http_schema(aftership_domain)
+
+            data['fulfillment']['tracking_company'] = "Other"
+            if tracking_numbers:
+                data['fulfillment']['tracking_urls'] = [aftership_domain.replace('{{tracking_number}}', i) for i in tracking_numbers]
+            else:
+                data['fulfillment']['tracking_url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
 
     if user_config.get('validate_tracking_number', False) \
             and not is_valide_tracking_number(source_tracking) \

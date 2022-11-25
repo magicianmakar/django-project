@@ -504,11 +504,13 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                     queryset = queryset.filter(pls_order__is_fulfilled=False)
 
             cancelled = form.cleaned_data['cancelled']
+
             if cancelled:
                 cancelled_order_ids = self.get_cancelled_order_ids()
                 for id, number in cancelled_order_ids.items():
                     if id.isnumeric():
-                        queryset = queryset.exclude(pls_order_id=id, pls_order__order_number=number)
+                        queryset = queryset.exclude(pls_order_id=id, pls_order__order_number=number,
+                                                    cancelled_in_shipstation=True)
 
             supplier = form.cleaned_data['supplier']
             if supplier:
@@ -561,6 +563,7 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                     continue
                 else:
                     self.cancelled_orders_cache[id] = number
+
             cache.set(cache_key, {'executed_date': str(timezone.now()), 'data': self.cancelled_orders_cache},
                       timeout=86400 * 3)  # "hard" refresh 3 days
         else:
@@ -577,6 +580,11 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                         continue
                     else:
                         self.cancelled_orders_cache[id] = number
+                        for item in order['items']:
+                            if item['lineItemKey']:
+                                line_item = self.model.objects.get(shipstation_key=item['lineItemKey'])
+                                line_item.cancelled_in_shipstation = True
+                                line_item.save()
                 cache.set(cache_key, {'executed_date': str(timezone.now()), 'data': self.cancelled_orders_cache},
                           timeout=600)  # refresh cache with latest updated orders
 

@@ -27,3 +27,8 @@ class ProductExportException(Exception):
 
 class AliexpressFulfillException(Exception):
     pass
+
+
+class RedirectException(Exception):
+    def __init__(self, url):
+        self.url = url

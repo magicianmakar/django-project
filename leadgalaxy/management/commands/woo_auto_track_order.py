@@ -26,11 +26,11 @@ class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
         order_store = options.get('store')
-        track_max = options.get('max')
+        # track_max = options.get('max')
         # uptime = options.get('uptime')
         days = options.get('days')
 
-        user_ids = AliexpressAccount.objects.all().values_list('user', flat=True)
+        user_ids = AliexpressAccount.objects.all().values_list('user', flat=True).distinct()
 
         orders = WooOrderTrack.objects.filter(user__in=user_ids) \
             .filter(woocommerce_status='') \
@@ -39,8 +39,7 @@ class Command(DropifiedBaseCommand):
             .filter(created_at__gte=arrow.now().replace(days=-days).datetime) \
             .filter(store__is_active=True) \
             .filter(store__auto_fulfill='enable') \
-            .defer('data') \
-            .order_by('-created_at' if options['new'] else 'created_at')
+            .order_by('-created_at')
 
         if order_store is not None:
             orders = orders.filter(store=order_store)
@@ -49,7 +48,7 @@ class Command(DropifiedBaseCommand):
             self.write(f'Orders to auto track {orders.count()}')
             return
 
-        self.write('Started Auto tracking orders')
+        self.write(f'Started Auto tracking Woo orders with count {orders.count()} on {arrow.now().datetime}')
 
         if options['progress']:
             self.progress_total(orders.count())
@@ -66,9 +65,6 @@ class Command(DropifiedBaseCommand):
         self.store_countdown = {}
         self.start_at = timezone.now()
 
-        if track_max:
-            orders = orders[:track_max]
-
         for order in orders:
             try:
                 counter['need_tracking'] += 1
@@ -77,10 +73,7 @@ class Command(DropifiedBaseCommand):
 
                 if isinstance(data, str):
                     self.write(f"Skipping tracking orders for user {user}: {data}")
-                    if data == 'Aliexpress Account is not connected':
-                        break
-                    else:
-                        continue
+                    continue
 
                 if data and not data.get('error_msg'):
                     new_tracking_number = (data.get('tracking_number') and data.get('tracking_number') not in order.source_tracking)
@@ -116,7 +109,6 @@ class Command(DropifiedBaseCommand):
         except:
             order_data = {'aliexpress': {}}
 
-        order_data['aliexpress']['end_reason'] = data.get('end_reason')
         order_details = {}
         try:
             if data.get('order_details'):

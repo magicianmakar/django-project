@@ -1144,7 +1144,7 @@ li.border-right {
     color: #3b4d5e;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-box-orient: vertical;\left: ;
+    -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
 }
 .product-box .product-imitation.pls + .product-desc .product-name {
@@ -1449,23 +1449,6 @@ li.border-right {
 .table.store-tables > tbody > tr > td .order-handle {
     color: #485e74 !important;
     font-size: 16px !important;
-}
-
-/*.label,*/
-.table.store-tables .label,
-.table.store-tables .btn.btn-default {
-    color: #1C1C1C;
-    background-color: transparent;
-    border: 1px solid #E8E8E8;
-    padding: 7px 8px;
-    font-weight: 700;
-    border-radius: 8px;
-    transition: background-color .2s;
-}
-
-.table.store-tables .label:hover,
-.table.store-tables .btn.btn-default:hover {
-    background-color: #E8E8E8;
 }
 
 #stores-table-body tr td {
@@ -2890,153 +2873,8 @@ ul.tagit:focus {
     border-color: #b0bfce !important;
 }
 
-.sweet-alert {
-    font-family: "Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
-}
-.sweet-alert button {
-    padding: 8px 22px;
-    font-weight: 500;
-    font-size: 13px;
-    border-radius: 8px;
-    transition: .2s background-color, .2s border-color;
-    border: 1px solid #e8e8e8;
-    background-color: #ffffff;
-    color: #1c1c1c;
-    line-height: 1.54;
-    margin: 0;
-}
-.sweet-alert .confirm {
-    background-color: #6bAA55 !important;
-    border-color: #6bAA55 !important;
-    color: #ffffff !important;
-}
-.sweet-alert .cancel {
-    background-color: #de1c22 !important;
-    border-color: #de1c22 !important;
-    color: #ffffff !important;
-}
-.sweet-alert .confirm:hover {
-    background-color: #4f7e3f !important;
-    border-color: #4f7e3f !important;
-}
-.sweet-alert .cancel:hover {
-    background-color: #7a0f13 !important;
-    border-color: #7a0f13 !important;
-}
-
-.sweet-alert {
-  padding: 20px;
-  background: #FFFFFF;
-  border-radius: 8px;
-  height: auto;
-  width: 428px;
-}
-
-.sweet-alert.show-input .sa-icon.sa-custom {
-  display: block !important;
-  background: url('/static/img/star.svg');
-  border: 1px solid #DBDBDB;
-  border-radius: 70px;
-  height: 120px;
-  width: 120px;
-}
-
-.sweet-alert h2 {
-  font-family: Inter;
-  font-style: normal;
-  font-weight: 600;
-  font-size: 24px;
-  line-height: 32px;
-  text-align: center;
-  letter-spacing: -0.4px;
-  color: #1D262F;
-  margin: 12px 0px;
-}
-
-.sweet-alert p {
-  font-family: Inter;
-  font-style: normal;
-  font-weight: normal;
-  font-size: 15px;
-  line-height: 22px;
-  text-align: center;
-  letter-spacing: -0.2px;
-  color: #3B4D5E;
-  margin: 12px 0px;
-}
-
-.sweet-alert input {
-  width: 370px;
-  height: 40px;
-  padding: 10px;
-  background: #FFFFFF;
-  border: 1px solid #B0BFCE;
-  box-sizing: border-box;
-  border-radius: 8px;
-  margin: 10px 0 0 10px;
-}
-
 .sa-input-error {
   margin: -8px;
-}
-
-.sa-button-container {
-}
-
-.sweet-alert button {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-
-  font-family: Inter;
-  font-style: normal;
-  font-weight: 600;
-  font-size: 15px;
-  line-height: 22px;
-  letter-spacing: -0.1px;
-  border-radius: 8px;
-  color: #FFFFFF;
-}
-.sweet-alert .sa-button-container {
-    margin-top: 44px;
-}
-.sweet-alert .sa-error-container.show {
-    min-height: 44px;
-    background: #FFFFFF;
-}
-
-.sweet-alert .sa-error-container.show > div.icon {
-}
-
-.sweet-alert .sa-error-container.show p {
-  position: static;
-  margin: 0;
-}
-
-.sweet-alert .sa-error-container.show + .sa-button-container {
-    margin-top: 0;
-}
-.sweet-alert button.cancel {
-  padding: 8px 50px;
-  float: left;
-  background: #FFFFFF;
-  box-shadow: 0px 1px 3px #0000000D, 0px 2px 1px #00000008, 0px 1px 1px #0000000A !important;
-}
-
-.sweet-alert button.confirm {
-  padding: 8px 50px;
-  float: right;
-  background: #6BAA55;
-  box-shadow: 0px 1px 3px #0000000D, 0px 2px 1px #00000008, 0px 1px 1px #0000000A !important;
-}
-
-.sweet-alert .sa-confirm-button-container {
-    float: right;
-}
-
-.sweet-alert  .la-ball-fall {
-  top: 6px;
 }
 
 .alert-danger a {
@@ -3283,6 +3121,10 @@ textarea.note {
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
+}
+
+.copy-cursor {
+    cursor: url(../img/copy.svg) 16 16, copy;
 }
 
 .plan-badge, .applications-nav {

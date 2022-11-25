@@ -2,7 +2,7 @@ version: 2
 defaults: &defaults
   working_directory: ~/ShopifiedApp/webapp
   docker:
-    - image: circleci/python:3.8.10-node
+    - image: cimg/python:3.8.15-node
       environment:
         SECRET_KEY: dBEn2nkwPvlKuEwrQtBwMLlOOTm3TObmllyOb0j6ZepIqztLQh28oItsJQCbVsF1
 
@@ -39,7 +39,7 @@ defaults: &defaults
         STRIPE_PUBLIC_KEY: ""
         STRIPE_SECRET_KEY: ""
 
-    - image: circleci/postgres:12.7
+    - image: cimg/postgres:12.7
       environment:
         POSTGRES_USER: ubuntu
         POSTGRES_DB: circle_test
@@ -54,9 +54,9 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - v7-dep-{{ .Branch }}-
-          - v7-dep-master-
-          - v7-dep-
+          - v8-dep-{{ .Branch }}-
+          - v8-dep-master-
+          - v8-dep-
 
       - run:
           name: Install Dependencies
@@ -94,7 +94,7 @@ jobs:
 
       # Save dependency cache
       - save_cache:
-          key: v7-dep-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "bower.json" }}-{{ checksum "package.json" }}
+          key: v8-dep-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "bower.json" }}-{{ checksum "package.json" }}
           paths:
           - app/static/libs/bower_components
           - node_modules
@@ -108,9 +108,9 @@ jobs:
 
       - restore_cache:
           keys:
-          - v7-dep-{{ .Branch }}-
-          - v7-dep-master-
-          - v7-dep-
+          - v8-dep-{{ .Branch }}-
+          - v8-dep-master-
+          - v8-dep-
 
       - run:
           name: Install Codecov
@@ -120,6 +120,7 @@ jobs:
 
       - run:
           name: Django Tests
+          no_output_timeout: 30m
           command: |
             source venv/bin/activate
             coverage run ./manage.py test --noinput -v2 --exclude-tag excessive
@@ -138,9 +139,9 @@ jobs:
 
       - restore_cache:
           keys:
-          - v7-dep-{{ .Branch }}-
-          - v7-dep-master-
-          - v7-dep-
+          - v8-dep-{{ .Branch }}-
+          - v8-dep-master-
+          - v8-dep-
 
       - run:
           name: Static Files
@@ -155,6 +156,7 @@ jobs:
 
       - run:
           name: Django Compressor
+          no_output_timeout: 30m
           command: |
             source venv/bin/activate
             DEBUG_APP="FALSE" python manage.py compress
@@ -162,10 +164,10 @@ jobs:
   deploy:
     working_directory: ~/ShopifiedApp/webapp
     docker:
-      - image: circleci/python:3.6.10
+      - image: cimg/python:3.8.15
     steps:
       - run:
-          name: Deploy Master to Heroku
+          name: Deploy to Heroku
           command: |
             echo "Manual Deploy Only"
 
@@ -180,3 +182,7 @@ workflows:
       - statics:
           requires:
             - build
+      - deploy:
+          requires:
+            - test
+            - statics
