@@ -118,7 +118,7 @@ class Command(DropifiedBaseCommand):
         except:
             order_data = {'aliexpress': {}}
 
-        # order_data['aliexpress']['end_reason'] = data.get('end_reason')
+        order_data['aliexpress']['end_reason'] = data.get('end_reason')
         order_details = {}
         try:
             if data.get('order_details'):
