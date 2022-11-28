@@ -87,7 +87,7 @@
     },
     "addons": [
         {
-            "plan": "heroku-redis",
+            "plan": "heroku-redis:mini",
             "as": "REDISCLOUD"
         },
         {
